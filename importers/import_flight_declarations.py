@@ -40,7 +40,7 @@ class FlightSpotlightUploader():
         
         payload = {"flight_declaration" : json.dumps(flight_declaration_data)}                
 
-        securl = 'http://0.0.0.0:5000/set_flight_declaration'
+        securl = 'http://local.test:5000/set_flight_declaration'
         try:
             response = requests.post(securl, data= payload, headers=headers)
             print(response.content)                
@@ -53,7 +53,6 @@ if __name__ == '__main__':
 
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_write_credentials()
-
     
     my_uploader = FlightSpotlightUploader(credentials = credentials)
     my_uploader.upload_to_server(filename='flight_declarations/flight-1.json')
