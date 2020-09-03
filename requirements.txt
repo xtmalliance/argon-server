@@ -3,4 +3,7 @@ Jinja2
 MarkupSafe
 Werkzeug
 gunicorn
-walrus>
+walrus
+redis
+rq 
+rq-scheduler
