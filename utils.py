@@ -12,9 +12,8 @@ def submit_flights_to_spotlight():
     return status
 
 def write_incoming_data(observation):    
-    
-    msgid = stream.add(observation)
 
+    msgid = stream.add(observation)
     return msgid
 
 
