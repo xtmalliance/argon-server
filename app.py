@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 
 q = Queue(connection=conn)
-scheduler = Scheduler(queue=q)
+scheduler = Scheduler(queue=q, connection = conn)
 
 @app.route("/initialize", methods = ['POST'])
 def initialize():            
@@ -100,8 +100,7 @@ def set_air_traffic():
 
             q_len = len(q)  # Get the queue length
 
-            message = f"Task queued at {task.enqueued_at.strftime('%a, %d %b %Y %H:%M:%S')}. {q_len} jobs queued"
-
+            message = "Task queued at {task.enqueued_at.strftime('%a, %d %b %Y %H:%M:%S')}. {q_len} jobs queued"
 
     op = json.dumps ({"message":"OK"})
     return Response(op, status=200, mimetype='application/json')
