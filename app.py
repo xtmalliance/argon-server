@@ -13,7 +13,6 @@ from worker import conn
 from walrus import Database
 app = Flask(__name__)
 
-
 q = Queue(connection=conn)
 scheduler = Scheduler(queue=q, connection = conn)
 
@@ -21,7 +20,6 @@ scheduler = Scheduler(queue=q, connection = conn)
 def initialize():            
     stream_keys = ['observations']
     db = Database()    
-
     cg = db.consumer_group('cg-observations', stream_keys)
     cg.create()  # Create the consumer group.
     cg.set_id('$')
@@ -44,7 +42,6 @@ def blend():
 
 @app.route("/stop_blend", methods = ['POST'])
 def stop_blend():
-    
     list_of_job_instances = scheduler.get_jobs()
     for job in list_of_job_instances:
         scheduler.cancel(job)
@@ -82,18 +79,14 @@ def set_air_traffic():
         return Response(msg, status=400, mimetype='application/json')
 
     else:
-
         for observation in observations:       
-        
             lat_dd = observation['lat_dd']
             lon_dd = observation['lon_dd']
             altitude_mm = observation['altitude_mm']
             traffic_source = observation['traffic_source']
             source_type = observation['source_type']
             icao_address = observation['icao_address']
-
             single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address }
-                
             task = q.enqueue(write_incoming_data, single_observation)  # Send a job to the task queue
 
             jobs = q.jobs  # Get a list of jobs in the queue
@@ -102,7 +95,7 @@ def set_air_traffic():
 
             message = "Task queued at {task.enqueued_at.strftime('%a, %d %b %Y %H:%M:%S')}. {q_len} jobs queued"
 
-    op = json.dumps ({"message":"OK"})
+    op = json.dumps ({"message":"OK" , "status":message})
     return Response(op, status=200, mimetype='application/json')
 
 if __name__ == '__main__':
