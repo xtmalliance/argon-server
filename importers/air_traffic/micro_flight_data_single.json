@@ -1,5 +1,4 @@
-{
-    "observations":
+
 [
   {
     "lon_dd": 30.13987541,
@@ -47,5 +46,3 @@
     "icao_address": "drone-a"
   }
 ]
-
-}
