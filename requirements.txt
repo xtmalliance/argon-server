@@ -5,5 +5,4 @@ Werkzeug
 gunicorn
 walrus
 redis
-rq 
-rq-scheduler
+celery

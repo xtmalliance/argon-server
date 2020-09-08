@@ -5,22 +5,77 @@ from flask import request, Response
 import requests, json
 from datetime import datetime
 import logging
-import redis
-from rq import Queue
-
-import time
-from utils import submit_flights_to_spotlight, write_incoming_data, cron_worker
-from worker import conn
+import redis, requests
 from walrus import Database
-app = Flask(__name__)
+from datetime import datetime, timedelta
+import time
+from celery import Celery
+import celeryconfig
 
-q = Queue(connection=conn)
+app = Flask(__name__)
+app.config.from_object('config')
+
+def make_celery(app):
+    # create context tasks in celery
+    celery = Celery(
+        app.import_name,
+        broker=app.config['BROKER_URL']
+    )
+    celery.conf.update(app.config)
+    celery.config_from_object(celeryconfig)
+    TaskBase = celery.Task
+
+    class ContextTask(TaskBase):
+        abstract = True
+
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+
+    celery.Task = ContextTask
+
+    return celery
+
+celery = make_celery(app)
+
+
+
+db = Database()   
+stream_keys = ['all_observations']
+for stream in stream_keys:
+    db.xadd(stream, {'': ''})
+
+cg = db.time_series('cg-obs', stream_keys)
+cg.create()  # Create the consumer group.
+cg.set_id('$') # mark all the observations as read
+
+
+
+
+@celery.task()
+def write_incoming_data(observation):            
+    msgid = cg.all_observations.add(observation)    
+    now = datetime.now()    
+        
+    try:
+        lu = db.get('last-updated')
+    except KeyError as e:
+        lu = None
+    else: 
+        lu = datetime.datetime(lu)
+    
+    if lu is None:
+        submit_flights_to_spotlight()
+    elif lu > now + timedelta(seconds=5):        
+        submit_flights_to_spotlight()
+        
+    return msgid
+
+
 
 @app.route("/")
 def home():
     return "Flight Blender"
-
-
 
 @app.route('/set_air_traffic', methods = ['POST'])
 def set_air_traffic():
@@ -54,13 +109,10 @@ def set_air_traffic():
             source_type = observation['source_type']
             icao_address = observation['icao_address']
             single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address }
-            task = q.enqueue(write_incoming_data, single_observation)  # Send a job to the task queue
-            jobs = q.jobs  # Get a list of jobs in the queue
-            q_len = len(q)  # Get the queue length
+            task = write_incoming_data.delay(single_observation)  # Send a job to the task queue
 
-            message = f"Task queued at {task.enqueued_at.strftime('%a, %d %b %Y %H:%M:%S')}. {q_len} jobs queued"
 
-    op = json.dumps ({"message":"OK" , "status":message})
+    op = json.dumps ({"message":"OK"})
     return Response(op, status=200, mimetype='application/json')
 
 if __name__ == '__main__':
