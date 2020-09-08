@@ -1,16 +1,4 @@
 import celery
-from walrus import Database
-from datetime import datetime, timedelta
-
-db = Database()   
-stream_keys = ['all_observations']
-for stream in stream_keys:
-    db.xadd(stream, {'': ''})
-
-cg = db.time_series('cg-obs', stream_keys)
-cg.create()  # Create the consumer group.
-cg.set_id('$') # mark all the observations as read
-
 
 
 @celery.task()

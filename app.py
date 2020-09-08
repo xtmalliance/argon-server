@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import time
 from celery import Celery
 import celeryconfig
-
+import os
 app = Flask(__name__)
 app.config.from_object('config')
 
@@ -40,7 +40,7 @@ celery = make_celery(app)
 
 
 
-db = Database()   
+db = Database(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'] )   
 stream_keys = ['all_observations']
 for stream in stream_keys:
     db.xadd(stream, {'': ''})
@@ -48,8 +48,6 @@ for stream in stream_keys:
 cg = db.time_series('cg-obs', stream_keys)
 cg.create()  # Create the consumer group.
 cg.set_id('$') # mark all the observations as read
-
-
 
 
 @celery.task()
