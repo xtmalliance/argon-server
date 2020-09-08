@@ -1,6 +1,5 @@
 import celery
 
-
 @celery.task()
 def print_hello():
     logger = print_hello.get_logger()
@@ -9,6 +8,9 @@ def print_hello():
 @celery.task()
 def submit_flights_to_spotlight():
     status = 1
+    # get existing consumer group
+    
+    
     messages = cg.all_observations.read()
     pending_messages = []
     for message in messages: 
