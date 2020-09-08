@@ -6,3 +6,4 @@ gunicorn
 walrus
 redis
 celery
+requests
