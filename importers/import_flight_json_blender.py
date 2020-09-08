@@ -3,11 +3,9 @@ import os
 import json, time, requests
 class BlenderUploader():
     
-    def __init__(self):
+    def __init__(self):        
         
-        
-        self.timestamps = [1590000000000,1590000005000,1590000010000,1590000015000,1590000020000]
-    
+        self.timestamps = [1590000000000,1590000005000,1590000010000,1590000015000,1590000020000]    
     
     def upload_to_server(self, filename):
         with open(filename, "r") as traffic_json_file:
@@ -38,8 +36,8 @@ class BlenderUploader():
                 except Exception as e:
                     print(e)
                 else:
-                    print("Sleeping 10 seconds..")
-                    time.sleep(10)
+                    print("Sleeping 25 seconds..")
+                    time.sleep(25)
 
 
 if __name__ == '__main__':

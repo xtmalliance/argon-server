@@ -3,48 +3,23 @@ from flask import render_template
 from functools import wraps
 from flask import request, Response
 import requests, json
+from datetime import datetime
 import logging
 import redis
 from rq import Queue
-from rq_scheduler import Scheduler
+
 import time
-from utils import submit_flights_to_spotlight, write_incoming_data
+from utils import submit_flights_to_spotlight, write_incoming_data, cron_worker
 from worker import conn
 from walrus import Database
 app = Flask(__name__)
 
 q = Queue(connection=conn)
-scheduler = Scheduler(queue=q, connection = conn)
-
-
-@app.route("/blend", methods = ['POST'])
-def blend():    
-    cron_string = '*/5 * * * *' # 5 seconds
-
-    scheduler.cron(
-        cron_string,                # A cron string (e.g. "0 0 * * 0")
-        func=submit_flights_to_spotlight,                  # Function to be queued
-        repeat=None,                  # Repeat this number of times (None means repeat forever)
-        queue_name=q,      # In which queue the job should be put in
-    )
-
-    msg = {"status":"OK"}
-    return Response(msg, status=200, mimetype='application/json')
-
-
-@app.route("/stop_blend", methods = ['POST'])
-def stop_blend():
-    list_of_job_instances = scheduler.get_jobs()
-    for job in list_of_job_instances:
-        scheduler.cancel(job)
-
-    msg = {"status":"OK"}
-    return Response(msg, status=200, mimetype='application/json')
-
 
 @app.route("/")
 def home():
     return "Flight Blender"
+
 
 
 @app.route('/set_air_traffic', methods = ['POST'])
@@ -79,9 +54,7 @@ def set_air_traffic():
             source_type = observation['source_type']
             icao_address = observation['icao_address']
             single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address }
-
             task = q.enqueue(write_incoming_data, single_observation)  # Send a job to the task queue
-
             jobs = q.jobs  # Get a list of jobs in the queue
             q_len = len(q)  # Get the queue length
 
