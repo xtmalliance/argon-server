@@ -42,32 +42,29 @@ def make_celery(app):
 
 celery = make_celery(app)
 
-db = Database(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'])   
-stream_keys = ['all_observations']
-for stream in stream_keys:
-    db.xadd(stream, {'': ''})
 
-cg = db.time_series('cg-obs', stream_keys)
-cg.create()  # Create the consumer group.
-cg.set_id('$') # mark all the observations as read
 
+def get_consumer_group(create=False):
+    db = Database(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'])   
+    stream_keys = ['all_observations']
+    
+    cg = db.time_series('cg-obs', stream_keys)
+    if create:
+        for stream in stream_keys:
+            db.xadd(stream, {'data': ''})
+
+    if create:
+        cg.create()
+        cg.set_id('$')
+
+    return cg.all_observations
+
+get_consumer_group(create=True)
 
 @celery.task()
-def write_incoming_data(observation):            
-    msgid = cg.all_observations.add(observation)    
-    now = datetime.now()    
-        
-    try:
-        lu = db.get('last-updated')
-    except KeyError as e:
-        lu = None
-    else: 
-        lu = datetime.datetime(lu)
-    
-    if lu is None:
-        submit_flights_to_spotlight()
-    elif lu > now + timedelta(seconds=5):        
-        submit_flights_to_spotlight()
+def write_incoming_data(observation): 
+    cg = get_consumer_group()           
+    msgid =cg.add(observation)    
         
     return msgid
 

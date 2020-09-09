@@ -1,17 +1,26 @@
 import celery
+from flask import current_app as app
+import requests
 
 @celery.task()
 def print_hello():
+    dir(app)
+    
+    with app.app_context():
+        cg = app.get_consumer_group()
+
     logger = print_hello.get_logger()
+
     logger.info("Hello")
     
+
 @celery.task()
 def submit_flights_to_spotlight():
     status = 1
     # get existing consumer group
-    
-    
-    messages = cg.all_observations.read()
+    with app.app_context():
+        cg = app.get_consumer_group()
+    messages = cg.read()
     pending_messages = []
     for message in messages: 
         pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'data':message.data, 'address':message.data['icao_address']})

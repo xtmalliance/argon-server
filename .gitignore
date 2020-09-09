@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+
 # C extensions
 *.so
 
@@ -26,7 +28,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-celerybeat-schedule.db
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -128,3 +129,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
