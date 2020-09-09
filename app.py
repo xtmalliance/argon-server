@@ -12,6 +12,10 @@ import time
 from celery import Celery
 import celeryconfig
 import os
+
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 app = Flask(__name__)
 app.config.from_object('config')
 
@@ -37,7 +41,6 @@ def make_celery(app):
     return celery
 
 celery = make_celery(app)
-
 
 
 db = Database(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'] )   

@@ -1,0 +1,56 @@
+version: "3"
+services:  
+  redis:
+    command: [ "redis-server", "/redis.conf" ]
+    image: "redis:latest"
+    ports:
+        - "6379:6379"
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
+    stop_grace_period: "${DOCKER_STOP_GRACE_PERIOD:-3s}"
+    volumes:
+      - ./config/redis.conf:/redis.conf
+      - "redis:/data"
+
+  web:    
+    env_file:
+      - ".env"      
+    build:
+      context: "."
+      args:
+        - "FLASK_ENV=${FLASK_ENV:-production}"
+    ports:
+      - "${DOCKER_WEB_PORT:-127.0.0.1:8080}:8080"
+    depends_on:
+      - redis
+      
+    volumes:
+      - .:/app
+
+  celery:
+    container_name: flight-blender-worker
+    build:
+      context: "."    
+    
+    command: celery -A app.celery worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  # beat:
+  #   container_name: flight-blender-beat
+  #   build:
+  #     context: "."    
+  #     args:
+  #       - "FLASK_ENV=${FLASK_ENV:-production}"
+  #   env_file:
+  #     - ".env"
+  #   hostname: beat    
+  #   command: celery -A app.celery beat --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - redis
+
+volumes:
+  redis: {}

@@ -7,3 +7,4 @@ walrus
 redis
 celery
 requests
+python-dotenv
