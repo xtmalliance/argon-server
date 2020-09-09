@@ -3,8 +3,8 @@ Jinja2
 MarkupSafe
 Werkzeug
 gunicorn
-walrus
 redis
+walrus
 celery
 requests
 python-dotenv

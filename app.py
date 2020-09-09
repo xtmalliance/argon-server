@@ -42,8 +42,7 @@ def make_celery(app):
 
 celery = make_celery(app)
 
-
-db = Database(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'] )   
+db = Database(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'])   
 stream_keys = ['all_observations']
 for stream in stream_keys:
     db.xadd(stream, {'': ''})
