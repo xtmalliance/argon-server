@@ -14,12 +14,7 @@ services:
   web:    
     env_file:
       - ".env"      
-    build:
-      context: "."
-      args:
-        - "FLASK_ENV=${FLASK_ENV:-production}"
-    ports:
-      - "${DOCKER_WEB_PORT:-127.0.0.1:8080}:8080"
+    image: openskiessh/flight-blender
     depends_on:
       - redis
       
@@ -37,9 +32,7 @@ services:
     depends_on:
       - redis
 
-    networks:
-      - default
-      - internal
+      
   # beat:
   #   container_name: flight-blender-beat
   #   build:
