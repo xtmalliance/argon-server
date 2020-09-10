@@ -1,7 +1,10 @@
 # from celery.schedules import crontab
 from datetime import timedelta
+import os
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
 
-
+HEARTBEAT = os.getenv('HEARTBEAT_RATE_SECS',5)
 CELERY_IMPORTS = ('blender.tasks.blend')
 CELERY_TASK_RESULT_EXPIRES = 30
 CELERY_TIMEZONE = 'UTC'
@@ -11,9 +14,9 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 CELERYBEAT_SCHEDULE = {
-    'test-celery': {
+    'submit-spotlight': {
         'task': 'blender.tasks.blend.submit_flights_to_spotlight',
         # Every 30 secionds
-        'schedule': timedelta(seconds=10),
+        'schedule': timedelta(seconds=int(HEARTBEAT)),
     }
 }

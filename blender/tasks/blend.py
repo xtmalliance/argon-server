@@ -1,11 +1,15 @@
 import celery
 import requests
 import os, json
+import logging
+from os import environ as env
 import redis
 from datetime import datetime, timedelta
 from walrus import Database
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
+
+
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
@@ -97,7 +101,7 @@ def submit_flights_to_spotlight():
     spotlight_host = os.getenv('SPOTLIGHT_HOST', 'http://localhost:5000')
     securl = spotlight_host + '/set_air_traffic'
     headers = {"Authorization": "Bearer " + credentials['access_token']}
-    
     for message in distinct_messages:
         payload = {"icao_address" : message['icao_address'],"traffic_source" :message['traffic_source'], "source_type" : message['source_type'], "lat_dd" : message['lat_dd'], "lon_dd" : message['lon_dd'], "time_stamp" : message['time_stamp'],"altitude_mm" : message['altitude_mm']}
         response = requests.post(securl, data= payload, headers=headers)
+        logging.info(response.status_code)

@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 
 
-
 # C extensions
 *.so
 
@@ -100,6 +99,7 @@ __pypackages__/
 celerybeat-schedule
 celerybeat.pid
 
+
 # SageMath parsed files
 *.sage.py
 
@@ -129,7 +129,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-celerybeat-schedule.bak
-celerybeat-schedule.dat
-celerybeat-schedule.dir
+
+
+
 .vscode/settings.json
