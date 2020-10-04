@@ -33,6 +33,7 @@ class PassportCredentialsGetter():
             
             credentials = self.get_write_credentials()
             r.set('access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+            r.expire("access_token_details", timedelta(minutes=58))
             
         return credentials
             
@@ -91,6 +92,6 @@ if __name__ == '__main__':
 
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
-    print(credentials)
-    # my_uploader = FlightSpotlightUploader(credentials = credentials)
-    # my_uploader.upload_to_server(filename='air_traffic/micro_flight_data_single.json')
+    # print(credentials)
+    my_uploader = FlightSpotlightUploader(credentials = credentials)
+    my_uploader.upload_to_server(filename='air_traffic/micro_flight_data_single.json')
