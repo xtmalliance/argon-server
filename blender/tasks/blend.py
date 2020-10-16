@@ -50,16 +50,16 @@ class PassportCredentialsGetter():
 
 
 
-@celery.task()
-def print_hello():
-    dir(app)
+# @celery.task()
+# def print_hello():
+#     dir(app)
     
-    with app.app_context():
-        cg = app.get_consumer_group()
+#     with app.app_context():
+#         cg = app.get_consumer_group()
 
-    logger = print_hello.get_logger()
+#     logger = print_hello.get_logger()
 
-    logger.info("Hello")
+#     logger.info("Hello")
     
 
 def get_consumer_group(create=False):
