@@ -14,10 +14,7 @@ This will open up port 8080 and you can post air-traffic data to `http://localho
 
 Take a look at the raw files for :
 
-- [Flight tracking data](https://github.com/openskies-sh/flight-blender/blob/master/importers/air_traffic/micro_flight_data_single.json). This file follows the format as specified in the [Airtraffic data protocol](https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md) 
-- [Area of Interest](https://github.com/openskies-sh/flight-blender/blob/master/importers/aoi_geo_fence/aoi.geojson) as a GeoJSON
-- [Geofence](https://github.com/openskies-sh/flight-blender/blob/master/importers/aoi_geo_fence/geo_fence.geojson) as a GeoJSON, we have converters to convert from ED-269
-- [Flight Declaration](https://github.com/openskies-sh/flight-blender/blob/master/importers/flight_declarations/flight-1.json). This file follows the format specified in [Flight Declaration Protocol](https://github.com/openskies-sh/flight-declaration-protocol-development)
+- [Flight tracking data](https://github.com/openskies-sh/flight-blender/blob/master/importers/air_traffic_samples/micro_flight_data_single.json). This file follows the format as specified in the [Airtraffic data protocol](https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md)
 
 #### Image Credit
 
