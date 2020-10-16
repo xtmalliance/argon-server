@@ -19,6 +19,23 @@ load_dotenv(find_dotenv())
 app = Flask(__name__)
 app.config.from_object('config')
 
+import dss_reader, dss_writer
+
+# Format error response and append status code.
+class AuthError(Exception):
+    def __init__(self, error, status_code):
+        self.error = error
+        self.status_code = status_code
+
+
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
+
+
+
 def make_celery(app):
     # create context tasks in celery
     celery = Celery(

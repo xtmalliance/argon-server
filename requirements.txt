@@ -8,3 +8,4 @@ walrus
 celery
 requests
 python-dotenv
+Flask-UUID

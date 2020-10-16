@@ -9,8 +9,6 @@ from walrus import Database
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-
-
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
 
