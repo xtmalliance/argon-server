@@ -19,7 +19,7 @@ load_dotenv(find_dotenv())
 app = Flask(__name__)
 app.config.from_object('config')
 
-import dss_reader, dss_writer
+import dss_reader, dss_writer, flight_declaration_writer, geo_fence_writer
 
 # Format error response and append status code.
 class AuthError(Exception):
