@@ -5,7 +5,7 @@ from flask import request, Response
 import requests, json
 from datetime import datetime
 import logging
-import redis, requests
+import redis
 from walrus import Database
 from datetime import datetime, timedelta
 import time

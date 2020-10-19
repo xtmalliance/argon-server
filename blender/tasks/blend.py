@@ -103,3 +103,7 @@ def submit_flights_to_spotlight():
         payload = {"icao_address" : message['icao_address'],"traffic_source" :message['traffic_source'], "source_type" : message['source_type'], "lat_dd" : message['lat_dd'], "lon_dd" : message['lon_dd'], "time_stamp" : message['time_stamp'],"altitude_mm" : message['altitude_mm']}
         response = requests.post(securl, data= payload, headers=headers)
         logging.info(response.status_code)
+
+
+
+
