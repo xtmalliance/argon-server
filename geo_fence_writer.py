@@ -75,6 +75,7 @@ class GeoFenceUploader():
             try:
                 p = Polygon(fence_feature['geometry']['coordinates'])
                 assert p.is_valid
+                
             except AssertionError as ae:
                 print("Invalid polygon in Geofence")
             else:
