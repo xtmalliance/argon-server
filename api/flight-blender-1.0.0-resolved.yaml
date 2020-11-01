@@ -23,10 +23,9 @@ paths:
         content:
           application/json:
             schema:
-              Observations:
-                type: object
-                observations: 
-                  $ref: '#/definitions/ArrayOfObservations'
+              type: object
+              observations: 
+                $ref: '#/definitions/ArrayOfObservations'
 
       responses:
         "200":
