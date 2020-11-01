@@ -2,7 +2,7 @@
 openapi: "3.0.0"
 info:
   title: "Flight Blender API specification"
-  description: "All APIs for Flight Blender"
+  description: "All APIs for Flight Blender, using these APIS, you can submit raw air traffic observations, geo fencing data, flight declarations in addition to make DSS queries"
   version: "1.0.0"
 servers:
 - url: "https://virtserver.swaggerhub.com/cygnus2936/flight-blender/1.0.0"
@@ -14,9 +14,9 @@ security:
 paths:
   /set_air_traffic:
     post:
-      summary: "Add Airtraffic observation into Flight Blender"
-      description: "Submit air traffic data to the service to normalize\
-        \ which normalizes the data and eventually sends it to Flight Spotlight. A single or multiple observation must be submitted"
+      summary: "Add Airtraffic observation"
+      description: "Submit air traffic data to the service, after submission, Flight Blender will \
+        \normalizes the data and eventually send it to Flight Spotlight. A single or multiple observation can be submitted at a given time"
 
       requestBody:
         required: true
@@ -24,8 +24,9 @@ paths:
           application/json:
             schema:
               type: object
-              observations: 
-                $ref: '#/definitions/ArrayOfObservations'
+              properties: 
+                observations: 
+                  $ref: '#/definitions/ArrayOfObservations'
 
       responses:
         "200":
