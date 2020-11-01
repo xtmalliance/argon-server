@@ -17,12 +17,14 @@ paths:
       summary: "Set Airtraffic data"
       description: "Submit air traffic data to the service to normalize\
         \ and submit eventually to Flight Spotlight."
-      parameters:
-        - in: body
-          name: observations
-          description: A single or multiple air-traffic obervation per the Airtraffic data protocol.
-          schema:
-            $ref: '#/definitions/AirTraffic'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/definitions/AirTraffic'
+
       responses:
         "200":
           description: "OK"
@@ -31,8 +33,7 @@ paths:
         "403":
           description: Access token does not have the required scope
  
-          
-
+        
 components:
   schemas: {}
   securitySchemes:
