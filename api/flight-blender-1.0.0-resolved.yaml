@@ -14,16 +14,20 @@ security:
 paths:
   /set_air_traffic:
     post:
-      summary: "Set Airtraffic data"
+      summary: "Add Airtraffic observation into Flight Blender"
       description: "Submit air traffic data to the service to normalize\
-        \ and submit eventually to Flight Spotlight."
+        \ which normalizes the data and eventually sends it to Flight Spotlight. A single or multiple observation must be submitted"
 
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/definitions/AirTraffic'
+              Observations:
+                type: object
+                properties:
+                  observations: 
+                    $ref: '#/definitions/AirTraffic'
 
       responses:
         "200":
@@ -47,7 +51,7 @@ components:
 
 definitions:
   AirTraffic:     
-    type: object
+    type: array
     required:
       - lon_dd
       - lat_dd
