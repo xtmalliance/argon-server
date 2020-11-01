@@ -12,11 +12,25 @@ security:
   - "write"
   
 paths:
+  /ping:
+    get:
+      summary: "Server heartbeat operation"
+      description: "This operation is a ping to check if the server is running "
+        
+      security: []
+      responses:
+        "200":
+          description: "pong"
+        "401":
+          description: Not authenticated
+        "403":
+          description: Access token does not have the required scope
+          
   /set_air_traffic:
     post:
       summary: "Add Airtraffic observation"
       description: "Submit air traffic data to the service, after submission, Flight Blender will \
-        \normalizes the data and eventually send it to Flight Spotlight. A single or multiple observation can be submitted at a given time"
+        \ normalizes the data and eventually send it to Flight Spotlight. A single or multiple observation can be submitted at a given time"
 
       requestBody:
         required: true
