@@ -25,9 +25,8 @@ paths:
             schema:
               Observations:
                 type: object
-                properties:
-                  observations: 
-                    $ref: '#/definitions/AirTraffic'
+                observations: 
+                  $ref: '#/definitions/ArrayOfObservations'
 
       responses:
         "200":
@@ -50,29 +49,32 @@ components:
             write: "Write data into Flight Blender"
 
 definitions:
-  AirTraffic:     
+  ArrayOfObservations:     
     type: array
-    required:
-      - lon_dd
-      - lat_dd
-      - timestamp
-      - altitude_mm
-      - icao_address
-    
-    properties:
-      lon_dd:
-        type: number     
-        format: float
-      lat_dd:
-        type: number  
-        format: float
-      timestamp:
-        type: integer      
-        format: int64
-      icao_address:
-        type: string
-        maxLength: 24
-      source_type:
-          type: integer
-      traffic_source:
-          type: integer
+    items:
+      type: object
+      required:
+        - lon_dd
+        - lat_dd
+        - timestamp
+        - altitude_mm
+        - icao_address
+      
+      properties:
+        lon_dd:
+          type: number     
+          format: float
+        lat_dd:
+          type: number  
+          format: float
+        timestamp:
+          type: integer      
+          format: int64
+        icao_address:
+          type: string
+          maxLength: 24
+        source_type:
+            type: integer
+        traffic_source:
+            type: integer
+            
