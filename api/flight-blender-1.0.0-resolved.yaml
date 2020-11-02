@@ -20,11 +20,16 @@ paths:
       security: []
       responses:
         "200":
-          description: "pong"
+          description: "pong" 
+        "400":
+          $ref: "#/responses/BadRequest400ErrorResponse"
         "401":
-          description: Not authenticated
+          $ref: "#/responses/Unauthorized401ErrorResponse"
         "403":
-          description: Access token does not have the required scope
+          $ref: "#/responses/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/responses/Standard500ErrorResponse"
+
           
   /set_air_traffic:
     post:
@@ -45,11 +50,47 @@ paths:
       responses:
         "200":
           description: "OK"
+        "201":
+          description: "Airtraffic data added"
+        "400":
+          $ref: "#/responses/BadRequest400ErrorResponse"
         "401":
-          description: Not authenticated
+          $ref: "#/responses/Unauthorized401ErrorResponse"
         "403":
-          description: Access token does not have the required scope
+          $ref: "#/responses/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/responses/Standard500ErrorResponse"
+
+
+
+  /set_geo_fence:
+    post:
+      summary: "Add a Geofence"
+      description: "Submit a Geofence declaration which is in turn submitted to  \
+        \ Flight Spotlight. Geofence can be used to specify areas of interest, restricted areas, constraints etc."
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/definitions/FeatureCollection'
+
+      responses:
+        "200":
+          description: "OK"
+        "201":
+          description: "Geofence Created"
+        "400":
+          $ref: "#/responses/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/responses/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/responses/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/responses/Standard500ErrorResponse"
  
+
         
 components:
   schemas: {}
@@ -63,6 +104,17 @@ components:
             write: "Write data into Flight Blender"
 
 definitions:
+  
+  Error:
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+      message:
+        type: string   
+        
   ArrayOfObservations:     
     type: array
     items:
@@ -91,4 +143,111 @@ definitions:
             type: integer
         traffic_source:
             type: integer
+
+  Geometry:
+    type: object
+    
+    description: "GeoJson geometry: accepted elements are: `Point`, `LineString`, `MultiLineString`, `Polygon` and `MultiPolygon`"
+    discriminator: type
+    required:
+      - type
+    externalDocs:
+      url: https://tools.ietf.org/html/rfc7946#section-3.1
+
+    oneOf:
+       - $ref: '#/definitions/Polygon'
+       - $ref: '#/definitions/MultiPolygon'      
+  
+  Point2D:
+    type: array
+    maxItems: 2
+    minItems: 2
+    items:
+      type: number
+  
+  
+  Point:
+    type: object
+    description: GeoJSon geometry
+    externalDocs:
+      url: https://tools.ietf.org/html/rfc7946#section-3.1.2
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            $ref: '#/definitions/Point2D'
+    
+  Polygon:
+    type: object
+    description: GeoJSON geometry
+    externalDocs:
+      url: https://tools.ietf.org/html/rfc7946#section-3.1.6
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                $ref: '#/definitions/Point2D'
+
+  MultiPolygon:
+    type: object
+    description: GeoJSON geometry
+    externalDocs:
+      url: https://tools.ietf.org/html/rfc7946#section-3.1.7
+    allOf:
+      - $ref: "#/definitions/Geometry"
+      - properties:
+          coordinates:
+            type: array
+            items:
+              type: array
+              items:
+                type: array
+                items:
+                  $ref: '#/definitions/Point2D'
+           
+      
+  FeatureCollection:
+    type: object
+    description: GeoJSON feature collection
+    required:
+     - type
+     - geometries
+    externalDocs:
+      url: https://tools.ietf.org/html/rfc7946#section-3.3
+    properties:
+      type:
+        type: string
+        enum:
+        - FeatureCollection
+        description:
+      features:
+          type: array
+          items:
+            $ref: '#/definitions/Geometry'
+
+
             
+responses:
+  Standard500ErrorResponse:
+    description: An unexpected error occured.
+    schema:
+      $ref: "#/definitions/Error"
+      
+  BadRequest400ErrorResponse:
+    description: The JSON is not valid
+    schema:
+      $ref: "#/definitions/Error"
+ 
+  Unauthorized401ErrorResponse:
+    description: The request requires an user authentication
+    schema:
+      $ref: "#/definitions/Error"
+      
+  Forbidden403ErrorResponse:
+    description: the access is not allowed
+    schema:
+      $ref: "#/definitions/Error"
