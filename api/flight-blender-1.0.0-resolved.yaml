@@ -8,7 +8,7 @@ servers:
 - url: "https://virtserver.swaggerhub.com/cygnus2936/flight-blender/1.0.0"
   description: "Flight Blender API Specification"
 security:
-- Flight Blender Service:
+- flight_blender_service:
   - "write"
   
 paths:
