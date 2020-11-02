@@ -45,7 +45,7 @@ paths:
               type: object
               properties: 
                 observations: 
-                  $ref: '#/definitions/ArrayOfObservations'
+                  $ref: '#/components/definitions/ArrayOfObservations'
 
       responses:
         "200":
@@ -62,19 +62,18 @@ paths:
           $ref: "#/responses/Standard500ErrorResponse"
 
 
-
-  /set_geo_fence:
+  /set_flight_declaration:
     post:
-      summary: "Add a Geofence"
-      description: "Submit a Geofence declaration which is in turn submitted to  \
-        \ Flight Spotlight. Geofence can be used to specify areas of interest, restricted areas, constraints etc."
+      summary: "Add a Flight Declaration"
+      description: "Submit a Flight Declaration into Flight Blender  \
+        \ A flight declaration can be upto 24 hours in advance and follows the Flight Declaration format etc."
 
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/definitions/FeatureCollection'
+              $ref: '#/components/schemas/FlightDeclarationJSON'
 
       responses:
         "200":
@@ -91,9 +90,36 @@ paths:
           $ref: "#/responses/Standard500ErrorResponse"
  
 
-        
+
+  /set_geo_fence:
+    post:
+      summary: "Add a Geofence"
+      description: "Submit a Geofence declaration which is in turn submitted to  \
+        \ Flight Spotlight. Geofence can be used to specify areas of interest, restricted areas, constraints etc."
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeoFenceGeoJSON'
+
+      responses:
+        "200":
+          description: "OK"
+        "201":
+          description: "Geofence Created"
+        "400":
+          $ref: "#/responses/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/responses/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/responses/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/responses/Standard500ErrorResponse"
+ 
+
 components:
-  schemas: {}
   securitySchemes:
     flight_blender_service:
       type: "oauth2"
@@ -103,151 +129,225 @@ components:
           scopes:
             write: "Write data into Flight Blender"
 
-definitions:
-  
-  Error:
-    required:
-      - code
-      - message
-    properties:
-      code:
-        type: string
-      message:
-        type: string   
-        
-  ArrayOfObservations:     
-    type: array
-    items:
-      type: object
-      required:
-        - lon_dd
-        - lat_dd
-        - timestamp
-        - altitude_mm
-        - icao_address
-      
-      properties:
-        lon_dd:
-          type: number     
-          format: float
-        lat_dd:
-          type: number  
-          format: float
-        timestamp:
-          type: integer      
-          format: int64
-        icao_address:
-          type: string
-          maxLength: 24
-        source_type:
-            type: integer
-        traffic_source:
-            type: integer
+  schemas:
+    FlightDeclarationJSON: 
+        type: object
+        required:
+          - flight_declaration
+        properties:
+          exchange_type:
+            type: string
+            enum:
+              - flight_declaration
+          flight_id:
+            type: string
+            format: uuid
+          plan_id:
+            type: string
+            format: uuid   
+          flight_state:
+            type: number
+          sequence_number:
+            type: number
+          flight_declaration:
+            type: object
+            properties:
+              parts:
+                type: object   
+                $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+              
 
-  Geometry:
-    type: object
-    
-    description: "GeoJson geometry: accepted elements are: `Point`, `LineString`, `MultiLineString`, `Polygon` and `MultiPolygon`"
-    discriminator: type
-    required:
-      - type
-    externalDocs:
-      url: https://tools.ietf.org/html/rfc7946#section-3.1
-
-    oneOf:
-       - $ref: '#/definitions/Polygon'
-       - $ref: '#/definitions/MultiPolygon'      
-  
-  Point2D:
-    type: array
-    maxItems: 2
-    minItems: 2
-    items:
-      type: number
-  
-  
-  Point:
-    type: object
-    description: GeoJSon geometry
-    externalDocs:
-      url: https://tools.ietf.org/html/rfc7946#section-3.1.2
-    allOf:
-      - $ref: "#/definitions/Geometry"
-      - properties:
-          coordinates:
-            $ref: '#/definitions/Point2D'
-    
-  Polygon:
-    type: object
-    description: GeoJSON geometry
-    externalDocs:
-      url: https://tools.ietf.org/html/rfc7946#section-3.1.6
-    allOf:
-      - $ref: "#/definitions/Geometry"
-      - properties:
-          coordinates:
-            type: array
-            items:
-              type: array
-              items:
-                $ref: '#/definitions/Point2D'
-
-  MultiPolygon:
-    type: object
-    description: GeoJSON geometry
-    externalDocs:
-      url: https://tools.ietf.org/html/rfc7946#section-3.1.7
-    allOf:
-      - $ref: "#/definitions/Geometry"
-      - properties:
-          coordinates:
-            type: array
-            items:
-              type: array
-              items:
-                type: array
-                items:
-                  $ref: '#/definitions/Point2D'
-           
-      
-  FeatureCollection:
-    type: object
-    description: GeoJSON feature collection
-    required:
-     - type
-     - geometries
-    externalDocs:
-      url: https://tools.ietf.org/html/rfc7946#section-3.3
-    properties:
-      type:
-        type: string
-        enum:
-        - FeatureCollection
-        description:
-      features:
-          type: array
-          items:
-            $ref: '#/definitions/Geometry'
-
-
+    FlightDeclarationFeatureGeoJSON:
+        type: object
+        required:
+          - type
+          - geometry
+          - properties
+        properties:
+          type:
+            type: string
+            enum:
+              - Feature
+          geometry:
+            $ref: '#/components/schemas/FlightDeclarationGeometryGeoJSON'
             
+          properties:
+            type: object
+            properties:
+              start_time:
+                type: string
+                format: date-time
+              end_time:
+                type: string   
+                format: date-time
+              max_altitude:
+                type: object
+                properties:
+                  metres:
+                    type: number
+                  datum:
+                    type: string
+                    enum:
+                      - "WGS84"
+              min_altitude:
+                type: object
+                properties:
+                  metres:
+                    type: number
+                  datum:
+                    type: string
+                    enum:
+                      - "WGS84"
+              
+            nullable: true
+          id:
+            oneOf:
+              - type: string
+              - type: integer
+
+
+    GeoFenceGeoJSON:
+        type: object
+        required:
+          - type
+          - features
+        properties:
+          type:
+            type: string
+            enum:
+              - FeatureCollection
+          features:
+            type: array
+            items:
+              $ref: '#/components/schemas/GeoFenceFeatureGeoJSON'
+
+    Point2D:
+      type: array
+      maxItems: 2
+      minItems: 2
+      items:
+        type: number
+        
+    GeoFenceFeatureGeoJSON:
+        type: object
+        required:
+          - type
+          - geometry
+          - properties
+        properties:
+          type:
+            type: string
+            enum:
+              - Feature
+          geometry:
+            $ref: '#/components/schemas/GeoFenceGeometryGeoJSON'
+            
+          properties:
+            type: object
+            properties:
+              upper_limit:
+                type: number     
+                format: float
+              lower_limit:
+                type: number     
+                format: float
+              
+            nullable: true
+          id:
+            oneOf:
+              - type: string
+              - type: integer
+
+    FlightDeclarationGeometryGeoJSON:
+        type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            enum:
+              - Polygon
+              - MultiPolygon
+              - LineString
+              
+          coordinates:
+            type: array
+            items:
+              $ref: '#/components/schemas/Point2D' 
+    GeoFenceGeometryGeoJSON:
+        type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            enum:
+              - Polygon
+              - MultiPolygon
+              
+              
+          coordinates:
+            type: array
+            items:
+              $ref: '#/components/schemas/Point2D'            
+      
+  definitions:
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string   
+          
+    ArrayOfObservations:     
+      type: array
+      items:
+        type: object
+        required:
+          - lon_dd
+          - lat_dd
+          - timestamp
+          - altitude_mm
+          - icao_address
+        
+        properties:
+          lon_dd:
+            type: number     
+            format: float
+          lat_dd:
+            type: number  
+            format: float
+          timestamp:
+            type: integer      
+            format: int64
+          icao_address:
+            type: string
+            maxLength: 24
+          source_type:
+              type: integer
+          traffic_source:
+              type: integer
+
 responses:
   Standard500ErrorResponse:
     description: An unexpected error occured.
     schema:
-      $ref: "#/definitions/Error"
+      $ref: "#/components/definitions/Error"
       
   BadRequest400ErrorResponse:
     description: The JSON is not valid
     schema:
-      $ref: "#/definitions/Error"
+      $ref: "#/components/definitions/Error"
  
   Unauthorized401ErrorResponse:
     description: The request requires an user authentication
     schema:
-      $ref: "#/definitions/Error"
+      $ref: "#/components/definitions/Error"
       
   Forbidden403ErrorResponse:
     description: the access is not allowed
     schema:
-      $ref: "#/definitions/Error"
+      $ref: "#/components/definitions/Error"
