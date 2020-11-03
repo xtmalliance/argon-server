@@ -110,18 +110,9 @@ def post_geo_fence():
         msg = {"message":"Unsupported Media Type"}
         return Response(json.dumps(msg), status=415, mimetype='application/json')
     else:    
-        req = json.loads(request.data)
+        geo_fence = json.loads(request.data)
 
-    try:
-        geo_fence = req['observations']   
-
-    except KeyError as ke:
-        msg = json.dumps({"message":"One parameter are required: observations with a list of observation objects. One or more of these were not found in your JSON request. For sample data see: https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#sample-traffic-object"})
-
-        return Response(msg, status=400, mimetype='application/json')
-
-    else:
-        task = write_geo_fence.delay(geo_fence)  # Send a job to the task queue
+    task = write_geo_fence.delay(geo_fence)  # Send a job to the task queue
 
     op = json.dumps ({"message":"OK"})
     return Response(op, status=200, mimetype='application/json')

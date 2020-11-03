@@ -2,19 +2,24 @@
 openapi: "3.0.0"
 info:
   title: "Flight Blender API specification"
-  description: "All APIs for Flight Blender, using these APIS, you can submit raw air traffic observations, geo fencing data, flight declarations in addition to make DSS queries"
+  description: |-
+    All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations. 
+    
+    Unless otherwise specified, fields specified in a message but not declared in the API shall be ignored.
   version: "1.0.0"
 servers:
 - url: "https://virtserver.swaggerhub.com/cygnus2936/flight-blender/1.0.0"
-  description: "Flight Blender API Specification"
+  description: "Flight Blender API"
 security:
-- flight_blender_service:
+- AuthFromPassport:
   - "write"
+  - "read"
   
 paths:
   /ping:
     get:
       summary: "Server heartbeat operation"
+      
       description: "This operation is a ping to check if the server is running "
         
       security: []
@@ -32,8 +37,11 @@ paths:
 
           
   /set_air_traffic:
+  
     post:
       summary: "Add Airtraffic observation"
+      security: 
+        - AuthFromPassport: [write] 
       description: "Submit air traffic data to the service, after submission, Flight Blender will \
         \ normalizes the data and eventually send it to Flight Spotlight. A single or multiple observation can be submitted at a given time"
 
@@ -67,6 +75,8 @@ paths:
       summary: "Add a Flight Declaration"
       description: "Submit a Flight Declaration into Flight Blender  \
         \ A flight declaration can be upto 24 hours in advance and follows the Flight Declaration format etc."
+      security: 
+        - AuthFromPassport: [write] 
 
       requestBody:
         required: true
@@ -94,6 +104,8 @@ paths:
   /set_geo_fence:
     post:
       summary: "Add a Geofence"
+      security: 
+        - AuthFromPassport: [write] 
       description: "Submit a Geofence declaration which is in turn submitted to  \
         \ Flight Spotlight. Geofence can be used to specify areas of interest, restricted areas, constraints etc."
 
@@ -121,13 +133,14 @@ paths:
 
 components:
   securitySchemes:
-    flight_blender_service:
-      type: "oauth2"
+    AuthFromPassport:
+      type: oauth2
       flows:
         clientCredentials:
           tokenUrl: "http://id.openskies.sh/oauth/token"
           scopes:
             write: "Write data into Flight Blender"
+            read: "Read data into Flight Blender"
 
   schemas:
     FlightDeclarationJSON: 
@@ -153,8 +166,9 @@ components:
             type: object
             properties:
               parts:
-                type: object   
-                $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+                type: array   
+                items:
+                  $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
               
 
     FlightDeclarationFeatureGeoJSON:
