@@ -2,7 +2,16 @@
 
 # Flight Blender
 
-Flight Blender is a open source "display provider" and a flight feed aggregator. It takes in flight tracking feeds from various sources e.g. ADS-B, DSS and others and outputs as a single fused JSON feed and submits it to a Display Provider e.g. [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) to be shown in real-time on a display.
+Flight Blender is a open source "display provider" and a flight feed aggregator. It has different modules that can relay data in to a display such as [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight). Some modules: 
+- _Flight Tracking_: It takes in flight tracking feeds from various sources e.g. ADS-B, DSS and others and outputs as a single fused JSON feed and submits it to a Display Provider e.g. [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) to be shown in real-time on a display.
+- _Geofence_: A Geofence can be submitted into Flight Blender and consequently transmitted to Spotlight
+- _Flight Declaration_: Future flights upto 24 hours can be submitted
+- _DSS Connectivity_: There are modules to connect and read for e.g. Remote ID data from a DSS.
+
+## First steps / Get Started
+
+Review the [API Specification](http://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/openskies-sh/flight-blender/master/api/flight-blender-1.0.0-resolved.yaml) to understand the endpoints and the kind of data that you can set in Flight Blender
+
 
 ## Installation
 
