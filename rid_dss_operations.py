@@ -14,6 +14,9 @@ import uuid
 import requests
 from os import environ as env
 
+REDIS_HOST = os.getenv('REDIS_HOST',"redis")
+REDIS_PORT = 6379
+
 class AuthorityCredentialsGetter():
     ''' All calls to the DSS require credentials from a authority, usually the CAA since they can provide access to the system '''
     def __init__(self):
@@ -70,7 +73,25 @@ class RemoteIDOperations():
         payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
 
         r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers,auth=(self.COUCHDB_USERNAME, self.COUCHDB_PASSWORD))
-        dss_response = json.loads(r.text)
+        
+        try: 
+            assert r.status_code == 200
+        except AssertionError as ae: 
+            return {"subscription_id": 0, "notification_index": 0}
+        else: 	
+            dss_response = r.json()
+            service_areas = dss_response['service_areas']
+            subscription = dss_response['subscription']
+            notification_index = subscription['notification_index']
+            # iterate over the service areas to get flights URL to poll 
+            flights_url_list = []
+            for service_area in service_areas: 
+                flights_url = service_area['flights_url']
+                flights_url_list.append(flights_url)
+                
+            redis = redis.Redis()
+            redis.hmset("all_uss_flights", flights_url_list)
+                
 
         # process DSS repsonse
         # store the subscription id and notificaiton index (might be handy)
@@ -78,8 +99,8 @@ class RemoteIDOperations():
         # store service area id and flights url
         # poll the flights URL every 3 seconds
 
-    def call_flight_details(self,uss_flight_url, flight_id):
-        ''' This module calls a USS to poll for flight details (/uss/flights) and submits to Flight Spotlight for display''' 
+    def delete_dss_subscription(self,subscription_id):
+        ''' This module calls the DSS to delete a subscription''' 
 
         # TODO: Make this a loop / 1s updated (make it a task)
         # get credentials with appropriate audience 
