@@ -19,7 +19,6 @@ class AuthorityCredentialsGetter():
     def __init__(self):
         pass
         
-
     def get_cached_credentials(self, audience):  
         r = redis.Redis()
         
@@ -35,11 +34,9 @@ class AuthorityCredentialsGetter():
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
             else: 
                 credentials = token_details['credentials']
-        else:   
-            
+        else:               
             credentials = self.get_read_credentials(audience)
-            r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            
+            r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
             r.expire(cache_key, timedelta(minutes=58))
             
         return credentials

@@ -11,7 +11,13 @@ Flight Blender is a open source Remote ID "display provider" compatible with AST
 
 ## First steps / Get Started
 
-Normally a "Display Provider" is used in conjunction with a "Display Application". In this case Flight Blender output is directed to a Flight Spotlight instance. You can customize a application instance by choosing what kind of modules you want to support, you can pick any from the above. We at Openskies can help you with making these decisions.
+Normally a "Display Provider" is used in conjunction with a "Display Application". In this case Flight Blender output is directed to a Flight Spotlight instance. You can customize a application instance by choosing what kind of modules you want to support, you can pick any from the above.
+
+## System Diagram
+
+The diagram below shows how Fight Blender works. 
+
+![img](https://i.imgur.com/7Ii62ZD.png)
 
 ## Installation
 
