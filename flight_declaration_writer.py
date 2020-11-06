@@ -13,8 +13,6 @@ from geojson import Polygon
 from datetime import datetime, timedelta
 
 
-
-
 class PassportCredentialsGetter():
     def __init__(self):
         pass
