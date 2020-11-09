@@ -35,7 +35,40 @@ paths:
         "500":
           $ref: "#/responses/Standard500ErrorResponse"
 
-          
+  /create_subscription:
+    post: 
+      summary: "Create a Subscription to the DSS"
+      security:
+        - AuthFromPassport: [write]
+      description: "Subscription for airspace updates to a volume of interest. After extents are submitted, Flight Blender will \
+        \ get a appropriate token and create a subscription. It will then poll flights to the Flights URL" 
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object
+                properties:
+                  extents:
+                    anyOf:
+                    - $ref: '#/components/schemas/Volume4D'
+
+      responses:
+        "200":
+          description: "OK"
+        "201":
+          description: "Subscription Created"
+        "400":
+          $ref: "#/responses/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/responses/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/responses/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/responses/Standard500ErrorResponse"
+
+
   /set_air_traffic:
   
     post:
@@ -219,6 +252,25 @@ components:
               - type: string
               - type: integer
 
+    Volume4D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
+      description: Contiguous block of geographic spacetime.
+      required:
+      - spatial_volume
+      type: object
+      properties:
+        spatial_volume:
+          anyOf:
+          - $ref: '#/components/schemas/Volume3D'
+          description: Constant spatial extent of this volume.
+        time_start:
+          format: date-time
+          description: Beginning time of this volume.  RFC 3339 format, per OpenAPI
+            specification.
+          type: string
+        time_end:
+          format: date-time
+          description: End time of this volume.  RFC 3339 format, per OpenAPI specification.
+          type: string
 
     GeoFenceGeoJSON:
         type: object
