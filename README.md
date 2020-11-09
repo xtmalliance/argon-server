@@ -15,7 +15,7 @@ Normally a "Display Provider" is used in conjunction with a "Display Application
 
 ## System Diagram
 
-The diagram below shows how Fight Blender works. 
+The diagram below shows how Fight Blender works.
 
 ![img](https://i.imgur.com/7Ii62ZD.png)
 
