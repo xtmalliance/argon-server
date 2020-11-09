@@ -12,6 +12,7 @@ import redis
 from datetime import datetime, timedelta
 import uuid
 import requests
+import shapely
 from os import environ as env
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
@@ -57,8 +58,11 @@ class RemoteIDOperations():
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')
 
-    def submit_dss_subscription(self, vertex_list):
+    def submit_dss_subscription(self, view_port):
         ''' This method PUTS /dss/subscriptions ''' 
+        my_authorization_helper = AuthorityCredentialsGetter()
+        
+        auth_token = my_authorization_helper.get_read_credentials()
 
         new_subscription_id = str(uuid.uuid4())
         dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
@@ -66,14 +70,20 @@ class RemoteIDOperations():
         callback_url = "https://example.com/identification_service_areas" # TODO: Fix to have the actual URL
         current_time = datetime.now().isoformat()
         one_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat()
-        headers = {'content-type': 'application/json'}
+
+        headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
+        vertex_list = []
+     
+
+
         
         volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":19.5,"altitude_hi":19.5},"time_start":current_time,"time_end":one_hour_from_now}
-
+        
         payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
 
-        r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers,auth=(self.COUCHDB_USERNAME, self.COUCHDB_PASSWORD))
+        r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)
         
+
         try: 
             assert r.status_code == 200
         except AssertionError as ae: 
@@ -84,13 +94,15 @@ class RemoteIDOperations():
             subscription = dss_response['subscription']
             notification_index = subscription['notification_index']
             # iterate over the service areas to get flights URL to poll 
+            
             flights_url_list = []
             for service_area in service_areas: 
                 flights_url = service_area['flights_url']
                 flights_url_list.append(flights_url)
-                
+
+            flights_dict= {'subscription_id': subscription['id'],'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port}
             redis = redis.Redis()
-            redis.hmset("all_uss_flights", flights_url_list)
+            redis.hmset("all_uss_flights", flights_dict)
                 
 
         # process DSS repsonse

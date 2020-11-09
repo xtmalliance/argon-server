@@ -6,6 +6,7 @@ gunicorn
 redis
 walrus
 celery
+Shapely
 requests
 python-dotenv
 Flask-UUID
