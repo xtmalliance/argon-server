@@ -49,8 +49,6 @@ class PassportCredentialsGetter():
         t_data = token_data.json()        
         return t_data
 
-
-
 class FlightDeclarationsUploader():
     
     def __init__(self, credentials):
