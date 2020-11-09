@@ -4,28 +4,28 @@ info:
   title: "Flight Blender API specification"
   description: |-
     All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations. 
-    
+
     Unless otherwise specified, fields specified in a message but not declared in the API shall be ignored.
   version: "1.0.0"
 servers:
-- url: "https://virtserver.swaggerhub.com/cygnus2936/flight-blender/1.0.0"
-  description: "Flight Blender API"
+  - url: "https://virtserver.swaggerhub.com/cygnus2936/flight-blender/1.0.0"
+    description: "Flight Blender API"
 security:
-- AuthFromPassport:
-  - "write"
-  - "read"
-  
+  - AuthFromPassport:
+      - "write"
+      - "read"
+
 paths:
   /ping:
     get:
       summary: "Server heartbeat operation"
-      
+
       description: "This operation is a ping to check if the server is running "
-        
+
       security: []
       responses:
         "200":
-          description: "pong" 
+          description: "pong"
         "400":
           $ref: "#/responses/BadRequest400ErrorResponse"
         "401":
@@ -36,23 +36,24 @@ paths:
           $ref: "#/responses/Standard500ErrorResponse"
 
   /create_subscription:
-    post: 
+    post:
       summary: "Create a Subscription to the DSS"
       security:
         - AuthFromPassport: [write]
-      description: "Subscription for airspace updates to a volume of interest. After extents are submitted, Flight Blender will \
-        \ get a appropriate token and create a subscription. It will then poll flights to the Flights URL" 
+      description:
+        "Subscription for airspace updates to a volume of interest. After extents are submitted, Flight Blender will \
+        \ get a appropriate token and create a subscription. It will then poll flights to the Flights URL"
 
       requestBody:
         required: true
         content:
           application/json:
             schema:
-                type: object
-                properties:
-                  extents:
-                    anyOf:
-                    - $ref: '#/components/schemas/Volume4D'
+              type: object
+              properties:
+                extents:
+                  anyOf:
+                    - $ref: "#/components/schemas/Volume4D"
 
       responses:
         "200":
@@ -68,14 +69,13 @@ paths:
         "500":
           $ref: "#/responses/Standard500ErrorResponse"
 
-
   /set_air_traffic:
-  
     post:
       summary: "Add Airtraffic observation"
-      security: 
-        - AuthFromPassport: [write] 
-      description: "Submit air traffic data to the service, after submission, Flight Blender will \
+      security:
+        - AuthFromPassport: [write]
+      description:
+        "Submit air traffic data to the service, after submission, Flight Blender will \
         \ normalizes the data and eventually send it to Flight Spotlight. A single or multiple observation can be submitted at a given time"
 
       requestBody:
@@ -84,9 +84,9 @@ paths:
           application/json:
             schema:
               type: object
-              properties: 
-                observations: 
-                  $ref: '#/components/definitions/ArrayOfObservations'
+              properties:
+                observations:
+                  $ref: "#/components/definitions/ArrayOfObservations"
 
       responses:
         "200":
@@ -102,21 +102,20 @@ paths:
         "500":
           $ref: "#/responses/Standard500ErrorResponse"
 
-
   /set_flight_declaration:
     post:
       summary: "Add a Flight Declaration"
       description: "Submit a Flight Declaration into Flight Blender  \
         \ A flight declaration can be upto 24 hours in advance and follows the Flight Declaration format etc."
-      security: 
-        - AuthFromPassport: [write] 
+      security:
+        - AuthFromPassport: [write]
 
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FlightDeclarationJSON'
+              $ref: "#/components/schemas/FlightDeclarationJSON"
 
       responses:
         "200":
@@ -131,15 +130,14 @@ paths:
           $ref: "#/responses/Forbidden403ErrorResponse"
         "500":
           $ref: "#/responses/Standard500ErrorResponse"
- 
-
 
   /set_geo_fence:
     post:
       summary: "Add a Geofence"
-      security: 
-        - AuthFromPassport: [write] 
-      description: "Submit a Geofence declaration which is in turn submitted to  \
+      security:
+        - AuthFromPassport: [write]
+      description:
+        "Submit a Geofence declaration which is in turn submitted to  \
         \ Flight Spotlight. Geofence can be used to specify areas of interest, restricted areas, constraints etc."
 
       requestBody:
@@ -147,7 +145,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GeoFenceGeoJSON'
+              $ref: "#/components/schemas/GeoFenceGeoJSON"
 
       responses:
         "200":
@@ -162,7 +160,6 @@ paths:
           $ref: "#/responses/Forbidden403ErrorResponse"
         "500":
           $ref: "#/responses/Standard500ErrorResponse"
- 
 
 components:
   securitySchemes:
@@ -176,95 +173,174 @@ components:
             read: "Read data into Flight Blender"
 
   schemas:
-    FlightDeclarationJSON: 
-        type: object
-        required:
-          - flight_declaration
-        properties:
-          exchange_type:
-            type: string
-            enum:
-              - flight_declaration
-          flight_id:
-            type: string
-            format: uuid
-          plan_id:
-            type: string
-            format: uuid   
-          flight_state:
-            type: number
-          sequence_number:
-            type: number
-          flight_declaration:
-            type: object
-            properties:
-              parts:
-                type: array   
-                items:
-                  $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
-              
+    FlightDeclarationJSON:
+      type: object
+      required:
+        - flight_declaration
+      properties:
+        exchange_type:
+          type: string
+          enum:
+            - flight_declaration
+        flight_id:
+          type: string
+          format: uuid
+        plan_id:
+          type: string
+          format: uuid
+        flight_state:
+          type: number
+        sequence_number:
+          type: number
+        flight_declaration:
+          type: object
+          properties:
+            parts:
+              type: array
+              items:
+                $ref: "#/components/schemas/FlightDeclarationFeatureGeoJSON"
 
     FlightDeclarationFeatureGeoJSON:
-        type: object
-        required:
-          - type
-          - geometry
-          - properties
+      type: object
+      required:
+        - type
+        - geometry
+        - properties
+      properties:
+        type:
+          type: string
+          enum:
+            - Feature
+        geometry:
+          $ref: "#/components/schemas/FlightDeclarationGeometryGeoJSON"
+
         properties:
-          type:
-            type: string
-            enum:
-              - Feature
-          geometry:
-            $ref: '#/components/schemas/FlightDeclarationGeometryGeoJSON'
-            
+          type: object
           properties:
-            type: object
-            properties:
-              start_time:
-                type: string
-                format: date-time
-              end_time:
-                type: string   
-                format: date-time
-              max_altitude:
-                type: object
-                properties:
-                  metres:
-                    type: number
-                  datum:
-                    type: string
-                    enum:
-                      - "WGS84"
-              min_altitude:
-                type: object
-                properties:
-                  metres:
-                    type: number
-                  datum:
-                    type: string
-                    enum:
-                      - "WGS84"
-              
-            nullable: true
-          id:
-            oneOf:
-              - type: string
-              - type: integer
+            start_time:
+              type: string
+              format: date-time
+            end_time:
+              type: string
+              format: date-time
+            max_altitude:
+              type: object
+              properties:
+                metres:
+                  type: number
+                datum:
+                  type: string
+                  enum:
+                    - "WGS84"
+            min_altitude:
+              type: object
+              properties:
+                metres:
+                  type: number
+                datum:
+                  type: string
+                  enum:
+                    - "WGS84"
+
+          nullable: true
+        id:
+          oneOf:
+            - type: string
+            - type: integer
+
+    Latitude:
+      format: double
+      description:
+        Degrees of latitude north of the equator, with reference to the
+        WGS84 ellipsoid.
+      maximum: 90
+      exclusiveMaximum: false
+      minimum: -90
+      exclusiveMinimum: false
+      type: number
+      example: 34.12
+    Longitude:
+      format: double
+      description:
+        Degrees of longitude east of the Prime Meridian, with reference
+        to the WGS84 ellipsoid.
+      maximum: -180
+      exclusiveMaximum: false
+      minimum: 180
+      exclusiveMinimum: false
+      type: number
+      example: -118.456
+
+    LatLngPoint:
+      description: Point on the earth's surface.
+      required:
+        - lat
+        - lng
+      type: object
+      properties:
+        lng:
+          $ref: "#/components/schemas/Longitude"
+        lat:
+          $ref: "#/components/schemas/Latitude"
+
+    GeoPolygon:
+      description: |-
+        An enclosed area on the earth.
+        The bounding edges of this polygon shall be the shortest paths between connected vertices.  This means, for instance, that the edge between two points both defined at a particular latitude is not generally contained at that latitude.
+        The winding order shall be interpreted as the order which produces the smaller area.
+        The path between two vertices shall be the shortest possible path between those vertices.
+        Edges may not cross.
+        Vertices may not be duplicated.  In particular, the final polygon vertex shall not be identical to the first vertex.
+      required:
+        - vertices
+      type: object
+      properties:
+        vertices:
+          minItems: 3
+          type: array
+          items:
+            $ref: "#/components/schemas/LatLngPoint"
+    Volume3D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
+      description:
+        A three-dimensional geographic volume consisting of a vertically-extruded
+        polygon.
+      required:
+        - footprint
+      type: object
+      properties:
+        footprint:
+          anyOf:
+            - $ref: "#/components/schemas/GeoPolygon"
+          description: Projection of this volume onto the earth's surface.
+        altitude_lo:
+          anyOf:
+            - $ref: "#/components/schemas/Altitude"
+          description: Minimum bounding altitude of this volume.
+        altitude_hi:
+          anyOf:
+            - $ref: "#/components/schemas/Altitude"
+          description: Maximum bounding altitude of this volume.
+
+    Altitude:
+      format: float
+      description: An altitude, in meters, above the WGS84 ellipsoid.
+      type: number
+      example: 19.5
 
     Volume4D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
       description: Contiguous block of geographic spacetime.
       required:
-      - spatial_volume
+        - spatial_volume
       type: object
       properties:
         spatial_volume:
           anyOf:
-          - $ref: '#/components/schemas/Volume3D'
+            - $ref: "#/components/schemas/Volume3D"
           description: Constant spatial extent of this volume.
         time_start:
           format: date-time
-          description: Beginning time of this volume.  RFC 3339 format, per OpenAPI
+          description:
+            Beginning time of this volume.  RFC 3339 format, per OpenAPI
             specification.
           type: string
         time_end:
@@ -273,19 +349,19 @@ components:
           type: string
 
     GeoFenceGeoJSON:
-        type: object
-        required:
-          - type
-          - features
-        properties:
-          type:
-            type: string
-            enum:
-              - FeatureCollection
-          features:
-            type: array
-            items:
-              $ref: '#/components/schemas/GeoFenceFeatureGeoJSON'
+      type: object
+      required:
+        - type
+        - features
+      properties:
+        type:
+          type: string
+          enum:
+            - FeatureCollection
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeoFenceFeatureGeoJSON"
 
     Point2D:
       type: array
@@ -293,70 +369,69 @@ components:
       minItems: 2
       items:
         type: number
-        
+
     GeoFenceFeatureGeoJSON:
-        type: object
-        required:
-          - type
-          - geometry
-          - properties
+      type: object
+      required:
+        - type
+        - geometry
+        - properties
+      properties:
+        type:
+          type: string
+          enum:
+            - Feature
+        geometry:
+          $ref: "#/components/schemas/GeoFenceGeometryGeoJSON"
+
         properties:
-          type:
-            type: string
-            enum:
-              - Feature
-          geometry:
-            $ref: '#/components/schemas/GeoFenceGeometryGeoJSON'
-            
+          type: object
           properties:
-            type: object
-            properties:
-              upper_limit:
-                type: number     
-                format: float
-              lower_limit:
-                type: number     
-                format: float
-              
-            nullable: true
-          id:
-            oneOf:
-              - type: string
-              - type: integer
+            upper_limit:
+              type: number
+              format: float
+            lower_limit:
+              type: number
+              format: float
+
+          nullable: true
+        id:
+          oneOf:
+            - type: string
+            - type: integer
 
     FlightDeclarationGeometryGeoJSON:
-        type: object
-        required:
-          - type
-        properties:
-          type:
-            type: string
-            enum:
-              - Polygon
-              - MultiPolygon
-              - LineString
-              
-          coordinates:
-            type: array
-            items:
-              $ref: '#/components/schemas/Point2D' 
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - Polygon
+            - MultiPolygon
+            - LineString
+
+        coordinates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Point2D"
     GeoFenceGeometryGeoJSON:
-        type: object
-        required:
-          - type
-        properties:
-          type:
-            type: string
-            enum:
-              - Polygon
-              - MultiPolygon
-              
-              
-          coordinates:
-            type: array
-            items:
-              $ref: '#/components/schemas/Point2D'            
-      
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - Polygon
+            - MultiPolygon
+
+        coordinates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Point2D"
+
   definitions:
     Error:
       required:
@@ -366,9 +441,9 @@ components:
         code:
           type: string
         message:
-          type: string   
-          
-    ArrayOfObservations:     
+          type: string
+
+    ArrayOfObservations:
       type: array
       items:
         type: object
@@ -378,41 +453,41 @@ components:
           - timestamp
           - altitude_mm
           - icao_address
-        
+
         properties:
           lon_dd:
-            type: number     
+            type: number
             format: float
           lat_dd:
-            type: number  
+            type: number
             format: float
           timestamp:
-            type: integer      
+            type: integer
             format: int64
           icao_address:
             type: string
             maxLength: 24
           source_type:
-              type: integer
+            type: integer
           traffic_source:
-              type: integer
+            type: integer
 
 responses:
   Standard500ErrorResponse:
     description: An unexpected error occured.
     schema:
       $ref: "#/components/definitions/Error"
-      
+
   BadRequest400ErrorResponse:
     description: The JSON is not valid
     schema:
       $ref: "#/components/definitions/Error"
- 
+
   Unauthorized401ErrorResponse:
     description: The request requires an user authentication
     schema:
       $ref: "#/components/definitions/Error"
-      
+
   Forbidden403ErrorResponse:
     description: the access is not allowed
     schema:

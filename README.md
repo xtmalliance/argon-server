@@ -2,7 +2,12 @@
 
 # Flight Blender
 
-Flight Blender is a open source Remote ID "display provider" compatible with ASTM standards and a flight feed aggregator. It has different modules that can process and relay data:
+Flight Blender is two things:
+
+ - a flight feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data
+ - an open source Remote ID "display provider" compatible with ASTM Remote ID standard
+
+There are different modules that enable this:
 
 - _Flight Tracking_: It takes in flight tracking feeds from various sources e.g. ADS-B, live telemetry and others and outputs as a single fused JSON feed and submits it to a Display Application e.g. [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) to be shown in real-time on a display
 - _Geofence_: A Geofence can be submitted into Flight Blender and consequently transmitted to Spotlight
@@ -11,7 +16,7 @@ Flight Blender is a open source Remote ID "display provider" compatible with AST
 
 ## First steps / Get Started
 
-Normally a "Display Provider" is used in conjunction with a "Display Application". In this case Flight Blender output is directed to a Flight Spotlight instance. You can customize a application instance by choosing what kind of modules you want to support, you can pick any from the above.
+Normally a "Display Provider" is used in conjunction with a "Display Application". In this case Flight Blender output is directed to a Flight Spotlight instance. You can customize a application instance by choosing what kind of modules you want to support, you can pick any or all from the above.
 
 ## System Diagram
 
