@@ -6,6 +6,7 @@ import os, json
 import logging
 from os import environ as env
 import redis
+import tldextract
 from datetime import timezone
 from datetime import datetime, timedelta
 from walrus import Database
@@ -14,6 +15,7 @@ load_dotenv(find_dotenv())
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
+
 
 
 class AuthorityCredentialsGetter():
@@ -55,11 +57,7 @@ class AuthorityCredentialsGetter():
 
 @celery.task()
 def poll_uss_for_flights():
-
-
     my_credentials = AuthorityCredentialsGetter()
-    credentials = my_credentials.get_read_credentials()
-    
     flights_dict = redis.hgetall("all_uss_flights")
 
     all_flights_url = flights_dict['all_flights_url']
@@ -71,6 +69,10 @@ def poll_uss_for_flights():
     payload = {"view": flights_view}
 
     for cur_flight_url in all_flights_url:
+        ext = tldextract.extract(cur_flight_url)          
+        audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+        credentials = my_credentials.get_read_credentials(audience)
+
         flights_response = requests.post(cur_flight_url, headers=headers)
         if flights_response.status_code == 200:
             # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
@@ -81,20 +83,13 @@ def poll_uss_for_flights():
                 now  = datetime.now()
                 time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
                 
-                payload = {"observations":[{"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}]}
+                single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}
+                # write incoming data
+                task = write_incoming_data.delay(single_observation)  # 
+                
+
+        logging.info(response.status_code)
+        
 
         else:
             logging.info(flights_response.status_code) 
-
-    
-    # Keep only the latest message
-    distinct_messages = {i['address']:i for i in reversed(pending_messages)}.values()
-    spotlight_host = os.getenv('SPOTLIGHT_HOST', 'http://localhost:5000')
-    securl = spotlight_host + '/set_air_traffic'
-    headers = {"Authorization": "Bearer " + credentials['access_token']}
-    for message in distinct_messages:
-        payload = {"icao_address" : message['icao_address'],"traffic_source" :message['traffic_source'], "source_type" : message['source_type'], "lat_dd" : message['lat_dd'], "lon_dd" : message['lon_dd'], "time_stamp" : message['time_stamp'],"altitude_mm" : message['altitude_mm']}
-        response = requests.post(securl, data= payload, headers=headers)
-        logging.info(response.status_code)
-
-
