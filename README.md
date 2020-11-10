@@ -26,7 +26,7 @@ The diagram below shows how Fight Blender works.
 
 ## Installation
 
-Docker and Docker Compose files are available for this software. You can first clone this repository using `git close https://www.github.com/openskies-sh/flight-blender.git` and then go to the directory and use `docker-compose up` command.
+Docker and Docker Compose files are available for this software. You can first clone this repository using `git clone https://www.github.com/openskies-sh/flight-blender.git` and then go to the directory and use `docker-compose up` command.
 
 This will open up port 8080 and you can post air-traffic data to `http://localhost:8080/set_air_traffic` and then start the processing.
 
