@@ -64,8 +64,7 @@ def poll_uss_for_flights():
     flights_view = flights_dict['view']
 
     headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + credentials}
-
-
+    
     payload = {"view": flights_view}
 
     for cur_flight_url in all_flights_url:

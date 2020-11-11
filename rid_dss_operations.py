@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import uuid
 import requests
 import shapely
+from flask_api import status
 from flask import request
 from os import environ as env
 
@@ -119,17 +120,41 @@ class RemoteIDOperations():
         pass
 
 
-
 @requires_auth
 @app.route("/create_dss_subscription", methods=['POST'])
 def create_dss_subscription():
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
     view = request.args.get('view')
+    # develop Volume 4D object
+    dss_extents = {"extents":{"spatial_volume":{"footprint":{"vertices":[{"lng":-118.456,"lat":34.123},{"lng":-118.456,"lat":34.123},{"lng":-118.456,"lat":34.123}]},"altitude_lo":19.5,"altitude_hi":19.5},"time_start":"2019-08-24T14:15:22Z","time_end":"2019-08-24T14:15:22Z"}}
+    
     vertex_list = []
     myDSSSubscriber = RemoteIDOperations()
     myDSSSubscriber.create_dss_subscription(vertex_list)
 
     return 'it works!'
+
+@requires_auth
+@app.route("/identification_service_areas", methods=['POST'])
+def dss_isa_callback(id):
+    ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
+    new_flights_url = request.args.get('flights_url', '')
+    if flights_url:
+        
+        
+        redis = redis.Redis()
+        # Get the flights URL from the DSS and put it in 
+        flights_dict = redis.hgetall("all_uss_flights")
+        
+        all_flights_url = flights_dict['all_flights_url']
+        all_flights_url = all_flights_url.append(new_flights_url)
+        flights_dict("all_uss_flights") = all_flights_url
+        redis.hmset("all_uss_flights", flights_dict)
+        return ('', 204)
+    else:
+
+        return "Incorrect data", status.HTTP_400_BAD_REQUEST
+
 
 
 
