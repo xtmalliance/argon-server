@@ -35,25 +35,24 @@ paths:
         "500":
           $ref: "#/responses/Standard500ErrorResponse"
 
-  /create_subscription:
+  /create_dss_subscription:
     post:
-      summary: "Create a Subscription to the DSS"
+      summary: "Create a Remote ID Subscription in the DSS"
       security:
         - AuthFromPassport: [write]
       description:
         "Subscription for airspace updates to a volume of interest. After extents are submitted, Flight Blender will \
         \ get a appropriate token and create a subscription. It will then poll flights to the Flights URL"
-
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                extents:
-                  anyOf:
-                    - $ref: "#/components/schemas/Volume4D"
+      parameters:
+        - name: view
+          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed
+            a diagonal length specified in the standard.  The view is the smallest box
+            bounded by the provided corner points.'
+          schema:
+            type: string
+            example: 29.97816,31.13296,29.98025,31.13535
+          in: query
+          required: true
 
       responses:
         "200":
@@ -300,6 +299,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/LatLngPoint"
+
+            
     Volume3D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
       description:
         A three-dimensional geographic volume consisting of a vertically-extruded

@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import uuid
 import requests
 import shapely
+from flask import request
 from os import environ as env
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
@@ -58,7 +59,7 @@ class RemoteIDOperations():
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')
 
-    def submit_dss_subscription(self, view_port):
+    def create_dss_subscription(self, view_port):
         ''' This method PUTS /dss/subscriptions ''' 
         my_authorization_helper = AuthorityCredentialsGetter()
         
@@ -73,10 +74,7 @@ class RemoteIDOperations():
 
         headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
         vertex_list = []
-     
 
-
-        
         volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":19.5,"altitude_hi":19.5},"time_start":current_time,"time_end":one_hour_from_now}
         
         payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
@@ -123,10 +121,13 @@ class RemoteIDOperations():
 
 
 @requires_auth
-@app.route("/subscribe_to_dss", methods=['POST'])
-def subscribe_to_dss(vertex_list):
+@app.route("/create_dss_subscription", methods=['POST'])
+def create_dss_subscription():
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
-
+    view = request.args.get('view')
+    vertex_list = []
+    myDSSSubscriber = RemoteIDOperations()
+    myDSSSubscriber.create_dss_subscription(vertex_list)
 
     return 'it works!'
 
