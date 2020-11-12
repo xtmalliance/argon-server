@@ -12,6 +12,10 @@ import redis, celery
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
+from flask import current_app
+from flask import Blueprint
+
+gf_blueprint = Blueprint('geo_fence_writer', __name__)
 
 
 class PassportCredentialsGetter():
@@ -90,7 +94,7 @@ class GeoFenceUploader():
                 else:
                     print("Uploaded Geo Fence")                    
 
-@celery.task()
+@current_app.celery.task()
 def write_geo_fence(geo_fence): 
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_write_credentials()
@@ -101,7 +105,7 @@ def write_geo_fence(geo_fence):
 
 
 @requires_auth
-@app.route("/submit_geo_fence", methods=['POST'])
+@gf_blueprint.route("/submit_geo_fence", methods=['POST'])
 def post_geo_fence():   
 
     try:

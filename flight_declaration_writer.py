@@ -11,6 +11,10 @@ import redis, celery
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
+from flask import current_app
+from flask import Blueprint
+
+fd_blueprint = Blueprint('flight_declaration_writer', __name__)
 
 
 class PassportCredentialsGetter():
@@ -73,7 +77,7 @@ class FlightDeclarationsUploader():
         else:
             print("Uploaded Flight Declarations")                    
 
-@celery.task()
+@current_app.celery.task()
 def write_flight_declaration(fd): 
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_write_credentials()
@@ -84,7 +88,7 @@ def write_flight_declaration(fd):
 
 
 @requires_auth
-@app.route("/submit_flight_declaration/", methods=['POST'])
+@fd_blueprint.route("/submit_flight_declaration/", methods=['POST'])
 def post_flight_declaration():
     
 

@@ -18,10 +18,19 @@ from auth import AuthError, requires_auth
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
+from flight_declaration_writer import fd_blueprint
+from gen_fence_writer import gf_blueprint
+from rid_dss_operations import dss_rid_blueprint
+
 app = Flask(__name__)
 app.config.from_object('config')
 
-import dss_reader, dss_writer, flight_declaration_writer, geo_fence_writer
+# register other endpoints
+app.register(fd_blueprint)
+app.register(gf_blueprint)
+app.register(dss_rid_blueprint)
+
+
 
 
 @app.errorhandler(AuthError)
@@ -122,6 +131,8 @@ def set_air_traffic():
 
     op = json.dumps ({"message":"OK"})
     return Response(op, status=200, mimetype='application/json')
+
+
 
 if __name__ == '__main__':
     app.run(port=8080)

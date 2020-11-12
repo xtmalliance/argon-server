@@ -104,6 +104,3 @@ def submit_flights_to_spotlight():
         response = requests.post(securl, data= payload, headers=headers)
         logging.info(response.status_code)
 
-
-
-

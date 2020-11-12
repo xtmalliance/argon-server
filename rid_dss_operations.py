@@ -12,10 +12,12 @@ import redis
 from datetime import datetime, timedelta
 import uuid
 import requests
-import shapely
 from flask_api import status
 from flask import request
 from os import environ as env
+from flask import Blueprint
+
+dss_rid_blueprint = Blueprint('rid_dss_operations', __name__)
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
@@ -121,7 +123,7 @@ class RemoteIDOperations():
 
 
 @requires_auth
-@app.route("/create_dss_subscription", methods=['POST'])
+@dss_rid_blueprint.route("/create_dss_subscription", methods=['POST'])
 def create_dss_subscription():
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
     view = request.args.get('view')
@@ -135,26 +137,24 @@ def create_dss_subscription():
     return 'it works!'
 
 @requires_auth
-@app.route("/identification_service_areas", methods=['POST'])
+@dss_rid_blueprint.route("/identification_service_areas", methods=['POST'])
 def dss_isa_callback(id):
     ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
-    new_flights_url = request.args.get('flights_url', '')
-    if flights_url:
+    new_flights_url = request.args.get('flights_url',0)
+    try:
         
-        
+        assert new_flights_url
         redis = redis.Redis()
         # Get the flights URL from the DSS and put it in 
-        flights_dict = redis.hgetall("all_uss_flights")
-        
+        flights_dict = redis.hgetall("all_uss_flights")        
         all_flights_url = flights_dict['all_flights_url']
         all_flights_url = all_flights_url.append(new_flights_url)
-        flights_dict("all_uss_flights") = all_flights_url
+        flights_dict["all_uss_flights"] = all_flights_url
         redis.hmset("all_uss_flights", flights_dict)
-        return ('', 204)
+        
+    except AssertionError as ae:
+        return ("Incorrect data in the POST URL", status.HTTP_400_BAD_REQUEST)
     else:
-
-        return "Incorrect data", status.HTTP_400_BAD_REQUEST
-
-
-
+        # All OK return a empty response
+        return ('', 204)
 
