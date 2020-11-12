@@ -2,7 +2,7 @@
 
 from functools import wraps
 import json
-from __main__ import app
+import app as current_app
 from flask_uuid import FlaskUUID
 from os import environ as env
 from six.moves.urllib.request import urlopen
@@ -12,8 +12,7 @@ import redis, celery
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
-from flask import current_app
-from flask import Blueprint
+from flask import current_app, Blueprint
 
 gf_blueprint = Blueprint('geo_fence_writer', __name__)
 

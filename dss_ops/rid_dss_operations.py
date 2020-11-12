@@ -4,20 +4,19 @@
 
 from functools import wraps
 import json
-from __main__ import app
 from flask_uuid import FlaskUUID
 from six.moves.urllib.request import urlopen
 from auth import AuthError, requires_auth, requires_scope
 import redis
 from datetime import datetime, timedelta
-import uuid
+import uuid, os
 import requests
-from flask_api import status
+
 from flask import request
 from os import environ as env
 from flask import Blueprint
 
-dss_rid_blueprint = Blueprint('rid_dss_operations', __name__)
+dss_rid_blueprint = Blueprint('rid_dss_operations_bp', __name__)
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379

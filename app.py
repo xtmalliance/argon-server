@@ -2,36 +2,36 @@ from flask import Flask, url_for
 from flask import render_template
 from functools import wraps
 from flask import request, Response
-import requests, json
+import requests, json, redis, os, time
 from datetime import datetime
-import logging
-import redis
 from walrus import Database
 from datetime import datetime, timedelta
-import time
+
 from celery import Celery
 import celeryconfig
-import os
 from flask import jsonify
 
 from auth import AuthError, requires_auth
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
-
 from flight_declaration_writer import fd_blueprint
-from gen_fence_writer import gf_blueprint
-from rid_dss_operations import dss_rid_blueprint
+# from geo_fence_writer import gf_blueprint
+# from rid_dss_operations import dss_rid_blueprint
+from flask_logs import LogSetup
 
 app = Flask(__name__)
 app.config.from_object('config')
+app.config["LOG_TYPE"] = os.getenv("LOG_TYPE", "stream")
+app.config["LOG_LEVEL"] = os.getenv("LOG_LEVEL", "INFO")
+
 
 # register other endpoints
-app.register(fd_blueprint)
-app.register(gf_blueprint)
-app.register(dss_rid_blueprint)
+app.register_blueprint(fd_blueprint)
+# app.register(gf_blueprint)
+# app.register(dss_rid_blueprint)
 
-
-
+logs = LogSetup()
+logs.init_app(app)
 
 @app.errorhandler(AuthError)
 def handle_auth_error(ex):

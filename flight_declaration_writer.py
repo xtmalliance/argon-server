@@ -1,20 +1,28 @@
 # API to submit Flight Declarations into Spotlight
-
+from flask import Blueprint, current_app
 from functools import wraps
-import json
-from __main__ import app
 from os import environ as env
 from six.moves.urllib.request import urlopen
 from auth import AuthError, requires_auth, requires_scope
 from flask import request, Response
-import redis, celery
+import redis, json
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
-from flask import current_app
-from flask import Blueprint
+
 
 fd_blueprint = Blueprint('flight_declaration_writer', __name__)
+
+print(dir(current_app))
+
+# @current_app.celery.task()
+# def write_flight_declaration(fd):   
+#     my_credentials = PassportCredentialsGetter()
+#     credentials = my_credentials.get_write_credentials()
+
+#     my_uploader = FlightDeclarationsUploader(credentials = credentials)
+#     my_uploader.upload_to_server(flight_declaration_json=fd)
+
 
 
 class PassportCredentialsGetter():
@@ -77,21 +85,10 @@ class FlightDeclarationsUploader():
         else:
             print("Uploaded Flight Declarations")                    
 
-@current_app.celery.task()
-def write_flight_declaration(fd): 
-    my_credentials = PassportCredentialsGetter()
-    credentials = my_credentials.get_write_credentials()
-
-    my_uploader = FlightDeclarationsUploader(credentials = credentials)
-    my_uploader.upload_to_server(flight_declaration_json=fd)
-
-
-
 @requires_auth
 @fd_blueprint.route("/submit_flight_declaration/", methods=['POST'])
 def post_flight_declaration():
-    
-
+ 
     try:
         assert request.headers['Content-Type'] == 'application/json'   
     except AssertionError as ae:     
