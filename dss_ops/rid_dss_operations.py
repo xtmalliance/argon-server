@@ -14,9 +14,9 @@ import requests
 
 from flask import request
 from os import environ as env
-from flask import Blueprint
+# from flask import Blueprint
 
-dss_rid_blueprint = Blueprint('rid_dss_operations_bp', __name__)
+# dss_rid_blueprint = Blueprint('rid_dss_operations_bp', __name__)
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
@@ -51,7 +51,7 @@ class AuthorityCredentialsGetter():
         
     def get_read_credentials(self, audience):        
         payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read_identification_service_areas'}        
-        url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_URL')        
+        url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
         token_data = requests.post(url, data = payload)
         t_data = token_data.json()        
         return t_data
@@ -64,25 +64,24 @@ class RemoteIDOperations():
     def create_dss_subscription(self, view_port):
         ''' This method PUTS /dss/subscriptions ''' 
         my_authorization_helper = AuthorityCredentialsGetter()
-        
-        auth_token = my_authorization_helper.get_read_credentials()
+        audience = env.get("SELF_DSS_AUDIENCE", "")
+        auth_token = my_authorization_helper.get_cached_credentials(audience)
 
         new_subscription_id = str(uuid.uuid4())
         dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
 
-        callback_url = "https://example.com/identification_service_areas" # TODO: Fix to have the actual URL
+        callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","") 
+
         current_time = datetime.now().isoformat()
         one_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat()
 
         headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
-        vertex_list = []
-
+        vertex_list = [] # TODO: Build a vertex list
         volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":19.5,"altitude_hi":19.5},"time_start":current_time,"time_end":one_hour_from_now}
         
         payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
 
-        r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)
-        
+        r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)        
 
         try: 
             assert r.status_code == 200
@@ -105,11 +104,6 @@ class RemoteIDOperations():
             redis.hmset("all_uss_flights", flights_dict)
                 
 
-        # process DSS repsonse
-        # store the subscription id and notificaiton index (might be handy)
-        # parse the service_area list 
-        # store service area id and flights url
-        # poll the flights URL every 3 seconds
 
     def delete_dss_subscription(self,subscription_id):
         ''' This module calls the DSS to delete a subscription''' 
@@ -119,41 +113,3 @@ class RemoteIDOperations():
         # send GET to USS flight url /uss/flights/{id}/details
 
         pass
-
-
-@requires_auth
-@dss_rid_blueprint.route("/create_dss_subscription", methods=['POST'])
-def create_dss_subscription():
-    ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
-    view = request.args.get('view')
-    # develop Volume 4D object
-    dss_extents = {"extents":{"spatial_volume":{"footprint":{"vertices":[{"lng":-118.456,"lat":34.123},{"lng":-118.456,"lat":34.123},{"lng":-118.456,"lat":34.123}]},"altitude_lo":19.5,"altitude_hi":19.5},"time_start":"2019-08-24T14:15:22Z","time_end":"2019-08-24T14:15:22Z"}}
-    
-    vertex_list = []
-    myDSSSubscriber = RemoteIDOperations()
-    myDSSSubscriber.create_dss_subscription(vertex_list)
-
-    return 'it works!'
-
-@requires_auth
-@dss_rid_blueprint.route("/identification_service_areas", methods=['POST'])
-def dss_isa_callback(id):
-    ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
-    new_flights_url = request.args.get('flights_url',0)
-    try:
-        
-        assert new_flights_url
-        redis = redis.Redis()
-        # Get the flights URL from the DSS and put it in 
-        flights_dict = redis.hgetall("all_uss_flights")        
-        all_flights_url = flights_dict['all_flights_url']
-        all_flights_url = all_flights_url.append(new_flights_url)
-        flights_dict["all_uss_flights"] = all_flights_url
-        redis.hmset("all_uss_flights", flights_dict)
-        
-    except AssertionError as ae:
-        return ("Incorrect data in the POST URL", status.HTTP_400_BAD_REQUEST)
-    else:
-        # All OK return a empty response
-        return ('', 204)
-

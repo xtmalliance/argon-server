@@ -2,7 +2,7 @@
 
 from functools import wraps
 import json
-import app as current_app
+
 from flask_uuid import FlaskUUID
 from os import environ as env
 from six.moves.urllib.request import urlopen
@@ -12,10 +12,14 @@ import redis, celery
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
-from flask import current_app, Blueprint
+from flask import Flask, current_app
+# from flask import Blueprint
 
-gf_blueprint = Blueprint('geo_fence_writer', __name__)
+# gf_blueprint = Blueprint('geo_fence_writer', __name__)
 
+
+REDIS_HOST = os.getenv('REDIS_HOST',"redis")
+REDIS_PORT = 6379
 
 class PassportCredentialsGetter():
     def __init__(self):
@@ -87,35 +91,9 @@ class GeoFenceUploader():
 
                 try:
                     response = requests.post(securl, data= payload, headers=headers)
-                    print(response.content)                
+                    current_app.logging.debug(response.content)                
                 except Exception as e:
-                    print(e)
-                else:
+                    current_app.logging.error(e)
+                else:            
+                    current_app.logging.debug("Uploaded Geo Fence")
                     print("Uploaded Geo Fence")                    
-
-@current_app.celery.task()
-def write_geo_fence(geo_fence): 
-    my_credentials = PassportCredentialsGetter()
-    credentials = my_credentials.get_write_credentials()
-
-    my_uploader = GeoFenceUploader(credentials = credentials)
-    my_uploader.upload_to_server(gf=geo_fence)
-
-
-
-@requires_auth
-@gf_blueprint.route("/submit_geo_fence", methods=['POST'])
-def post_geo_fence():   
-
-    try:
-        assert request.headers['Content-Type'] == 'application/json'   
-    except AssertionError as ae:     
-        msg = {"message":"Unsupported Media Type"}
-        return Response(json.dumps(msg), status=415, mimetype='application/json')
-    else:    
-        geo_fence = json.loads(request.data)
-
-    task = write_geo_fence.delay(geo_fence)  # Send a job to the task queue
-
-    op = json.dumps ({"message":"OK"})
-    return Response(op, status=200, mimetype='application/json')

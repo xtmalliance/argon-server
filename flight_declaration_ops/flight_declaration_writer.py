@@ -1,28 +1,20 @@
 # API to submit Flight Declarations into Spotlight
-from flask import Blueprint, current_app
+# from flask import Blueprint, current_app
 from functools import wraps
 from os import environ as env
 from six.moves.urllib.request import urlopen
 from auth import AuthError, requires_auth, requires_scope
-from flask import request, Response
 import redis, json
 import geojson, requests
+from flask import Flask, current_app
 from geojson import Polygon
 from datetime import datetime, timedelta
 
 
-fd_blueprint = Blueprint('flight_declaration_writer', __name__)
-
-print(dir(current_app))
-
-# @current_app.celery.task()
-# def write_flight_declaration(fd):   
-#     my_credentials = PassportCredentialsGetter()
-#     credentials = my_credentials.get_write_credentials()
-
-#     my_uploader = FlightDeclarationsUploader(credentials = credentials)
-#     my_uploader.upload_to_server(flight_declaration_json=fd)
-
+# fd_blueprint = Blueprint('flight_declaration_writer', __name__)
+ 
+REDIS_HOST = os.getenv('REDIS_HOST',"redis")
+REDIS_PORT = 6379
 
 
 class PassportCredentialsGetter():
@@ -57,8 +49,11 @@ class PassportCredentialsGetter():
     def get_write_credentials(self):        
         payload = {"grant_type":"client_credentials","client_id": env.get('PASSPORT_WRITE_CLIENT_ID'),"client_secret": env.get('PASSPORT_WRITE_CLIENT_SECRET'),"audience": env.get('PASSPORT_WRITE_AUDIENCE'),"scope": env.get('PASSPORT_FLIGHT_DECLARATION_SCOPE')}        
         url = env.get('PASSPORT_URL') + env.get('PASSPORT_TOKEN_URL')        
-        token_data = requests.post(url, data = payload)
-        t_data = token_data.json()        
+        token_response = requests.post(url, data = payload)
+        if token_response.status_code == 200:
+            t_data = token_response.json()        
+        else:
+            t_data = {}
         return t_data
 
 class FlightDeclarationsUploader():
@@ -79,35 +74,9 @@ class FlightDeclarationsUploader():
         securl = env.get('FLIGHT_SPOTLIGHT_URL') + '/set_flight_declaration'
         try:
             response = requests.post(securl, data= payload, headers=headers)
-            print(response.content)                
+            current_app.logging.debug(response.content)                
         except Exception as e:
-            print(e)
-        else:
-            print("Uploaded Flight Declarations")                    
-
-@requires_auth
-@fd_blueprint.route("/submit_flight_declaration/", methods=['POST'])
-def post_flight_declaration():
- 
-    try:
-        assert request.headers['Content-Type'] == 'application/json'   
-    except AssertionError as ae:     
-        msg = {"message":"Unsupported Media Type"}
-        return Response(json.dumps(msg), status=415, mimetype='application/json')
-    else:    
-        req = json.loads(request.data)
-
-    try:
-        flight_declaration_data = req("flight_declaration")
-
-    except KeyError as ke:
-        msg = json.dumps({"message":"One parameter are required: observations with a list of observation objects. One or more of these were not found in your JSON request. For sample data see: https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#sample-traffic-object"})
-        
-        return Response(msg, status=400, mimetype='application/json')
-
-    else:
-        task = write_flight_declaration.delay(flight_declaration_data)  # Send a job to the task queuervation)  # Send a job to the task queue
-
-
-    op = json.dumps ({"message":"OK"})
-    return Response(op, status=200, mimetype='application/json')
+            current_app.logging.error(e)
+        else:            
+            current_app.logging.debug("Uploaded Flight Declarations")                    
+            return "Uploaded Flight Declarations"

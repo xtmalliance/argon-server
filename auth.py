@@ -17,8 +17,6 @@ ALGORITHMS = ["RS256"]
 
 
 
-
-
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
