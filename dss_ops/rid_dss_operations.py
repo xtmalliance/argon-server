@@ -11,11 +11,9 @@ import redis
 from datetime import datetime, timedelta
 import uuid, os
 import requests
-
 from flask import request
 from os import environ as env
 # from flask import Blueprint
-
 # dss_rid_blueprint = Blueprint('rid_dss_operations_bp', __name__)
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
@@ -61,7 +59,7 @@ class RemoteIDOperations():
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')
 
-    def create_dss_subscription(self, view_port):
+    def create_dss_subscription(self, vertex_list, view_port):
         ''' This method PUTS /dss/subscriptions ''' 
         my_authorization_helper = AuthorityCredentialsGetter()
         audience = env.get("SELF_DSS_AUDIENCE", "")
@@ -99,16 +97,17 @@ class RemoteIDOperations():
                 flights_url = service_area['flights_url']
                 flights_url_list.append(flights_url)
 
-            flights_dict= {'subscription_id': subscription['id'],'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port}
+            flights_dict= {'subscription_id': subscription['id'],'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
+
             redis = redis.Redis()
-            redis.hmset("all_uss_flights", flights_dict)
+            hash_name = "all_uss_flights"
+            redis.hmset(hash_name, flights_dict)
+            # expire keys in one hour
+            redis.expire(name=hash_name, time=timedelta(minutes=60))
                 
 
     def delete_dss_subscription(self,subscription_id):
         ''' This module calls the DSS to delete a subscription''' 
 
-        # TODO: Make this a loop / 1s updated (make it a task)
-        # get credentials with appropriate audience 
-        # send GET to USS flight url /uss/flights/{id}/details
-
+        # TODO: Subscriptions expire after a hour but we may need to delete one 
         pass

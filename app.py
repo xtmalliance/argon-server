@@ -2,6 +2,10 @@ from flask import Flask, url_for, current_app
 from flask import render_template
 from flask import request, Response
 from flask import jsonify
+
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 from functools import wraps
 import requests, json, redis, os, time
 from datetime import datetime
@@ -11,10 +15,7 @@ from celery import Celery
 import celeryconfig
 from shapely.geometry import box
 from auth import AuthError, requires_auth, requires_authority_auth, requires_scope
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv())
 from flask_logs import LogSetup
-
 from flight_declaration_ops import flight_declaration_writer
 from geo_fence_ops import geo_fence_writer
 from dss_ops import rid_dss_operations
@@ -221,8 +222,10 @@ def create_dss_subscription():
         vertex_list.append(lat_lng)
     
     vertex_list = []
+
+    # TODO: Make this a asnyc call
     myDSSSubscriber = rid_dss_operations.RemoteIDOperations()
-    myDSSSubscriber.create_dss_subscription(vertex_list)
+    myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
     
     success_msg = json.dumps ({"message":"Subscription Created"})
     return Response(json.dumps(success_msg), status=200, mimetype='application/json')
