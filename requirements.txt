@@ -9,3 +9,4 @@ celery
 requests
 python-dotenv
 Flask-UUID
+Shapely

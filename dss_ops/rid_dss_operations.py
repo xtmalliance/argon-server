@@ -76,8 +76,8 @@ class RemoteIDOperations():
         one_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat()
 
         headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
-        vertex_list = [] # TODO: Build a vertex list
-        volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":19.5,"altitude_hi":19.5},"time_start":current_time,"time_end":one_hour_from_now}
+
+        volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":one_hour_from_now}
         
         payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
 
@@ -103,7 +103,6 @@ class RemoteIDOperations():
             redis = redis.Redis()
             redis.hmset("all_uss_flights", flights_dict)
                 
-
 
     def delete_dss_subscription(self,subscription_id):
         ''' This module calls the DSS to delete a subscription''' 

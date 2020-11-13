@@ -168,8 +168,8 @@ components:
         clientCredentials:
           tokenUrl: "http://id.openskies.sh/oauth/token"
           scopes:
-            write: "Write data into Flight Blender"
-            read: "Read data into Flight Blender"
+            blender.write: "Write data into Flight Blender"
+            blender.read: "Read data into Flight Blender"
 
   schemas:
     FlightDeclarationJSON:

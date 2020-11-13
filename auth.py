@@ -11,10 +11,12 @@ load_dotenv(find_dotenv())
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
-PASSPORT_DOMAIN = env.get("PASSPORT_DOMAIN")
+PASSPORT_DOMAIN = env.get("PASSPORT_DOMAIN" , 'https://')
 PASSPORT_AUDIENCE = env.get("PASSPORT_AUDIENCE")
 ALGORITHMS = ["RS256"]
 
+AUTHORITY_AUDIENCE = env.get('DSS_SELF_AUDIENCE')
+AUTHORITY_DOMAIN = env.get('DSS_AUTH_DOMAIN')
 
 
 class AuthError(Exception):
@@ -85,6 +87,65 @@ def requires_auth(f):
                     algorithms=ALGORITHMS,
                     audience=PASSPORT_AUDIENCE,
                     issuer='https://' + PASSPORT_DOMAIN + '/'
+                )
+
+            except jwt.ExpiredSignatureError:
+                raise AuthError({
+                    'code': 'token_expired',
+                    'description': 'Token expired.'
+                }, 401)
+
+            except jwt.JWTClaimsError:
+                raise AuthError({
+                    'code': 'invalid_claims',
+                    'description': 'Incorrect claims. Please, check the audience and issuer.'
+                }, 401)
+            except Exception:
+                raise AuthError({
+                    'code': 'invalid_header',
+                    'description': 'Unable to parse authentication token.'
+                }, 400)
+
+            _request_ctx_stack.top.current_user = payload
+            return f(*args, **kwargs)
+
+        raise AuthError({
+            'code': 'invalid_header',
+            'description': 'Unable to find the appropriate key.'
+        }, 400)
+
+    return decorated
+
+    
+# This is the code to check if the token matches the auth server
+def requires_authority_auth(f):
+    """Determines if the Access Token is valid
+    """
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = get_token_auth_header()
+        jsonurl = urlopen(f'https://{AUTHORITY_DOMAIN}/.well-known/jwks.json')
+        jwks = json.loads(jsonurl.read())
+        unverified_header = jwt.get_unverified_header(token)
+        rsa_key = {}
+        for key in jwks['keys']:
+            if key['kid'] == unverified_header['kid']:
+                rsa_key = {
+                    'kty': key['kty'],
+                    'kid': key['kid'],
+                    'use': key['use'],
+                    'n': key['n'],
+                    'e': key['e']
+                }
+        if rsa_key:
+            try:
+                payload = jwt.decode(
+                    token,
+                    rsa_key,
+                    algorithms=ALGORITHMS,
+                    audience=AUTHORITY_AUDIENCE,
+                    issuer='https://' + AUTHORITY_DOMAIN + '/'
                 )
 
             except jwt.ExpiredSignatureError:

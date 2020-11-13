@@ -9,7 +9,8 @@ from walrus import Database
 from datetime import datetime, timedelta
 from celery import Celery
 import celeryconfig
-from auth import AuthError, requires_auth, requires_scope
+from shapely.geometry import box
+from auth import AuthError, requires_auth, requires_authority_auth, requires_scope
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from flask_logs import LogSetup
@@ -55,7 +56,6 @@ def make_celery(app):
 
 celery = make_celery(app)
 
-
 def get_consumer_group(create=False):
     db = Database(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'])   
     stream_keys = ['all_observations']
@@ -74,21 +74,17 @@ def get_consumer_group(create=False):
 # create a consumer group once
 get_consumer_group(create=True)
 
-@app.route("/")
-def home():
-    return "Flight Blender"
-
-
 # TODO: Build Flask Blueprints, move the celery calls to their modules. 
 
 #### Airtraffic Endpoint
 @celery.task()
 def write_incoming_data(observation): 
     cg = get_consumer_group()           
-    msgid =cg.add(observation)            
+    msgid = cg.add(observation)            
     return msgid
 
 @requires_auth
+@requires_scope('blender.write')
 @app.route('/set_air_traffic', methods = ['POST'])
 def set_air_traffic():
     
@@ -143,7 +139,7 @@ def write_flight_declaration(fd):
 
 
 @requires_auth
-@requires_scope('write')
+@requires_scope('blender.write')
 @app.route("/submit_flight_declaration/", methods=['POST'])
 def post_flight_declaration(): 
     try:
@@ -181,7 +177,7 @@ def write_geo_fence(geo_fence):
 
 
 @requires_auth
-@requires_scope('write')
+@requires_scope('blender.write')
 @app.route("/submit_geo_fence", methods=['POST'])
 def post_geo_fence():   
 
@@ -202,14 +198,27 @@ def post_geo_fence():
 
 #### DSS RID Module 
 
+@app.route("/")
+def home():
+    return "Flight Blender"
+
 @requires_auth
-@requires_scope('write')
+@requires_scope('blender.write')
 @app.route("/create_dss_subscription", methods=['POST'])
 def create_dss_subscription():
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
-    view = request.args.get('view')
-    # develop Volume 4D object
-    dss_extents = {"extents":{"spatial_volume":{"footprint":{"vertices":[{"lng":-118.456,"lat":34.123},{"lng":-118.456,"lat":34.123},{"lng":-118.456,"lat":34.123}]},"altitude_lo":19.5,"altitude_hi":19.5},"time_start":"2019-08-24T14:15:22Z","time_end":"2019-08-24T14:15:22Z"}}
+
+    view = request.args.get('view') # view is a bbox list
+    
+    b = box(view)
+    co_ordinates = list(zip(*b.exterior.coords.xy))
+    # Convert bounds vertix 
+    vertex_list = []
+    for cur_co_ordinate in co_ordinates:
+        lat_lng = {"lng":0, "lat":0}
+        lat_lng["lng"] = cur_co_ordinate[0]
+        lat_lng["lat"] = cur_co_ordinate[1]
+        vertex_list.append(lat_lng)
     
     vertex_list = []
     myDSSSubscriber = rid_dss_operations.RemoteIDOperations()
@@ -219,14 +228,13 @@ def create_dss_subscription():
     return Response(json.dumps(success_msg), status=200, mimetype='application/json')
     
 
-@requires_auth
-@requires_scope('write')
-@app.route("/identification_service_areas", methods=['POST'])
+@requires_authority_auth
+@requires_scope('dss.write.identification_service_areas')
+@app.route("isa_callback/", methods=['POST'])
 def dss_isa_callback(id):
     ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
     new_flights_url = request.args.get('flights_url',0)
-    try:
-        
+    try:        
         assert new_flights_url != 0
         redis = redis.Redis(host=app.config['REDIS_HOST'], port =app.config['REDIS_PORT'])   
         # Get the flights URL from the DSS and put it in 

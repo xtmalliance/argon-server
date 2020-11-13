@@ -10,6 +10,7 @@ import tldextract
 from datetime import timezone
 from datetime import datetime, timedelta
 from walrus import Database
+from Flask import current_app
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -54,24 +55,21 @@ class AuthorityCredentialsGetter():
         return t_data
 
 
-
 @celery.task()
 def poll_uss_for_flights():
-    my_credentials = AuthorityCredentialsGetter()
+    authority_credentials = AuthorityCredentialsGetter()
     flights_dict = redis.hgetall("all_uss_flights")
-
     all_flights_url = flights_dict['all_flights_url']
-    flights_view = flights_dict['view']
+    # flights_view = flights_dict['view']
 
-    headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + credentials}
-    
-    payload = {"view": flights_view}
 
     for cur_flight_url in all_flights_url:
         ext = tldextract.extract(cur_flight_url)          
         audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
-        credentials = my_credentials.get_read_credentials(audience)
+        auth_credentials = authority_credentials.get_cached_credentials(audience)
 
+        headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
+    
         flights_response = requests.post(cur_flight_url, headers=headers)
         if flights_response.status_code == 200:
             # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
@@ -83,12 +81,13 @@ def poll_uss_for_flights():
                 time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
                 
                 single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}
-                # write incoming data
-                task = write_incoming_data.delay(single_observation)  # 
-                
 
-        logging.info(response.status_code)
+                # write incoming data either directly or via POST call locally
+                db = Database(host=REDIS_HOST, port=REDIS_PORT)   
+                stream_keys = ['all_observations']
+                ts_db = db.time_series('cg-obs', stream_keys)
+                cg = ts_db.all_observations
+                cg.add(single_observation)            
         
-
         else:
-            logging.info(flights_response.status_code) 
+            current_app.logging.info(flights_response.status_code) 
