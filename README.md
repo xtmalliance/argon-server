@@ -35,6 +35,14 @@ This will open up port 8080 and you can post air-traffic data to `http://localho
 - To begin, review the [API Specification](http://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/openskies-sh/flight-blender/master/api/flight-blender-1.0.0-resolved.yaml) to understand the endpoints and the kind of data that you can set in Flight Blender.
 - Then take a look at some data formats: [Flight tracking data](https://github.com/openskies-sh/flight-blender/blob/master/importers/air_traffic_samples/micro_flight_data_single.json). This file follows the format as specified in the [Air-traffic data protocol](https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md)
 
-#### Image Credit
+## Submitting AOI, Flight Declarations and Geofence data
+
+Take a look at sample data below to see the kind of data that can be submitted in Flight Blender
+
+- [Area of Interest](https://github.com/openskies-sh/flight-blender/blob/master/importers/aoi_geo_fence_samples/aoi.geojson) as a GeoJSON
+- [Geofence](https://github.com/openskies-sh/flight-blender/blob/master/importers/aoi_geo_fence_samples/geo_fence.geojson) as a GeoJSON, we have converters to convert from ED-269
+- [Flight Declaration](https://github.com/openskies-sh/flight-blender/blob/master/importers/flight_declarations_samples/flight-1.json). This file follows the format specified in [Flight Declaration Protocol](https://github.com/openskies-sh/flight-declaration-protocol-development)
+
+### Image Credit
 
 <a href="https://www.vecteezy.com/free-vector/blender">Blender Vectors by Vecteezy</a>
