@@ -138,10 +138,9 @@ def write_flight_declaration(fd):
         my_uploader.upload_to_server(flight_declaration_json=fd)
  
 
-
 @requires_auth
 @requires_scope('blender.write')
-@app.route("/submit_flight_declaration/", methods=['POST'])
+@app.route("/submit_flight_declaration", methods=['POST'])
 def post_flight_declaration(): 
     try:
         assert request.headers['Content-Type'] == 'application/json'   
@@ -150,7 +149,7 @@ def post_flight_declaration():
         return Response(json.dumps(msg), status=415, mimetype='application/json')
     else:    
         req = json.loads(request.data)
-
+        
     try:
         flight_declaration_data = req("flight_declaration")
 
@@ -208,32 +207,33 @@ def home():
 @app.route("/create_dss_subscription", methods=['POST'])
 def create_dss_subscription():
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
-
-    view = request.args.get('view') # view is a bbox list
-    
-    b = box(view)
-    co_ordinates = list(zip(*b.exterior.coords.xy))
-    # Convert bounds vertix 
-    vertex_list = []
-    for cur_co_ordinate in co_ordinates:
-        lat_lng = {"lng":0, "lat":0}
-        lat_lng["lng"] = cur_co_ordinate[0]
-        lat_lng["lat"] = cur_co_ordinate[1]
-        vertex_list.append(lat_lng)
-    
-    vertex_list = []
-
-    # TODO: Make this a asnyc call
-    myDSSSubscriber = rid_dss_operations.RemoteIDOperations()
-    myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
-    
-    success_msg = json.dumps ({"message":"Subscription Created"})
-    return Response(json.dumps(success_msg), status=200, mimetype='application/json')
-    
+    try: 
+        view = request.args.get('view') # view is a bbox list
+    except KeyError as ke:
+        incorrect_parameters = {"message":""}
+        return Response(json.dumps(success_msg), status=200, mimetype='application/json')
+    else:
+        b = box(view)
+        co_ordinates = list(zip(*b.exterior.coords.xy))
+        # Convert bounds vertex list
+        vertex_list = []
+        for cur_co_ordinate in co_ordinates:
+            lat_lng = {"lng":0, "lat":0}
+            lat_lng["lng"] = cur_co_ordinate[0]
+            lat_lng["lat"] = cur_co_ordinate[1]
+            vertex_list.append(lat_lng)
+        
+        # TODO: Make this a asnyc call
+        myDSSSubscriber = rid_dss_operations.RemoteIDOperations()
+        subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
+        
+        success_msg = {"message":"Subscription Created"}
+        return Response(json.dumps(success_msg), status=200, mimetype='application/json')
+        
 
 @requires_authority_auth
 @requires_scope('dss.write.identification_service_areas')
-@app.route("isa_callback/", methods=['POST'])
+@app.route("/isa_callback", methods=['POST'])
 def dss_isa_callback(id):
     ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
     new_flights_url = request.args.get('flights_url',0)

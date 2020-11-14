@@ -79,17 +79,24 @@ class RemoteIDOperations():
         
         payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
 
-        r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)        
-
+        r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)   
+        
+        subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
+        
         try: 
             assert r.status_code == 200
+            subscription_response["created"] = 1
         except AssertionError as ae: 
+            
             return {"subscription_id": 0, "notification_index": 0}
         else: 	
             dss_response = r.json()
             service_areas = dss_response['service_areas']
             subscription = dss_response['subscription']
+            subscription_id = subscription['id']
             notification_index = subscription['notification_index']
+            subscription_response['notification_index'] = notification_index
+            subscription_responsep['subscription_id'] = subscription_id
             # iterate over the service areas to get flights URL to poll 
             
             flights_url_list = []
@@ -97,14 +104,14 @@ class RemoteIDOperations():
                 flights_url = service_area['flights_url']
                 flights_url_list.append(flights_url)
 
-            flights_dict= {'subscription_id': subscription['id'],'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
+            flights_dict= {'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
 
             redis = redis.Redis()
             hash_name = "all_uss_flights"
             redis.hmset(hash_name, flights_dict)
             # expire keys in one hour
             redis.expire(name=hash_name, time=timedelta(minutes=60))
-                
+
 
     def delete_dss_subscription(self,subscription_id):
         ''' This module calls the DSS to delete a subscription''' 

@@ -1,5 +1,4 @@
 ## This module polls 
-
 import celery
 import requests
 import os, json
@@ -16,6 +15,23 @@ load_dotenv(find_dotenv())
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
+
+
+def get_consumer_group(create=False):
+    
+    db = Database(host=REDIS_HOST, port =REDIS_PORT)   
+    stream_keys = ['all_observations']
+    
+    cg = db.time_series('cg-obs', stream_keys)
+    if create:
+        for stream in stream_keys:
+            db.xadd(stream, {'data': ''})
+
+    if create:
+        cg.create()
+        cg.set_id('$')
+
+    return cg.all_observations
 
 
 
@@ -62,7 +78,6 @@ def poll_uss_for_flights():
     all_flights_url = flights_dict['all_flights_url']
     # flights_view = flights_dict['view']
 
-
     for cur_flight_url in all_flights_url:
         ext = tldextract.extract(cur_flight_url)          
         audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
@@ -80,14 +95,14 @@ def poll_uss_for_flights():
                 now  = datetime.now()
                 time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
                 
-                single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}
-
-                # write incoming data either directly or via POST call locally
-                db = Database(host=REDIS_HOST, port=REDIS_PORT)   
-                stream_keys = ['all_observations']
-                ts_db = db.time_series('cg-obs', stream_keys)
-                cg = ts_db.all_observations
-                cg.add(single_observation)            
-        
+                if {"lat", "lng", "alt"} <= position.keys():
+                    # check if lat / lng / alt existis
+                    single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}
+                    # write incoming data directly
+                    cg = get_consumer_group()
+                    cg.add(single_observation)    
+                else: 
+                    current_app.logging.error("Error in received flights data: %{url}s ".format(**flight) ) 
+            
         else:
             current_app.logging.info(flights_response.status_code) 
