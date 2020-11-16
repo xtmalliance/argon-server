@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import uuid, os
 import requests
 from flask import request
+from Flask import current_app
 from os import environ as env
 # from flask import Blueprint
 # dss_rid_blueprint = Blueprint('rid_dss_operations_bp', __name__)
@@ -41,9 +42,8 @@ class AuthorityCredentialsGetter():
                 credentials = token_details['credentials']
         else:               
             credentials = self.get_read_credentials(audience)
-            error = credentials.get('error')
-
-            if not error: # there is no error in the token
+            access_token = credentials.get('access_token')
+            if access_token: # there is no error in the token
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
                 r.expire(cache_key, timedelta(minutes=58))
                 
@@ -64,56 +64,65 @@ class RemoteIDOperations():
 
     def create_dss_subscription(self, vertex_list, view_port):
         ''' This method PUTS /dss/subscriptions ''' 
+        
         my_authorization_helper = AuthorityCredentialsGetter()
         audience = env.get("SELF_DSS_AUDIENCE", "")
         auth_token = my_authorization_helper.get_cached_credentials(audience)
-
-        new_subscription_id = str(uuid.uuid4())
-        dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
-
-        callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","") 
-
-        current_time = datetime.now().isoformat()
-        one_hour_from_now = (datetime.now() + timedelta(hours=1)).isoformat()
-
-        headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
-
-        volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":one_hour_from_now}
         
-        payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
-
-        r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)   
-        
-        subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
-        
-        try: 
-            assert r.status_code == 200
-            subscription_response["created"] = 1
-        except AssertionError as ae: 
+        error = auth_token.get("error")
+        if error: 
+            current_app.logger.error("Error in getting Authority Access Token %s": % auth_token)
             
-            return {"subscription_id": 0, "notification_index": 0}
-        else: 	
-            dss_response = r.json()
-            service_areas = dss_response['service_areas']
-            subscription = dss_response['subscription']
-            subscription_id = subscription['id']
-            notification_index = subscription['notification_index']
-            subscription_response['notification_index'] = notification_index
-            subscription_response['subscription_id'] = subscription_id
-            # iterate over the service areas to get flights URL to poll 
+        else: 
+            # A token from authority was received, 
+            new_subscription_id = str(uuid.uuid4())
+            dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
+
+            callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","") 
+            now = datetime.now()
             
-            flights_url_list = []
-            for service_area in service_areas: 
-                flights_url = service_area['flights_url']
-                flights_url_list.append(flights_url)
+            current_time = now.isoformat()
+            one_hour_from_now = (now + timedelta(hours=1)).isoformat()
 
-            flights_dict= {'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
+            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
 
-            redis = redis.Redis()
-            hash_name = "all_uss_flights"
-            redis.hmset(hash_name, flights_dict)
-            # expire keys in one hour
-            redis.expire(name=hash_name, time=timedelta(minutes=60))
+            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":one_hour_from_now }
+            
+            payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
+
+            r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)   
+            
+            subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
+            
+            try: 
+                assert r.status_code == 200
+                subscription_response["created"] = 1
+            except AssertionError as ae: 
+                current_app.logger.error("Error in creating subscription in the DSS %s": % r.text)
+                return subscription_response
+            else: 	
+                dss_response = r.json()
+                service_areas = dss_response['service_areas']
+                subscription = dss_response['subscription']
+                subscription_id = subscription['id']
+                notification_index = subscription['notification_index']
+                subscription_response['notification_index'] = notification_index
+                subscription_response['subscription_id'] = subscription_id
+                # iterate over the service areas to get flights URL to poll 
+                
+                flights_url_list = []
+                for service_area in service_areas: 
+                    flights_url = service_area['flights_url']
+                    flights_url_list.append(flights_url)
+
+                flights_dict= {'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
+
+                redis = redis.Redis()
+                hash_name = "all_uss_flights"
+                redis.hmset(hash_name, flights_dict)
+                # expire keys in one hour
+                redis.expire(name=hash_name, time=timedelta(minutes=60))
+                return subscription_response
 
 
     def delete_dss_subscription(self,subscription_id):

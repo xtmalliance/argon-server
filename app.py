@@ -204,8 +204,6 @@ def create_dss_subscription():
                 vertex_list.append(lat_lng)
             # remove the final point 
             vertex_list.pop()
-
-            
             # TODO: Make this a asnyc call
             #tasks.submit_dss_subscription(vertex_list = vertex_list, view_port = view)
 
