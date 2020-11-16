@@ -1,5 +1,6 @@
 import celery
 import requests
+from app import celery
 import os, json
 import logging
 from os import environ as env
@@ -8,6 +9,7 @@ from datetime import datetime, timedelta
 from walrus import Database
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
+from tasks import ConsumerGroupOps
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
@@ -81,7 +83,8 @@ def get_consumer_group(create=False):
 def submit_flights_to_spotlight():
     
     # get existing consumer group
-    cg = get_consumer_group()
+    my_cg_ops = ConsumerGroupOps()
+    cg = my_cg_ops.get_consumer_group()
     messages = cg.read()
     pending_messages = []
     

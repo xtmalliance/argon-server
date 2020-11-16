@@ -2,8 +2,9 @@
 # from flask import Blueprint, current_app
 from functools import wraps
 from os import environ as env
+import os
 from six.moves.urllib.request import urlopen
-from auth import AuthError, requires_auth, requires_scope
+
 import redis, json
 import geojson, requests
 from flask import Flask, current_app
@@ -39,10 +40,12 @@ class PassportCredentialsGetter():
         else:   
             
             credentials = self.get_write_credentials()
-            r.set('flight_declaration_access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            
-            r.expire("flight_declaration_access_token_details", timedelta(minutes=58))
-            
+            error = credentials.get('error')
+
+            if not error: # there is no error in the token
+                r.set('flight_declaration_access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))                
+                r.expire("flight_declaration_access_token_details", timedelta(minutes=58))
+                
         return credentials
             
         
@@ -64,19 +67,16 @@ class FlightDeclarationsUploader():
     
     def upload_to_server(self, flight_declaration_json):
         
-        flight_declaration_data = json.loads(flight_declaration_json)
-        # print (flight_declaration_data['flight_declaration']['parts'])
-
         headers = {"Authorization": "Bearer "+ self.credentials['access_token']}
         
-        payload = {"flight_declaration" : json.dumps(flight_declaration_data)}                
+        payload = {"flight_declaration" : json.dumps(flight_declaration_json)}                
 
         securl = env.get('FLIGHT_SPOTLIGHT_URL') + '/set_flight_declaration'
         try:
             response = requests.post(securl, data= payload, headers=headers)
-            current_app.logging.debug(response.content)                
+            current_app.logger.debug(response.content)                
         except Exception as e:
-            current_app.logging.error(e)
+            current_app.logger.error(e)
         else:            
-            current_app.logging.debug("Uploaded Flight Declarations")                    
+            current_app.logger.debug("Uploaded Flight Declarations")                    
             return "Uploaded Flight Declarations"

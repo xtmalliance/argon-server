@@ -5,6 +5,7 @@ import os, json
 import logging
 from os import environ as env
 import redis
+from tasks import ConsumerGroupOps
 import tldextract
 from datetime import timezone
 from datetime import datetime, timedelta
@@ -57,9 +58,13 @@ class AuthorityCredentialsGetter():
                 credentials = token_details['credentials']
         else:               
             credentials = self.get_read_credentials(audience)
-            r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
-            r.expire(cache_key, timedelta(minutes=58))
-            
+            error = credentials.get('error')
+
+            if not error: # there is no error in the token
+                    
+                r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
+                r.expire(cache_key, timedelta(minutes=58))
+                
         return credentials
             
         
@@ -99,10 +104,12 @@ def poll_uss_for_flights():
                     # check if lat / lng / alt existis
                     single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}
                     # write incoming data directly
-                    cg = get_consumer_group()
+                    
+                    cg_ops = ConsumerGroupOps()
+                    cg = cg_ops.get_consumer_group()
                     cg.add(single_observation)    
                 else: 
-                    current_app.logging.error("Error in received flights data: %{url}s ".format(**flight) ) 
+                    current_app.logger.error("Error in received flights data: %{url}s ".format(**flight) ) 
             
         else:
-            current_app.logging.info(flights_response.status_code) 
+            current_app.logger.info(flights_response.status_code) 

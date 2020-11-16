@@ -6,7 +6,7 @@ from functools import wraps
 import json
 from flask_uuid import FlaskUUID
 from six.moves.urllib.request import urlopen
-from auth import AuthError, requires_auth, requires_scope
+
 import redis
 from datetime import datetime, timedelta
 import uuid, os
@@ -41,9 +41,12 @@ class AuthorityCredentialsGetter():
                 credentials = token_details['credentials']
         else:               
             credentials = self.get_read_credentials(audience)
-            r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
-            r.expire(cache_key, timedelta(minutes=58))
-            
+            error = credentials.get('error')
+
+            if not error: # there is no error in the token
+                r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
+                r.expire(cache_key, timedelta(minutes=58))
+                
         return credentials
             
         
@@ -96,7 +99,7 @@ class RemoteIDOperations():
             subscription_id = subscription['id']
             notification_index = subscription['notification_index']
             subscription_response['notification_index'] = notification_index
-            subscription_responsep['subscription_id'] = subscription_id
+            subscription_response['subscription_id'] = subscription_id
             # iterate over the service areas to get flights URL to poll 
             
             flights_url_list = []
