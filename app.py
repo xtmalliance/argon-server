@@ -208,10 +208,12 @@ def create_dss_subscription():
             #tasks.submit_dss_subscription(vertex_list = vertex_list, view_port = view)
 
             myDSSSubscriber = rid_dss_operations.RemoteIDOperations()
-            subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
+            subscription_respone = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
             
-
-            success_msg = {"message":"DSS Subscription created"}
+            if subscription_respone['created']:
+                msg = {"message":"DSS Subscription created"}
+            else:
+                msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator."}
             return Response(json.dumps(success_msg), status=200, mimetype='application/json')
             
     raise AuthError({
