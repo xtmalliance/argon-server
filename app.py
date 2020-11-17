@@ -223,7 +223,6 @@ def create_dss_subscription():
 
 
 @requires_authority_auth
-
 @app.route("/isa_callback", methods=['POST'])
 def dss_isa_callback(id):
     ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''

@@ -65,20 +65,28 @@ class RemoteIDOperations():
     def create_dss_subscription(self, vertex_list, view_port):
         ''' This method PUTS /dss/subscriptions ''' 
         
-        my_authorization_helper = AuthorityCredentialsGetter()
-        audience = env.get("SELF_DSS_AUDIENCE", "")
-        auth_token = my_authorization_helper.get_cached_credentials(audience)
-        
-        error = auth_token.get("error")
-        if error: 
-            current_app.logger.error("Error in getting Authority Access Token %s": % auth_token)
+        subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
             
+        my_authorization_helper = AuthorityCredentialsGetter()
+        audience = env.get("SELF_DSS_AUDIENCE", 0)
+        if audience == 0:
+            current_app.logging.error("Error in getting Authority Access Token SELF_DSS_AUDIENCE is not set in the environment")
+        else:
+            auth_token = my_authorization_helper.get_cached_credentials(audience)
+            error = auth_token.get("error")
+            
+        try: 
+            assert error is None
+        except AssertionError as ae: 
+            current_app.logger.error("Error in getting Authority Access Token %s": % auth_token)
+            return subscription_response
         else: 
+            current_app.logger.info("Successfully received Token")
             # A token from authority was received, 
             new_subscription_id = str(uuid.uuid4())
             dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
 
-            callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","") 
+            callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","/isa_callback") 
             now = datetime.now()
             
             current_time = now.isoformat()
@@ -90,18 +98,16 @@ class RemoteIDOperations():
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
 
-            r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)   
-            
-            subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
+            dss_r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)   
             
             try: 
-                assert r.status_code == 200
+                assert dss_r.status_code == 200
                 subscription_response["created"] = 1
             except AssertionError as ae: 
-                current_app.logger.error("Error in creating subscription in the DSS %s": % r.text)
+                current_app.logger.error("Error in creating subscription in the DSS %s" % r.text)
                 return subscription_response
             else: 	
-                dss_response = r.json()
+                dss_response = dss_r.json()
                 service_areas = dss_response['service_areas']
                 subscription = dss_response['subscription']
                 subscription_id = subscription['id']
