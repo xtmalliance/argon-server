@@ -82,6 +82,8 @@ def poll_uss_for_flights():
     flights_dict = redis.hgetall("all_uss_flights")
     all_flights_url = flights_dict['all_flights_url']
     # flights_view = flights_dict['view']
+    cg_ops = ConsumerGroupOps()
+    cg = cg_ops.get_consumer_group()
 
     for cur_flight_url in all_flights_url:
         ext = tldextract.extract(cur_flight_url)          
@@ -96,20 +98,24 @@ def poll_uss_for_flights():
             all_flights = flights_response['flights']
             for flight in all_flights:
                 flight_id = flight['id']
-                position = flight['current_state']['position']
-                now  = datetime.now()
-                time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
-                
-                if {"lat", "lng", "alt"} <= position.keys():
-                    # check if lat / lng / alt existis
-                    single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}
-                    # write incoming data directly
+                try: 
+                    assert flight.get('current_state') is not None
+                except AssertionError as ae:
+                    current_app.logging.error('There is no current_state provided by SP on the flights url %s' % cur_flight_url)
+                    current_app.logging.debug(json.dumps(flight))
+                else:
+                    position = flight['current_state']['position']
+                    now  = datetime.now()
+                    time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
                     
-                    cg_ops = ConsumerGroupOps()
-                    cg = cg_ops.get_consumer_group()
-                    cg.add(single_observation)    
-                else: 
-                    current_app.logger.error("Error in received flights data: %{url}s ".format(**flight) ) 
-            
+                    if {"lat", "lng", "alt"} <= position.keys():
+                        # check if lat / lng / alt existis
+                        single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt']}
+                        # write incoming data directly
+                        
+                        cg.add(single_observation)    
+                    else: 
+                        current_app.logger.error("Error in received flights data: %{url}s ".format(**flight) ) 
+                
         else:
             current_app.logger.info(flights_response.status_code) 
