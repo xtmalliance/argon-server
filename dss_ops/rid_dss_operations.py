@@ -68,19 +68,30 @@ class RemoteIDOperations():
         subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
             
         my_authorization_helper = AuthorityCredentialsGetter()
-        audience = env.get("SELF_DSS_AUDIENCE", 0)
-        if audience == 0:
-            current_app.logging.error("Error in getting Authority Access Token SELF_DSS_AUDIENCE is not set in the environment")
-        else:
+        audience = env.get("DSS_SELF_AUDIENCE", 0)
+        error = True
+
+        try: 
+            assert audience
+        except AssertionError as ae:
+            current_app.logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
+            return subscription_response
+
+        try:
             auth_token = my_authorization_helper.get_cached_credentials(audience)
-            error = auth_token.get("error")
-            
+        except Exception as e:
+            current_app.logger.error("Error in getting Authority Access Token %s " % e)
+            return subscription_response        
+        else:
+            error = auth_token.get("error")            
+
+
         try: 
             assert error is None
-        except AssertionError as ae: 
-            current_app.logger.error("Error in getting Authority Access Token %s": % auth_token)
+        except AssertionError as ae:             
             return subscription_response
         else: 
+            
             current_app.logger.info("Successfully received Token")
             # A token from authority was received, 
             new_subscription_id = str(uuid.uuid4())
@@ -97,38 +108,42 @@ class RemoteIDOperations():
             volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":one_hour_from_now }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
-
-            dss_r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)   
-            
-            try: 
-                assert dss_r.status_code == 200
-                subscription_response["created"] = 1
-            except AssertionError as ae: 
-                current_app.logger.error("Error in creating subscription in the DSS %s" % r.text)
+            try:
+                dss_r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)  
+            except Exception as re: 
+                current_app.logger.error("Error in posting to subscription URL %s " % re)
                 return subscription_response
-            else: 	
-                dss_response = dss_r.json()
-                service_areas = dss_response['service_areas']
-                subscription = dss_response['subscription']
-                subscription_id = subscription['id']
-                notification_index = subscription['notification_index']
-                subscription_response['notification_index'] = notification_index
-                subscription_response['subscription_id'] = subscription_id
-                # iterate over the service areas to get flights URL to poll 
-                
-                flights_url_list = []
-                for service_area in service_areas: 
-                    flights_url = service_area['flights_url']
-                    flights_url_list.append(flights_url)
 
-                flights_dict= {'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
+            else: 
+                try: 
+                    assert dss_r.status_code == 200
+                    subscription_response["created"] = 1
+                except AssertionError as ae: 
+                    current_app.logger.error("Error in creating subscription in the DSS %s" % dss_r.text)
+                    return subscription_response
+                else: 	
+                    dss_response = dss_r.json()
+                    service_areas = dss_response['service_areas']
+                    subscription = dss_response['subscription']
+                    subscription_id = subscription['id']
+                    notification_index = subscription['notification_index']
+                    subscription_response['notification_index'] = notification_index
+                    subscription_response['subscription_id'] = subscription_id
+                    # iterate over the service areas to get flights URL to poll 
+                    
+                    flights_url_list = []
+                    for service_area in service_areas: 
+                        flights_url = service_area['flights_url']
+                        flights_url_list.append(flights_url)
 
-                redis = redis.Redis()
-                hash_name = "all_uss_flights"
-                redis.hmset(hash_name, flights_dict)
-                # expire keys in one hour
-                redis.expire(name=hash_name, time=timedelta(minutes=60))
-                return subscription_response
+                    flights_dict= {'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
+
+                    redis = redis.Redis()
+                    hash_name = "all_uss_flights"
+                    redis.hmset(hash_name, flights_dict)
+                    # expire keys in one hour
+                    redis.expire(name=hash_name, time=timedelta(minutes=60))
+                    return subscription_response
 
 
     def delete_dss_subscription(self,subscription_id):

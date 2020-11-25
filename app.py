@@ -188,7 +188,6 @@ def create_dss_subscription():
         try: 
             view = request.args.get('view') # view is a bbox list
             view = [float(i) for i in view.split(",")]
-            print(view)
         except Exception as ke:
             incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
             return Response(json.dumps(incorrect_parameters), status=400, mimetype='application/json')
@@ -206,10 +205,10 @@ def create_dss_subscription():
             vertex_list.pop()
             # TODO: Make this a asnyc call
             #tasks.submit_dss_subscription(vertex_list = vertex_list, view_port = view)
-
-            myDSSSubscriber = rid_dss_operations.RemoteIDOperations()
-            subscription_respone = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
             
+            myDSSubscriber = rid_dss_operations.RemoteIDOperations()
+            subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
+
             if subscription_respone['created']:
                 msg = {"message":"DSS Subscription created"}
             else:
