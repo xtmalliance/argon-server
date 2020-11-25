@@ -214,7 +214,7 @@ def create_dss_subscription():
                 msg = {"message":"DSS Subscription created"}
             else:
                 msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator."}
-            return Response(json.dumps(success_msg), status=200, mimetype='application/json')
+            return Response(json.dumps(msg), status=200, mimetype='application/json')
             
     raise AuthError({
         "code": "Unauthorized",

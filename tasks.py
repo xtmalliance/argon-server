@@ -50,6 +50,6 @@ def write_flight_declaration(fd):
         my_uploader.upload_to_server(flight_declaration_json=fd)
  
 @celery.task()
-def submit_dss_subscription(view = view, vertex_list = vertex_list):
+def submit_dss_subscription(view , vertex_list):
     myDSSSubscriber = rid_dss_operations.RemoteIDOperations()
     subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)

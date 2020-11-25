@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import uuid, os
 import requests
 from flask import request
-from Flask import current_app
+from flask import current_app
 from os import environ as env
 # from flask import Blueprint
 # dss_rid_blueprint = Blueprint('rid_dss_operations_bp', __name__)
@@ -71,7 +71,7 @@ class RemoteIDOperations():
         
         error = auth_token.get("error")
         if error: 
-            current_app.logger.error("Error in getting Authority Access Token %s": % auth_token)
+            current_app.logger.error("Error in getting Authority Access Token %s:" % auth_token)
             
         else: 
             # A token from authority was received, 
@@ -98,7 +98,7 @@ class RemoteIDOperations():
                 assert r.status_code == 200
                 subscription_response["created"] = 1
             except AssertionError as ae: 
-                current_app.logger.error("Error in creating subscription in the DSS %s": % r.text)
+                current_app.logger.error("Error in creating subscription in the DSS %s:" % r.text)
                 return subscription_response
             else: 	
                 dss_response = r.json()
