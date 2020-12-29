@@ -6,7 +6,7 @@ from functools import wraps
 import json
 from flask_uuid import FlaskUUID
 from six.moves.urllib.request import urlopen
-
+import redis
 import redis
 from datetime import datetime, timedelta
 import uuid, os
@@ -14,11 +14,7 @@ import requests
 from flask import request
 from flask import current_app
 from os import environ as env
-# from flask import Blueprint
-# dss_rid_blueprint = Blueprint('rid_dss_operations_bp', __name__)
 
-REDIS_HOST = os.getenv('REDIS_HOST',"redis")
-REDIS_PORT = 6379
 
 class AuthorityCredentialsGetter():
     ''' All calls to the DSS require credentials from a authority, usually the CAA since they can provide access to the system '''

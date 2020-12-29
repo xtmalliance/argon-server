@@ -2,21 +2,14 @@
 
 from functools import wraps
 import json
-
 import os
-from flask_uuid import FlaskUUID
 from os import environ as env
-from six.moves.urllib.request import urlopen
-
 
 import redis, celery
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
 from flask import Flask, current_app
-# from flask import Blueprint
-
-# gf_blueprint = Blueprint('geo_fence_writer', __name__)
 
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
