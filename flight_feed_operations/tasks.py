@@ -15,6 +15,18 @@ load_dotenv(find_dotenv())
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
 
+
+#### Airtraffic Endpoint
+
+@task('WriteIncomingData')
+def write_incoming_data(observation): 
+    myCGOps = ConsumerGroupOps()
+    cg = myCGOps.get_consumer_group()           
+    msgid = cg.add(observation)            
+    return msgid
+
+
+
 class PassportCredentialsGetter():
     def __init__(self):
         pass
@@ -80,7 +92,7 @@ def get_consumer_group(create=False):
     return cg.all_observations
 
 
-@task('SubmitFlightToSpotlight')
+@task('submit-spotlight-task')
 def submit_flights_to_spotlight():
     
     # get existing consumer group

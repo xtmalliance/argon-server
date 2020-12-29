@@ -24,7 +24,7 @@ services:
     build:
       context: "."    
     
-    command: celery -A app.celery worker -l info 
+    command: celery worker --app=flight_blender --loglevel=info
     volumes:
       - .:/app
     depends_on:
@@ -35,12 +35,11 @@ services:
     container_name: flight-blender-beat
     build:
       context: "."    
-      args:
-        - "FLASK_ENV=${FLASK_ENV:-production}"
+      
     env_file:
       - ".env"
     hostname: beat    
-    command: celery -A app.celery beat --loglevel=info
+    command: celery --app=flight_blender beat --loglevel=info
     volumes:
       - .:/app
     depends_on:

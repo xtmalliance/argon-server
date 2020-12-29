@@ -1,12 +1,9 @@
-Flask
-Jinja2
-MarkupSafe
-Werkzeug
+Django
+djangorestframework
 gunicorn
 redis
 walrus
 celery
 requests
 python-dotenv
-Flask-UUID
 Shapely

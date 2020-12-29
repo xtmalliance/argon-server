@@ -138,6 +138,21 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+CELERY_RESULT_BACKEND = BROKER_URL
+CELERYBEAT_SCHEDULE = {
+    'submit-spotlight-task': {
+        'task': 'flight_blender.tasks.submit-spotlight-task',
+        # Every 30 secionds
+        'schedule': timedelta(seconds=int(HEARTBEAT)),
+    }, 
+    
+    # 'poll-flights':{
+    #     'task': 'blender.tasks.flights_reader.poll_uss_for_flights',
+    #     # Every 30 secionds
+    #     'schedule': timedelta(seconds=int(HEARTBEAT)),
+        
+    # }
+}
 # DataFlair #Logging Information
 LOGGING = {
     'version': 1,
