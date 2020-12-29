@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'flight_declaration_operations',
     'geo_fence_operations',
+    'flight_feed_operations',
     'dss_operations'
 ]
 
