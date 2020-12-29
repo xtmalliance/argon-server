@@ -6,12 +6,12 @@ import json
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from .tasks import WriteGeoFence
+from .tasks import write_geo_fence
 
 
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
-def post_geo_fence(request):   
+def set_geo_fence(request):   
     try:
         assert request.headers['Content-Type'] == 'application/json'   
     except AssertionError as ae:     
@@ -20,7 +20,7 @@ def post_geo_fence(request):
     else:    
         geo_fence = json.loads(request.data)
     
-    WriteGeoFence.delay(geo_fence)  # Send a job to the task queue
+    write_geo_fence.delay(geo_fence)  # Send a job to the task queue
 
     op = json.dumps ({"message":"Geofence submitted successfully"})
     return JsonResponse(op, status=200, mimetype='application/json')

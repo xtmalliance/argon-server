@@ -1,19 +1,18 @@
-import plcnxdb.settings 
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 import logging
-import dss_rw_helper
+from . import dss_rw_helper
 from walrus import Database
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 
 
-@task('SubmitDSSSubscription')
+@task(name='submit_dss_subscription')
 def submit_dss_subscription(view , vertex_list):
     myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
     subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
-    logging.success("Created Subscription %s" subscription_created.id)
+    logging.success("Created Subscription %s" % subscription_created.id)
 
 
 def get_consumer_group(create=False):
@@ -74,7 +73,7 @@ class AuthorityCredentialsGetter():
         return t_data
 
 
-@task('PollUSSforFlights')
+@task(name='poll_uss_for_flights')
 def poll_uss_for_flights():
     authority_credentials = AuthorityCredentialsGetter()
     flights_dict = redis.hgetall("all_uss_flights")

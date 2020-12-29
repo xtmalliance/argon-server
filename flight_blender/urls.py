@@ -15,7 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
+from flight_declaration_operations import views as flight_declaration_views
+from flight_feed_operations import views as flight_feed_views
+from geo_fence_operations import views as geo_fence_views
+from dss_operations import views as dss_views
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('ping', flight_feed_views.ping),
+    path('set_air_traffic', flight_feed_views.set_air_traffic),
+    path('create_dss_subscription', dss_views.create_dss_subscription),
+    path('dss_isa_callback', dss_views.dss_isa_callback),
+    path('set_flight_declaration', flight_declaration_views.set_flight_declaration),
+    path('set_geo_fence', geo_fence_views.set_geo_fence),
 ]

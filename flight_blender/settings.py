@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import datetime, timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv, find_dotenv
@@ -143,7 +144,7 @@ CELERYBEAT_SCHEDULE = {
     'submit-spotlight-task': {
         'task': 'flight_blender.tasks.submit-spotlight-task',
         # Every 30 secionds
-        'schedule': timedelta(seconds=int(HEARTBEAT)),
+        'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS',default=4))),
     }, 
     
     # 'poll-flights':{

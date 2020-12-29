@@ -10,7 +10,12 @@ import logging
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from .tasks import WriteIncomingData
+from .tasks import write_incoming_data
+
+
+@api_view(['GET'])
+def ping(request):
+    return JsonResponse(json.dumps({"message":"pong"}), status=200,mimetype='application/json')
 
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
@@ -42,7 +47,7 @@ def set_air_traffic(request):
             source_type = observation['source_type']
             icao_address = observation['icao_address']
             single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address }
-            task = WriteIncomingData.delay(single_observation)  # Send a job to the task queue
+            task = write_incoming_data.delay(single_observation)  # Send a job to the task queue
 
         op = json.dumps ({"message":"OK"})
         return JsonResponse(op, status=200, mimetype='application/json')

@@ -4,15 +4,13 @@
 
 from functools import wraps
 import json
-from flask_uuid import FlaskUUID
+
 from six.moves.urllib.request import urlopen
 import redis
 import redis
 from datetime import datetime, timedelta
 import uuid, os
 import requests
-from flask import request
-from flask import current_app
 from os import environ as env
 
 

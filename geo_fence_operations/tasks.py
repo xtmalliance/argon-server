@@ -1,12 +1,12 @@
-import plcnxdb.settings 
+
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 import logging
-import geo_fence_rw_helper
+from . import geo_fence_rw_helper
 
 
 
-@task(name="WriteGeoFence")
+@task(name="write_geo_fence")
 def write_geo_fence(geo_fence): 
     my_credentials = geo_fence_rw_helper.PassportCredentialsGetter()
     gf_credentials = my_credentials.get_cached_credentials()

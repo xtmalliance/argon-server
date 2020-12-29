@@ -1,11 +1,10 @@
-import plcnxdb.settings 
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 import logging
-import flight_declaration_rw_helper
+from . import flight_declaration_rw_helper
 
 
-@task('WriteFlightDeclaration')
+@task(name='write_flight_declaration')
 def write_flight_declaration(fd):   
     my_credential_ops = flight_declaration_rw_helper.PassportCredentialsGetter()        
     fd_credentials = my_credential_ops.get_cached_credentials()

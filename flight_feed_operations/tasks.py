@@ -12,13 +12,9 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 
-REDIS_HOST = os.getenv('REDIS_HOST',"redis")
-REDIS_PORT = 6379
-
-
 #### Airtraffic Endpoint
 
-@task('WriteIncomingData')
+@task(name='write_incoming_data')
 def write_incoming_data(observation): 
     myCGOps = ConsumerGroupOps()
     cg = myCGOps.get_consumer_group()           
@@ -92,7 +88,7 @@ def get_consumer_group(create=False):
     return cg.all_observations
 
 
-@task('submit-spotlight-task')
+@task(name='submit_flights_to_spotlight')
 def submit_flights_to_spotlight():
     
     # get existing consumer group
