@@ -1,26 +1,24 @@
 import celery
 import requests
-
 from celery.decorators import task
 import os, json
 import logging
 from os import environ as env
 import redis
+from . import flight_stream_helper
 from datetime import datetime, timedelta
 from walrus import Database
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-
 #### Airtraffic Endpoint
 
 @task(name='write_incoming_data')
 def write_incoming_data(observation): 
-    myCGOps = ConsumerGroupOps()
+    myCGOps = flight_stream_helper.ConsumerGroupOps()
     cg = myCGOps.get_consumer_group()           
     msgid = cg.add(observation)            
     return msgid
-
 
 
 class PassportCredentialsGetter():
@@ -71,48 +69,31 @@ class PassportCredentialsGetter():
 #     logger.info("Hello")
     
 
-def get_consumer_group(create=False):
-    
-    db = Database(host=REDIS_HOST, port =REDIS_PORT)   
-    stream_keys = ['all_observations']
-    
-    cg = db.time_series('cg-obs', stream_keys)
-    if create:
-        for stream in stream_keys:
-            db.xadd(stream, {'data': ''})
-
-    if create:
-        cg.create()
-        cg.set_id('$')
-
-    return cg.all_observations
-
-
 @task(name='submit_flights_to_spotlight')
 def submit_flights_to_spotlight():
-    
     # get existing consumer group
-    my_cg_ops = ConsumerGroupOps()
+    my_cg_ops = flight_stream_helper.ConsumerGroupOps()
     cg = my_cg_ops.get_consumer_group()
     messages = cg.read()
     pending_messages = []
     
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
-    
-    for message in messages: 
-        pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'data':message.data, 'address':message.data['icao_address']})
-    
-    # sort by date
-    pending_messages.sort(key=lambda item:item['timestamp'], reverse=True)
+    if 'error' in credentials: 
+        logging.error('Error in getting credentials %s' % credentials)
+    else:
+        for message in messages: 
+            pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'data':message.data, 'address':message.data['icao_address']})
+        
+        # sort by date
+        pending_messages.sort(key=lambda item:item['timestamp'], reverse=True)
 
-    # Keep only the latest message
-    distinct_messages = {i['address']:i for i in reversed(pending_messages)}.values()
-    spotlight_host = os.getenv('SPOTLIGHT_HOST', 'http://localhost:5000')
-    securl = spotlight_host + '/set_air_traffic'
-    headers = {"Authorization": "Bearer " + credentials['access_token']}
-    for message in distinct_messages:
-        payload = {"icao_address" : message['icao_address'],"traffic_source" :message['traffic_source'], "source_type" : message['source_type'], "lat_dd" : message['lat_dd'], "lon_dd" : message['lon_dd'], "time_stamp" : message['time_stamp'],"altitude_mm" : message['altitude_mm']}
-        response = requests.post(securl, data= payload, headers=headers)
-        logging.info(response.status_code)
-
+        # Keep only the latest message
+        distinct_messages = {i['address']:i for i in reversed(pending_messages)}.values()
+        spotlight_host = os.getenv('SPOTLIGHT_HOST', 'http://localhost:5000')
+        securl = spotlight_host + '/set_air_traffic'
+        headers = {"Authorization": "Bearer " + credentials['access_token']}
+        for message in distinct_messages:
+            payload = {"icao_address" : message['icao_address'],"traffic_source" :message['traffic_source'], "source_type" : message['source_type'], "lat_dd" : message['lat_dd'], "lon_dd" : message['lon_dd'], "time_stamp" : message['time_stamp'],"altitude_mm" : message['altitude_mm']}
+            response = requests.post(securl, data= payload, headers=headers)
+            logging.info(response.status_code)

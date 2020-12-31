@@ -134,3 +134,4 @@ dmypy.json
 
 .vscode/settings.json
 *.sqlite3
+celerybeat-schedule.db

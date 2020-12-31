@@ -5,7 +5,6 @@ import logging
 from . import geo_fence_rw_helper
 
 
-
 @task(name="write_geo_fence")
 def write_geo_fence(geo_fence): 
     my_credentials = geo_fence_rw_helper.PassportCredentialsGetter()

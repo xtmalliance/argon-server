@@ -3,9 +3,9 @@ from celery.utils.log import get_task_logger
 import logging
 from . import dss_rw_helper
 from walrus import Database
+from flight_feed_operations import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
-
 
 
 @task(name='submit_dss_subscription')
@@ -79,7 +79,7 @@ def poll_uss_for_flights():
     flights_dict = redis.hgetall("all_uss_flights")
     all_flights_url = flights_dict['all_flights_url']
     # flights_view = flights_dict['view']
-    cg_ops = ConsumerGroupOps()
+    cg_ops = flight_stream_helper.ConsumerGroupOps()
     cg = cg_ops.get_consumer_group()
 
     for cur_flight_url in all_flights_url:
