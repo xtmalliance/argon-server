@@ -9,8 +9,9 @@ def write_flight_declaration(fd):
     my_credential_ops = flight_declaration_rw_helper.PassportCredentialsGetter()        
     fd_credentials = my_credential_ops.get_cached_credentials()
     
+
     try: 
-        assert any(fd_credentials) == True # Dictionary is populated 
+        assert 'error' not in fd_credentials # Dictionary is populated 
     except AssertionError as e: 
         # Error in receiving a Flight Declaration credential
         logging.error('Error in getting Flight Declaration Token')

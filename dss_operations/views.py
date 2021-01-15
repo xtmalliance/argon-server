@@ -9,7 +9,7 @@ from auth_helper.utils import requires_scopes, BearerAuth
 # Create your views here.
 import json, os
 import logging
-from django.http import JsonResponse
+from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
@@ -26,11 +26,13 @@ def create_dss_subscription(request):
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
 
     try: 
-        view = request.args.get('view') # view is a bbox list
+        view = request.POST['view']
+        # view = request.POST.get['view'] # view is a bbox list
         view = [float(i) for i in view.split(",")]
     except Exception as ke:
+        
         incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
-        return JsonResponse(json.dumps(incorrect_parameters), status=400, mimetype='application/json')
+        return HttpResponse(json.dumps(incorrect_parameters), status=400)
     else:
         b = box(view[0], view[1], view[2],view[3])
         co_ordinates = list(zip(*b.exterior.coords.xy))
@@ -53,7 +55,7 @@ def create_dss_subscription(request):
             msg = {"message":"DSS Subscription created"}
         else:
             msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator."}
-        return JsonResponse(json.dumps(msg), status=200, mimetype='application/json')
+        return HttpResponse(json.dumps(msg), status=200)
 
 
 

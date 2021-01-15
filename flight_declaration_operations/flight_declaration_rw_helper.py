@@ -7,7 +7,7 @@ from six.moves.urllib.request import urlopen
 
 import redis, json
 import geojson, requests
-from flask import Flask, current_app
+import logging
 from geojson import Polygon
 from datetime import datetime, timedelta
 
@@ -69,14 +69,14 @@ class FlightDeclarationsUploader():
         
         headers = {"Authorization": "Bearer "+ self.credentials['access_token']}
         
-        payload = {"flight_declaration" : json.dumps(flight_declaration_json)}                
+        payload = {"flight_declaration" : flight_declaration_json}                
 
         securl = env.get('FLIGHT_SPOTLIGHT_URL') + '/set_flight_declaration'
         try:
             response = requests.post(securl, data= payload, headers=headers)
-            current_app.logger.debug(response.content)                
+                           
         except Exception as e:
-            current_app.logger.error(e)
+            logging.error(e)
         else:            
-            current_app.logger.debug("Uploaded Flight Declarations")                    
+            logging.debug("Uploaded Flight Declarations")                    
             return "Uploaded Flight Declarations"

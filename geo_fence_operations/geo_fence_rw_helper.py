@@ -10,7 +10,7 @@ import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
 from flask import Flask, current_app
-
+import logging
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
 REDIS_PORT = 6379
@@ -64,7 +64,7 @@ class GeoFenceUploader():
     def upload_to_server(self, gf):
         geo_fence_data = json.loads(gf)
         for fence_feature in geo_fence_data['features']:
-            headers = {"Authorization": "Bearer "+ self.credentials['access_token']}
+            headers = {"Authorization": "Bearer " + self.credentials['access_token']}
             upper_limit = fence_feature['properties']['upper_limit']
             lower_limit = fence_feature['properties']['lower_limit']
             try:
@@ -86,10 +86,10 @@ class GeoFenceUploader():
                     securl = env.get("FLIGHT_SPOTLIGHT_URL")+ '/set_geo_fence'
                     try:
                         response = requests.post(securl, data= payload, headers=headers)
-                        current_app.logger.debug(response.content)                
+                        logging.debug(response.content)                
                     except Exception as e:
-                        current_app.logger.error(e)
+                        logging.error(e)
                     else:            
-                        current_app.logger.debug("Uploaded Geofence")
+                        logging.debug("Uploaded Geofence")
                         # print("Uploaded Geofence")                 
                         return {"message":"Successfully uploaded Geofence"}   
