@@ -7,3 +7,7 @@ celery
 requests
 python-dotenv
 Shapely
+python-jose
+cryptography
+pyjwt
+geojson

@@ -9,7 +9,6 @@ import redis, celery
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
-from flask import Flask, current_app
 import logging
 
 REDIS_HOST = os.getenv('REDIS_HOST',"redis")
