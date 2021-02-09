@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('ping', flight_feed_views.ping),
     path('set_air_traffic', flight_feed_views.set_air_traffic),
-    path('create_dss_subscription/$', dss_views.create_dss_subscription),
+    path('create_dss_subscription/', dss_views.create_dss_subscription),
     path('dss_isa_callback', dss_views.dss_isa_callback),
     path('set_flight_declaration', flight_declaration_views.set_flight_declaration),
     path('set_geo_fence', geo_fence_views.set_geo_fence),
