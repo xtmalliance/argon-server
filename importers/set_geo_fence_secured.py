@@ -94,4 +94,4 @@ if __name__ == '__main__':
     credentials = my_credentials.get_write_credentials()
     
     my_uploader = FlightSpotlightUploader(credentials = credentials)
-    my_uploader.upload_to_server(filename='aoi_geo_fence/geo_fence.geojson')
+    my_uploader.upload_to_server(filename='aoi_geo_fence_samples/geo_fence.geojson')

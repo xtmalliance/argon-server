@@ -82,4 +82,4 @@ if __name__ == '__main__':
     credentials = my_credentials.get_write_credentials()
     
     my_uploader = FlightSpotlightUploader(credentials = credentials)
-    my_uploader.upload_to_server(filename='flight_declarations/flight-1.json')
+    my_uploader.upload_to_server(filename='flight_declarations_samples/flight-1.json')

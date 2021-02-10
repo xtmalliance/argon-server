@@ -6,7 +6,7 @@
             "timestamp": 1590000000000,
             "traffic_source":3,
             "source_type" :0,
-            "icao_addresss": "drone-a",
+            "icao_address": "drone-a",
             "altitude_mm": 230.93
           },
           {
@@ -16,7 +16,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 285.23,
-            "icao_addresss": "drone-b"
+            "icao_address": "drone-b"
           }, 
            {
             "lon_dd": 30.14592648,
@@ -25,7 +25,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 250.67,
-            "icao_addresss": "drone-a"
+            "icao_address": "drone-a"
           },
           {
             "lon_dd": 30.14386654,
@@ -34,7 +34,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 270.22,
-            "icao_addresss": "drone-b"
+            "icao_address": "drone-b"
           }, 
            {
             "lon_dd": 30.15129089,
@@ -43,7 +43,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 270.22,
-            "icao_addresss": "drone-a"
+            "icao_address": "drone-a"
           },
           {
             "lon_dd": 30.14317989,
@@ -52,7 +52,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 250.67,
-            "icao_addresss": "drone-b"
+            "icao_address": "drone-b"
           }, 
           {
             "lon_dd": 30.15511036,
@@ -61,7 +61,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 285.23,
-            "icao_addresss": "drone-a"
+            "icao_address": "drone-a"
           },
           {
             "lon_dd": 30.14240742,
@@ -70,7 +70,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 230.93,
-            "icao_addresss": "drone-b"
+            "icao_address": "drone-b"
           }, 
           {
             "lon_dd": 30.1591444,
@@ -79,7 +79,7 @@
             "traffic_source":3,
             "source_type" :0,
             "altitude_mm": 290.42,
-            "icao_addresss": "drone-a"
+            "icao_address": "drone-a"
           }
     
   ]

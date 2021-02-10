@@ -19,21 +19,21 @@ class PassportCredentialsGetter():
         
         now = datetime.now()
         
-        token_details = r.get('access_token_details')
+        token_details = r.get('flight_data_access_token_details')
         if token_details:    
             token_details = json.loads(token_details)
             created_at = token_details['created_at']
             set_date = datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f")
             if now < (set_date - timedelta(minutes=58)):
                 credentials = self.get_write_credentials()
-                r.set('access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+                r.set('flight_data_access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
             else: 
                 credentials = token_details['credentials']
         else:   
             
             credentials = self.get_write_credentials()
-            r.set('access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            r.expire("access_token_details", timedelta(minutes=58))
+            r.set('flight_data_access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+            r.expire("flight_data_access_token_details", timedelta(minutes=58))
             
         return credentials
             
@@ -76,7 +76,7 @@ class FlightSpotlightUploader():
 
                 headers = {"Authorization": "Bearer "+ self.credentials['access_token']}
                 payload = {"icao_address" : icao_address,"traffic_source" :traffic_source, "source_type" : source_type, "lat_dd" : lat_dd, "lon_dd" : lon_dd, "time_stamp" : time_stamp,"altitude_mm" : altitude_mm}
-                securl = 'http://localhost:8080/set_air_traffic'
+                securl = 'http://localhost:5000/set_air_traffic'
                 try:
                     response = requests.post(securl, data= payload, headers=headers)
                     print(response.content)                
@@ -94,4 +94,4 @@ if __name__ == '__main__':
     credentials = my_credentials.get_cached_credentials()
     # print(credentials)
     my_uploader = FlightSpotlightUploader(credentials = credentials)
-    my_uploader.upload_to_server(filename='air_traffic/micro_flight_data_single.json')
+    my_uploader.upload_to_server(filename='air_traffic_samples/micro_flight_data.json')
