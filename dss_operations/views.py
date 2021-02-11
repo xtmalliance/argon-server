@@ -59,6 +59,13 @@ def create_dss_subscription(request):
 
 
 
+@api_view(['GET'])
+@requires_scopes(['blender.read'])
+def get_rid_data(request, subscription_id):
+    ''' This is the GET endpoint for remote id data '''
+    pass
+
+
 @api_view(['POST'])
 @requires_scopes(['dss.write.identification_service_areas'])
 def dss_isa_callback(request, id):
@@ -75,8 +82,8 @@ def dss_isa_callback(request, id):
         redis.hmset("all_uss_flights", flights_dict)
         
     except AssertionError as ae:
-        return JsonResponse("Incorrect data in the POST URL", status=400, mimetype='application/json')
+        return HttpResponse("Incorrect data in the POST URL", status=400, mimetype='application/json')
         
     else:
         # All OK return a empty response
-        return JsonResponse("", status=204, mimetype='application/json')
+        return HttpResponse("", status=204, mimetype='application/json')

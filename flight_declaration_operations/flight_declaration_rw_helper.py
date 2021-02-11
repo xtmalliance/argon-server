@@ -1,5 +1,5 @@
 # API to submit Flight Declarations into Spotlight
-# from flask import Blueprint, current_app
+
 from functools import wraps
 from os import environ as env
 import os
@@ -10,12 +10,6 @@ import geojson, requests
 import logging
 from geojson import Polygon
 from datetime import datetime, timedelta
-
-
-# fd_blueprint = Blueprint('flight_declaration_writer', __name__)
- 
-REDIS_HOST = os.getenv('REDIS_HOST',"redis")
-REDIS_PORT = 6379
 
 
 class PassportCredentialsGetter():

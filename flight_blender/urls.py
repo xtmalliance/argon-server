@@ -25,6 +25,7 @@ urlpatterns = [
     path('set_air_traffic', flight_feed_views.set_air_traffic),
     path('create_dss_subscription/', dss_views.create_dss_subscription),
     path('dss_isa_callback', dss_views.dss_isa_callback),
+    path('get_rid_data/<uuid:subscription_id>', dss_views.get_rid_data),
     path('set_flight_declaration', flight_declaration_views.set_flight_declaration),
     path('set_geo_fence', geo_fence_views.set_geo_fence),
 ]

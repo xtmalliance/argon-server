@@ -11,8 +11,6 @@ from geojson import Polygon
 from datetime import datetime, timedelta
 import logging
 
-REDIS_HOST = os.getenv('REDIS_HOST',"redis")
-REDIS_PORT = 6379
 
 class PassportCredentialsGetter():
     def __init__(self):

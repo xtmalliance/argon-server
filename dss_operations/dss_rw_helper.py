@@ -7,7 +7,7 @@ import json
 
 from six.moves.urllib.request import urlopen
 import redis
-import redis
+import logging
 from datetime import datetime, timedelta
 import uuid, os
 import requests
@@ -68,13 +68,13 @@ class RemoteIDOperations():
         try: 
             assert audience
         except AssertionError as ae:
-            current_app.logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
+            logging.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
             return subscription_response
 
         try:
             auth_token = my_authorization_helper.get_cached_credentials(audience)
         except Exception as e:
-            current_app.logger.error("Error in getting Authority Access Token %s " % e)
+            logging.error("Error in getting Authority Access Token %s " % e)
             return subscription_response        
         else:
             error = auth_token.get("error")            
@@ -86,7 +86,7 @@ class RemoteIDOperations():
             return subscription_response
         else: 
             
-            current_app.logger.info("Successfully received Token")
+            logging.info("Successfully received Token")
             # A token from authority was received, 
             new_subscription_id = str(uuid.uuid4())
             dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
@@ -105,7 +105,7 @@ class RemoteIDOperations():
             try:
                 dss_r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)  
             except Exception as re: 
-                current_app.logger.error("Error in posting to subscription URL %s " % re)
+                logging.error("Error in posting to subscription URL %s " % re)
                 return subscription_response
 
             else: 
@@ -113,7 +113,7 @@ class RemoteIDOperations():
                     assert dss_r.status_code == 200
                     subscription_response["created"] = 1
                 except AssertionError as ae: 
-                    current_app.logger.error("Error in creating subscription in the DSS %s" % dss_r.text)
+                    logging.error("Error in creating subscription in the DSS %s" % dss_r.text)
                     return subscription_response
                 else: 	
                     dss_response = dss_r.json()

@@ -5,8 +5,16 @@ from . import dss_rw_helper
 from walrus import Database
 from flight_feed_operations import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
+import tldextract
+import json
+
+from os import environ as env
+from datetime import datetime, timedelta, timezone
+import redis
+import requests
 load_dotenv(find_dotenv())
 
+ 
 
 @task(name='submit_dss_subscription')
 def submit_dss_subscription(view , vertex_list):
@@ -17,7 +25,7 @@ def submit_dss_subscription(view , vertex_list):
 
 def get_consumer_group(create=False):
     
-    db = Database(host=REDIS_HOST, port =REDIS_PORT)   
+    db = Database(host=env.get('REDIS_HOST',"redis"), port =env.get(REDIS_PORT,6379))   
     stream_keys = ['all_observations']
     
     cg = db.time_series('cg-obs', stream_keys)
@@ -98,8 +106,8 @@ def poll_uss_for_flights():
                 try: 
                     assert flight.get('current_state') is not None
                 except AssertionError as ae:
-                    current_app.logging.error('There is no current_state provided by SP on the flights url %s' % cur_flight_url)
-                    current_app.logging.debug(json.dumps(flight))
+                    logging.error('There is no current_state provided by SP on the flights url %s' % cur_flight_url)
+                    logging.debug(json.dumps(flight))
                 else:
                     position = flight['current_state']['position']
                     now  = datetime.now()

@@ -27,13 +27,13 @@ paths:
         "200":
           description: "pong"
         "400":
-          $ref: "#/responses/BadRequest400ErrorResponse"
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/responses/Unauthorized401ErrorResponse"
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/responses/Forbidden403ErrorResponse"
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/responses/Standard500ErrorResponse"
+          $ref: "#/components/schemas/Standard500ErrorResponse"
 
   /create_dss_subscription:
     post:
@@ -41,12 +41,11 @@ paths:
       security:
         - AuthFromPassport: [write]
       description:
-        "Subscription for airspace updates to a volume of interest. After extents are submitted, Flight Blender will \
-        \ get a appropriate token and create a subscription. It will then poll flights to the Flights URL"
+        "Create a subscription for airspace updates to a volume of interest. After extents are submitted, Flight Blender will \
+        \ get a appropriate token and create a subscription with a DSS, the DSS url needs to be confirmed / set as a part of Flight Blender setup. It will then poll flights through the Flights URLs provided by the DSS "
       parameters:
         - name: view
-          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed
-            a diagonal length specified in the standard.  The view is the smallest box
+          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box
             bounded by the provided corner points.'
           schema:
             type: string
@@ -60,13 +59,43 @@ paths:
         "201":
           description: "Subscription Created"
         "400":
-          $ref: "#/responses/BadRequest400ErrorResponse"
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/responses/Unauthorized401ErrorResponse"
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/responses/Forbidden403ErrorResponse"
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/responses/Standard500ErrorResponse"
+          $ref: "#/components/schemas/Standard500ErrorResponse"
+
+  /get_rid_data/{subscription_id}:
+
+    get:
+      summary: "Get remote id data given a subscription id"
+      security:
+        - AuthFromPassport: [read]
+      description:
+        "By default flight blender sends flight data to Flight Spotlight as a scheduled job every x seconds (which can be configured) \
+        \ in case you want to use a different polling mechanism, use this endpoint to get flights if you are using a polling mechanism for your display client"
+      parameters:
+        - in: path 
+          name: subscription_id
+          description: 'This is the ID of the subscription'
+          schema:
+            type: string
+            format: uuid            
+          required: true
+
+      responses:
+        "200":
+          $ref: "#/components/schemas/FlightFeedJSON"
+        "400":
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/components/schemas/Standard500ErrorResponse"
 
   /set_air_traffic:
     post:
@@ -85,7 +114,7 @@ paths:
               type: object
               properties:
                 observations:
-                  $ref: "#/components/definitions/ArrayOfObservations"
+                  $ref: "#/components/schemas/ArrayOfObservations"
 
       responses:
         "200":
@@ -93,13 +122,13 @@ paths:
         "201":
           description: "Airtraffic data added"
         "400":
-          $ref: "#/responses/BadRequest400ErrorResponse"
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/responses/Unauthorized401ErrorResponse"
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/responses/Forbidden403ErrorResponse"
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/responses/Standard500ErrorResponse"
+          $ref: "#/components/schemas/Standard500ErrorResponse"
 
   /set_flight_declaration:
     post:
@@ -122,13 +151,13 @@ paths:
         "201":
           description: "Geofence Created"
         "400":
-          $ref: "#/responses/BadRequest400ErrorResponse"
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/responses/Unauthorized401ErrorResponse"
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/responses/Forbidden403ErrorResponse"
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/responses/Standard500ErrorResponse"
+          $ref: "#/components/schemas/Standard500ErrorResponse"
 
   /set_geo_fence:
     post:
@@ -152,13 +181,13 @@ paths:
         "201":
           description: "Geofence Created"
         "400":
-          $ref: "#/responses/BadRequest400ErrorResponse"
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/responses/Unauthorized401ErrorResponse"
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/responses/Forbidden403ErrorResponse"
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/responses/Standard500ErrorResponse"
+          $ref: "#/components/schemas/Standard500ErrorResponse"
 
 components:
   securitySchemes:
@@ -171,7 +200,34 @@ components:
             blender.write: "Write data into Flight Blender"
             blender.read: "Read data into Flight Blender"
 
+
   schemas:
+
+    Standard500ErrorResponse:
+      description: An unexpected error occured.      
+      $ref: "#/components/schemas/Error"
+
+    BadRequest400ErrorResponse:
+      description: The JSON is not valid
+      
+      $ref: "#/components/schemas/Error"
+
+    Unauthorized401ErrorResponse:
+      description: The request requires an user authentication
+      
+      $ref: "#/components/schemas/Error"
+
+    Forbidden403ErrorResponse:
+      description: the access is not allowed
+      
+      $ref: "#/components/schemas/Error"
+
+
+    FlightFeedJSON:
+      type: array
+      items:
+        $ref: '#/components/schemas/ArrayOfObservations'
+
     FlightDeclarationJSON:
       type: object
       required:
@@ -433,7 +489,7 @@ components:
           items:
             $ref: "#/components/schemas/Point2D"
 
-  definitions:
+    
     Error:
       required:
         - code
@@ -473,23 +529,3 @@ components:
           traffic_source:
             type: integer
 
-responses:
-  Standard500ErrorResponse:
-    description: An unexpected error occured.
-    schema:
-      $ref: "#/components/definitions/Error"
-
-  BadRequest400ErrorResponse:
-    description: The JSON is not valid
-    schema:
-      $ref: "#/components/definitions/Error"
-
-  Unauthorized401ErrorResponse:
-    description: The request requires an user authentication
-    schema:
-      $ref: "#/components/definitions/Error"
-
-  Forbidden403ErrorResponse:
-    description: the access is not allowed
-    schema:
-      $ref: "#/components/definitions/Error"
