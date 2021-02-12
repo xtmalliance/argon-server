@@ -12,7 +12,8 @@ import logging
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-
+import dss_rw_helper
+import uuid
 from shapely.geometry import box
 import redis
 
@@ -47,14 +48,14 @@ def create_dss_subscription(request):
         vertex_list.pop()
         # TODO: Make this a asnyc call
         #tasks.submit_dss_subscription(vertex_list = vertex_list, view_port = view)
-        
-        myDSSubscriber = rid_dss_operations.RemoteIDOperations()
-        subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
+        uuid = str(uuid.uuid4())
+        myDSSubscriber = dss_rw_helper.RemoteIDOperations()
+        subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = uuid)
 
         if subscription_respone['created']:
-            msg = {"message":"DSS Subscription created"}
+            msg = {"message":"DSS Subscription created", 'id': uuid}
         else:
-            msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator."}
+            msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': uuid}
         return HttpResponse(json.dumps(msg), status=200)
 
 

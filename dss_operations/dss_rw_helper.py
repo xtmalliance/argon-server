@@ -13,14 +13,13 @@ import uuid, os
 import requests
 from os import environ as env
 
-
 class AuthorityCredentialsGetter():
     ''' All calls to the DSS require credentials from a authority, usually the CAA since they can provide access to the system '''
     def __init__(self):
         pass
         
     def get_cached_credentials(self, audience):  
-        r = redis.Redis()
+        r = redis.Redis(host=os.getenv(['REDIS_HOST']), port =os.getenv(['REDIS_PORT']))   
         
         now = datetime.now()
         cache_key = audience + '_auth_dss_token'
@@ -56,7 +55,7 @@ class RemoteIDOperations():
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')
 
-    def create_dss_subscription(self, vertex_list, view_port):
+    def create_dss_subscription(self, vertex_list, view_port, request_uuid):
         ''' This method PUTS /dss/subscriptions ''' 
         
         subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
@@ -130,9 +129,9 @@ class RemoteIDOperations():
                         flights_url = service_area['flights_url']
                         flights_url_list.append(flights_url)
 
-                    flights_dict= {'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
+                    flights_dict= {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
 
-                    redis = redis.Redis()
+                    redis = redis.Redis(host=os.getenv(['REDIS_HOST']), port =os.getenv(['REDIS_PORT']))   
                     hash_name = "all_uss_flights"
                     redis.hmset(hash_name, flights_dict)
                     # expire keys in one hour

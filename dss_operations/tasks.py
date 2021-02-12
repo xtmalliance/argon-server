@@ -13,19 +13,18 @@ from datetime import datetime, timedelta, timezone
 import redis
 import requests
 load_dotenv(find_dotenv())
-
  
 
 @task(name='submit_dss_subscription')
-def submit_dss_subscription(view , vertex_list):
+def submit_dss_subscription(view , vertex_list, request_uuid):
     myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
-    subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view)
-    logging.success("Created Subscription %s" % subscription_created.id)
+    subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = request_uuid)
+    logging.success("Subscription creation status: %s" % subscription_created['created'])
 
 
 def get_consumer_group(create=False):
     
-    db = Database(host=env.get('REDIS_HOST',"redis"), port =env.get(REDIS_PORT,6379))   
+    db = Database(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
     stream_keys = ['all_observations']
     
     cg = db.time_series('cg-obs', stream_keys)
@@ -47,7 +46,7 @@ class AuthorityCredentialsGetter():
         pass
         
     def get_cached_credentials(self, audience):  
-        r = redis.Redis()
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
         
         now = datetime.now()
         cache_key = audience + '_auth_dss_token'
@@ -84,6 +83,7 @@ class AuthorityCredentialsGetter():
 @task(name='poll_uss_for_flights')
 def poll_uss_for_flights():
     authority_credentials = AuthorityCredentialsGetter()
+    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
     flights_dict = redis.hgetall("all_uss_flights")
     all_flights_url = flights_dict['all_flights_url']
     # flights_view = flights_dict['view']
