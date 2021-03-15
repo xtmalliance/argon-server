@@ -5,7 +5,6 @@
 from functools import wraps
 import json
 
-from six.moves.urllib.request import urlopen
 import redis
 import logging
 from datetime import datetime, timedelta

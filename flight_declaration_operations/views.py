@@ -35,6 +35,9 @@ def set_flight_declaration(request):
     else:
         
         task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to the task queuervation)  # Send a job to the task queue
+        # Write the flight Declaration to database
+        
+        
         op = json.dumps ({"message":"Submitted Flight Declaration"})
         return HttpResponse(op, status=200)
 
