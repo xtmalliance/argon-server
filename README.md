@@ -1,4 +1,4 @@
-<img src="https://i.imgur.com/YIfAsfV.jpg" width="350">
+<img src="images/blender-logo.jfif" width="350">
 
 # Flight Blender
 
