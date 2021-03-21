@@ -22,7 +22,7 @@ Normally a "Display Provider" is used in conjunction with a "Display Application
 
 The diagram below shows how Fight Blender works.
 
-![img](https://i.imgur.com/IuJ0wqF.png)
+![img](images/openskies-stack.png)
 
 ## Installation
 
