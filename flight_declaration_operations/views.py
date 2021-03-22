@@ -11,6 +11,11 @@ from .models import FlightOperation
 from .tasks import write_flight_declaration
 from shapely.geometry import asShape
 from shapely.ops import unary_union
+
+from rest_framework import mixins, generics
+from .serializers import FlightOperationSerializer
+from django.utils.decorators import method_decorator
+
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
 def set_flight_declaration(request): 
@@ -49,13 +54,35 @@ def set_flight_declaration(request):
         except KeyError as ke:
             end_time = arrow.now().shift(hours=1).isoformat()
         else:
-            end_time = arrow.get(req["end_time"]).isoformat()
             
-        type_of_operation = flight_declaration_data['flight_declaration']['operation_mode']
+            end_time = arrow.get(req["end_time"]).isoformat()
+        
+        type_of_operation = flight_declaration_data['operation_mode']
         type_of_operation = 1  if (type_of_operation =='bvlos') else 0
         fo = FlightOperation(gutma_flight_declaration = json.dumps(flight_declaration_data),start_datetime= start_time, end_datetime=end_time, bounds= bounds, type_of_operation= type_of_operation)
         fo.save()
         
-        op = json.dumps ({"message":"Submitted Flight Declaration"})
+        op = json.dumps ({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
         return HttpResponse(op, status=200)
 
+
+@method_decorator(requires_scopes(['blender.read']), name='dispatch')
+class FlightOperationDetail(mixins.RetrieveModelMixin,             
+                    generics.GenericAPIView):
+
+    queryset = FlightOperation.objects.all()
+    serializer_class = FlightOperationSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
+@method_decorator(requires_scopes(['blender.read']), name='dispatch')
+class FlightOperationList(mixins.ListModelMixin,  
+    generics.GenericAPIView):
+
+    queryset = FlightOperation.objects.all()
+    serializer_class = FlightOperationSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)

@@ -130,6 +130,64 @@ paths:
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
 
+  /flight_declaration:
+    
+    get:
+      summary: "Get a list of all submitted flight declarations"
+      security:
+        - AuthFromPassport: [read]
+      description:
+        "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
+        
+
+      responses:
+        "200":
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/FlightDeclarationList"
+        "400":
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/components/schemas/Standard500ErrorResponse"
+
+  /flight_declaration/{flight_declaration_id}:
+    
+    get:
+      summary: "Get the details of a a single flight declaration"
+      security:
+        - AuthFromPassport: [read]
+      description:
+        "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
+      parameters:
+        - in: path 
+          name: flight_declaration_id
+          description: 'This is the ID of the flight declaration'
+          schema:
+            type: string
+            format: uuid            
+          required: true
+
+      responses:
+        "200":
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/FlightDeclarationDetail"
+        "400":
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/components/schemas/Standard500ErrorResponse"
+
+
   /set_flight_declaration:
     post:
       summary: "Add a Flight Declaration"
@@ -147,9 +205,16 @@ paths:
 
       responses:
         "200":
-          description: "OK"
-        "201":
-          description: "Geofence Created"
+          description: A flight declaration created notification
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/FlightDeclarationCreated"
+              example: 
+                id: 842bde46-6559-49af-8272-3da722a48a7d
+                message: "Flight Declaration submitted"
+                is_approved: 0
+                
         "400":
           $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
@@ -177,9 +242,9 @@ paths:
 
       responses:
         "200":
-          description: "OK"
+          $ref: "#/components/schemas/GeoFenceCreated"
         "201":
-          description: "Geofence Created"
+          $ref: "#/components/schemas/GeoFenceCreated"
         "400":
           $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
@@ -203,6 +268,33 @@ components:
 
   schemas:
 
+    FlightDeclarationCreated:
+      description: A flight declaration has been created
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        message:
+          type: string
+          example: "Submitted Flight Declaration"
+        is_approved: 
+          type: boolean
+          example: 1
+
+    GeoFenceCreated:
+      description: A Geofence has been created
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        message:
+          type: string
+          example: "Submitted Geofence"
+
     Standard500ErrorResponse:
       description: An unexpected error occured.      
       $ref: "#/components/schemas/Error"
@@ -221,18 +313,40 @@ components:
       description: the access is not allowed
       
       $ref: "#/components/schemas/Error"
-
-
+    
     FlightFeedJSON:
       type: array
       items:
         $ref: '#/components/schemas/ArrayOfObservations'
 
+    FlightDeclarationList:
+      type: array
+      items:
+        $ref: '#/components/schemas/FlightDeclarationDetail'
+
+    FlightDeclarationDetail: 
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        is_approved:
+          type: string
+          format: boolean
+        gutma_flight_declaration: 
+          type: object
+          $ref: '#/components/schemas/FlightDeclarationJSON'
+
     FlightDeclarationJSON:
       type: object
       required:
         - flight_declaration
-      properties:
+      properties:      
+        operation_mode:
+          type: string
+          enum: [vlos,bvlos]      
+        operator_name:
+          type: string          
         exchange_type:
           type: string
           enum:
