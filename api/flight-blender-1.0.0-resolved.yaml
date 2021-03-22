@@ -333,6 +333,12 @@ components:
         is_approved:
           type: string
           format: boolean
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
         gutma_flight_declaration: 
           type: object
           $ref: '#/components/schemas/FlightDeclarationJSON'

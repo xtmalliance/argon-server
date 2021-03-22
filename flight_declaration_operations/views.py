@@ -34,7 +34,7 @@ def set_flight_declaration(request):
         return HttpResponse(msg, status=400)
 
     else:
-        task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job 
+        # task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to spotlight
         geo_json_fc = flight_declaration_data['flight_declaration']['parts']
         shp_features = []
         for feature in geo_json_fc['features']:
