@@ -97,7 +97,7 @@ class FlightOperationList(mixins.ListModelMixin,
         else: 
             start_date = present.shift(months=-1)
             end_date = present.shift(days=1)
-        print(start_date, end_date)
+            
         return FlightOperation.objects.filter(start_datetime__gte = start_date.isoformat(), end_datetime__lte = end_date.isoformat())
 
     def get_queryset(self):
