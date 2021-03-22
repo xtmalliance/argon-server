@@ -11,11 +11,14 @@ from .models import FlightOperation
 from .tasks import write_flight_declaration
 from shapely.geometry import asShape
 from shapely.ops import unary_union
-
+from django.http import Http404
 from rest_framework import mixins, generics
 from .serializers import FlightOperationSerializer
 from django.utils.decorators import method_decorator
-
+from django.utils import timezone
+from datetime import datetime, timedelta
+from datetime import date
+from django.utils.timezone import make_aware
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
 def set_flight_declaration(request): 
@@ -83,6 +86,26 @@ class FlightOperationList(mixins.ListModelMixin,
 
     queryset = FlightOperation.objects.all()
     serializer_class = FlightOperationSerializer
+
+    def get_responses(self, start, end):
+
+        present = arrow.now()
+        if start and end:
+            start_date = arrow.format(start, "%Y-%m-%d")
+            end_date = arrow.format(end, "%Y-%m-%d")
+    
+        else: 
+            start_date = present.shift(months=-1)
+            end_date = present.shift(days=1)
+        print(start_date, end_date)
+        return FlightOperation.objects.filter(start_datetime__gte = start_date.isoformat(), end_datetime__lte = end_date.isoformat())
+
+    def get_queryset(self):
+        start_time = self.request.query_params.get('start_time', None)
+        end_time = self.request.query_params.get('end_time', None)
+
+        Responses = self.get_responses(start_time, end_time)
+        return Responses
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
