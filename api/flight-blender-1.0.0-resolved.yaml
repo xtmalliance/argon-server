@@ -158,7 +158,7 @@ paths:
   /flight_declaration/{flight_declaration_id}:
     
     get:
-      summary: "Get the details of a a single flight declaration"
+      summary: "Get the details of a single flight declaration"
       security:
         - AuthFromPassport: [read]
       description:
