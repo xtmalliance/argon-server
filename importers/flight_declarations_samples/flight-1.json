@@ -73,7 +73,7 @@
         },
         "purpose": "Delivery",
         "expect_telemetry": true,
-        "originating_party": "Originating Party, Inc.",
+        "originating_party": "Medicine Delivery Company",
         "contact_url": "https://utm.originatingparty.com/contact?5a7f3377-b991-4cc8-af2d-379d57f786d1",
         "operation_mode": "bvlos",
         "vehicle_id": "157de9bb-6b49-496b-bf3f-0b768ce6a3b6",
