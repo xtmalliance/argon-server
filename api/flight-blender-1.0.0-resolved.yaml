@@ -139,9 +139,25 @@ paths:
       description:
         "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
         
-
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: >
+            The start date for the report. Must be used together with `end_date`.
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: >
+            The end date for the report. Must be used together with `start_date`.
       responses:
+
         "200":
+          description: Get a list of declared operations, `start_date`+`end_date` are optional, by default declared operations for the past month are displayed.
           content: 
             application/json:
               schema: 
