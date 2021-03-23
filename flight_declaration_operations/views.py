@@ -91,20 +91,22 @@ class FlightOperationList(mixins.ListModelMixin,
 
         present = arrow.now()
         if start and end:
-            start_date = arrow.format(start, "%Y-%m-%d")
-            end_date = arrow.format(end, "%Y-%m-%d")
+            start_date = arrow.get(start, "YYYY-MM-DD")
+            end_date = arrow.get(end, "YYYY-MM-DD")
     
         else: 
             start_date = present.shift(months=-1)
             end_date = present.shift(days=1)
+
+        print(start_date, end_date)
             
         return FlightOperation.objects.filter(start_datetime__gte = start_date.isoformat(), end_datetime__lte = end_date.isoformat())
 
     def get_queryset(self):
-        start_time = self.request.query_params.get('start_time', None)
-        end_time = self.request.query_params.get('end_time', None)
+        start_date = self.request.query_params.get('start_date', None)
+        start_date = self.request.query_params.get('end_date', None)
 
-        Responses = self.get_responses(start_time, end_time)
+        Responses = self.get_responses(start_date, start_date)
         return Responses
 
     def get(self, request, *args, **kwargs):
