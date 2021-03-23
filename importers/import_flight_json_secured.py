@@ -3,6 +3,7 @@ import time
 import requests 
 from dotenv import load_dotenv, find_dotenv
 import json
+import os
 from os import environ as env
 import redis
 from datetime import datetime, timedelta
@@ -15,7 +16,7 @@ class PassportCredentialsGetter():
         pass
 
     def get_cached_credentials(self):  
-        r = redis.Redis(host=os.getenv(['REDIS_HOST']), port =os.getenv(['REDIS_PORT']))   
+        r = redis.Redis(host=os.getenv('REDIS_HOST'), port =os.getenv('REDIS_PORT'))   
         
         now = datetime.now()
         

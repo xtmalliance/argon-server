@@ -46,6 +46,7 @@ class PassportCredentialsGetter():
         url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
         
         token_data = requests.post(url, data = payload)
+       
         t_data = token_data.json()
         
         return t_data
