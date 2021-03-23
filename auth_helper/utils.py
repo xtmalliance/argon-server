@@ -73,9 +73,14 @@ def requires_scopes(required_scopes):
             for jwk in jwks['keys']:
                 kid = jwk['kid']
                 public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-            
-            kid = jwt.get_unverified_header(token)['kid']
-            public_key = public_keys[kid]
+            try:
+                kid = jwt.get_unverified_header(token)['kid']
+            except ValueError as ve:
+                response = JsonResponse({'detail': 'Invalid audience in token'})
+                response.status_code = 401
+                return response
+            else:
+                public_key = public_keys[kid]
             try:
                 decoded = jwt.decode(token, public_key, audience=API_IDENTIFIER, algorithms=['RS256'])
                 
