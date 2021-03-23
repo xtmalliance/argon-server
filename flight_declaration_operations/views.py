@@ -13,7 +13,7 @@ from shapely.geometry import asShape
 from shapely.ops import unary_union
 from django.http import Http404
 from rest_framework import mixins, generics
-from .serializers import FlightOperationSerializer
+from .serializers import FlightOperationSerializer, FlightOperationApprovalSerializer
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -70,7 +70,7 @@ def set_flight_declaration(request):
 
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
-class FlightOperationDetail(mixins.RetrieveModelMixin,             
+class FlightOperationDetail(mixins.RetrieveModelMixin, 
                     generics.GenericAPIView):
 
     queryset = FlightOperation.objects.all()
@@ -78,6 +78,18 @@ class FlightOperationDetail(mixins.RetrieveModelMixin,
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
+
+@method_decorator(requires_scopes(['blender.read']), name='dispatch')
+class FlightOperationApproval( 
+                    mixins.UpdateModelMixin,           
+                    generics.GenericAPIView):
+
+    queryset = FlightOperation.objects.all()
+    serializer_class = FlightOperationApprovalSerializer
+
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')

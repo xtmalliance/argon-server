@@ -204,6 +204,47 @@ paths:
           $ref: "#/components/schemas/Standard500ErrorResponse"
 
 
+  /flight_declaration_review/{flight_declaration_id}:
+    
+    put:
+      summary: "Approve / Reject a flight declaration"
+      security:
+        - AuthFromPassport: [read]
+      description:
+        "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point to change the status of operation"
+      parameters:
+        - in: path 
+          name: flight_declaration_id
+          description: 'This is the ID of the flight declaration'
+          schema:
+            type: string
+            format: uuid            
+          required: true
+
+      requestBody:
+        description: Set whether a flight is approved or rejected
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveRejectDeclaration'          
+
+      responses:
+        "200":
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/FlightDeclarationDetail"
+        "400":
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/components/schemas/Standard500ErrorResponse"
+
+
   /set_flight_declaration:
     post:
       summary: "Add a Flight Declaration"
@@ -283,6 +324,13 @@ components:
 
 
   schemas:
+    ApproveRejectDeclaration:
+      description: A flight declaration approved / created
+      type: object
+      properties:
+        is_approved: 
+          type: boolean
+          example: 1
 
     FlightDeclarationCreated:
       description: A flight declaration has been created
