@@ -8,22 +8,40 @@ services:
     volumes:
       - ./config/redis.conf:/redis.conf
 
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
 
   web:    
     env_file:
       - ".env"      
-    image: openskies/flight-blender
+    build: . 
+    command: python manage.py runserver 0.0.0.0:8000
     depends_on:
-      - redis
-      
+      - redis    
+      - db
     volumes:
       - .:/app
-
+  migration:
+    
+    command: python manage.py migrate --noinput
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      
   celery:
     container_name: flight-blender-worker
     build:
       context: "."    
     
+    env_file:
+      - ".env"
     command: celery --app=flight_blender worker --loglevel=info
     volumes:
       - .:/app

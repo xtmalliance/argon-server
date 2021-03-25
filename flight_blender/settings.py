@@ -132,7 +132,7 @@ STATIC_URL = '/static/'
 if DEBUG:
     BROKER_URL = os.getenv("REDIS_URL",'redis://localhost:6379/')
 else:
-    BROKER_URL = os.getenv("REDIS_URL")
+    BROKER_URL = os.getenv("REDIS_URL","redis://redis:6379/")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
