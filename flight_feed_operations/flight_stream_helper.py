@@ -4,9 +4,6 @@ import os
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-REDIS_HOST = os.getenv('REDIS_HOST',"redis")
-REDIS_PORT = 6379
-
 
 class ConsumerGroupOps():
 
@@ -17,7 +14,7 @@ class ConsumerGroupOps():
         self.get_consumer_group(create=True)
         
     def get_consumer_group(self,create=False):
-        db = Database(host=REDIS_HOST, port =REDIS_PORT)   
+        db = Database(os.environ.get("REDIS_URL"))   
         stream_keys = ['all_observations']
         
         cg = db.time_series('cg-obs', stream_keys)

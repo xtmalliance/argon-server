@@ -24,7 +24,7 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
 
 def get_consumer_group(create=False):
     
-    db = Database(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+    db = Database(os.environ.get("REDIS_URL"))   
     stream_keys = ['all_observations']
     
     cg = db.time_series('cg-obs', stream_keys)
@@ -46,7 +46,7 @@ class AuthorityCredentialsGetter():
         pass
         
     def get_cached_credentials(self, audience):  
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+        r = redis.Redis(os.environ.get("REDIS_URL"))   
         
         now = datetime.now()
         cache_key = audience + '_auth_dss_token'
@@ -83,7 +83,7 @@ class AuthorityCredentialsGetter():
 @task(name='poll_uss_for_flights')
 def poll_uss_for_flights():
     authority_credentials = AuthorityCredentialsGetter()
-    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+    redis = redis.Redis(os.environ.get("REDIS_URL"))   
     flights_dict = redis.hgetall("all_uss_flights")
     all_flights_url = flights_dict['all_flights_url']
     # flights_view = flights_dict['view']
