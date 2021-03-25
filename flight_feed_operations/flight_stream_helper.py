@@ -14,7 +14,7 @@ class ConsumerGroupOps():
         self.get_consumer_group(create=True)
         
     def get_consumer_group(self,create=False):
-        db = Database(os.environ.get("REDIS_URL"))   
+        db = Database(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"))   
         stream_keys = ['all_observations']
         
         cg = db.time_series('cg-obs', stream_keys)

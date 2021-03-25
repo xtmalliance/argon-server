@@ -24,7 +24,7 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
 
 def get_consumer_group(create=False):
     
-    db = Database(os.environ.get("REDIS_URL"))   
+    db = Database(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"))   
     stream_keys = ['all_observations']
     
     cg = db.time_series('cg-obs', stream_keys)
