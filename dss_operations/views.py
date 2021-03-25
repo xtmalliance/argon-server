@@ -74,7 +74,7 @@ def dss_isa_callback(request, id):
     new_flights_url = request.args.get('flights_url',0)
     try:        
         assert new_flights_url != 0
-        redis = redis.Redis(host=os.getenv(['REDIS_HOST']), port =os.getenv(['REDIS_PORT']))   
+        redis = redis.Redis(os.environ.get("REDIS_URL"))   
         # Get the flights URL from the DSS and put it in 
         flights_dict = redis.hgetall("all_uss_flights")        
         all_flights_url = flights_dict['all_flights_url']
