@@ -46,7 +46,7 @@ class AuthorityCredentialsGetter():
         pass
         
     def get_cached_credentials(self, audience):  
-        r = redis.Redis(os.environ.get("REDIS_URL"))   
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
         
         now = datetime.now()
         cache_key = audience + '_auth_dss_token'
@@ -83,7 +83,7 @@ class AuthorityCredentialsGetter():
 @task(name='poll_uss_for_flights')
 def poll_uss_for_flights():
     authority_credentials = AuthorityCredentialsGetter()
-    redis = redis.Redis(os.environ.get("REDIS_URL"))   
+    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
     flights_dict = redis.hgetall("all_uss_flights")
     all_flights_url = flights_dict['all_flights_url']
     # flights_view = flights_dict['view']

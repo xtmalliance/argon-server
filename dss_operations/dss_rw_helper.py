@@ -18,7 +18,7 @@ class AuthorityCredentialsGetter():
         pass
         
     def get_cached_credentials(self, audience):  
-        r = redis.Redis(os.environ.get("REDIS_URL"))   
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
         
         now = datetime.now()
         cache_key = audience + '_auth_dss_token'
@@ -130,7 +130,7 @@ class RemoteIDOperations():
 
                     flights_dict= {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
 
-                    redis = redis.Redis(os.environ.get("REDIS_URL"))   
+                    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
                     hash_name = "all_uss_flights"
                     redis.hmset(hash_name, flights_dict)
                     # expire keys in one hour

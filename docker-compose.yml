@@ -24,7 +24,7 @@ services:
     build:
       context: "."    
     
-    command: celery worker --app=flight_blender --loglevel=info
+    command: celery --app=flight_blender worker --loglevel=info
     volumes:
       - .:/app
     depends_on:

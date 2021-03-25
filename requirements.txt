@@ -13,3 +13,4 @@ pyjwt
 geojson
 arrow
 python-dateutil
+tldextract

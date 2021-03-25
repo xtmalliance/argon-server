@@ -26,7 +26,7 @@ class PassportCredentialsGetter():
         pass
 
     def get_cached_credentials(self):  
-        r = redis.Redis(os.environ.get("REDIS_URL"))   
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
         now = datetime.now()
         token_details = r.get('access_token_details')
         if token_details:    
