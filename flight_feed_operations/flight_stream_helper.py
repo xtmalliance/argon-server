@@ -16,7 +16,7 @@ class ConsumerGroupOps():
         
     def get_consumer_group(self,create=False):
         # db = Database(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"))  
-     
+        print(url)
         db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
         stream_keys = ['all_observations']
         
