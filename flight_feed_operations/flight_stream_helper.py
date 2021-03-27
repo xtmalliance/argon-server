@@ -1,9 +1,10 @@
 from walrus import Database
 import os
-
+from urllib.parse import urlparse
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
+url = urlparse(os.environ.get("REDIS_URL"))
 
 class ConsumerGroupOps():
 
@@ -14,7 +15,9 @@ class ConsumerGroupOps():
         self.get_consumer_group(create=True)
         
     def get_consumer_group(self,create=False):
-        db = Database(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"))   
+        # db = Database(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"))  
+     
+        db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
         stream_keys = ['all_observations']
         
         cg = db.time_series('cg-obs', stream_keys)

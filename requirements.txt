@@ -14,3 +14,4 @@ geojson
 arrow
 python-dateutil
 tldextract
+django-heroku
