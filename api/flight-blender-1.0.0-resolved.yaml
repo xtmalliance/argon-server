@@ -700,7 +700,7 @@ components:
         features:
           type: array
           items:
-            $ref: "#/components/schemas/GeoFenceFeatureGeoJSON"
+            $ref: "#/components/schemas/GeoFenceFeatures"
 
     GeoFenceDetails:
       type: object
@@ -711,8 +711,7 @@ components:
           readOnly: true
         raw_geo_fence:                    
             type: object
-            items:
-              $ref: "#/components/schemas/GeoFenceFeatureGeoJSON"
+            $ref: "#/components/schemas/GeoFenceGeoJSON"
         upper_limit:
           type: number
           multipleOf: 0.01  
@@ -751,7 +750,7 @@ components:
       items:
         type: number
 
-    GeoFenceFeatureGeoJSON:
+    GeoFenceFeatures:
       type: object
       required:
         - type
