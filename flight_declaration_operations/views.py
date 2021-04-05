@@ -19,6 +19,8 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from datetime import date
 from django.utils.timezone import make_aware
+
+
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
 def set_flight_declaration(request): 
@@ -70,16 +72,6 @@ def set_flight_declaration(request):
 
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
-class FlightOperationDetail(mixins.RetrieveModelMixin, 
-                    generics.GenericAPIView):
-
-    queryset = FlightOperation.objects.all()
-    serializer_class = FlightOperationSerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-@method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class FlightOperationApproval( 
                     mixins.UpdateModelMixin,           
                     generics.GenericAPIView):
@@ -91,6 +83,16 @@ class FlightOperationApproval(
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
+
+@method_decorator(requires_scopes(['blender.read']), name='dispatch')
+class FlightOperationDetail(mixins.RetrieveModelMixin, 
+                    generics.GenericAPIView):
+
+    queryset = FlightOperation.objects.all()
+    serializer_class = FlightOperationSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class FlightOperationList(mixins.ListModelMixin,  

@@ -66,6 +66,9 @@ paths:
           $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
+      tags:
+        - dss
+
 
   /get_rid_data/{subscription_id}:
 
@@ -96,6 +99,8 @@ paths:
           $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
+      tags:
+        - dss
 
   /set_air_traffic:
     post:
@@ -129,8 +134,9 @@ paths:
           $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
-
-  /flight_declaration:
+      tags:
+        - air-traffic
+  /flight_declaration_ops/flight_declaration:
     
     get:
       summary: "Get a list of all submitted flight declarations"
@@ -170,8 +176,10 @@ paths:
           $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
+      tags:
+        - flight-declaration
 
-  /flight_declaration/{flight_declaration_id}:
+  /flight_declaration_ops/flight_declaration/{flight_declaration_id}:
     
     get:
       summary: "Get the details of a single flight declaration"
@@ -189,7 +197,7 @@ paths:
           required: true
 
       responses:
-        "200":
+        "200":          
           content: 
             application/json:
               schema: 
@@ -203,8 +211,10 @@ paths:
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
 
+      tags:
+        - flight-declaration
 
-  /flight_declaration_review/{flight_declaration_id}:
+  /flight_declaration_ops/flight_declaration_review/{flight_declaration_id}:
     
     put:
       summary: "Approve / Reject a flight declaration"
@@ -244,8 +254,10 @@ paths:
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
 
+      tags:
+        - flight-declaration
 
-  /set_flight_declaration:
+  /flight_declaration_ops/set_flight_declaration:
     post:
       summary: "Add a Flight Declaration"
       description: "Submit a Flight Declaration into Flight Blender  \
@@ -281,7 +293,11 @@ paths:
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
 
-  /set_geo_fence:
+      tags:
+        - flight-declaration
+
+
+  /geo_fence_ops/set_geo_fence:
     post:
       summary: "Add a Geofence"
       security:
@@ -310,6 +326,88 @@ paths:
           $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
+
+      tags:
+        - geo-fence
+        
+  /geo_fence_ops/geo_fence:
+    
+    get:
+      summary: "Get a list of all submitted Geofence"
+      security:
+        - AuthFromPassport: [read]
+      description:
+        "By default all geo fence submitted in Flight Blender have a start and end date, if none is provided, the server will default to today as start and end date"
+        
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: >
+            The start date for the report. Must be used together with `end_date`.
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: >
+            The end date for the report. Must be used together with `start_date`.
+      responses:
+
+        "200":
+          description: Get a list of submitted geo fence, `start_date`+`end_date` are optional, by default geo fences for today displayed.
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/GeoFenceGeoJSONList"
+        "400":
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/components/schemas/Standard500ErrorResponse"
+      tags:
+        - geo-fence
+
+  /geo_fence_ops/geo_fence/{geo_fence_id}:
+    
+    get:
+      summary: "Get the details of a single geo fence"
+      security:
+        - AuthFromPassport: [read]
+      description:
+        "Show details of a geofence as stored in the database"
+      parameters:
+        - in: path 
+          name: geo_fence_id
+          description: 'This is the ID of the geo fence'
+          schema:
+            type: string
+            format: uuid            
+          required: true
+
+      responses:
+        "200":
+          description: 'Details of all Geofences in the database'
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/GeoFenceDetails"
+        "400":
+          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+        "401":
+          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+        "403":
+          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+        "500":
+          $ref: "#/components/schemas/Standard500ErrorResponse"
+
+      tags:
+        - geo-fence
 
 components:
   securitySchemes:
@@ -603,6 +701,48 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GeoFenceFeatureGeoJSON"
+
+    GeoFenceDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        raw_geo_fence:                    
+            type: object
+            items:
+              $ref: "#/components/schemas/GeoFenceFeatureGeoJSON"
+        upper_limit:
+          type: number
+          multipleOf: 0.01  
+        lower_limit:
+          type: number
+          multipleOf: 0.01  
+        name:
+          type: string
+        bounds:
+          type: string
+        altitude_ref:
+          type: number
+        start_datetime:
+          type: string
+          format: date-time
+        end_datetime:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    GeoFenceGeoJSONList:
+      type: array
+      items:
+        $ref: '#/components/schemas/GeoFenceDetails'
 
     Point2D:
       type: array

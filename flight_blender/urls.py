@@ -14,10 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from flight_declaration_operations import views as flight_declaration_views
 from flight_feed_operations import views as flight_feed_views
-from geo_fence_operations import views as geo_fence_views
+
 from dss_operations import views as dss_views
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,9 +26,10 @@ urlpatterns = [
     path('create_dss_subscription/', dss_views.create_dss_subscription),
     path('dss_isa_callback', dss_views.dss_isa_callback),
     path('get_rid_data/<uuid:subscription_id>', dss_views.get_rid_data),
-    path('set_flight_declaration', flight_declaration_views.set_flight_declaration),
-    path('flight_declaration/', flight_declaration_views.FlightOperationList.as_view()),
-    path('flight_declaration/<uuid:pk>', flight_declaration_views.FlightOperationDetail.as_view()),
-    path('flight_declaration_review/<uuid:pk>', flight_declaration_views.FlightOperationApproval.as_view()),
-    path('set_geo_fence', geo_fence_views.set_geo_fence),
+
+    path('geo_fence_ops/', include('geo_fence_operations.urls')),
+    
+    path('flight_declaration_ops/', include('geo_fence_operations.urls')),
+
+    
 ]
