@@ -10,12 +10,14 @@ services:
 
   db:
     image: postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+        
     volumes:
       - ./data/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    env_file:
+      - ".env"
 
   web:    
     env_file:
