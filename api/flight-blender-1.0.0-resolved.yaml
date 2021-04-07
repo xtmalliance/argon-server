@@ -35,7 +35,7 @@ paths:
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
 
-  /create_dss_subscription:
+  /dss/create_dss_subscription:
     post:
       summary: "Create a Remote ID Subscription in the DSS"
       security:
@@ -70,7 +70,7 @@ paths:
         - dss
 
 
-  /get_rid_data/{subscription_id}:
+  /dss/get_rid_data/{subscription_id}:
 
     get:
       summary: "Get remote id data given a subscription id"
