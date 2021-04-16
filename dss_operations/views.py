@@ -28,7 +28,6 @@ def create_dss_subscription(request):
 
     try: 
         view = request.POST['view']
-        # view = request.POST.get['view'] # view is a bbox list
         view = [float(i) for i in view.split(",")]
     except Exception as ke:
         
@@ -88,3 +87,22 @@ def dss_isa_callback(request, id):
     else:
         # All OK return a empty response
         return HttpResponse("", status=204, mimetype='application/json')
+
+
+@api_view(['GET'])
+@requires_scopes(['dss.read.identification_service_areas'])
+def get_display_data(request, view):
+    ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
+
+
+    return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
+
+
+@api_view(['GET'])
+@requires_scopes(['dss.read.identification_service_areas'])
+def get_flight_data(request, view):
+    ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
+
+
+    return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
+

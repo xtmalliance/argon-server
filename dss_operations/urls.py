@@ -23,4 +23,6 @@ urlpatterns = [
     path('create_dss_subscription/', dss_views.create_dss_subscription),
     path('dss_isa_callback', dss_views.dss_isa_callback),
     path('get_rid_data/<uuid:subscription_id>', dss_views.get_rid_data),
+    path('display_data/<str:view>', dss_views.get_display_data),
+    path('display_data/<uuid:flight_id>', dss_views.get_display_data),
 ]
