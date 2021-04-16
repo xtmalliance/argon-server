@@ -21,16 +21,17 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 
-@api_view(['POST'])
+@api_view(['PUT'])
 @requires_scopes(['blender.write'])
-def create_dss_subscription(request):
+def create_dss_subscription(request, *args, **kwargs):
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
+ 
 
-    try: 
+    try:        
+
         view = request.POST['view']
         view = [float(i) for i in view.split(",")]
-    except Exception as ke:
-        
+    except Exception as ke:        
         incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
     else:
@@ -93,6 +94,14 @@ def dss_isa_callback(request, id):
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_display_data(request, view):
     ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
+    
+    # get the view bounding box 
+
+    # send a subscription request to the DSS
+
+    # get the flights endpoint and poll it every second 
+
+    # send the polled data
 
 
     return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
@@ -103,6 +112,25 @@ def get_display_data(request, view):
 def get_flight_data(request, view):
     ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
 
+    # get the flight ID
+    # query the /uss/flights/{id}/details with the ID (should return the RID details / https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/master/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights~1{id}~1details/get
+    # {
+    # "details": {
+    #     "id": "a3423b-213401-0023",
+    #     "operator_id": "string",
+    #     "operator_location": {
+    #     "lng": -118.456,
+    #     "lat": 34.123
+    #     },
+    #     "operation_description": "SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.",
+    #     "auth_data": {
+    #     "format": "string",
+    #     "data": "string"
+    #     },
+    #     "serial_number": "INTCJ123-4567-890",
+    #     "registration_number": "FA12345897"
+    # }
+    # }
 
-    return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
+    return HttpResponse(json.dumps({"details":{}}), mimetype='application/json')
 

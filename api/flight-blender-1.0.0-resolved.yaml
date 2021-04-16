@@ -36,7 +36,7 @@ paths:
           $ref: "#/components/schemas/Standard500ErrorResponse"
 
   /dss/create_dss_subscription:
-    post:
+    put:
       summary: "Create a Remote ID Subscription in the DSS"
       security:
         - AuthFromPassport: [write]
@@ -73,7 +73,7 @@ paths:
   /dss/get_rid_data/{subscription_id}:
 
     get:
-      summary: "Get remote id data given a subscription id"
+      summary: "Get flight data from network remote id given a subscription id"
       security:
         - AuthFromPassport: [read]
       description:
@@ -125,7 +125,7 @@ paths:
       security:
         - AuthFromPassport: [read]
       description:
-        "This enpoint is used in the context of running the rid_qualifier tool to query details of the flight"
+        "This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application."
 
       responses:        
         '200':
@@ -145,43 +145,66 @@ paths:
         "500":
           $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
-        - dss
+        - rid-qualifier
 
   /dss/display_data/{flight_id}:
-
+    summary: A remote ID flight reported by a remote ID service provider.
     get:
-      summary: "Get remote id data given a flight id"
-      security:
-        - AuthFromPassport: [read]
-      description:
-        "This enpoint is used in the context of running the rid_qualifier tool to query details of the flight"
-      parameters:
-        - in: path 
-          name: flight_id
-          description: 'This is the ID of the flight whose details are requested'
-          schema:
-            type: string
-            format: uuid            
-          required: true
-
-      responses:        
-        '200':
-          description: Details about the requested flight were retrieved successfully.
-        '404':
-          description: Requested flight was not found.          
-        "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
-        - dss
+      - rid-qualifier
+
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFlightDetailsResponse'
+          description: Flight details were successfully retrieved.
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+          description: One or more input parameters were missing or invalid.
+        401:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+          description: Bearer access token was not provided in Authorization header,
+            token could not be decoded, or token was invalid.
+        403:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+          description: The access token was decoded successfully but did not include
+            a scope appropriate to this endpoint.
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+          description: The requested flight could not be found.
+      security:
+      - AuthFromAuthorizationAuthority:
+        - dss.read.identification_service_areas
+      summary: Get flight details
+      description: Retrieve details of a flight from a remote ID service provider
+        to meet remote ID requirements.
+    parameters:
+    - name: id
+      description: Remote ID flight ID for this flight; may be obtained in general
+        /flights query.
+      schema:
+        $ref: '#/components/schemas/RIDFlightID'
+      in: path
+      required: true
+    tags:
+        - rid-qualifier
 
   /set_air_traffic:
-    post:
+    put:
       summary: "Add Airtraffic observation"
       security:
         - AuthFromPassport: [write]
@@ -336,7 +359,7 @@ paths:
         - flight-declaration
 
   /flight_declaration_ops/set_flight_declaration:
-    post:
+    put:
       summary: "Add a Flight Declaration"
       description: "Submit a Flight Declaration into Flight Blender  \
         \ A flight declaration can be upto 24 hours in advance and follows the Flight Declaration format etc."
@@ -376,7 +399,7 @@ paths:
 
 
   /geo_fence_ops/set_geo_fence:
-    post:
+    put:
       summary: "Add a Geofence"
       security:
         - AuthFromPassport: [write]
@@ -1034,3 +1057,78 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Position'
+
+    RIDFlightID:
+      description: |-
+        ID, unique to a remote ID service provider, which identifies a particular flight for which the remote ID service provider is providing remote ID services.
+
+        The following characters are not allowed: \0 \t \r \n # % / : ? @ [ \ ]
+      maxLength: 255
+      minLength: 1
+      type: string
+      example: uss1.JA6kHYCcByQ-6AfU
+
+    GetFlightDetailsResponse:
+      description: Response to remote ID provider query for details about a specific
+        flight.
+      required:
+      - details
+      type: object
+      properties:
+        details:
+          $ref: '#/components/schemas/RIDFlightDetails'
+
+    RIDFlightDetails:
+      description: Details about a flight reported by a remote ID service provider.  At
+        least one of the registration or serial fields must be filled if required
+        by CAA.
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          description: ID for this flight, matching argument in request.
+          type: string
+          example: a3423b-213401-0023
+        operator_id:
+          description: 'CAA-issued registration/license ID for the remote pilot or
+            operator. '
+          type: string
+        operator_location:
+          anyOf:
+          - $ref: '#/components/schemas/LatLngPoint'
+          description: Location of party controlling the aircraft.
+        operation_description:
+          description: Free-text field that enables the operator to describe the purpose
+            of a flight, if so desired.
+          type: string
+          example: SafeFlightDrone company doing survey with DJI Inspire 2. See my
+            privacy policy www.example.com/privacy.
+        auth_data:
+          $ref: '#/components/schemas/RIDAuthData'
+        serial_number:
+          description: Can be specified when no registration ID exists and required
+            by law in a region. This is expressed in the ANSI/CTA-2063-A Physical Serial
+            Number format.
+          type: string
+          example: INTCJ123-4567-890
+        registration_number:
+          description: If a CAA provides a method of registering UAS, this number
+            is provided by the CAA or its authorized representative.  Required when
+            required by law in a region.
+          type: string
+          example: FA12345897  
+
+    RIDAuthData:
+      description: Additional authentication data.
+      required:
+      - format
+      - data
+      type: object
+      properties:
+        format:
+          description: Format of additional authentication data.
+          type: string
+        data:
+          description: Authentication data in form specified by `format`.
+          type: string          

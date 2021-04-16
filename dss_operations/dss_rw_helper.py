@@ -4,7 +4,6 @@
 
 from functools import wraps
 import json
-
 import redis
 import logging
 from datetime import datetime, timedelta
@@ -76,7 +75,6 @@ class RemoteIDOperations():
             return subscription_response        
         else:
             error = auth_token.get("error")            
-
 
         try: 
             assert error is None
