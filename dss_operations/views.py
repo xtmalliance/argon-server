@@ -16,7 +16,7 @@ from . import dss_rw_helper
 import uuid
 from shapely.geometry import box
 import redis
-
+from uuid import UUID
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -28,7 +28,6 @@ def create_dss_subscription(request, *args, **kwargs):
  
 
     try:        
-
         view = request.POST['view']
         view = [float(i) for i in view.split(",")]
     except Exception as ke:        
@@ -53,10 +52,10 @@ def create_dss_subscription(request, *args, **kwargs):
         subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = uuid)
 
         if subscription_respone['created']:
-            msg = {"message":"DSS Subscription created", 'id': uuid}
+            msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_respone}
         else:
             msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': uuid}
-        return HttpResponse(json.dumps(msg), status=200)
+        return HttpResponse(json.dumps(msg), status=201)
 
 
 
@@ -64,30 +63,49 @@ def create_dss_subscription(request, *args, **kwargs):
 @requires_scopes(['blender.read'])
 def get_rid_data(request, subscription_id):
     ''' This is the GET endpoint for remote id data '''
+
+    try:
+        is_uuid = UUID(subscription_id, version=4)
+    except ValueError as ve: 
+        return HttpResponse("Incorrect UUID passed in the parameters, please send a valid subscription ID", status=400, mimetype='application/json')
+
+    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+    # Get the flights URL from the DSS and put it in 
+
+    flights_key = "all_uss_flights-"+ subscription_id
+
+    
+
+
     pass
 
 
 @api_view(['POST'])
 @requires_scopes(['dss.write.identification_service_areas'])
-def dss_isa_callback(request, id):
+def dss_isa_callback(request, subscription_id):
     ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
-    new_flights_url = request.args.get('flights_url',0)
+    service_areas = request.get('service_area',0)
     try:        
-        assert new_flights_url != 0
+        assert service_areas != 0
         redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
-        # Get the flights URL from the DSS and put it in 
-        flights_dict = redis.hgetall("all_uss_flights")        
+        # Get the flights URL from the DSS and put it in the flights_url
+        
+        flights_key = "all_uss_flights-"+ subscription_id
+
+        flights_dict = redis.hgetall(flights_key)        
         all_flights_url = flights_dict['all_flights_url']
-        all_flights_url = all_flights_url.append(new_flights_url)
+        for new_flight in service_areas:
+            all_flights_url.append(new_flight['flights_url'])
+
         flights_dict["all_uss_flights"] = all_flights_url
-        redis.hmset("all_uss_flights", flights_dict)
+        redis.hmset(flights_key, flights_dict)
         
     except AssertionError as ae:
         return HttpResponse("Incorrect data in the POST URL", status=400, mimetype='application/json')
         
     else:
         # All OK return a empty response
-        return HttpResponse("", status=204, mimetype='application/json')
+        return HttpResponse(status=204, mimetype='application/json')
 
 
 @api_view(['GET'])
@@ -97,7 +115,7 @@ def get_display_data(request, view):
     
     # get the view bounding box 
 
-    # send a subscription request to the DSS
+    # get the existing subscription id , if no subscription exists, then reject
 
     # get the flights endpoint and poll it every second 
 
@@ -109,7 +127,7 @@ def get_display_data(request, view):
 
 @api_view(['GET'])
 @requires_scopes(['dss.read.identification_service_areas'])
-def get_flight_data(request, view):
+def get_flight_data(request, flight_id):
     ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
 
     # get the flight ID

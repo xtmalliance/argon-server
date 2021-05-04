@@ -5,6 +5,7 @@
 from functools import wraps
 import json
 import redis
+import hashlib
 import logging
 from datetime import datetime, timedelta
 import uuid, os
@@ -52,6 +53,8 @@ class RemoteIDOperations():
 
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')
+        
+        self.redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
 
     def create_dss_subscription(self, vertex_list, view_port, request_uuid):
         ''' This method PUTS /dss/subscriptions ''' 
@@ -87,19 +90,38 @@ class RemoteIDOperations():
             new_subscription_id = str(uuid.uuid4())
             dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
 
-            callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","/isa_callback") 
+            # check if a subscription already exists for this view_port
+            view_port_hash = int(hashlib.sha256(view_port.encode('utf-8')).hexdigest(), 16) % 10**8
+            try:
+                existing_subscription_details = self.redis.get(view_port_hash)
+            except KeyError as ke:
+                logging.info("No subscription exists for this viewport for hash %s" % view_port_hash)
+                self.redis.set(json.dumps({'sub-' + view_port_hash: new_subscription_id}))
+
+
+            else:
+                subscription_response['created'] = existing_subscription_details['created']
+                subscription_response['subscription_id'] = existing_subscription_details['subscription_id']
+
+                return subscription_response
+
+
+            callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","/uss/identification_service_areas") 
             now = datetime.now()
+
+            callback_url += '/'+ new_subscription_id
             
             current_time = now.isoformat()
-            one_hour_from_now = (now + timedelta(hours=1)).isoformat()
+            three_mins_from_now = (now + timedelta(minutes=3)).isoformat()
 
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
 
-            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":one_hour_from_now }
+            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":three_mins_from_now }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
+
             try:
-                dss_r = requests.post(dss_subscription_url, data= json.dumps(payload), headers=headers)  
+                dss_r = requests.put(dss_subscription_url, data= json.dumps(payload), headers=headers)  
             except Exception as re: 
                 logging.error("Error in posting to subscription URL %s " % re)
                 return subscription_response
@@ -108,7 +130,7 @@ class RemoteIDOperations():
                 try: 
                     assert dss_r.status_code == 200
                     subscription_response["created"] = 1
-                except AssertionError as ae: 
+                except AssertionError as ae:              
                     logging.error("Error in creating subscription in the DSS %s" % dss_r.text)
                     return subscription_response
                 else: 	
@@ -126,13 +148,12 @@ class RemoteIDOperations():
                         flights_url = service_area['flights_url']
                         flights_url_list.append(flights_url)
 
-                    flights_dict= {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at':one_hour_from_now}
-
-                    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
-                    hash_name = "all_uss_flights"
-                    redis.hmset(hash_name, flights_dict)
-                    # expire keys in one hour
-                    redis.expire(name=hash_name, time=timedelta(minutes=60))
+                    flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view_port, 'expire_at': three_mins_from_now}
+ 
+                    hash_name = "all_uss_flights-" + new_subscription_id
+                    self.redis.hmset(hash_name, flights_dict)
+                    # expire keys in three minutes 
+                    self.redis.expire(name=hash_name, time=timedelta(minutes=3))
                     return subscription_response
 
 
@@ -140,4 +161,5 @@ class RemoteIDOperations():
         ''' This module calls the DSS to delete a subscription''' 
 
         # TODO: Subscriptions expire after a hour but we may need to delete one 
-        pass
+        
+

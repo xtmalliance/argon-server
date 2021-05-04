@@ -54,10 +54,9 @@ paths:
           required: true
 
       responses:
-        "200":
-          description: "OK"
+                  
         "201":
-          description: "Subscription Created"
+          $ref: "#/components/schemas/SubscriptionCreated"
         "400":
           $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
@@ -112,7 +111,7 @@ paths:
     get:
       parameters:
         - in: path 
-        - name: view
+        - name: view_port
           description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box
             bounded by the provided corner points.'
           schema:
@@ -545,6 +544,19 @@ components:
         is_approved: 
           type: boolean
           example: 1
+
+    SubscriptionCreated:
+      description: A subscription in the DSS for the area has been created
+      type: object
+      properties: 
+        message:
+          type: string
+          example: DSS Subscription created
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+
 
     GeoFenceCreated:
       description: A Geofence has been created
