@@ -1,13 +1,10 @@
 from django.shortcuts import render
 
-# Create your views here.
-
-# Create your views here.
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from auth_helper.utils import requires_scopes, BearerAuth
-# Create your views here.
 import json, os
+import rtree_helper
 import logging
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
@@ -16,6 +13,7 @@ from . import dss_rw_helper
 import uuid
 from shapely.geometry import box
 import redis
+import uuid
 from uuid import UUID
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -25,16 +23,16 @@ load_dotenv(find_dotenv())
 @requires_scopes(['blender.write'])
 def create_dss_subscription(request, *args, **kwargs):
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
- 
+
 
     try:        
-        view = request.POST['view']
-        view = [float(i) for i in view.split(",")]
+        view = request.query_params['view']
+        view_port = [float(i) for i in view.split(",")]
     except Exception as ke:        
         incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
     else:
-        b = box(view[0], view[1], view[2],view[3])
+        b = box(view_port[0], view_port[1], view_port[2],view_port[3])
         co_ordinates = list(zip(*b.exterior.coords.xy))
         # Convert bounds vertex list
         vertex_list = []
@@ -47,16 +45,31 @@ def create_dss_subscription(request, *args, **kwargs):
         vertex_list.pop()
         # TODO: Make this a asnyc call
         #tasks.submit_dss_subscription(vertex_list = vertex_list, view_port = view)
-        uuid = str(uuid.uuid4())
-        myDSSubscriber = dss_rw_helper.RemoteIDOperations()
-        subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = uuid)
+        request_id = str(uuid.uuid4())
+        my_index_helper = rtree_helper.IndexFactory()
+
+        try:
+            subscription_index = my_index_helper.get_current_subscriptions()
+            # Query the RTree to get the nearest subscription
+
+            # Query Redis to get the details of the subscription
+
+            
+
+        except KeyError as ke:
+
+            logging.info("No subscription exists for this viewport for view %s" % view)
+            self.redis.set(json.dumps({'sub-' + request_id: view }))
+        
+        
+            myDSSubscriber = dss_rw_helper.RemoteIDOperations()
+            subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view = view, request_uuid = request_id)
 
         if subscription_respone['created']:
             msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_respone}
         else:
-            msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': uuid}
+            msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         return HttpResponse(json.dumps(msg), status=201)
-
 
 
 @api_view(['GET'])
@@ -73,8 +86,6 @@ def get_rid_data(request, subscription_id):
     # Get the flights URL from the DSS and put it in 
 
     flights_key = "all_uss_flights-"+ subscription_id
-
-    
 
 
     pass

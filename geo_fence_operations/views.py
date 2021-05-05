@@ -1,6 +1,6 @@
 # Create your views here.
 from django.shortcuts import render
-from auth_helper.utils import requires_scopes, , BearerAuth
+from auth_helper.utils import requires_scopes, BearerAuth
 # Create your views here.
 import json
 import arrow
@@ -13,7 +13,7 @@ from shapely.geometry import asShape
 from shapely.ops import unary_union
 from django.http import Http404
 from rest_framework import mixins, generics
-from .serializers import GeoFence
+from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import datetime, timedelta

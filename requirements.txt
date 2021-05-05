@@ -14,5 +14,5 @@ geojson
 arrow
 python-dateutil
 tldextract
-hashlib
+rtree
 django-heroku

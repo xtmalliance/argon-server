@@ -7,7 +7,6 @@ from flight_feed_operations import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
 import tldextract
 import json
-
 from os import environ as env
 from datetime import datetime, timedelta, timezone
 import redis
