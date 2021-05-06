@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from auth_helper.utils import requires_scopes, BearerAuth
 import json, os
-import rtree_helper
+from . import rtree_helper
 import logging
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
