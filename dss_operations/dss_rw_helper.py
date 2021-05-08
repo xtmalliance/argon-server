@@ -2,13 +2,12 @@
 ## For more information review: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml 
 ## and this diagram https://github.com/interuss/dss/blob/master/assets/generated/rid_display.png
 
-from functools import wraps
+
 import json
 import redis
-import hashlib
 import logging
 from datetime import datetime, timedelta
-import uuid, os
+import uuid
 import requests
 from os import environ as env
 

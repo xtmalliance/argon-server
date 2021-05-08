@@ -18,6 +18,15 @@ from uuid import UUID
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
+def create_new_subscription(request_id, view, vertex_list):
+    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+    redis.set(json.dumps({'sub-' + request_id: view }))
+
+    myDSSubscriber = dss_rw_helper.RemoteIDOperations()
+    subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view = view, request_uuid = request_id)
+
+    return subscription_respone
+
 
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
@@ -51,24 +60,32 @@ def create_dss_subscription(request, *args, **kwargs):
         try:
             subscription_index = my_index_helper.get_current_subscriptions()
             # Query the RTree to get the nearest subscription
-
-            # Query Redis to get the details of the subscription
-
-            
+            intersecting_subscription_list = list(subscription_index.intersection((view_port[0], view_port[1], view_port[2],view_port[3])))
+            existing_subscription = False
+            if intersecting_subscription_list:
+                for current_subscription in intersecting_subscription_list: 
+                    current_box = box(current_subscription.box[0], current_subscription.box[1], current_subscription.box[2],current_subscription.box[3])
+                    if current_box.contains(b.buffer(-1e-14)) and current_box.buffer(1e-14).contains(b):
+                        
+                        existing_subscription = current_subscription['id']
+                        break
+                if existing_subscription: 
+                    subscription_respone = {'id':existing_subscription}
+            else:
+                subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
 
         except KeyError as ke:
-
             logging.info("No subscription exists for this viewport for view %s" % view)
-            self.redis.set(json.dumps({'sub-' + request_id: view }))
-        
-        
-            myDSSubscriber = dss_rw_helper.RemoteIDOperations()
-            subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view = view, request_uuid = request_id)
-
+            subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+ 
+ 
         if subscription_respone['created']:
             msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_respone}
+        if subscription_respone['found']:
+            msg = {"message":"Existing DSS Subscription found", 'id': subscription_respone['id']} # todo write existing subs
         else:
             msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
+            
         return HttpResponse(json.dumps(msg), status=201)
 
 
