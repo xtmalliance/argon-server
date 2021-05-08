@@ -47,7 +47,7 @@ class PassportCredentialsGetter():
             
             
     def get_write_credentials(self):        
-        payload = {"grant_type":"client_credentials","client_id": env.get('PASSPORT_WRITE_CLIENT_ID'),"client_secret": env.get('PASSPORT_WRITE_CLIENT_SECRET'),"audience": env.get('PASSPORT_WRITE_AUDIENCE'),"scope": env.get('PASSPORT_AIR_TRAFFIC_SCOPE')}        
+        payload = {"grant_type":"client_credentials","client_id": env.get('SPOTLIGHT_WRITE_CLIENT_ID'),"client_secret": env.get('SPOTLIGHT_WRITE_CLIENT_SECRET'),"audience": env.get('SPOTLIGHT_AUDIENCE'),"scope": env.get('SPOTLIGHT_AIR_TRAFFIC_SCOPE')}        
         url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
         
         token_data = requests.post(url, data = payload)
@@ -90,8 +90,8 @@ def submit_flights_to_spotlight():
 
         # Keep only the latest message
         distinct_messages = {i['address']:i for i in reversed(pending_messages)}.values()
-        spotlight_host = os.getenv('SPOTLIGHT_HOST', 'http://localhost:5000')
-        securl = spotlight_host + '/set_air_traffic'
+        FLIGHT_SPOTLIGHT_URL = os.getenv('FLIGHT_SPOTLIGHT_URL', 'http://localhost:5000')
+        securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
         headers = {"Authorization": "Bearer " + credentials['access_token']}
         for message in distinct_messages:
             payload = {"icao_address" : message['icao_address'],"traffic_source" :message['traffic_source'], "source_type" : message['source_type'], "lat_dd" : message['lat_dd'], "lon_dd" : message['lon_dd'], "time_stamp" : message['time_stamp'],"altitude_mm" : message['altitude_mm']}

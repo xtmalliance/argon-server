@@ -96,7 +96,7 @@ class RemoteIDOperations():
             # check if a subscription already exists for this view_port
 
 
-            callback_url = env.get("SUBSCRIPTION_CALLBACK_URL","/uss/identification_service_areas") 
+            callback_url = env.get("BLENDER_FQDN","https://www.flightblender.com") + "/uss/identification_service_areas" 
             now = datetime.now()
 
             callback_url += '/'+ new_subscription_id
@@ -140,10 +140,10 @@ class RemoteIDOperations():
 
                     flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now}
  
-                    hash_name = "all_uss_flights-" + new_subscription_id
-                    self.redis.hmset(hash_name, flights_dict)
+                    subscription_flights = "all_uss_flights-" + new_subscription_id
+                    self.redis.hmset(subscription_flights, flights_dict)
                     # expire keys in three minutes 
-                    self.redis.expire(name=hash_name, time=timedelta(minutes=3))
+                    self.redis.expire(name=subscription_flights, time=timedelta(minutes=3))
                     return subscription_response
 
 

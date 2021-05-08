@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
-from django.shortcuts import render
 from django.utils.decorators import method_decorator
+from requests.adapters import HTTPResponse
 from auth_helper.utils import requires_scopes, BearerAuth
 import json, os
 from . import rtree_helper
@@ -14,6 +14,7 @@ import uuid
 from shapely.geometry import box
 import redis
 import uuid
+import tldextract
 from uuid import UUID
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -55,29 +56,29 @@ def create_dss_subscription(request, *args, **kwargs):
         # TODO: Make this a asnyc call
         #tasks.submit_dss_subscription(vertex_list = vertex_list, view_port = view)
         request_id = str(uuid.uuid4())
-        my_index_helper = rtree_helper.IndexFactory()
+        # my_index_helper = rtree_helper.IndexFactory()
 
-        try:
-            subscription_index = my_index_helper.get_current_subscriptions()
-            # Query the RTree to get the nearest subscription
-            intersecting_subscription_list = list(subscription_index.intersection((view_port[0], view_port[1], view_port[2],view_port[3])))
-            existing_subscription = False
-            if intersecting_subscription_list:
-                for current_subscription in intersecting_subscription_list: 
-                    current_box = box(current_subscription.box[0], current_subscription.box[1], current_subscription.box[2],current_subscription.box[3])
-                    if current_box.contains(b.buffer(-1e-14)) and current_box.buffer(1e-14).contains(b):
+        subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+        # check if subscription exists.
+        # try:
+        #     subscription_index = my_index_helper.get_current_subscriptions()
+        #     # Query the RTree to get the nearest subscription
+        #     intersecting_subscription_list = list(subscription_index.intersection((view_port[0], view_port[1], view_port[2],view_port[3])))
+        #     existing_subscription = False
+        #     if intersecting_subscription_list:
+        #         for current_subscription in intersecting_subscription_list: 
+        #             current_box = box(current_subscription.box[0], current_subscription.box[1], current_subscription.box[2],current_subscription.box[3])
+        #             if current_box.contains(b.buffer(-1e-14)) and current_box.buffer(1e-14).contains(b):
                         
-                        existing_subscription = current_subscription['id']
-                        break
-                if existing_subscription: 
-                    subscription_respone = {'id':existing_subscription}
-            else:
-                subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+        #                 existing_subscription = current_subscription['id']
+        #                 break
+        #         if existing_subscription: 
+        #             subscription_respone = {'id':existing_subscription}
+        #     else:
+        #         subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
 
-        except KeyError as ke:
-            logging.info("No subscription exists for this viewport for view %s" % view)
-            subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
- 
+        # except KeyError as ke:
+        #     logging.info("No subscription exists for this viewport for view %s" % view)
  
         if subscription_respone['created']:
             msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_respone}
@@ -92,7 +93,7 @@ def create_dss_subscription(request, *args, **kwargs):
 @api_view(['GET'])
 @requires_scopes(['blender.read'])
 def get_rid_data(request, subscription_id):
-    ''' This is the GET endpoint for remote id data '''
+    ''' This is the GET endpoint for remote id data given a subscription id. Blender will store flight URLs and everytime '''
 
     try:
         is_uuid = UUID(subscription_id, version=4)
@@ -103,9 +104,27 @@ def get_rid_data(request, subscription_id):
     # Get the flights URL from the DSS and put it in 
 
     flights_key = "all_uss_flights-"+ subscription_id
+    flights_dict = redis.get(flights_key)
+    
+    authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
+    
+    all_flights_url = flights_dict['all_flights_url']
+    for cur_flight_url in all_flights_url:
+        ext = tldextract.extract(cur_flight_url)          
+        audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+        auth_credentials = authority_credentials.get_cached_credentials(audience)
+
+        headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
+    
+        flights_response = requests.post(cur_flight_url, headers=headers)
+        if flights_response.status_code == 200:
+            # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
+            return HTTPResponse(json.dumps(flights_response), status = 200, mimetype='application/json')
+        
+        else:
+            
 
 
-    pass
 
 
 @api_view(['POST'])

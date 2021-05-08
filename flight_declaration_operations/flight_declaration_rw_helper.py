@@ -44,7 +44,7 @@ class PassportCredentialsGetter():
             
         
     def get_write_credentials(self):        
-        payload = {"grant_type":"client_credentials","client_id": env.get('PASSPORT_WRITE_CLIENT_ID'),"client_secret": env.get('PASSPORT_WRITE_CLIENT_SECRET'),"audience": env.get('PASSPORT_WRITE_AUDIENCE'),"scope": env.get('PASSPORT_FLIGHT_DECLARATION_SCOPE')}        
+        payload = {"grant_type":"client_credentials","client_id": env.get('SPOTLIGHT_WRITE_CLIENT_ID'),"client_secret": env.get('SPOTLIGHT_WRITE_CLIENT_SECRET'),"audience": env.get('SPOTLIGHT_AUDIENCE'),"scope": env.get('SPOTLIGHT_FLIGHT_DECLARATION_SCOPE')}        
         url = env.get('PASSPORT_URL') + env.get('PASSPORT_TOKEN_URL')        
         token_response = requests.post(url, data = payload)
         if token_response.status_code == 200:
