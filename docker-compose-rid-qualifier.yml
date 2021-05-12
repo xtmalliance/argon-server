@@ -1,0 +1,48 @@
+version: "3.9"
+services:  
+  redis:
+    command: [ "redis-server", "/redis.conf" ]
+    image: "redis:latest"
+    ports:
+        - "6379:6379"
+    volumes:
+      - ./config/redis.conf:/redis.conf
+
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+        
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file:
+      - ".env.rid_qualifier"
+
+  web:    
+    env_file:
+      - ".env.rid_qualifier"
+    build: . 
+    image: openskies-sh/flight-blender-rid-qualifier
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - redis    
+      - db
+    volumes:
+      - .:/app
+
+  migration:
+    
+    command: python manage.py migrate --noinput
+    image: openskies-sh/flight-blender-rid-qualifier
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+
+volumes:
+  app:
+  db_data:
+  
+      
+      

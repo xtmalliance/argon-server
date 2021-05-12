@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
         
     volumes:
-      - ./data/db:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     env_file:
       - ".env"
 
@@ -23,6 +23,7 @@ services:
     env_file:
       - ".env"      
     build: . 
+    image: openskies-sh/flight-blender
     command: python manage.py runserver 0.0.0.0:8000
     depends_on:
       - redis    
@@ -32,6 +33,7 @@ services:
   migration:
     
     command: python manage.py migrate --noinput
+    image: openskies-sh/flight-blender
     volumes:
       - .:/app
     depends_on:
@@ -39,6 +41,7 @@ services:
       
   celery:
     container_name: flight-blender-worker
+    image: openskies-sh/flight-blender
     build:
       context: "."    
     
@@ -53,6 +56,7 @@ services:
       
   beat:
     container_name: flight-blender-beat
+    image: openskies-sh/flight-blender
     build:
       context: "."    
       
@@ -65,4 +69,8 @@ services:
     depends_on:
       - redis
 
+  
+volumes:
+  app:
+  db_data:
   

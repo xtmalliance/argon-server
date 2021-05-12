@@ -14,6 +14,7 @@ import uuid
 from shapely.geometry import box
 import redis
 import uuid
+import requests
 import tldextract
 from uuid import UUID
 from dotenv import load_dotenv, find_dotenv
@@ -122,10 +123,8 @@ def get_rid_data(request, subscription_id):
             return HTTPResponse(json.dumps(flights_response), status = 200, mimetype='application/json')
         
         else:
+            return HTTPResponse(json.dumps(flights_response), status = 400, mimetype='application/json')
             
-
-
-
 
 @api_view(['POST'])
 @requires_scopes(['dss.write.identification_service_areas'])
