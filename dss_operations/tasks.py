@@ -56,7 +56,7 @@ def poll_uss_for_flights():
 
         headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
     
-        flights_response = requests.post(cur_flight_url, headers=headers)
+        flights_response = requests.get(cur_flight_url, headers=headers)
         if flights_response.status_code == 200:
             # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
             all_flights = flights_response['flights']

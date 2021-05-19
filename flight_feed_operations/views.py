@@ -1,16 +1,28 @@
-from django.shortcuts import render
-
 # Create your views here.
 from django.shortcuts import render
-from django.utils.decorators import method_decorator
-from auth_helper.utils import requires_scopes, BearerAuth
 # Create your views here.
 import json
 import logging
 from django.http import HttpResponse, JsonResponse
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from auth_helper.utils import requires_scopes
+from rest_framework.decorators import api_view,
 from .tasks import write_incoming_data
+from typing import NamedTuple, Type
+
+class RIDMetadata(NamedTuple):
+    ''' A class to store RemoteID metadata '''
+    aircraft_type: str
+
+class SingleObervation(NamedTuple):
+    ''' This is the object stores details of the obervation  '''
+
+    lat_dd: float
+    lon_dd: float
+    altitude_mm: float
+    traffic_source: int
+    source_type:int
+    icao_address: str
+    metadata: RIDMetadata
 
 
 @api_view(['GET'])
@@ -34,22 +46,44 @@ def set_air_traffic(request):
     try:
         observations = req['observations']
     except KeyError as ke:
-        msg = json.dumps({"message":"One parameter are required: observations with a list of observation objects. One or more of these were not found in your JSON request. For sample data see: https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#sample-traffic-object"})
+        msg = json.dumps({"message":"At least one observation is required: observations with a list of observation objects. One or more of these were not found in your JSON request. For sample data see: https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#sample-traffic-object"})
         
         return JsonResponse(msg, status=400, mimetype='application/json')
 
-    else:
-        for observation in observations:  
+    for observation in observations:  
+        try: 
             lat_dd = observation['lat_dd']
             lon_dd = observation['lon_dd']
             altitude_mm = observation['altitude_mm']
             traffic_source = observation['traffic_source']
             source_type = observation['source_type']
             icao_address = observation['icao_address']
-            single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address }
-            task = write_incoming_data.delay(json.dumps(single_observation))  # Send a job to the task queue
+            
+        except KeyError as obs_ke:
+            msg = json.dumps({"message":"One of your obervations do not have the mandatory required field"})
+            
+            return JsonResponse(msg, status=400, mimetype='application/json')
+            # logging.error("Not all data was provided")
 
-        op = json.dumps ({"message":"OK"})
-        return HttpResponse(op, status=200)
+        metadata = {}
+        try: 
+            metadata = observation['metadata']            
+        except KeyError as mt_ke:
+            pass
+        else:
+            try:
+                mtd = RIDMetadata(aircraft_type = metadata['aircraft_type'])
+            except(KeyError, TypeError) as mt_ve:
+                pass
+            else:
+                metadata = {"aircraft_type": mtd.aircraft_type}
 
-                    
+        
+
+        single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address , 'metadata' : metadata}
+        task = write_incoming_data.delay(json.dumps(single_observation))  # Send a job to the task queue
+
+    op = json.dumps ({"message":"OK"})
+    return HttpResponse(op, status=200)
+
+                
