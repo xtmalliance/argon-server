@@ -15,9 +15,11 @@ load_dotenv(find_dotenv())
 
 @task(name='write_incoming_data')
 def write_incoming_data(observation): 
+    obs = json.loads(observation)
     myCGOps = flight_stream_helper.ConsumerGroupOps()
-    cg = myCGOps.get_consumer_group()           
-    msgid = cg.add(observation)            
+    cg = myCGOps.get_consumer_group()       
+    msgid = cg.add(obs)
+    
     return msgid
 
 
@@ -82,8 +84,8 @@ def submit_flights_to_spotlight():
     if 'error' in credentials: 
         logging.error('Error in getting credentials %s' % credentials)
     else:
-        for message in messages: 
-            pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'data':message.data, 'address':message.data['icao_address']})
+        for message in messages:             
+            pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
         
         # sort by date
         pending_messages.sort(key=lambda item:item['timestamp'], reverse=True)
@@ -91,9 +93,14 @@ def submit_flights_to_spotlight():
         # Keep only the latest message
         distinct_messages = {i['address']:i for i in reversed(pending_messages)}.values()
         FLIGHT_SPOTLIGHT_URL = os.getenv('FLIGHT_SPOTLIGHT_URL', 'http://localhost:5000')
+        
         securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
+
+        print(securl)
         headers = {"Authorization": "Bearer " + credentials['access_token']}
         for message in distinct_messages:
-            payload = {"icao_address" : message['icao_address'],"traffic_source" :message['traffic_source'], "source_type" : message['source_type'], "lat_dd" : message['lat_dd'], "lon_dd" : message['lon_dd'], "time_stamp" : message['time_stamp'],"altitude_mm" : message['altitude_mm']}
+            print(message)
+            payload = {"icao_address" : message['address'],"traffic_source" :message['msg_data']['traffic_source'], "source_type" : message['msg_data']['source_type'], "lat_dd" : message['msg_data']['lat_dd'], "lon_dd" : message['msg_data']['lon_dd'], "time_stamp" : message['timestamp'],"altitude_mm" : message['msg_data']['altitude_mm'], "metadata": message['msg_data']['metadata']}
             response = requests.post(securl, data= payload, headers=headers)
+            print(response.status_code)
             logging.info(response.status_code)

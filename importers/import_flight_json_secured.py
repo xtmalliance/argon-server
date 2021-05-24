@@ -1,5 +1,7 @@
 ## A file to import flight data into the Secured Flight Spotlight instance. 
+from sys import setrecursionlimit
 import time
+from django.views.generic import base
 import requests 
 from dotenv import load_dotenv, find_dotenv
 import json
@@ -20,21 +22,21 @@ class PassportCredentialsGetter():
         
         now = datetime.now()
         
-        token_details = r.get('flight_data_access_token_details')
+        token_details = r.get('spotlight_write_air_traffic_token')
         if token_details:    
             token_details = json.loads(token_details)
             created_at = token_details['created_at']
             set_date = datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f")
             if now < (set_date - timedelta(minutes=58)):
                 credentials = self.get_write_credentials()
-                r.set('flight_data_access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+                r.set('spotlight_write_air_traffic_token', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
             else: 
                 credentials = token_details['credentials']
         else:   
             
             credentials = self.get_write_credentials()
-            r.set('flight_data_access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            r.expire("flight_data_access_token_details", timedelta(minutes=58))
+            r.set('spotlight_write_air_traffic_token', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+            r.expire("spotlight_write_air_traffic_token", timedelta(minutes=58))
             
         return credentials
             
@@ -74,13 +76,17 @@ class FlightSpotlightUploader():
                 lon_dd = current_reading['lon_dd']
                 time_stamp = current_reading['timestamp']
                 altitude_mm = current_reading['altitude_mm']
+                metadata = current_reading['metadata']
 
                 headers = {"Authorization": "Bearer "+ self.credentials['access_token']}
-                payload = {"icao_address" : icao_address,"traffic_source" :traffic_source, "source_type" : source_type, "lat_dd" : lat_dd, "lon_dd" : lon_dd, "time_stamp" : time_stamp,"altitude_mm" : altitude_mm}
-                securl = 'http://localhost:5000/set_air_traffic'
+                payload = {"icao_address" : icao_address,"traffic_source" :traffic_source, "source_type" : source_type, "lat_dd" : lat_dd, "lon_dd" : lon_dd, "time_stamp" : time_stamp,"altitude_mm" : altitude_mm, 'metadata':metadata}
+                baseurl = env.get('FLIGHT_SPOTLIGHT_URL','http://localhost:5000')
+                securl = baseurl + '/set_air_traffic'
                 try:
-                    response = requests.post(securl, data= payload, headers=headers)
-                    print(response.content)                
+                    
+                    response = requests.post(securl, json = payload, headers = headers)
+                    
+                    
                 except Exception as e:
                     print(e)
                 else:
@@ -93,6 +99,6 @@ if __name__ == '__main__':
 
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
-    # print(credentials)
+    print(credentials)
     my_uploader = FlightSpotlightUploader(credentials = credentials)
     my_uploader.upload_to_server(filename='air_traffic_samples/micro_flight_data.json')
