@@ -9,5 +9,5 @@ class MyAppConfig(AppConfig):
     def ready(self):
         
         myCGOps = flight_stream_helper.ConsumerGroupOps()
-        cg = myCGOps.create_cg()     
+        cg = myCGOps.create_all_obs()     
 

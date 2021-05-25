@@ -17,9 +17,17 @@ load_dotenv(find_dotenv())
 def write_incoming_data(observation): 
     obs = json.loads(observation)
     myCGOps = flight_stream_helper.ConsumerGroupOps()
-    cg = myCGOps.get_consumer_group()       
+    cg = myCGOps.get_all_observations_group()       
+    msgid = cg.add(obs)    
+    return msgid
+
+
+@task(name='write_incoming_data_rid_qualifier')
+def write_incoming_data_rid_qualifier(observation): 
+    obs = json.loads(observation)
+    myCGOps = flight_stream_helper.ConsumerGroupOps()
+    cg = myCGOps.get_rid_qualifier_group()       
     msgid = cg.add(obs)
-    
     return msgid
 
 
@@ -64,7 +72,7 @@ class PassportCredentialsGetter():
 #     dir(app)
     
 #     with app.app_context():
-#         cg = app.get_consumer_group()
+#         cg = app.get_all_observations_group()
 
 #     logger = print_hello.get_logger()
 
@@ -75,7 +83,7 @@ class PassportCredentialsGetter():
 def submit_flights_to_spotlight():
     # get existing consumer group
     my_cg_ops = flight_stream_helper.ConsumerGroupOps()
-    cg = my_cg_ops.get_consumer_group()
+    cg = my_cg_ops.get_all_observations_group()
     messages = cg.read()
     pending_messages = []
     
@@ -96,11 +104,10 @@ def submit_flights_to_spotlight():
         
         securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
 
-        print(securl)
         headers = {"Authorization": "Bearer " + credentials['access_token']}
         for message in distinct_messages:
-            print(message)
+            
             payload = {"icao_address" : message['address'],"traffic_source" :message['msg_data']['traffic_source'], "source_type" : message['msg_data']['source_type'], "lat_dd" : message['msg_data']['lat_dd'], "lon_dd" : message['msg_data']['lon_dd'], "time_stamp" : message['timestamp'],"altitude_mm" : message['msg_data']['altitude_mm'], "metadata": message['msg_data']['metadata']}
             response = requests.post(securl, data= payload, headers=headers)
-            print(response.status_code)
+            
             logging.info(response.status_code)

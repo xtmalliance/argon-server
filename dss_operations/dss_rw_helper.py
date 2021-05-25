@@ -143,7 +143,7 @@ class RemoteIDOperations():
                     subscription_flights = "all_uss_flights-" + new_subscription_id
                     self.redis.hmset(subscription_flights, flights_dict)
                     # expire keys in three minutes 
-                    self.redis.expire(name=subscription_flights, time=timedelta(minutes=3))
+                    self.redis.expire(name=subscription_flights, time=timedelta(minutes=5))
                     return subscription_response
 
 

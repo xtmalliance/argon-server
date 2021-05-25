@@ -1,7 +1,7 @@
 # Create your views here.
 import json
 import logging
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from auth_helper.utils import requires_scopes
 from rest_framework.decorators import api_view
 from .tasks import write_incoming_data

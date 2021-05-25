@@ -21,8 +21,7 @@ from . import views as dss_views
 urlpatterns = [
 
     path('create_dss_subscription/', dss_views.create_dss_subscription),
-    path('uss/identification_service_areas/<uuid:subscription_id>', dss_views.dss_isa_callback),
-    
+    path('uss/identification_service_areas/<uuid:subscription_id>', dss_views.dss_isa_callback),    
     path('get_rid_data/<uuid:subscription_id>', dss_views.get_rid_data),
 
     path('display_data/<str:view_port>', dss_views.get_display_data),

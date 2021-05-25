@@ -6,5 +6,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         myCGOps = flight_stream_helper.ConsumerGroupOps()
-        cg = myCGOps.create_cg()     
+        cg = myCGOps.create_all_obs()     
 

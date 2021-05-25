@@ -1,17 +1,16 @@
-from django.shortcuts import render
-
-from django.utils.decorators import method_decorator
 from requests.adapters import HTTPResponse
-from auth_helper.utils import requires_scopes, BearerAuth
-import json, os
+from walrus.models import BooleanField
+from auth_helper.utils import requires_scopes
+import json
+from pyproj import Geod
 from . import rtree_helper
 import logging
 from django.http import HttpResponse
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view
 from . import dss_rw_helper
+from os import environ as env
 import uuid
-from shapely.geometry import box
+import shapely.geometry
 import redis
 import uuid
 import requests
@@ -29,6 +28,32 @@ def create_new_subscription(request_id, view, vertex_list):
 
     return subscription_respone
 
+def check_view_port(view_port) -> bool:
+    geod = Geod(ellps="WGS84")
+    if len(view_port) != 4:
+        return False
+        # return '"view" argument contains the wrong number of coordinates (expected 4, found {})'.format(len(view_port)), 400
+
+    lat_min = min(view_port[0], view_port[2])
+    lat_max = max(view_port[0], view_port[2])
+    lng_min = min(view_port[1], view_port[3])
+    lng_max = max(view_port[1], view_port[3])
+
+    if (lat_min < -90 or lat_min >= 90 or lat_max <= -90 or lat_max > 90 or
+        lng_min < -180 or lng_min >= 360 or lng_max <= -180 or lng_max > 360):
+        # return '"view" coordinates do not fall within the valid range of -90 <= lat <= 90 and -180 <= lng <= 360', 400
+        return False
+
+    box = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
+    area = abs(geod.geometry_area_perimeter(box)[0])
+    if (area) < 250000 and (area) > 90000:
+        return False
+
+
+
+    return True
+
+
 
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
@@ -42,8 +67,11 @@ def create_dss_subscription(request, *args, **kwargs):
     except Exception as ke:        
         incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
-    else:
-        b = box(view_port[0], view_port[1], view_port[2],view_port[3])
+
+    view_port_valid = check_view_port(view_port=view_port)
+
+    if view_port_valid:
+        b = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
         co_ordinates = list(zip(*b.exterior.coords.xy))
         # Convert bounds vertex list
         vertex_list = []
@@ -59,7 +87,7 @@ def create_dss_subscription(request, *args, **kwargs):
         request_id = str(uuid.uuid4())
         # my_index_helper = rtree_helper.IndexFactory()
 
-        subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+        subscription_resposne = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
         # check if subscription exists.
         # try:
         #     subscription_index = my_index_helper.get_current_subscriptions()
@@ -81,14 +109,18 @@ def create_dss_subscription(request, *args, **kwargs):
         # except KeyError as ke:
         #     logging.info("No subscription exists for this viewport for view %s" % view)
  
-        if subscription_respone['created']:
-            msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_respone}
-        if subscription_respone['found']:
-            msg = {"message":"Existing DSS Subscription found", 'id': subscription_respone['id']} # todo write existing subs
+        if subscription_resposne['created']:
+            msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_resposne}
+        if subscription_resposne['found']:
+            msg = {"message":"Existing DSS Subscription found", 'id': subscription_resposne['id']} # todo write existing subs
         else:
             msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
             
         return HttpResponse(json.dumps(msg), status=201)
+
+    else:
+        incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
 
 @api_view(['GET'])
@@ -163,12 +195,20 @@ def get_display_data(request, view):
 
     # get the existing subscription id , if no subscription exists, then reject
 
-    # get the flights endpoint and poll it every second 
+    try:        
+        view = request.query_params['view']
+        view_port = [float(i) for i in view.split(",")]
+    except Exception as ke:        
+        incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        return HttpResponse(json.dumps(incorrect_parameters), status=400)
+    view_port_valid = check_view_port(view_port=view_port)
+    if view_port_valid:        
+        
 
-    # send the polled data
-
-
-    return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
+        return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
+    else:
+        view_port_error = {"message":"A incorrect view port bbox was provided"}
+        return HttpResponse(json.dumps(view_port_error), status=400)
 
 
 @api_view(['GET'])
