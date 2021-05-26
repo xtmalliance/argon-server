@@ -3,7 +3,6 @@ from walrus.models import BooleanField
 from auth_helper.utils import requires_scopes
 import json
 from pyproj import Geod
-from . import rtree_helper
 import logging
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
@@ -16,15 +15,25 @@ import uuid
 import requests
 import tldextract
 from uuid import UUID
+from itertools import izip_longest
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
+
+
+# iterate a list in batches of size n
+def batcher(iterable, n):
+    args = [iter(iterable)] * n
+    return izip_longest(*args)
+
+
 def create_new_subscription(request_id, view, vertex_list):
     redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
-    redis.set(json.dumps({'sub-' + request_id: view }))
-
     myDSSubscriber = dss_rw_helper.RemoteIDOperations()
     subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view = view, request_uuid = request_id)
+    
+    redis.set(json.dumps({'sub-' + request_id: view }))
+
 
     return subscription_respone
 
@@ -49,8 +58,6 @@ def check_view_port(view_port) -> bool:
     if (area) < 250000 and (area) > 90000:
         return False
 
-
-
     return True
 
 
@@ -59,7 +66,6 @@ def check_view_port(view_port) -> bool:
 @requires_scopes(['blender.write'])
 def create_dss_subscription(request, *args, **kwargs):
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
-
 
     try:        
         view = request.query_params['view']
@@ -70,57 +76,33 @@ def create_dss_subscription(request, *args, **kwargs):
 
     view_port_valid = check_view_port(view_port=view_port)
 
-    if view_port_valid:
-        b = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
-        co_ordinates = list(zip(*b.exterior.coords.xy))
-        # Convert bounds vertex list
-        vertex_list = []
-        for cur_co_ordinate in co_ordinates:
-            lat_lng = {"lng":0, "lat":0}
-            lat_lng["lng"] = cur_co_ordinate[0]
-            lat_lng["lat"] = cur_co_ordinate[1]
-            vertex_list.append(lat_lng)
-        # remove the final point 
-        vertex_list.pop()
-        # TODO: Make this a asnyc call
-        #tasks.submit_dss_subscription(vertex_list = vertex_list, view_port = view)
-        request_id = str(uuid.uuid4())
-        # my_index_helper = rtree_helper.IndexFactory()
-
-        subscription_resposne = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
-        # check if subscription exists.
-        # try:
-        #     subscription_index = my_index_helper.get_current_subscriptions()
-        #     # Query the RTree to get the nearest subscription
-        #     intersecting_subscription_list = list(subscription_index.intersection((view_port[0], view_port[1], view_port[2],view_port[3])))
-        #     existing_subscription = False
-        #     if intersecting_subscription_list:
-        #         for current_subscription in intersecting_subscription_list: 
-        #             current_box = box(current_subscription.box[0], current_subscription.box[1], current_subscription.box[2],current_subscription.box[3])
-        #             if current_box.contains(b.buffer(-1e-14)) and current_box.buffer(1e-14).contains(b):
-                        
-        #                 existing_subscription = current_subscription['id']
-        #                 break
-        #         if existing_subscription: 
-        #             subscription_respone = {'id':existing_subscription}
-        #     else:
-        #         subscription_respone = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
-
-        # except KeyError as ke:
-        #     logging.info("No subscription exists for this viewport for view %s" % view)
- 
-        if subscription_resposne['created']:
-            msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_resposne}
-        if subscription_resposne['found']:
-            msg = {"message":"Existing DSS Subscription found", 'id': subscription_resposne['id']} # todo write existing subs
-        else:
-            msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
-            
-        return HttpResponse(json.dumps(msg), status=201)
-
-    else:
+    if not view_port_valid:
         incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
+
+    b = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
+    co_ordinates = list(zip(*b.exterior.coords.xy))
+    # Convert bounds vertex list
+    vertex_list = []
+    for cur_co_ordinate in co_ordinates:
+        lat_lng = {"lng":0, "lat":0}
+        lat_lng["lng"] = cur_co_ordinate[0]
+        lat_lng["lat"] = cur_co_ordinate[1]
+        vertex_list.append(lat_lng)
+    # remove the final point 
+    vertex_list.pop()
+    
+    request_id = str(uuid.uuid4())    
+    # TODO: Make this a asnyc call
+    subscription_resposne = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+    if subscription_resposne['created']:
+        msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_resposne}
+    if subscription_resposne['found']:
+        msg = {"message":"Existing DSS Subscription found", 'id': subscription_resposne['id']} # todo write existing subs
+    else:
+        msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
+        
+    return HttpResponse(json.dumps(msg), status=201)
 
 
 @api_view(['GET'])
@@ -134,28 +116,40 @@ def get_rid_data(request, subscription_id):
         return HttpResponse("Incorrect UUID passed in the parameters, please send a valid subscription ID", status=400, mimetype='application/json')
 
     redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+    flights_dict = {}
     # Get the flights URL from the DSS and put it in 
-
-    flights_key = "all_uss_flights-"+ subscription_id
-    flights_dict = redis.get(flights_key)
+    for keybatch in batcher(redis.scan_iter('all_uss_flights-*'),500): # reasonably we wont have more than 500 subscriptions active
+        stored_subscription_id = keybatch.split('-')[1]        
+        if (subscription_id == stored_subscription_id):
+            flights_dict = redis.get(*keybatch)
+            break
     
-    authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
-    
-    all_flights_url = flights_dict['all_flights_url']
-    for cur_flight_url in all_flights_url:
-        ext = tldextract.extract(cur_flight_url)          
-        audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
-        auth_credentials = authority_credentials.get_cached_credentials(audience)
-
-        headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
-    
-        flights_response = requests.post(cur_flight_url, headers=headers)
-        if flights_response.status_code == 200:
-            # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
-            return HTTPResponse(json.dumps(flights_response), status = 200, mimetype='application/json')
+    if bool(flights_dict):
+        all_flights_rid_data = []
+        # Build a Consumer Group
+        # Read data from Redis using the CG
+        # authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
         
-        else:
-            return HTTPResponse(json.dumps(flights_response), status = 400, mimetype='application/json')
+        # all_flights_url = flights_dict['all_flights_url']
+        # for cur_flight_url in all_flights_url:
+        #     ext = tldextract.extract(cur_flight_url)          
+        #     audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+        #     auth_credentials = authority_credentials.get_cached_credentials(audience)
+
+        #     headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
+        
+        #     flights_response = requests.post(cur_flight_url, headers=headers)
+            
+        #     if flights_response.status_code == 200:
+        #         # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
+        #         # return HTTPResponse(json.dumps(flights_response), status = 200, mimetype='application/json')
+        #         all_flights_rid_data.append(json.dumps(flights_response))
+            
+            
+        return HTTPResponse(json.dumps(all_flights_rid_data), status = 200, mimetype='application/json')
+    else:
+        return HTTPResponse(json.dumps({}), status = 404, mimetype='application/json')
+
             
 
 @api_view(['POST'])
@@ -202,8 +196,7 @@ def get_display_data(request, view):
         incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
     view_port_valid = check_view_port(view_port=view_port)
-    if view_port_valid:        
-        
+    if view_port_valid:               
 
         return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
     else:

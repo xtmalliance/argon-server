@@ -1,14 +1,10 @@
-import celery
-import requests
 from celery.decorators import task
 import os, json
 import logging
-from os import environ as env
-import redis
+import requests
 from . import flight_stream_helper
-from datetime import datetime, timedelta
-from walrus import Database
 from dotenv import load_dotenv, find_dotenv
+
 load_dotenv(find_dotenv())
 
 #### Airtraffic Endpoint
@@ -22,51 +18,6 @@ def write_incoming_data(observation):
     return msgid
 
 
-@task(name='write_incoming_data_rid_qualifier')
-def write_incoming_data_rid_qualifier(observation): 
-    obs = json.loads(observation)
-    myCGOps = flight_stream_helper.ConsumerGroupOps()
-    cg = myCGOps.get_rid_qualifier_group()       
-    msgid = cg.add(obs)
-    return msgid
-
-
-class PassportCredentialsGetter():
-    def __init__(self):
-        pass
-
-    def get_cached_credentials(self):  
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
-        now = datetime.now()
-        token_details = r.get('access_token_details')
-        if token_details:    
-            token_details = json.loads(token_details)
-            created_at = token_details['created_at']
-            set_date = datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f")
-            if now < (set_date - timedelta(minutes=58)):
-                credentials = self.get_write_credentials()
-                r.set('access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            else: 
-                credentials = token_details['credentials']
-        else:   
-            
-            credentials = self.get_write_credentials()
-            r.set('access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            
-        return credentials
-            
-            
-    def get_write_credentials(self):        
-        payload = {"grant_type":"client_credentials","client_id": env.get('SPOTLIGHT_WRITE_CLIENT_ID'),"client_secret": env.get('SPOTLIGHT_WRITE_CLIENT_SECRET'),"audience": env.get('SPOTLIGHT_AUDIENCE'),"scope": env.get('SPOTLIGHT_AIR_TRAFFIC_SCOPE')}        
-        url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
-        
-        token_data = requests.post(url, data = payload)
-        t_data = token_data.json()
-        
-        return t_data
-
-
-
 # @celery.task()
 # def print_hello():
 #     dir(app)
@@ -78,7 +29,7 @@ class PassportCredentialsGetter():
 
 #     logger.info("Hello")
     
-
+# This method submits flight information to Spotlight
 @task(name='submit_flights_to_spotlight')
 def submit_flights_to_spotlight():
     # get existing consumer group
@@ -87,7 +38,7 @@ def submit_flights_to_spotlight():
     messages = cg.read()
     pending_messages = []
     
-    my_credentials = PassportCredentialsGetter()
+    my_credentials = flight_stream_helper.PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
     if 'error' in credentials: 
         logging.error('Error in getting credentials %s' % credentials)

@@ -2,14 +2,27 @@
 ## For more information review: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml 
 ## and this diagram https://github.com/interuss/dss/blob/master/assets/generated/rid_display.png
 
-
 import json
 import redis
 import logging
 from datetime import datetime, timedelta
 import uuid
 import requests
+from dss_operations import dss_rw_helper
+from flight_feed_operations import flight_stream_helper
+from datetime import datetime, timedelta, timezone
+import json
+import redis
+import requests
+import tldextract
 from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+ 
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
 
 class AuthorityCredentialsGetter():
     ''' All calls to the DSS require credentials from a authority, usually the CAA since they can provide access to the system '''
@@ -111,45 +124,91 @@ class RemoteIDOperations():
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
 
             try:
-                dss_r = requests.put(dss_subscription_url, data= json.dumps(payload), headers=headers)  
-            except Exception as re: 
+                dss_r = requests.put(dss_subscription_url, json= payload, headers=headers)
+            except Exception as re:
                 logging.error("Error in posting to subscription URL %s " % re)
                 return subscription_response
 
-            else: 
-                try: 
-                    assert dss_r.status_code == 200
-                    subscription_response["created"] = 1
-                except AssertionError as ae:              
-                    logging.error("Error in creating subscription in the DSS %s" % dss_r.text)
-                    return subscription_response
-                else: 	
-                    dss_response = dss_r.json()
-                    service_areas = dss_response['service_areas']
-                    subscription = dss_response['subscription']
-                    subscription_id = subscription['id']
-                    notification_index = subscription['notification_index']
-                    subscription_response['notification_index'] = notification_index
-                    subscription_response['subscription_id'] = subscription_id
-                    # iterate over the service areas to get flights URL to poll 
-                    
-                    flights_url_list = []
-                    for service_area in service_areas: 
-                        flights_url = service_area['flights_url']
-                        flights_url_list.append(flights_url)
+            try: 
+                assert dss_r.status_code == 200
+                subscription_response["created"] = 1
+            except AssertionError as ae:              
+                logging.error("Error in creating subscription in the DSS %s" % dss_r.text)
+                return subscription_response
+            else: 	
+                dss_response = dss_r.json()
+                service_areas = dss_response['service_areas']
+                subscription = dss_response['subscription']
+                subscription_id = subscription['id']
+                notification_index = subscription['notification_index']
+                new_subscription_version = subscription['version']
+                subscription_response['notification_index'] = notification_index
+                subscription_response['subscription_id'] = subscription_id
 
-                    flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now}
- 
-                    subscription_flights = "all_uss_flights-" + new_subscription_id
-                    self.redis.hmset(subscription_flights, flights_dict)
-                    # expire keys in three minutes 
-                    self.redis.expire(name=subscription_flights, time=timedelta(minutes=5))
-                    return subscription_response
+                # iterate over the service areas to get flights URL to poll 
+                
+                flights_url_list = []
+                for service_area in service_areas: 
+                    flights_url = service_area['flights_url']
+                    flights_url_list.append(flights_url)
+
+                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now}
+
+                subscription_id_flights = "all_uss_flights-" + new_subscription_id + "-"+ new_subscription_version
+                self.redis.hmset(subscription_id_flights, flights_dict)
+                # expire keys in three minutes 
+                self.redis.expire(name = subscription_id_flights, time=timedelta(minutes=5))
+                return subscription_response
 
 
     def delete_dss_subscription(self,subscription_id):
         ''' This module calls the DSS to delete a subscription''' 
 
-        # TODO: Subscriptions expire after a hour but we may need to delete one 
+        pass
+
+    def query_uss_for_rid(self, flights_dict):
         
+        authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
+
+        all_flights_url = flights_dict['all_flights_url']
+        # flights_view = flights_dict['view']
+        cg_ops = flight_stream_helper.ConsumerGroupOps()
+        cg = cg_ops.get_all_observations_group()
+
+        for cur_flight_url in all_flights_url:
+            ext = tldextract.extract(cur_flight_url)          
+            audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+            auth_credentials = authority_credentials.get_cached_credentials(audience)
+
+            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
+        
+            flights_response = requests.get(cur_flight_url, headers=headers)
+            if flights_response.status_code == 200:
+                # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
+                all_flights = flights_response['flights']
+                for flight in all_flights:
+                    flight_id = flight['id']
+                    try: 
+                        assert flight.get('current_state') is not None
+                    except AssertionError as ae:
+                        logging.error('There is no current_state provided by SP on the flights url %s' % cur_flight_url)
+                        logging.debug(json.dumps(flight))
+                    else:
+                        flight_current_state = flight['current_state']
+                        position = flight_current_state['position']
+                        flight_metadata = {'id':flight_current_state['id'],"aircraft_type":flight_current_state["aircraft_type"]}
+                        now  = datetime.now()
+                        time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
+                        
+                        if {"lat", "lng", "alt"} <= position.keys():
+                            # check if lat / lng / alt existis
+                            single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
+                            # write incoming data directly
+                            
+                            cg.add(single_observation)    
+                        else: 
+                            logging.error("Error in received flights data: %{url}s ".format(**flight) ) 
+                    
+            else:
+                logging.info(flights_response.status_code) 
 
