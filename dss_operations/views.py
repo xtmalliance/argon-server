@@ -1,25 +1,19 @@
 from requests.adapters import HTTPResponse
-from walrus.models import BooleanField
 from auth_helper.utils import requires_scopes
 import json
 from pyproj import Geod
-import logging
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from . import dss_rw_helper
 from os import environ as env
 import uuid
 import shapely.geometry
-import redis
 import uuid
-import requests
-import tldextract
+from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 from itertools import izip_longest
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
-
-
 
 # iterate a list in batches of size n
 def batcher(iterable, n):
@@ -189,6 +183,7 @@ def get_display_data(request, view):
 
     # get the existing subscription id , if no subscription exists, then reject
 
+    request_id = str(uuid.uuid4())   
     try:        
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
@@ -196,7 +191,36 @@ def get_display_data(request, view):
         incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
     view_port_valid = check_view_port(view_port=view_port)
-    if view_port_valid:               
+    
+    b = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
+    co_ordinates = list(zip(*b.exterior.coords.xy))
+    # Convert bounds vertex list
+    vertex_list = []
+    for cur_co_ordinate in co_ordinates:
+        lat_lng = {"lng":0, "lat":0}
+        lat_lng["lng"] = cur_co_ordinate[0]
+        lat_lng["lat"] = cur_co_ordinate[1]
+        vertex_list.append(lat_lng)
+    # remove the final point 
+    vertex_list.pop()
+    
+    if view_port_valid:   
+        # create a subscription 
+        subscription_resposne = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+        myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
+
+        # TODO: Get existing flight details from subscription
+        flights_dict = {}
+
+        cg_ops = flight_stream_helper.ConsumerGroupOps()
+        cg = cg_ops.get_all_observations_group()
+
+        myDSSSubscriber.query_uss_for_rid(flights_dict, cg)
+        # Poll USS for data async
+        
+        # Create a consumer group
+        
+        # Poll consumter group
 
         return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
     else:

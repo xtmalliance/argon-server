@@ -5,26 +5,25 @@ import json, redis
 import logging
 import requests
 from urllib.parse import urlparse
+
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 url = urlparse(os.environ.get("REDIS_URL"))
 
 class ConsumerGroupOps():
-    # def __init__(self):
-        
-        # self.stream_keys = ['all_observations','rid_qualifier']
+    
+    def __init__(self):
+        self.stream_keys = ['all_observations']
     def create_all_obs(self):
         self.get_all_observations_group(create=True)
         
     def get_all_observations_group(self,create=False):
-        
         db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
-        
-        stream_keys = ['all_observations']
-        cg = db.time_series('cg-obs', stream_keys)
+        # stream_keys = ['all_observations']
+        cg = db.time_series('cg-obs', self.stream_keys)
         if create:
-            for stream in stream_keys:
+            for stream in self.stream_keys:
                 db.xadd(stream, {'data': ''})
 
         if create:
@@ -32,6 +31,24 @@ class ConsumerGroupOps():
             cg.set_id('$')
 
         return cg.all_observations
+    
+    def create_all_rid_qualifier_obs(self):
+        self.get_all_rid_qualifier_group(create=True)
+        
+    def get_all_rid_qualifier_group(self,create=False):
+        db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
+        # stream_keys = ['all_observations']
+        cg = db.time_series('cg-rid', self.stream_keys)
+        if create:
+            for stream in self.stream_keys:
+                db.xadd(stream, {'data': ''})
+
+        if create:
+            cg.create()
+            cg.set_id('$')
+
+        return cg.all_observations
+
 
 
 class ObservationReadOperations():

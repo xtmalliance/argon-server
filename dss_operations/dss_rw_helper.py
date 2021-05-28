@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import uuid
 import requests
 from dss_operations import dss_rw_helper
-from flight_feed_operations import flight_stream_helper
+
 from datetime import datetime, timedelta, timezone
 import json
 import redis
@@ -166,15 +166,12 @@ class RemoteIDOperations():
 
         pass
 
-    def query_uss_for_rid(self, flights_dict):
+    def query_uss_for_rid(self, flights_dict, cg):
         
         authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
 
         all_flights_url = flights_dict['all_flights_url']
         # flights_view = flights_dict['view']
-        cg_ops = flight_stream_helper.ConsumerGroupOps()
-        cg = cg_ops.get_all_observations_group()
-
         for cur_flight_url in all_flights_url:
             ext = tldextract.extract(cur_flight_url)          
             audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials

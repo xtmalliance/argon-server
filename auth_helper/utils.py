@@ -10,8 +10,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from six.moves.urllib import request as req
 from django.http import JsonResponse
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.backends import default_backend
+
 import requests
 
 def jwt_get_username_from_payload_handler(payload):

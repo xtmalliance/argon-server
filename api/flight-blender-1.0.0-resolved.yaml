@@ -106,7 +106,7 @@ paths:
       tags:
         - dss
 
-  /dss/display_data/:
+  /dss/display_data:
 
     get:
       parameters:
