@@ -84,6 +84,10 @@ def requires_scopes(required_scopes):
             try:
                 decoded = jwt.decode(token, public_key, audience=API_IDENTIFIER, algorithms=['RS256'])
                 
+            except jwt.ImmatureSignatureError as es: 
+                response = JsonResponse({'detail': 'Token Signature has is not valid'})
+                response.status_code = 401
+                return response
             except jwt.ExpiredSignatureError as es: 
                 response = JsonResponse({'detail': 'Token Signature has expired'})
                 response.status_code = 401
@@ -100,6 +104,10 @@ def requires_scopes(required_scopes):
 
             except jwt.InvalidSignatureError as es: 
                 response = JsonResponse({'detail': 'Invalid signature in token'})
+                response.status_code = 401
+                return response
+            except jwt.DecodeError as es: 
+                response = JsonResponse({'detail': 'Token canot be decoded'})
                 response.status_code = 401
                 return response
             except Exception as e: 
