@@ -11,15 +11,8 @@ import shapely.geometry
 import uuid
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
-from itertools import izip_longest
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
-
-# iterate a list in batches of size n
-def batcher(iterable, n):
-    args = [iter(iterable)] * n
-    return izip_longest(*args)
-
 
 def create_new_subscription(request_id, view, vertex_list):
     redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
@@ -27,7 +20,6 @@ def create_new_subscription(request_id, view, vertex_list):
     subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view = view, request_uuid = request_id)
     
     redis.set(json.dumps({'sub-' + request_id: view }))
-
 
     return subscription_respone
 
@@ -112,34 +104,20 @@ def get_rid_data(request, subscription_id):
     redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
     flights_dict = {}
     # Get the flights URL from the DSS and put it in 
-    for keybatch in batcher(redis.scan_iter('all_uss_flights-*'),500): # reasonably we wont have more than 500 subscriptions active
+    for keybatch in flight_stream_helper.batcher(redis.scan_iter('all_uss_flights-*'),500): # reasonably we wont have more than 500 subscriptions active
         stored_subscription_id = keybatch.split('-')[1]        
         if (subscription_id == stored_subscription_id):
             flights_dict = redis.get(*keybatch)
             break
     
     if bool(flights_dict):
+        # TODO for Pull operations Flights Dict is not being used at all
         all_flights_rid_data = []
-        # Build a Consumer Group
-        # Read data from Redis using the CG
-        # authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
+        cg_ops = flight_stream_helper.ConsumerGroupOps()
+        cg = cg_ops.get_pull_stream()
+        obs_helper = flight_stream_helper.ObservationReadOperations()
+        all_flights_rid_data = obs_helper.get_observations(cg)
         
-        # all_flights_url = flights_dict['all_flights_url']
-        # for cur_flight_url in all_flights_url:
-        #     ext = tldextract.extract(cur_flight_url)          
-        #     audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
-        #     auth_credentials = authority_credentials.get_cached_credentials(audience)
-
-        #     headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
-        
-        #     flights_response = requests.post(cur_flight_url, headers=headers)
-            
-        #     if flights_response.status_code == 200:
-        #         # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
-        #         # return HTTPResponse(json.dumps(flights_response), status = 200, mimetype='application/json')
-        #         all_flights_rid_data.append(json.dumps(flights_response))
-            
-            
         return HTTPResponse(json.dumps(all_flights_rid_data), status = 200, mimetype='application/json')
     else:
         return HTTPResponse(json.dumps({}), status = 404, mimetype='application/json')
@@ -180,9 +158,7 @@ def get_display_data(request, view):
     ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
     
     # get the view bounding box 
-
     # get the existing subscription id , if no subscription exists, then reject
-
     request_id = str(uuid.uuid4())   
     try:        
         view = request.query_params['view']
@@ -213,7 +189,7 @@ def get_display_data(request, view):
         flights_dict = {}
 
         cg_ops = flight_stream_helper.ConsumerGroupOps()
-        cg = cg_ops.get_all_observations_group()
+        cg = cg_ops.get_pull_stream()
 
         myDSSSubscriber.query_uss_for_rid(flights_dict, cg)
         # Poll USS for data async

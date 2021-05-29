@@ -54,20 +54,20 @@ services:
       - redis
 
       
-  beat:
-    container_name: flight-blender-beat
-    image: openskies-sh/flight-blender
-    build:
-      context: "."    
+  # beat:
+  #   container_name: flight-blender-beat
+  #   image: openskies-sh/flight-blender
+  #   build:
+  #     context: "."    
       
-    env_file:
-      - ".env"
-    hostname: beat    
-    command: celery --app=flight_blender beat --loglevel=info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
+  #   env_file:
+  #     - ".env"
+  #   hostname: beat    
+  #   command: celery --app=flight_blender beat --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - redis
 
   
 volumes:

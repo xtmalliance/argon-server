@@ -6,22 +6,29 @@ import logging
 import requests
 from urllib.parse import urlparse
 
+from itertools import izip_longest
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 url = urlparse(os.environ.get("REDIS_URL"))
 
+# iterate a list in batches of size n
+def batcher(iterable, n):
+    args = [iter(iterable)] * n
+    return izip_longest(*args)
+
+
 class ConsumerGroupOps():
     
     def __init__(self):
-        self.stream_keys = ['all_observations']
-    def create_all_obs(self):
-        self.get_all_observations_group(create=True)
+        self.stream_keys = ['all_observations_push', 'all_observations_pull']
+    def create_push_pull_stream(self):
+        self.get_push_pull_stream(create=True)
         
-    def get_all_observations_group(self,create=False):
+    def get_push_pull_stream(self,create=False):
         db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
         # stream_keys = ['all_observations']
-        cg = db.time_series('cg-obs', self.stream_keys)
+        cg = db.time_series('cg-type-push-pull', self.stream_keys)
         if create:
             for stream in self.stream_keys:
                 db.xadd(stream, {'data': ''})
@@ -30,34 +37,14 @@ class ConsumerGroupOps():
             cg.create()
             cg.set_id('$')
 
-        return cg.all_observations
+        return {'push_stream':cg.all_observations_push, 'pull_stream':cg.all_observations_pull}
     
-    def create_all_rid_qualifier_obs(self):
-        self.get_all_rid_qualifier_group(create=True)
-        
-    def get_all_rid_qualifier_group(self,create=False):
-        db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
-        # stream_keys = ['all_observations']
-        cg = db.time_series('cg-rid', self.stream_keys)
-        if create:
-            for stream in self.stream_keys:
-                db.xadd(stream, {'data': ''})
-
-        if create:
-            cg.create()
-            cg.set_id('$')
-
-        return cg.all_observations
-
-
-
+    
 class ObservationReadOperations():
-    def __init__(self):
-        self.cg_ops = ConsumerGroupOps()
-
-    def get_all_observations(self):
-        cg = self.cg_ops.get_all_observations_group()
-        messages = cg.read()
+    
+    def get_observations(self, cg):
+        
+        messages = cg['pull_stream'].read()
         pending_messages = []
         
         my_credentials = PassportCredentialsGetter()
@@ -66,10 +53,10 @@ class ObservationReadOperations():
             logging.error('Error in getting credentials %s' % credentials)
         else:
             for message in messages:             
-                pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
+                pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address'], 'metadata':message['metadata']})
+        return pending_messages
         
-
-
+        
 class PassportCredentialsGetter():
     def __init__(self):
         pass

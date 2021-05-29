@@ -152,9 +152,9 @@ class RemoteIDOperations():
                     flights_url = service_area['flights_url']
                     flights_url_list.append(flights_url)
 
-                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now}
+                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now, 'version':new_subscription_version}
 
-                subscription_id_flights = "all_uss_flights-" + new_subscription_id + "-"+ new_subscription_version
+                subscription_id_flights = "all_uss_flights-" + new_subscription_id 
                 self.redis.hmset(subscription_id_flights, flights_dict)
                 # expire keys in three minutes 
                 self.redis.expire(name = subscription_id_flights, time=timedelta(minutes=5))
@@ -201,8 +201,8 @@ class RemoteIDOperations():
                             # check if lat / lng / alt existis
                             single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
                             # write incoming data directly
-                            
-                            cg.add(single_observation)    
+                            cg['push_stream'].add(single_observation)    
+                            cg['pull_stream'].add(single_observation)    
                         else: 
                             logging.error("Error in received flights data: %{url}s ".format(**flight) ) 
                     

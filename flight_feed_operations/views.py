@@ -4,7 +4,7 @@ import logging
 from django.http import JsonResponse
 from auth_helper.utils import requires_scopes
 from rest_framework.decorators import api_view
-from .tasks import write_incoming_data
+from .tasks import write_incoming_air_traffic_data
 from typing import NamedTuple, Type
 
 class RIDMetadata(NamedTuple):
@@ -80,7 +80,7 @@ def set_air_traffic(request):
 
         single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address , 'metadata' : json.dumps(metadata)}
         
-        task = write_incoming_data.delay(json.dumps(single_observation))  # Send a job to the task queue
+        task = write_incoming_air_traffic_data.delay(json.dumps(single_observation))  # Send a job to the task queue
 
     op = {"message":"OK"}
     return JsonResponse(op, status=200)

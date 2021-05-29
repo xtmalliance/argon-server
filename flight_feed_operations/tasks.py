@@ -9,13 +9,15 @@ load_dotenv(find_dotenv())
 
 #### Airtraffic Endpoint
 
-@task(name='write_incoming_data')
-def write_incoming_data(observation): 
+@task(name='write_incoming_air_traffic_data')
+def write_incoming_air_traffic_data(observation): 
     obs = json.loads(observation)
     myCGOps = flight_stream_helper.ConsumerGroupOps()
-    cg = myCGOps.get_all_observations_group()       
-    msgid = cg.add(obs)    
-    return msgid
+    cg = myCGOps.get_push_pull_stream()       
+    push_msgid = cg['push_stream'].add(obs)    
+    pull_msgid = cg['pull_stream'].add(obs)
+    
+    return {'push_msg_id':push_msgid, 'pull_msg_id':pull_msgid}
 
 
 # @celery.task()
@@ -23,7 +25,7 @@ def write_incoming_data(observation):
 #     dir(app)
     
 #     with app.app_context():
-#         cg = app.get_all_observations_group()
+#         cg = app.get_push_stream()
 
 #     logger = print_hello.get_logger()
 
@@ -34,8 +36,8 @@ def write_incoming_data(observation):
 def submit_flights_to_spotlight():
     # get existing consumer group
     my_cg_ops = flight_stream_helper.ConsumerGroupOps()
-    cg = my_cg_ops.get_all_observations_group()
-    messages = cg.read()
+    cg = my_cg_ops.get_push_pull_stream()
+    messages = cg['push_stream'].read()
     pending_messages = []
     
     my_credentials = flight_stream_helper.PassportCredentialsGetter()
