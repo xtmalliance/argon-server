@@ -11,6 +11,7 @@ import shapely.geometry
 import uuid
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
+import hashlib
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -181,22 +182,17 @@ def get_display_data(request, view):
     vertex_list.pop()
     
     if view_port_valid:   
+        # stream_id = hashlib.md5(view.encode('utf-8')).hexdigest()
         # create a subscription 
-        subscription_resposne = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
-        myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
-
+        subscription_response = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)  
         # TODO: Get existing flight details from subscription
-        flights_dict = {}
-
         cg_ops = flight_stream_helper.ConsumerGroupOps()
         cg = cg_ops.get_pull_stream()
 
-        myDSSSubscriber.query_uss_for_rid(flights_dict, cg)
-        # Poll USS for data async
-        
-        # Create a consumer group
-        
-        # Poll consumter group
+        messages = cg['pull_stream'].read()
+        pending_messages = []
+        for message in messages:             
+            pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address'], 'metadata':message['metadata']})
 
         return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
     else:

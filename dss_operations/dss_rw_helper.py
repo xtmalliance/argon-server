@@ -107,8 +107,7 @@ class RemoteIDOperations():
             dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
             
             # check if a subscription already exists for this view_port
-
-
+            
             callback_url = env.get("BLENDER_FQDN","https://www.flightblender.com") + "/uss/identification_service_areas" 
             now = datetime.now()
 
@@ -146,7 +145,6 @@ class RemoteIDOperations():
                 subscription_response['subscription_id'] = subscription_id
 
                 # iterate over the service areas to get flights URL to poll 
-                
                 flights_url_list = []
                 for service_area in service_areas: 
                     flights_url = service_area['flights_url']
@@ -166,7 +164,7 @@ class RemoteIDOperations():
 
         pass
 
-    def query_uss_for_rid(self, flights_dict, cg):
+    def query_uss_for_rid(self, flights_dict, cg, subscription_id):
         
         authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
 
@@ -193,7 +191,7 @@ class RemoteIDOperations():
                     else:
                         flight_current_state = flight['current_state']
                         position = flight_current_state['position']
-                        flight_metadata = {'id':flight_current_state['id'],"aircraft_type":flight_current_state["aircraft_type"]}
+                        flight_metadata = {'id':flight_current_state['id'],"aircraft_type":flight_current_state["aircraft_type"],'subscription_id':subscription_id}
                         now  = datetime.now()
                         time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
                         

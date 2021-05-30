@@ -60,7 +60,6 @@ def set_air_traffic(request):
             
         except KeyError as obs_ke:
             msg = {"message":"One of your obervations do not have the mandatory required field"}
-            
             return JsonResponse(msg, status=400)
             # logging.error("Not all data was provided")
 

@@ -22,13 +22,28 @@ class ConsumerGroupOps():
     
     def __init__(self):
         self.stream_keys = ['all_observations_push', 'all_observations_pull']
+        
+        self.db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
     def create_push_pull_stream(self):
         self.get_push_pull_stream(create=True)
         
     def get_push_pull_stream(self,create=False):
+        # stream_keys = ['all_observations']
+        cg = self.db.time_series('cg-type-push-pull', self.stream_keys)
+        if create:
+            for stream in self.stream_keys:
+                self.db.xadd(stream, {'data': ''})
+
+        if create:
+            cg.create()
+            cg.set_id('$')
+
+        return {'push_stream':cg.all_observations_push, 'pull_stream':cg.all_observations_pull}
+    
+    def create_pull_stream(self,stream_id, create=False):
         db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
         # stream_keys = ['all_observations']
-        cg = db.time_series('cg-type-push-pull', self.stream_keys)
+        cg = db.time_series(stream_id, self.stream_keys)
         if create:
             for stream in self.stream_keys:
                 db.xadd(stream, {'data': ''})

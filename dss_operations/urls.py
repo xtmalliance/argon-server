@@ -22,7 +22,7 @@ urlpatterns = [
     # Flight Spotlight specific views
     path('create_dss_subscription/', dss_views.create_dss_subscription),
     # This is the call back url to DSS
-    path('uss/identification_service_areas/<uuid:subscription_id>', dss_views.dss_isa_callback),    
+    path('uss/identification_service_areas/<uuid:subscription_id>', dss_views.dss_isa_callback),
     # Get RID data (PULL)
     path('get_rid_data/<uuid:subscription_id>', dss_views.get_rid_data),
     # RID Qualifier data
