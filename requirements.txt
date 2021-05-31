@@ -15,5 +15,6 @@ arrow
 python-dateutil
 tldextract
 rtree
+pyproj
 django-heroku
 psycopg2-binary>=2.8
