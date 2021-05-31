@@ -130,7 +130,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 if DEBUG:
     BROKER_URL = os.getenv("REDIS_URL",'redis://localhost:6379/')
 else:
