@@ -30,14 +30,7 @@ services:
       - db
     volumes:
       - .:/app
-  migration:
-    
-    command: python manage.py migrate --noinput
-    image: openskies-sh/flight-blender
-    volumes:
-      - .:/app
-    depends_on:
-      - db
+
       
   celery:
     container_name: flight-blender-worker
