@@ -6,7 +6,7 @@ import logging
 import requests
 from urllib.parse import urlparse
 
-from itertools import izip_longest
+from itertools import zip_longest
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -15,7 +15,7 @@ url = urlparse(os.environ.get("REDIS_URL"))
 # iterate a list in batches of size n
 def batcher(iterable, n):
     args = [iter(iterable)] * n
-    return izip_longest(*args)
+    return zip_longest(*args)
 
 
 class ConsumerGroupOps():
@@ -40,19 +40,7 @@ class ConsumerGroupOps():
 
         return {'push_stream':cg.all_observations_push, 'pull_stream':cg.all_observations_pull}
     
-    def create_pull_stream(self,stream_id, create=False):
-        db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
-        # stream_keys = ['all_observations']
-        cg = db.time_series(stream_id, self.stream_keys)
-        if create:
-            for stream in self.stream_keys:
-                db.xadd(stream, {'data': ''})
-
-        if create:
-            cg.create()
-            cg.set_id('$')
-
-        return {'push_stream':cg.all_observations_push, 'pull_stream':cg.all_observations_pull}
+    
     
     
 class ObservationReadOperations():
