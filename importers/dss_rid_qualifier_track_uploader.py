@@ -72,19 +72,17 @@ if __name__ == '__main__':
     flight_id = state_json['flight_details']["serial_number"]
 
     headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ credentials['access_token']}
+    securl = env.get("BLENDER_FQDN","http://localhost:8000/") +'/set_air_traffic'     
     
     for flight_state in flight_states:
         time_stamp = arrow.now().int_timestamp
-        payload = {"observations":[{"icao_address" : flight_id,"traffic_source" :11, "source_type" : 1, "lat_dd" : flight_state['position']['lat'], "lon_dd" :  flight_state['position']['lon'], "time_stamp" : time_stamp,"altitude_mm" :  flight_state['position']['alt'], 'metadata':metadata}]}
+        payload = {"observations":[{"icao_address" : flight_id,"traffic_source" :11, "source_type" : 1, "lat_dd" : flight_state['position']['lat'], "lon_dd" :  flight_state['position']['lon'], "time_stamp" : time_stamp,"altitude_mm" :  flight_state['position']['alt'], 'metadata':metadata}]}    
     
-    
-        securl = env.get("BLENDER_FQDN","http://localhost:8000/") +'/set_air_traffic' 
-
-        time.sleep(1)
         try:
             response = requests.post(securl, json = payload, headers = headers)        
         except Exception as e:
             print(e)
         else:
             response.json()
+        time.sleep(1)
 
