@@ -31,7 +31,7 @@ class StreamHelperOps():
         # Create a time-series consumer group named "demo-ts" for the stream all_observation
         time_series = self.db.time_series('cg-type-push', self.obs_database)
         if create:
-            for stream in self.stream_keys:
+            for stream in self.obs_database:
                 self.db.xadd(stream, {'data': ''})                
             time_series.create()
             time_series.set_id('$')
@@ -46,7 +46,7 @@ class StreamHelperOps():
         # Create a time-series consumer group named "demo-ts" for the stream all_observation
         time_series = self.db.time_series('cg-type-pull', self.obs_database)
         if create:
-            for stream in self.stream_keys:
+            for stream in self.obs_database:
                 self.db.xadd(stream, {'data': ''})
             time_series.create()
             time_series.set_id('$')
