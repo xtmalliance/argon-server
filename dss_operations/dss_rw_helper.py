@@ -164,7 +164,7 @@ class RemoteIDOperations():
 
         pass
 
-    def query_uss_for_rid(self, flights_dict, cg, subscription_id):
+    def query_uss_for_rid(self, flights_dict, all_observations, subscription_id):
         
         authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
 
@@ -199,8 +199,8 @@ class RemoteIDOperations():
                             # check if lat / lng / alt existis
                             single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
                             # write incoming data directly
-                            cg['push_stream'].add(single_observation)    
-                            cg['pull_stream'].add(single_observation)    
+                            all_observations.add(single_observation)    
+                            
                         else: 
                             logging.error("Error in received flights data: %{url}s ".format(**flight) ) 
                     

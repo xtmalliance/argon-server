@@ -8,6 +8,7 @@ class MyAppConfig(AppConfig):
     name = 'flight_feed_operations'
     def ready(self):
         
-        myCGOps = flight_stream_helper.ConsumerGroupOps()
-        cg = myCGOps.get_push_pull_stream()     
+        my_stream_ops = flight_stream_helper.StreamHelperOps()
+        my_stream_ops.create_pull_stream()     
+        my_stream_ops.create_push_stream()     
 

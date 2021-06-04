@@ -114,10 +114,10 @@ def get_rid_data(request, subscription_id):
     if bool(flights_dict):
         # TODO for Pull operations Flights Dict is not being used at all
         all_flights_rid_data = []
-        cg_ops = flight_stream_helper.ConsumerGroupOps()
-        cg = cg_ops.get_pull_stream()
+        stream_ops = flight_stream_helper.StreamHelperOps()
+        all_observations = stream_ops.get_pull_stream()
         obs_helper = flight_stream_helper.ObservationReadOperations()
-        all_flights_rid_data = obs_helper.get_observations(cg)
+        all_flights_rid_data = obs_helper.get_observations(all_observations)
         
         return HTTPResponse(json.dumps(all_flights_rid_data), status = 200, mimetype='application/json')
     else:
@@ -186,10 +186,10 @@ def get_display_data(request, view):
         # create a subscription 
         subscription_response = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)  
         # TODO: Get existing flight details from subscription
-        cg_ops = flight_stream_helper.ConsumerGroupOps()
-        cg = cg_ops.get_pull_stream()
+        stream_ops = flight_stream_helper.StreamHelperOps()
+        all_observations = stream_ops.get_pull_stream()
 
-        messages = cg['pull_stream'].read()
+        messages = all_observations.read()
         pending_messages = []
         for message in messages:             
             pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address'], 'metadata':message['metadata']})

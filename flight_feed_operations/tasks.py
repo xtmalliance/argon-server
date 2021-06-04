@@ -12,12 +12,11 @@ load_dotenv(find_dotenv())
 @task(name='write_incoming_air_traffic_data')
 def write_incoming_air_traffic_data(observation): 
     obs = json.loads(observation)
-    myCGOps = flight_stream_helper.ConsumerGroupOps()
-    cg = myCGOps.get_push_pull_stream()       
-    push_msgid = cg['push_stream'].add(obs)    
-    pull_msgid = cg['pull_stream'].add(obs)
+    my_stream_ops = flight_stream_helper.StreamHelperOps()
+    all_observations = my_stream_ops.get_push_stream()       
+    msg_id = all_observations.add(obs)       
     
-    return {'push_msg_id':push_msgid, 'pull_msg_id':pull_msgid}
+    return msg_id
 
 
 # @celery.task()
@@ -35,9 +34,9 @@ def write_incoming_air_traffic_data(observation):
 @task(name='submit_flights_to_spotlight')
 def submit_flights_to_spotlight():
     # get existing consumer group
-    my_cg_ops = flight_stream_helper.ConsumerGroupOps()
-    cg = my_cg_ops.get_push_pull_stream()
-    messages = cg['push_stream'].read()
+    my_cg_ops = flight_stream_helper.StreamHelperOps()
+    all_observations = my_cg_ops.get_push_stream()
+    messages = all_observations.read()
     pending_messages = []
     
     my_credentials = flight_stream_helper.PassportCredentialsGetter()

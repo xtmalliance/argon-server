@@ -5,6 +5,7 @@ class Command(BaseCommand):
     help = "Create a consumer group once"
 
     def handle(self, *args, **options):
-        myCGOps = flight_stream_helper.ConsumerGroupOps()
-        cg = myCGOps.create_all_obs()     
+        my_stream_ops = flight_stream_helper.StreamHelperOps()
+        my_stream_ops.create_push_stream()     
+        my_stream_ops.create_pull_stream()
 

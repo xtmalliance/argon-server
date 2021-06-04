@@ -17,8 +17,8 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
 def poll_uss_for_flights_async():
     myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
 
-    cg_ops = flight_stream_helper.ConsumerGroupOps()
-    cg = cg_ops.get_push_pull_stream()
+    stream_ops = flight_stream_helper.StreamHelperOps()
+    all_observations = stream_ops.get_push_stream()
 
     # TODO: Get existing flight details from subscription
     redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
@@ -27,4 +27,4 @@ def poll_uss_for_flights_async():
     for keybatch in flight_stream_helper.batcher(redis.scan_iter('all_uss_flights-*'),500): # reasonably we wont have more than 500 subscriptions active
         flights_dict = redis.get(keybatch)
         subscription_id = keybatch.split('-')[1]
-        myDSSSubscriber.query_uss_for_rid(flights_dict, cg,subscription_id)
+        myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)

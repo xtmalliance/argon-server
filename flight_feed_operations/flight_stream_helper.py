@@ -18,36 +18,49 @@ def batcher(iterable, n):
     return zip_longest(*args)
 
 
-class ConsumerGroupOps():
+class StreamHelperOps():
     
     def __init__(self):
-        self.stream_keys = ['all_observations_push', 'all_observations_pull']
-        
+        self.obs_database = ['all_observations']               
         self.db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
-    def create_push_pull_stream(self):
-        self.get_push_pull_stream(create=True)
         
-    def get_push_pull_stream(self,create=False):
-        # stream_keys = ['all_observations']
-        cg = self.db.time_series('cg-type-push-pull', self.stream_keys)
+    def create_push_stream(self):
+        self.get_push_stream(create=True)
+        
+    def get_push_stream(self,create=False):
+        # Create a time-series consumer group named "demo-ts" for the stream all_observation
+        time_series = self.db.time_series('cg-type-push', self.obs_database)
+        if create:
+            for stream in self.stream_keys:
+                self.db.xadd(stream, {'data': ''})                
+            time_series.create()
+            time_series.set_id('$')
+
+        return time_series.all_observations
+    
+        
+    def create_pull_stream(self):
+        self.get_pull_stream(create=True)
+        
+    def get_pull_stream(self,create=False):
+        # Create a time-series consumer group named "demo-ts" for the stream all_observation
+        time_series = self.db.time_series('cg-type-pull', self.obs_database)
         if create:
             for stream in self.stream_keys:
                 self.db.xadd(stream, {'data': ''})
+            time_series.create()
+            time_series.set_id('$')
 
-        if create:
-            cg.create()
-            cg.set_id('$')
-
-        return {'push_stream':cg.all_observations_push, 'pull_stream':cg.all_observations_pull}
+        return time_series.all_observations
     
     
     
     
 class ObservationReadOperations():
     
-    def get_observations(self, cg):
+    def get_observations(self, all_observations):
         
-        messages = cg['pull_stream'].read()
+        messages = all_observations.read()
         pending_messages = []
         
         my_credentials = PassportCredentialsGetter()
