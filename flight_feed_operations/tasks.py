@@ -13,9 +13,9 @@ load_dotenv(find_dotenv())
 def write_incoming_air_traffic_data(observation): 
     obs = json.loads(observation)
     my_stream_ops = flight_stream_helper.StreamHelperOps()
-    all_observations = my_stream_ops.get_push_stream()       
-    msg_id = all_observations.add(obs)       
-    
+    all_obserations_stream = my_stream_ops.all_observations_stream      
+    msg_id = all_obserations_stream.add(obs) 
+    all_obserations_stream.trim(1000)      
     return msg_id
 
 
@@ -24,7 +24,7 @@ def write_incoming_air_traffic_data(observation):
 #     dir(app)
     
 #     with app.app_context():
-#         cg = app.get_push_stream()
+#         cg = app.get_push_cg()
 
 #     logger = print_hello.get_logger()
 
@@ -35,8 +35,8 @@ def write_incoming_air_traffic_data(observation):
 def submit_flights_to_spotlight():
     # get existing consumer group
     my_cg_ops = flight_stream_helper.StreamHelperOps()
-    all_observations = my_cg_ops.get_push_stream()
-    messages = all_observations.read()
+    push_cg = my_cg_ops.get_push_cg()
+    messages = push_cg.read()
     pending_messages = []
     
     my_credentials = flight_stream_helper.PassportCredentialsGetter()

@@ -21,46 +21,36 @@ def batcher(iterable, n):
 class StreamHelperOps():
     
     def __init__(self):
-        self.obs_database = ['all_observations']               
+        self.obs_database_name = 'all_observations'            
         self.db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
+        self.all_observations_stream = None
+        self.push_cg = None
+        self.pull_cg = None
         
-    def create_push_stream(self):
-        self.get_push_stream(create=True)
+    def create_push_cg(self):
+        # Create a time-series consumer group named "demo-ts" for the stream all_observations, 
+        time_series = self.db.time_series('push-cg', self.obs_database_name)
         
-    def get_push_stream(self,create=False):
-        # Create a time-series consumer group named "demo-ts" for the stream all_observation
-        time_series = self.db.time_series('cg-type-push', self.obs_database)
-        if create:
-            for stream in self.obs_database:
-                self.db.xadd(stream, {'data': ''})                
-            time_series.create()
-            time_series.set_id('$')
+        self.db.xadd(self.obs_database_name,  {'data': ''})             
+        time_series.create()
+        time_series.set_id('$')
+        self.push_cg = time_series
 
-        return time_series.all_observations
-    
+    def create_pull_cg(self):
+        # Create a time-series consumer group named "demo-ts" for the stream all_observation    
+        time_series = self.db.time_series('pull-cg', self.obs_database_name)
         
-    def create_pull_stream(self):
-        self.get_pull_stream(create=True)
-        
-    def get_pull_stream(self,create=False):
-        # Create a time-series consumer group named "demo-ts" for the stream all_observation
-        time_series = self.db.time_series('cg-type-pull', self.obs_database)
-        if create:
-            for stream in self.obs_database:
-                self.db.xadd(stream, {'data': ''})
-            time_series.create()
-            time_series.set_id('$')
-
-        return time_series.all_observations
-    
-    
+        self.db.xadd(self.obs_database_name,  {'data': ''})
+        time_series.create()
+        time_series.set_id('$')
+        self.pull_cg = time_series
     
     
 class ObservationReadOperations():
     
-    def get_observations(self, all_observations):
+    def get_observations(self, push_cg):
         
-        messages = all_observations.read()
+        messages = push_cg.read()
         pending_messages = []
         
         my_credentials = PassportCredentialsGetter()

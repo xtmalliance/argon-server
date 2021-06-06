@@ -18,7 +18,7 @@ def poll_uss_for_flights_async():
     myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
 
     stream_ops = flight_stream_helper.StreamHelperOps()
-    all_observations = stream_ops.get_push_stream()
+    all_observations = stream_ops.all_observations_stream()
 
     # TODO: Get existing flight details from subscription
     redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
