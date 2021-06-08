@@ -32,8 +32,11 @@ class PassportCredentialsGetter():
         else:   
             
             credentials = self.get_write_credentials()
-            r.set('blender_write_air_traffic_token', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            r.expire("blender_write_air_traffic_token", timedelta(minutes=58))
+            if 'error' in credentials.keys():
+                pass
+            else:
+                r.set('blender_write_air_traffic_token', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+                r.expire("blender_write_air_traffic_token", timedelta(minutes=58))
             
         return credentials
             
@@ -41,7 +44,7 @@ class PassportCredentialsGetter():
     def get_write_credentials(self):        
         payload = {"grant_type":"client_credentials","client_id": env.get('BLENDER_WRITE_CLIENT_ID'),"client_secret": env.get('BLENDER_WRITE_CLIENT_SECRET'),"audience": env.get('BLENDER_AUDIENCE'),"scope": env.get('BLENDER_WRITE_SCOPE')}        
         url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
-        
+       
         token_data = requests.post(url, data = payload)
         t_data = token_data.json()
         
