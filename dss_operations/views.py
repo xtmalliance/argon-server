@@ -11,7 +11,7 @@ import shapely.geometry
 import uuid
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
-import hashlib
+import logging
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -155,7 +155,7 @@ def dss_isa_callback(request, subscription_id):
 
 @api_view(['GET'])
 @requires_scopes(['dss.read.identification_service_areas'])
-def get_display_data(request, view):
+def get_display_data(request):
     ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
     
     # get the view bounding box 
@@ -184,17 +184,26 @@ def get_display_data(request, view):
     if view_port_valid:   
         # stream_id = hashlib.md5(view.encode('utf-8')).hexdigest()
         # create a subscription 
-        subscription_response = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)  
+        # subscription_response = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)  
         # TODO: Get existing flight details from subscription
         stream_ops = flight_stream_helper.StreamHelperOps()
         pull_cg = stream_ops.get_pull_cg()
 
-        messages = pull_cg.read()
-        pending_messages = []
-        for message in messages:             
-            pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address'], 'metadata':message['metadata']})
 
-        return HttpResponse(json.dumps({"flights":[], "clusters":[]}), mimetype='application/json')
+        all_streams_messages = pull_cg.read()
+        
+        pending_messages = []
+        
+        for all_observations_messages in all_streams_messages:        
+            timestamp = all_observations_messages.timestamp
+            print(timestamp)
+            try:
+                pending_messages.append({'timestamp':timestamp.isoformat() ,'seq': all_observations_messages.sequence, 'msg_data':all_observations_messages.data, 'address':all_observations_messages.data['icao_address'], 'metadata':all_observations_messages.data['metadata']})
+            except KeyError as ke: 
+                print(ke)
+                logging.error("Error in data in the stream %s" % ke)
+
+        return HttpResponse(json.dumps({"flights":pending_messages, "clusters":[]}),)
     else:
         view_port_error = {"message":"A incorrect view port bbox was provided"}
         return HttpResponse(json.dumps(view_port_error), status=400)

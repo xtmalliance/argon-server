@@ -10,12 +10,11 @@ load_dotenv(find_dotenv())
 #### Airtraffic Endpoint
 
 @task(name='write_incoming_air_traffic_data')
-def write_incoming_air_traffic_data(observation): 
-    obs = json.loads(observation)
-    my_stream_ops = flight_stream_helper.StreamHelperOps()
-    all_obserations_stream = my_stream_ops.all_observations_stream      
-    msg_id = all_obserations_stream.add(obs) 
-    all_obserations_stream.trim(1000)      
+def write_incoming_air_traffic_data(observation):         
+    obs = json.loads(observation)    
+    my_stream_ops = flight_stream_helper.StreamHelperOps()   
+    cg = my_stream_ops.get_push_cg()     
+    msg_id = cg.all_observations.add(obs)         
     return msg_id
 
 
@@ -24,7 +23,7 @@ def write_incoming_air_traffic_data(observation):
 #     dir(app)
     
 #     with app.app_context():
-#         cg = app.get_push_cg()
+#         cg = app.get_push_cg() 
 
 #     logger = print_hello.get_logger()
 

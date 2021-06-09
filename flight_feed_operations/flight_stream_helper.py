@@ -19,32 +19,40 @@ def batcher(iterable, n):
 
 
 class StreamHelperOps():
-    
     def __init__(self):
-        self.obs_database_name = 'all_observations'            
+        self.stream_keys = ['all_observations']
         self.db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
-        self.all_observations_stream = None
-        self.push_cg = None
-        self.pull_cg = None
         
     def create_push_cg(self):
-        # Create a time-series consumer group named "demo-ts" for the stream all_observations, 
-        time_series = self.db.time_series('push-cg', self.obs_database_name)
+        self.get_push_cg(create=True)
+
+
+    def get_push_cg(self,create=False):
         
-        self.db.xadd(self.obs_database_name,  {'data': ''})             
-        time_series.create()
-        time_series.set_id('$')
-        self.push_cg = time_series
+        
+        cg = self.db.time_series('cg-push', self.stream_keys)
+        if create:
+            for stream in self.stream_keys:
+                self.db.xadd(stream, {'data': ''})
+            cg.create()
+            cg.set_id('$')
+
+        return cg
 
     def create_pull_cg(self):
-        # Create a time-series consumer group named "demo-ts" for the stream all_observation    
-        time_series = self.db.time_series('pull-cg', self.obs_database_name)
+        self.get_pull_cg(create=True)
         
-        self.db.xadd(self.obs_database_name,  {'data': ''})
-        time_series.create()
-        time_series.set_id('$')
-        self.pull_cg = time_series
-    
+    def get_pull_cg(self,create=False):              
+        cg = self.db.time_series('cg-pull', self.stream_keys)
+
+        if create:
+            for stream in self.stream_keys:
+                self.db.xadd(stream, {'data': ''})
+
+            cg.create()
+            cg.set_id('$')
+
+        return cg
     
 class ObservationReadOperations():
     

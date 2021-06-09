@@ -26,6 +26,6 @@ urlpatterns = [
     # Get RID data (PULL)
     path('get_rid_data/<uuid:subscription_id>', dss_views.get_rid_data),
     # RID Qualifier data
-    path('display_data/<str:view_port>', dss_views.get_display_data),
+    path('display_data', dss_views.get_display_data),
     path('flight_data/<uuid:flight_id>', dss_views.get_flight_data),
 ]
