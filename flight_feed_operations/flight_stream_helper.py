@@ -21,7 +21,8 @@ def batcher(iterable, n):
 class StreamHelperOps():
     def __init__(self):
         self.stream_keys = ['all_observations']
-        self.db = Database(host=url.hostname, port=url.port, username=url.username, password=url.password)   
+        
+        self.db = Database(host=url.hostname, port=url.port)   
         
     def create_push_cg(self):
         self.get_push_cg(create=True)
@@ -78,21 +79,22 @@ class PassportCredentialsGetter():
     def get_cached_credentials(self):  
         r = redis.Redis(host=os.getenv('REDIS_HOST',"redis"), port =os.getenv('REDIS_PORT',6379))   
         now = datetime.now()
-        token_details = r.get('access_token_details')
+        cache_key = 'airtraffic_access_token_details'
+        token_details = r.get(cache_key)
         if token_details:    
             token_details = json.loads(token_details)
             created_at = token_details['created_at']
             set_date = datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f")
             if now < (set_date - timedelta(minutes=58)):
                 credentials = self.get_write_credentials()
-                r.set('access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+                r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
             else: 
                 credentials = token_details['credentials']
         else:   
             
             credentials = self.get_write_credentials()
-            r.set('access_token_details', json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            
+            r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+            r.expire(cache_key, timedelta(minutes=58))
         return credentials
             
             

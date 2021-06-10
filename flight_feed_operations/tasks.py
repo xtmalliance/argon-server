@@ -1,6 +1,7 @@
 from celery.decorators import task
 import os, json
 import logging
+import time, datetime
 import requests
 from . import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
@@ -58,7 +59,10 @@ def submit_flights_to_spotlight():
         headers = {"Authorization": "Bearer " + credentials['access_token']}
         for message in distinct_messages:
             
-            payload = {"icao_address" : message['address'],"traffic_source" :message['msg_data']['traffic_source'], "source_type" : message['msg_data']['source_type'], "lat_dd" : message['msg_data']['lat_dd'], "lon_dd" : message['msg_data']['lon_dd'], "time_stamp" : message['timestamp'],"altitude_mm" : message['msg_data']['altitude_mm'], "metadata": message['msg_data']['metadata']}
+            unix_time = int(message['timestamp'].timestamp())
+                                               
+            payload = {"icao_address" : message['address'],"traffic_source" :message['msg_data']['traffic_source'], "source_type" : message['msg_data']['source_type'], "lat_dd" : message['msg_data']['lat_dd'], "lon_dd" : message['msg_data']['lon_dd'], "time_stamp" : unix_time,"altitude_mm" : message['msg_data']['altitude_mm'], "metadata": message['msg_data']['metadata']}
+            
             response = requests.post(securl, data= payload, headers=headers)
             
             logging.info(response.status_code)
