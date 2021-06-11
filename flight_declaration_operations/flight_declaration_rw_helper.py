@@ -1,14 +1,10 @@
 # API to submit Flight Declarations into Spotlight
 
-from functools import wraps
-from os import environ as env
-import os
-from six.moves.urllib.request import urlopen
 
+from os import environ as env
 import redis, json
-import geojson, requests
+import requests
 import logging
-from geojson import Polygon
 from datetime import datetime, timedelta
 
 

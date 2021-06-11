@@ -57,10 +57,17 @@ class AuthorityCredentialsGetter():
             
         
     def get_read_credentials(self, audience):        
-        payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read_identification_service_areas'}        
+        issuer = audience if audience =='localhost' else None
+
+        if audience == 'localhost':
+            # Test instance of DSS
+            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas', "issuer":issuer}        
+        else: 
+            payload = payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read.identification_service_areas'}    
+      
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
-        
-        token_data = requests.post(url, data = payload)
+        print(payload)
+        token_data = requests.post(url, params = payload)
         t_data = token_data.json()        
         return t_data
 
@@ -69,7 +76,7 @@ class RemoteIDOperations():
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')
         
-        self.redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+        self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
 
     def create_dss_subscription(self, vertex_list, view, request_uuid):
         ''' This method PUTS /dss/subscriptions ''' 
@@ -104,24 +111,23 @@ class RemoteIDOperations():
             logging.info("Successfully received Token")
             # A token from authority was received, 
             new_subscription_id = str(uuid.uuid4())
-            dss_subscription_url = self.dss_base_url + '/dss/subscriptions/' + new_subscription_id
+            dss_subscription_url = self.dss_base_url + 'v1/dss/subscriptions/' + new_subscription_id
             
             # check if a subscription already exists for this view_port
             
-            callback_url = env.get("BLENDER_FQDN","https://www.flightblender.com") + "/uss/identification_service_areas" 
+            callback_url = env.get("BLENDER_FQDN","https://www.flightblender.com") + "/dss/identification_service_areas" 
             now = datetime.now()
 
             callback_url += '/'+ new_subscription_id
             
-            current_time = now.isoformat()
-            three_mins_from_now = (now + timedelta(minutes=3)).isoformat()
-
-            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token}
+            current_time = now.isoformat() + 'Z'
+            three_mins_from_now = (now + timedelta(minutes=3)).isoformat() +'Z'
+            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
 
             volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":three_mins_from_now }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
-
+            
             try:
                 dss_r = requests.put(dss_subscription_url, json= payload, headers=headers)
             except Exception as re:
@@ -146,6 +152,7 @@ class RemoteIDOperations():
 
                 # iterate over the service areas to get flights URL to poll 
                 flights_url_list = []
+                
                 for service_area in service_areas: 
                     flights_url = service_area['flights_url']
                     flights_url_list.append(flights_url)
@@ -153,9 +160,10 @@ class RemoteIDOperations():
                 flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now, 'version':new_subscription_version}
 
                 subscription_id_flights = "all_uss_flights-" + new_subscription_id 
-                self.redis.hmset(subscription_id_flights, flights_dict)
+                
+                self.r.hmset(subscription_id_flights, flights_dict)
                 # expire keys in three minutes 
-                self.redis.expire(name = subscription_id_flights, time=timedelta(minutes=5))
+                self.r.expire(name = subscription_id_flights, time=timedelta(minutes=three_mins_from_now))
                 return subscription_response
 
 

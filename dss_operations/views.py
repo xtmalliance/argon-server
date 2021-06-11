@@ -9,6 +9,8 @@ from os import environ as env
 import uuid
 import shapely.geometry
 import uuid
+from datetime import datetime, timedelta
+import redis
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
@@ -16,11 +18,15 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 def create_new_subscription(request_id, view, vertex_list):
-    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
     myDSSubscriber = dss_rw_helper.RemoteIDOperations()
     subscription_respone = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view = view, request_uuid = request_id)
     
-    redis.set(json.dumps({'sub-' + request_id: view }))
+    if subscription_respone['created']:
+        sub_id = 'sub-' + request_id
+        view_details = view
+        r.set(sub_id , view_details)
+        r.expire(sub_id, timedelta(minutes=3))
 
     return subscription_respone
 
@@ -81,15 +87,15 @@ def create_dss_subscription(request, *args, **kwargs):
     
     request_id = str(uuid.uuid4())    
     # TODO: Make this a asnyc call
-    subscription_resposne = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
-    if subscription_resposne['created']:
-        msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_resposne}
-    if subscription_resposne['found']:
-        msg = {"message":"Existing DSS Subscription found", 'id': subscription_resposne['id']} # todo write existing subs
+    subscription_response = create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+    if subscription_response['created']:
+        msg = {"message":"DSS Subscription created", 'id': uuid, "subscription_response":subscription_response}
+        status = 201
     else:
         msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
+        status = 400
         
-    return HttpResponse(json.dumps(msg), status=201)
+    return HttpResponse(json.dumps(msg), status=status)
 
 
 @api_view(['GET'])
@@ -102,13 +108,13 @@ def get_rid_data(request, subscription_id):
     except ValueError as ve: 
         return HttpResponse("Incorrect UUID passed in the parameters, please send a valid subscription ID", status=400, mimetype='application/json')
 
-    redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
     flights_dict = {}
     # Get the flights URL from the DSS and put it in 
-    for keybatch in flight_stream_helper.batcher(redis.scan_iter('all_uss_flights-*'),500): # reasonably we wont have more than 500 subscriptions active
+    for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights-*'),500): # reasonably we wont have more than 500 subscriptions active
         stored_subscription_id = keybatch.split('-')[1]        
         if (subscription_id == stored_subscription_id):
-            flights_dict = redis.get(*keybatch)
+            flights_dict = r.get(*keybatch)
             break
     
     if bool(flights_dict):
@@ -132,18 +138,18 @@ def dss_isa_callback(request, subscription_id):
     service_areas = request.get('service_area',0)
     try:        
         assert service_areas != 0
-        redis = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
         # Get the flights URL from the DSS and put it in the flights_url
         
         flights_key = "all_uss_flights-"+ subscription_id
 
-        flights_dict = redis.hgetall(flights_key)        
+        flights_dict = r.hgetall(flights_key)        
         all_flights_url = flights_dict['all_flights_url']
         for new_flight in service_areas:
             all_flights_url.append(new_flight['flights_url'])
 
         flights_dict["all_uss_flights"] = all_flights_url
-        redis.hmset(flights_key, flights_dict)
+        r.hmset(flights_key, flights_dict)
         
     except AssertionError as ae:
         return HttpResponse("Incorrect data in the POST URL", status=400, mimetype='application/json')
@@ -200,7 +206,6 @@ def get_display_data(request):
             try:
                 pending_messages.append({'timestamp':timestamp.isoformat() ,'seq': all_observations_messages.sequence, 'msg_data':all_observations_messages.data, 'address':all_observations_messages.data['icao_address'], 'metadata':all_observations_messages.data['metadata']})
             except KeyError as ke: 
-                print(ke)
                 logging.error("Error in data in the stream %s" % ke)
 
         return HttpResponse(json.dumps({"flights":pending_messages, "clusters":[]}),)
