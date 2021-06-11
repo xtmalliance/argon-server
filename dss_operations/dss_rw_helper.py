@@ -63,7 +63,7 @@ class AuthorityCredentialsGetter():
             # Test instance of DSS
             payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas', "issuer":issuer}        
         else: 
-            payload = payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read.identification_service_areas'}    
+            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read.identification_service_areas'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
         print(payload)
