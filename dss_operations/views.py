@@ -145,8 +145,9 @@ def dss_isa_callback(request, subscription_id):
 
         flights_dict = r.hgetall(flights_key)        
         all_flights_url = flights_dict['all_flights_url']
+
         for new_flight in service_areas:
-            all_flights_url.append(new_flight['flights_url'])
+            all_flights_url += " " + new_flight['flights_url']
 
         flights_dict["all_uss_flights"] = all_flights_url
         r.hmset(flights_key, flights_dict)

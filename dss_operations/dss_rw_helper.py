@@ -66,7 +66,7 @@ class AuthorityCredentialsGetter():
             payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read.identification_service_areas'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
-        print(payload)
+        
         token_data = requests.post(url, params = payload)
         t_data = token_data.json()        
         return t_data
@@ -151,11 +151,11 @@ class RemoteIDOperations():
                 subscription_response['subscription_id'] = subscription_id
 
                 # iterate over the service areas to get flights URL to poll 
-                flights_url_list = []
+                flights_url_list = ''
                 
                 for service_area in service_areas: 
                     flights_url = service_area['flights_url']
-                    flights_url_list.append(flights_url)
+                    flights_url_list+= ' ' + flights_url
 
                 flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now, 'version':new_subscription_version}
 
@@ -176,8 +176,9 @@ class RemoteIDOperations():
         
         authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
 
-        all_flights_url = flights_dict['all_flights_url']
+        all_flights_urls_string = flights_dict['all_flights_url']
         # flights_view = flights_dict['view']
+        all_flights_url = all_flights_urls_string.split(" ")
         for cur_flight_url in all_flights_url:
             ext = tldextract.extract(cur_flight_url)          
             audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
