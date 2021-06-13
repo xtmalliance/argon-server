@@ -155,7 +155,7 @@ class RemoteIDOperations():
                 
                 for service_area in service_areas: 
                     flights_url = service_area['flights_url']
-                    flights_url_list+= ' ' + flights_url
+                    flights_url_list += flights_url + ' '
 
                 flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now, 'version':new_subscription_version}
 
@@ -178,7 +178,7 @@ class RemoteIDOperations():
 
         all_flights_urls_string = flights_dict['all_flights_url']
         # flights_view = flights_dict['view']
-        all_flights_url = all_flights_urls_string.split(" ")
+        all_flights_url = all_flights_urls_string.split()
         for cur_flight_url in all_flights_url:
             ext = tldextract.extract(cur_flight_url)          
             audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
