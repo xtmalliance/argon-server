@@ -119,9 +119,9 @@ class RemoteIDOperations():
             now = datetime.now()
 
             callback_url += '/'+ new_subscription_id
-            three_minutes_timedelta = timedelta(minutes=3)
+            thirty_seconds_timedelta = timedelta(seconds=30)
             current_time = now.isoformat() + 'Z'
-            three_mins_from_now = now + three_minutes_timedelta
+            three_mins_from_now = now + thirty_seconds_timedelta
             three_mins_from_now_isoformat = three_mins_from_now.isoformat() +'Z'
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
 
@@ -158,7 +158,7 @@ class RemoteIDOperations():
                 
                 for service_area in service_areas: 
                     flights_url = service_area['flights_url']
-                    flights_url_list += flights_url + ' '
+                    flights_url_list += flights_url +'/?view='+ view + ' '
 
                 flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now_isoformat, 'version':new_subscription_version}
 
@@ -166,7 +166,7 @@ class RemoteIDOperations():
                 
                 self.r.hmset(subscription_id_flights, flights_dict)
                 # expire keys in three minutes 
-                self.r.expire(name = subscription_id_flights, time=three_minutes_timedelta)
+                self.r.expire(name = subscription_id_flights, time=thirty_seconds_timedelta)
                 return subscription_response
 
 
@@ -189,9 +189,9 @@ class RemoteIDOperations():
             else:
                 audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
             auth_credentials = authority_credentials.get_cached_credentials(audience)
+            
+            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials['access_token']}
 
-            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}
-        
             flights_response = requests.get(cur_flight_url, headers=headers)
             if flights_response.status_code == 200:
                 # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get

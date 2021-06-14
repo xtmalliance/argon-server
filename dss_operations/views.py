@@ -21,35 +21,39 @@ load_dotenv(find_dotenv())
 class SubscriptionHelper():
 
     def check_subscription_exists(self, view) -> bool:
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True) 
+        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
+            'REDIS_PORT', 6379), decode_responses=True)
         subscription_found = False
-        for keybatch in flight_stream_helper.batcher(r.scan_iter('sub-*'),500): # reasonably we wont have more than 500 subscriptions active
+        # reasonably we wont have more than 500 subscriptions active
+        for keybatch in flight_stream_helper.batcher(r.scan_iter('sub-*'), 500):
             key_batch_unique = set(keybatch)
-            
+
             for key in key_batch_unique:
                 if key:
-                    stored_view = r.get(key)                
-                    if (stored_view == view): 
+                    stored_view = r.get(key)
+                    if (stored_view == view):
                         subscription_found = True
-                        
+
                         break
-        
+
         return subscription_found
 
-
-
     def create_new_subscription(self, request_id, view, vertex_list):
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
-        myDSSubscriber = dss_rw_helper.RemoteIDOperations()
-        subscription_response = myDSSubscriber.create_dss_subscription(vertex_list = vertex_list, view = view, request_uuid = request_id)
         
+        r = redis.Redis(host=env.get('REDIS_HOST', "redis"),
+                        port=env.get('REDIS_PORT', 6379))
+        myDSSubscriber = dss_rw_helper.RemoteIDOperations()
+        subscription_response = myDSSubscriber.create_dss_subscription(
+            vertex_list=vertex_list, view=view, request_uuid=request_id)
+
         if subscription_response['created']:
             sub_id = 'sub-' + request_id
             view_details = view
-            r.set(sub_id , view_details)
-            r.expire(sub_id, timedelta(minutes=3))
+            r.set(sub_id, view_details)
+            r.expire(sub_id, timedelta(seconds=30))
 
         return subscription_response
+
 
 def check_view_port(view_port) -> bool:
     geod = Geod(ellps="WGS84")
@@ -63,11 +67,12 @@ def check_view_port(view_port) -> bool:
     lng_max = max(view_port[1], view_port[3])
 
     if (lat_min < -90 or lat_min >= 90 or lat_max <= -90 or lat_max > 90 or
-        lng_min < -180 or lng_min >= 360 or lng_max <= -180 or lng_max > 360):
+            lng_min < -180 or lng_min >= 360 or lng_max <= -180 or lng_max > 360):
         # return '"view" coordinates do not fall within the valid range of -90 <= lat <= 90 and -180 <= lng <= 360', 400
         return False
 
-    box = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
+    box = shapely.geometry.box(
+        view_port[0], view_port[1], view_port[2], view_port[3])
     area = abs(geod.geometry_area_perimeter(box)[0])
     if (area) < 250000 and (area) > 90000:
         return False
@@ -75,48 +80,52 @@ def check_view_port(view_port) -> bool:
     return True
 
 
-
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
 def create_dss_subscription(request, *args, **kwargs):
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
 
-    try:        
+    try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
-    except Exception as ke:        
-        incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+    except Exception as ke:
+        incorrect_parameters = {
+            "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
     view_port_valid = check_view_port(view_port=view_port)
 
     if not view_port_valid:
-        incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        incorrect_parameters = {
+            "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
-    b = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
+    b = shapely.geometry.box(
+        view_port[0], view_port[1], view_port[2], view_port[3])
     co_ordinates = list(zip(*b.exterior.coords.xy))
     # Convert bounds vertex list
     vertex_list = []
     for cur_co_ordinate in co_ordinates:
-        lat_lng = {"lng":0, "lat":0}
+        lat_lng = {"lng": 0, "lat": 0}
         lat_lng["lng"] = cur_co_ordinate[0]
         lat_lng["lat"] = cur_co_ordinate[1]
         vertex_list.append(lat_lng)
-    # remove the final point 
+    # remove the final point
     vertex_list.pop()
-    
-    request_id = str(uuid.uuid4())    
+
+    request_id = str(uuid.uuid4())
     # TODO: Make this a asnyc call
     my_subscription_helper = SubscriptionHelper()
-    subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+    subscription_response = my_subscription_helper.create_new_subscription(
+        request_id=request_id, vertex_list=vertex_list, view=view)
     if subscription_response['created']:
-        msg = {"message":"DSS Subscription created", 'id': request_id, "subscription_response":subscription_response}
+        msg = {"message": "DSS Subscription created", 'id': request_id,
+               "subscription_response": subscription_response}
         status = 201
     else:
-        msg = {"message":"Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
+        msg = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         status = 400
-        
+
     return HttpResponse(json.dumps(msg), status=status, content_type='application/json')
 
 
@@ -127,21 +136,23 @@ def get_rid_data(request, subscription_id):
 
     try:
         is_uuid = UUID(subscription_id, version=4)
-    except ValueError as ve: 
+    except ValueError as ve:
         return HttpResponse("Incorrect UUID passed in the parameters, please send a valid subscription ID", status=400, mimetype='application/json')
 
-    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), charset="utf-8", decode_responses=True)
+    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
+        'REDIS_PORT', 6379), charset="utf-8", decode_responses=True)
     flights_dict = {}
-    # Get the flights URL from the DSS and put it in 
-    for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights:*'),500): # reasonably we wont have more than 500 subscriptions active
+    # Get the flights URL from the DSS and put it in
+    # reasonably we wont have more than 500 subscriptions active
+    for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights:*'), 500):
 
         for key in keybatch:
-            if key:                
-                stored_subscription_id = key.split(':')[1]        
+            if key:
+                stored_subscription_id = key.split(':')[1]
                 if (subscription_id == stored_subscription_id):
                     flights_dict = r.get(*key)
                     break
-    
+
     if bool(flights_dict):
         # TODO for Pull operations Flights Dict is not being used at all
         all_flights_rid_data = []
@@ -149,37 +160,41 @@ def get_rid_data(request, subscription_id):
         push_cg = stream_ops.push_cg()
         obs_helper = flight_stream_helper.ObservationReadOperations()
         all_flights_rid_data = obs_helper.get_observations(push_cg)
-        
-        return HTTPResponse(json.dumps(all_flights_rid_data), status = 200, content_type='application/json')
-    else:
-        return HTTPResponse(json.dumps({}), status = 404, content_type='application/json')
 
-            
+        return HTTPResponse(json.dumps(all_flights_rid_data), status=200, content_type='application/json')
+    else:
+        return HTTPResponse(json.dumps({}), status=404, content_type='application/json')
+
 
 @api_view(['POST'])
 @requires_scopes(['dss.write.identification_service_areas'])
 def dss_isa_callback(request, subscription_id):
     ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
-    service_areas = request.get('service_area',0)
-    try:        
+    service_areas = request.get('service_area', 0)
+    try:
         assert service_areas != 0
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
+            'REDIS_PORT', 6379), decode_responses=True)
         # Get the flights URL from the DSS and put it in the flights_url
-        
-        flights_key = "all_uss_flights:"+ subscription_id
 
-        flights_dict = r.hgetall(flights_key)        
+        flights_key = "all_uss_flights:" + subscription_id
+
+        subscirption_view_key = "sub-" + subscription_id
+
+        flights_dict = r.hgetall(flights_key)
+        subscription_view = r.get(subscirption_view_key)
         all_flights_url = flights_dict['all_flights_url']
 
         for new_flight in service_areas:
-            all_flights_url += new_flight['flights_url']  + " "
+            all_flights_url += new_flight['flights_url'] + \
+                '/?view=' + subscription_view + " "
 
         flights_dict["all_uss_flights"] = all_flights_url
         r.hmset(flights_key, flights_dict)
-        
+
     except AssertionError as ae:
         return HttpResponse("Incorrect data in the POST URL", status=400, content_type='application/json')
-        
+
     else:
         # All OK return a empty response
         return HttpResponse(status=204, content_type='application/json')
@@ -189,57 +204,61 @@ def dss_isa_callback(request, subscription_id):
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_display_data(request):
     ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
-    
-    # get the view bounding box 
+
+    # get the view bounding box
     # get the existing subscription id , if no subscription exists, then reject
-    request_id = str(uuid.uuid4())   
-    try:        
+    request_id = str(uuid.uuid4())
+    try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
-    except Exception as ke:        
-        incorrect_parameters = {"message":"A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+    except Exception as ke:
+        incorrect_parameters = {
+            "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
     view_port_valid = check_view_port(view_port=view_port)
-    
-    b = shapely.geometry.box(view_port[0], view_port[1], view_port[2],view_port[3])
+
+    b = shapely.geometry.box(
+        view_port[0], view_port[1], view_port[2], view_port[3])
     co_ordinates = list(zip(*b.exterior.coords.xy))
     # Convert bounds vertex list
     vertex_list = []
     for cur_co_ordinate in co_ordinates:
-        lat_lng = {"lng":0, "lat":0}
+        lat_lng = {"lng": 0, "lat": 0}
         lat_lng["lng"] = cur_co_ordinate[0]
         lat_lng["lat"] = cur_co_ordinate[1]
         vertex_list.append(lat_lng)
-    # remove the final point 
+    # remove the final point
     vertex_list.pop()
-    
-    if view_port_valid:   
-        
+
+    if view_port_valid:
+
         # stream_id = hashlib.md5(view.encode('utf-8')).hexdigest()
-        # create a subscription 
-        # my_subscription_helper = SubscriptionHelper()
+        # create a subscription
+        my_subscription_helper = SubscriptionHelper()
         # subscription_exists = my_subscription_helper.check_subscription_exists(view)
         # if not subscription_exists:
-        #     subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)          
+        # subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
 
         # TODO: Get existing flight details from subscription
         stream_ops = flight_stream_helper.StreamHelperOps()
         pull_cg = stream_ops.get_pull_cg()
 
         all_streams_messages = pull_cg.read()
-        
+
         pending_messages = []
-        for all_observations_messages in all_streams_messages:        
-            
-            timestamp = all_observations_messages.timestamp            
+        for all_observations_messages in all_streams_messages:
+
+            timestamp = all_observations_messages.timestamp
             try:
-                pending_messages.append({'timestamp':timestamp.isoformat() ,'seq': all_observations_messages.sequence, 'msg_data':all_observations_messages.data, 'address':all_observations_messages.data['icao_address'], 'metadata':all_observations_messages.data['metadata']})
-            except KeyError as ke: 
+                pending_messages.append({'timestamp': timestamp.isoformat(), 'seq': all_observations_messages.sequence, 'msg_data': all_observations_messages.data,
+                                         'address': all_observations_messages.data['icao_address'], 'metadata': all_observations_messages.data['metadata']})
+            except KeyError as ke:
                 logging.error("Error in data in the stream %s" % ke)
 
-        return HttpResponse(json.dumps({"flights":pending_messages, "clusters":[]}),  status =200, content_type='application/json')
+        return HttpResponse(json.dumps({"flights": pending_messages, "clusters": []}),  status=200, content_type='application/json')
     else:
-        view_port_error = {"message":"A incorrect view port bbox was provided"}
+        view_port_error = {
+            "message": "A incorrect view port bbox was provided"}
         return HttpResponse(json.dumps(view_port_error), status=400, content_type='application/json')
 
 
@@ -268,5 +287,4 @@ def get_flight_data(request, flight_id):
     # }
     # }
 
-    return HttpResponse(json.dumps({"details":{}}), mimetype='application/json')
-
+    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
