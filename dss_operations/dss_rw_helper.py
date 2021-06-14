@@ -119,12 +119,13 @@ class RemoteIDOperations():
             now = datetime.now()
 
             callback_url += '/'+ new_subscription_id
-            
+            three_minutes_timedelta = timedelta(minutes=3)
             current_time = now.isoformat() + 'Z'
-            three_mins_from_now = (now + timedelta(minutes=3)).isoformat() +'Z'
+            three_mins_from_now = now + three_minutes_timedelta
+            three_mins_from_now_isoformat = three_mins_from_now.isoformat() +'Z'
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
 
-            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":three_mins_from_now }
+            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":three_mins_from_now_isoformat }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
             
@@ -141,6 +142,8 @@ class RemoteIDOperations():
                 logging.error("Error in creating subscription in the DSS %s" % dss_r.text)
                 return subscription_response
             else: 	
+                
+                print("Succesfully created a subscription %s" % dss_r.text)
                 dss_response = dss_r.json()
                 service_areas = dss_response['service_areas']
                 subscription = dss_response['subscription']
@@ -157,13 +160,13 @@ class RemoteIDOperations():
                     flights_url = service_area['flights_url']
                     flights_url_list += flights_url + ' '
 
-                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now, 'version':new_subscription_version}
+                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now_isoformat, 'version':new_subscription_version}
 
-                subscription_id_flights = "all_uss_flights-" + new_subscription_id 
+                subscription_id_flights = "all_uss_flights:" + new_subscription_id 
                 
                 self.r.hmset(subscription_id_flights, flights_dict)
                 # expire keys in three minutes 
-                self.r.expire(name = subscription_id_flights, time=timedelta(minutes=three_mins_from_now))
+                self.r.expire(name = subscription_id_flights, time=three_minutes_timedelta)
                 return subscription_response
 
 
@@ -172,16 +175,19 @@ class RemoteIDOperations():
 
         pass
 
-    def query_uss_for_rid(self, flights_dict, all_observations, subscription_id):
+    def query_uss_for_rid(self, flights_dict, all_observations, subscription_id:str):
         
         authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
-
-        all_flights_urls_string = flights_dict['all_flights_url']
-        # flights_view = flights_dict['view']
-        all_flights_url = all_flights_urls_string.split()
+        
+        all_flights_urls_string = flights_dict['all_flights_url']        
+        all_flights_url = all_flights_urls_string.split()        
         for cur_flight_url in all_flights_url:
-            ext = tldextract.extract(cur_flight_url)          
-            audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+            try:
+                ext = tldextract.extract(cur_flight_url)  
+            except Exception as e: 
+                audience == 'localhost'
+            else:
+                audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
             auth_credentials = authority_credentials.get_cached_credentials(audience)
 
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials}

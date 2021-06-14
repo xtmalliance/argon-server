@@ -22,10 +22,12 @@ def poll_uss_for_flights_async():
     all_observations = push_cg.all_observations
 
     # TODO: Get existing flight details from subscription
-    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
     flights_dict = {}
     # Get the flights URL from the DSS and put it in 
-    for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights-*'),500): # reasonably we wont have more than 500 subscriptions active
-        flights_dict = r.get(keybatch)
-        subscription_id = keybatch.split('-')[1]
-        myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)
+    for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights:*'),500): # reasonably we wont have more than 500 subscriptions active
+        for key in keybatch:
+            if key:
+                flights_dict = r.hgetall(key)                
+                subscription_id = key.split(':')[1]                
+                myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)
