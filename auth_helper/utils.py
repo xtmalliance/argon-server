@@ -59,11 +59,11 @@ def requires_scopes(required_scopes):
                 return response
 
             
+            API_IDENTIFIER = env.get('PASSPORT_AUDIENCE')
             unverified_token_headers = jwt.get_unverified_header(token)
             if 'kid' in unverified_token_headers:                   
 
                 PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))
-                API_IDENTIFIER = env.get('PASSPORT_AUDIENCE')
                 
                 jsonurl = req.urlopen(PASSPORT_DOMAIN)
                 
@@ -132,7 +132,7 @@ def requires_scopes(required_scopes):
             else:                
                 token_details = jwt.decode(token, audience = "local.test",algorithms=['RS256'], options={"verify_signature": False})
                 
-                if 'iss' in token_details.keys() and token_details['iss'] == 'NoAuth':          
+                if 'iss' in token_details.keys() and token_details['iss'] == 'dummy':          
                     return f(*args, **kwargs)
                 else:
                     response = JsonResponse({'detail': 'Invalid token provided'})

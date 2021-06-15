@@ -45,7 +45,7 @@ class AuthorityCredentialsGetter():
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
             else: 
                 credentials = token_details['credentials']
-        else:               
+        else:   
             credentials = self.get_read_credentials(audience)
             
             access_token = credentials.get('access_token')
@@ -61,14 +61,15 @@ class AuthorityCredentialsGetter():
 
         if audience == 'localhost':
             # Test instance of DSS
-            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas', "issuer":issuer}        
+            payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas', "issuer":issuer}       
+            
         else: 
             payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read.identification_service_areas'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
         
         token_data = requests.post(url, params = payload)
-        t_data = token_data.json()        
+        t_data = token_data.json()     
         return t_data
 
 class RemoteIDOperations():
@@ -84,7 +85,7 @@ class RemoteIDOperations():
         subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
             
         my_authorization_helper = AuthorityCredentialsGetter()
-        audience = env.get("DSS_SELF_AUDIENCE", 0)
+        audience = env.get("DSS_SELF_AUDIENCE", 0)        
         error = None
 
         try: 
@@ -121,11 +122,10 @@ class RemoteIDOperations():
             callback_url += '/'+ new_subscription_id
             thirty_seconds_timedelta = timedelta(seconds=30)
             current_time = now.isoformat() + 'Z'
-            three_mins_from_now = now + thirty_seconds_timedelta
-            three_mins_from_now_isoformat = three_mins_from_now.isoformat() +'Z'
+            thirty_seconds_from_now = now + thirty_seconds_timedelta
+            thirty_seconds_from_now_isoformat = thirty_seconds_from_now.isoformat() +'Z'
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
-
-            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":three_mins_from_now_isoformat }
+            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":thirty_seconds_from_now_isoformat }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
             
@@ -158,9 +158,9 @@ class RemoteIDOperations():
                 
                 for service_area in service_areas: 
                     flights_url = service_area['flights_url']
-                    flights_url_list += flights_url +'/?view='+ view + ' '
+                    flights_url_list += flights_url +'?view='+ view + ' '
 
-                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': three_mins_from_now_isoformat, 'version':new_subscription_version}
+                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': thirty_seconds_from_now_isoformat, 'version':new_subscription_version}
 
                 subscription_id_flights = "all_uss_flights:" + new_subscription_id 
                 
@@ -187,14 +187,20 @@ class RemoteIDOperations():
             except Exception as e: 
                 audience == 'localhost'
             else:
-                audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+                if ext.domain in ['localhost']:
+                    audience = 'localhost'
+                else:
+                    audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+            
             auth_credentials = authority_credentials.get_cached_credentials(audience)
             
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials['access_token']}
-
-            flights_response = requests.get(cur_flight_url, headers=headers)
-            if flights_response.status_code == 200:
+            
+            flights_request = requests.get(cur_flight_url, headers=headers)
+            if flights_request.status_code == 200:
                 # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
+                flights_response = flights_request.json()
+                
                 all_flights = flights_response['flights']
                 for flight in all_flights:
                     flight_id = flight['id']
@@ -205,11 +211,12 @@ class RemoteIDOperations():
                         logging.debug(json.dumps(flight))
                     else:
                         flight_current_state = flight['current_state']
-                        position = flight_current_state['position']
-                        flight_metadata = {'id':flight_current_state['id'],"aircraft_type":flight_current_state["aircraft_type"],'subscription_id':subscription_id}
+                        position = flight_current_state['position']                       
+                        
+                        flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state}
                         now  = datetime.now()
                         time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
-                        
+                        print("writing flight data")
                         if {"lat", "lng", "alt"} <= position.keys():
                             # check if lat / lng / alt existis
                             single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
@@ -217,8 +224,11 @@ class RemoteIDOperations():
                             all_observations.add(single_observation)    
                             
                         else: 
-                            logging.error("Error in received flights data: %{url}s ".format(**flight) ) 
+                            logging.error("Error in received flights data: %{url}s ".format(**flight)) 
                     
             else:
-                logging.info(flights_response.status_code) 
+                logs_dict = {'url':cur_flight_url, 'status_code':flights_response.status_code}
+                logging.info("Received a non 200 error from {url} : {status_code} ".format(**logs_dict))
+                logging.info    ("Detailed Response %s" % flights_response.text) 
+                
 

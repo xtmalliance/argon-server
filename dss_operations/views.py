@@ -21,31 +21,27 @@ load_dotenv(find_dotenv())
 class SubscriptionHelper():
 
     def check_subscription_exists(self, view) -> bool:
-        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
-            'REDIS_PORT', 6379), decode_responses=True)
+        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379), decode_responses=True)
         subscription_found = False
         # reasonably we wont have more than 500 subscriptions active
-        for keybatch in flight_stream_helper.batcher(r.scan_iter('sub-*'), 500):
+        for keybatch in flight_stream_helper.batcher(r.scan_iter('sub-*'), 100):
             key_batch_unique = set(keybatch)
-
             for key in key_batch_unique:
                 if key:
                     stored_view = r.get(key)
                     if (stored_view == view):
                         subscription_found = True
-
                         break
 
         return subscription_found
 
     def create_new_subscription(self, request_id, view, vertex_list):
         
-        r = redis.Redis(host=env.get('REDIS_HOST', "redis"),
-                        port=env.get('REDIS_PORT', 6379))
+        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379))
         myDSSubscriber = dss_rw_helper.RemoteIDOperations()
-        subscription_response = myDSSubscriber.create_dss_subscription(
-            vertex_list=vertex_list, view=view, request_uuid=request_id)
-
+        
+        subscription_response = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id)
+        
         if subscription_response['created']:
             sub_id = 'sub-' + request_id
             view_details = view
@@ -100,9 +96,9 @@ def create_dss_subscription(request, *args, **kwargs):
             "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
-    b = shapely.geometry.box(
-        view_port[0], view_port[1], view_port[2], view_port[3])
+    b = shapely.geometry.box(view_port[1], view_port[0], view_port[3], view_port[2])
     co_ordinates = list(zip(*b.exterior.coords.xy))
+    
     # Convert bounds vertex list
     vertex_list = []
     for cur_co_ordinate in co_ordinates:
@@ -112,12 +108,11 @@ def create_dss_subscription(request, *args, **kwargs):
         vertex_list.append(lat_lng)
     # remove the final point
     vertex_list.pop()
-
+    
     request_id = str(uuid.uuid4())
     # TODO: Make this a asnyc call
     my_subscription_helper = SubscriptionHelper()
-    subscription_response = my_subscription_helper.create_new_subscription(
-        request_id=request_id, vertex_list=vertex_list, view=view)
+    subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view=view)
     if subscription_response['created']:
         msg = {"message": "DSS Subscription created", 'id': request_id,
                "subscription_response": subscription_response}
@@ -139,8 +134,7 @@ def get_rid_data(request, subscription_id):
     except ValueError as ve:
         return HttpResponse("Incorrect UUID passed in the parameters, please send a valid subscription ID", status=400, mimetype='application/json')
 
-    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
-        'REDIS_PORT', 6379), charset="utf-8", decode_responses=True)
+    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379), charset="utf-8", decode_responses=True)
     flights_dict = {}
     # Get the flights URL from the DSS and put it in
     # reasonably we wont have more than 500 subscriptions active
@@ -187,7 +181,7 @@ def dss_isa_callback(request, subscription_id):
 
         for new_flight in service_areas:
             all_flights_url += new_flight['flights_url'] + \
-                '/?view=' + subscription_view + " "
+                '?view=' + subscription_view + " "
 
         flights_dict["all_uss_flights"] = all_flights_url
         r.hmset(flights_key, flights_dict)
@@ -217,8 +211,7 @@ def get_display_data(request):
         return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
     view_port_valid = check_view_port(view_port=view_port)
 
-    b = shapely.geometry.box(
-        view_port[0], view_port[1], view_port[2], view_port[3])
+    b = shapely.geometry.box(view_port[1], view_port[0], view_port[3], view_port[2])
     co_ordinates = list(zip(*b.exterior.coords.xy))
     # Convert bounds vertex list
     vertex_list = []
@@ -235,9 +228,12 @@ def get_display_data(request):
         # stream_id = hashlib.md5(view.encode('utf-8')).hexdigest()
         # create a subscription
         my_subscription_helper = SubscriptionHelper()
-        # subscription_exists = my_subscription_helper.check_subscription_exists(view)
-        # if not subscription_exists:
-        # subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+        subscription_exists = my_subscription_helper.check_subscription_exists(view)
+        
+        if not subscription_exists:
+            logging.info("Creating Subscription..")
+            subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+            logging.info(subscription_response)
 
         # TODO: Get existing flight details from subscription
         stream_ops = flight_stream_helper.StreamHelperOps()
@@ -265,7 +261,7 @@ def get_display_data(request):
 @api_view(['GET'])
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_flight_data(request, flight_id):
-    ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
+    ''' This is the end point for the rid_qualifier to get details of a flight '''
 
     # get the flight ID
     # query the /uss/flights/{id}/details with the ID (should return the RID details / https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/master/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights~1{id}~1details/get

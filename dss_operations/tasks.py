@@ -26,7 +26,8 @@ def poll_uss_for_flights_async():
     flights_dict = {}
     # Get the flights URL from the DSS and put it in 
     for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights:*'),500): # reasonably we wont have more than 500 subscriptions active
-        for key in keybatch:
+        key_batch_set = set(keybatch)
+        for key in key_batch_set:
             if key:
                 flights_dict = r.hgetall(key)                
                 subscription_id = key.split(':')[1]                
