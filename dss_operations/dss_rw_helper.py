@@ -7,7 +7,6 @@ import redis
 import logging
 from datetime import datetime, timedelta
 import uuid
-import requests
 from dss_operations import dss_rw_helper
 
 from datetime import datetime, timedelta, timezone

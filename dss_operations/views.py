@@ -62,13 +62,11 @@ def check_view_port(view_port) -> bool:
     lng_min = min(view_port[1], view_port[3])
     lng_max = max(view_port[1], view_port[3])
 
-    if (lat_min < -90 or lat_min >= 90 or lat_max <= -90 or lat_max > 90 or
-            lng_min < -180 or lng_min >= 360 or lng_max <= -180 or lng_max > 360):
+    if (lat_min < -90 or lat_min >= 90 or lat_max <= -90 or lat_max > 90 or lng_min < -180 or lng_min >= 360 or lng_max <= -180 or lng_max > 360):
         # return '"view" coordinates do not fall within the valid range of -90 <= lat <= 90 and -180 <= lng <= 360', 400
         return False
 
-    box = shapely.geometry.box(
-        view_port[0], view_port[1], view_port[2], view_port[3])
+    box = shapely.geometry.box(view_port[0], view_port[1], view_port[2], view_port[3])
     area = abs(geod.geometry_area_perimeter(box)[0])
     if (area) < 250000 and (area) > 90000:
         return False
@@ -85,8 +83,7 @@ def create_dss_subscription(request, *args, **kwargs):
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
     except Exception as ke:
-        incorrect_parameters = {
-            "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
     view_port_valid = check_view_port(view_port=view_port)
@@ -224,7 +221,6 @@ def get_display_data(request):
     vertex_list.pop()
 
     if view_port_valid:
-
         # stream_id = hashlib.md5(view.encode('utf-8')).hexdigest()
         # create a subscription
         my_subscription_helper = SubscriptionHelper()
@@ -243,7 +239,6 @@ def get_display_data(request):
 
         pending_messages = []
         for all_observations_messages in all_streams_messages:
-
             timestamp = all_observations_messages.timestamp
             try:
                 pending_messages.append({'timestamp': timestamp.isoformat(), 'seq': all_observations_messages.sequence, 'msg_data': all_observations_messages.data,
