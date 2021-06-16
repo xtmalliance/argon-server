@@ -112,8 +112,7 @@ paths:
       parameters:
         - in: path 
         - name: view_port
-          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box
-            bounded by the provided corner points.'
+          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
           schema:
             type: string
             example: 29.97816,31.13296,29.98025,31.13535
@@ -124,7 +123,7 @@ paths:
       security:
         - AuthFromPassport: [read]
       description:
-        "This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application."
+        "This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application. It follows the specification in the [Airtraffic Data Protocol](https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#traffic-source-and-mandatory-fields)."
 
       responses:        
         '200':
@@ -967,17 +966,19 @@ components:
             type: integer
           traffic_source:
             type: integer
+          metadata:
+            type: object
 
     GetDisplayDataResponse:
-      description: Response to a request for current data that would be visualized by a Display Application.
+      description: Response to a request for current data that would be visualized by a Display Application. 
       type: object
       properties:
         flights:
           description: Current information for set of discovered flights whose precise locations are known.
+          
           type: array
-          items:
-            $ref: '#/components/schemas/Flight'
-          default: []
+          $ref: "#/components/schemas/ArrayOfObservations"
+          
         clusters:
           description: >-
             Current information for sets of discovered flights whose precise locations are not
