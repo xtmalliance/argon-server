@@ -119,12 +119,12 @@ class RemoteIDOperations():
             now = datetime.now()
 
             callback_url += '/'+ new_subscription_id
-            thirty_seconds_timedelta = timedelta(seconds=30)
+            fifteen_seconds_timedelta = timedelta(seconds=15)
             current_time = now.isoformat() + 'Z'
-            thirty_seconds_from_now = now + thirty_seconds_timedelta
-            thirty_seconds_from_now_isoformat = thirty_seconds_from_now.isoformat() +'Z'
+            fifteen_seconds_from_now = now + fifteen_seconds_timedelta
+            fifteen_seconds_from_now_isoformat = fifteen_seconds_from_now.isoformat() +'Z'
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
-            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":thirty_seconds_from_now_isoformat }
+            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":fifteen_seconds_from_now_isoformat }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
             
@@ -159,13 +159,13 @@ class RemoteIDOperations():
                     flights_url = service_area['flights_url']
                     flights_url_list += flights_url +'?view='+ view + ' '
 
-                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': thirty_seconds_from_now_isoformat, 'version':new_subscription_version}
+                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': fifteen_seconds_from_now_isoformat, 'version':new_subscription_version}
 
                 subscription_id_flights = "all_uss_flights:" + new_subscription_id 
                 
                 self.r.hmset(subscription_id_flights, flights_dict)
                 # expire keys in three minutes 
-                self.r.expire(name = subscription_id_flights, time=thirty_seconds_timedelta)
+                self.r.expire(name = subscription_id_flights, time=fifteen_seconds_timedelta)
                 return subscription_response
 
 
@@ -215,12 +215,14 @@ class RemoteIDOperations():
                         flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state}
                         now  = datetime.now()
                         time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
-                        print("writing flight data")
+                        logging.info("Writing flight remote-id data..")
                         if {"lat", "lng", "alt"} <= position.keys():
                             # check if lat / lng / alt existis
                             single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
                             # write incoming data directly
-                            all_observations.add(single_observation)    
+                            all_observations.add(single_observation)                               
+                            all_observations.trim(1000) 
+
                             
                         else: 
                             logging.error("Error in received flights data: %{url}s ".format(**flight)) 

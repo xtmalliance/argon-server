@@ -68,6 +68,7 @@ def check_view_port(view_port) -> bool:
 
     box = shapely.geometry.box(view_port[0], view_port[1], view_port[2], view_port[3])
     area = abs(geod.geometry_area_perimeter(box)[0])
+    print("Area : %s" % area)
     if (area) < 250000 and (area) > 90000:
         return False
 
@@ -241,8 +242,7 @@ def get_display_data(request):
         for all_observations_messages in all_streams_messages:
             timestamp = all_observations_messages.timestamp
             try:
-                pending_messages.append({'timestamp': timestamp.isoformat(), 'seq': all_observations_messages.sequence, 'msg_data': all_observations_messages.data,
-                                         'address': all_observations_messages.data['icao_address'], 'metadata': all_observations_messages.data['metadata']})
+                pending_messages.append({'timestamp': timestamp.isoformat(), 'seq': all_observations_messages.sequence,                                       'address': all_observations_messages.data['icao_address'], 'metadata': json.loads(all_observations_messages.data['metadata'])})
             except KeyError as ke:
                 logging.error("Error in data in the stream %s" % ke)
 

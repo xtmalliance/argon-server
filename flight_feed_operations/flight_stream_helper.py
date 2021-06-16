@@ -20,8 +20,7 @@ def batcher(iterable, n):
 
 class StreamHelperOps():
     def __init__(self):
-        self.stream_keys = ['all_observations']
-        
+        self.stream_keys = ['all_observations']        
         self.db = Database(host=url.hostname, port=url.port)   
         
     def create_push_cg(self):
@@ -29,8 +28,6 @@ class StreamHelperOps():
 
 
     def get_push_cg(self,create=False):
-        
-        
         cg = self.db.time_series('cg-push', self.stream_keys)
         if create:
             for stream in self.stream_keys:
@@ -45,7 +42,6 @@ class StreamHelperOps():
         
     def get_pull_cg(self,create=False):              
         cg = self.db.time_series('cg-pull', self.stream_keys)
-
         if create:
             for stream in self.stream_keys:
                 self.db.xadd(stream, {'data': ''})

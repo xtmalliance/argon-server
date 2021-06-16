@@ -1,17 +1,14 @@
 
-import json
-import os
+
+from django.http import JsonResponse
 from functools import wraps
 from django.contrib.auth import authenticate
 import jwt
+import json
 import requests
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
-from six.moves.urllib import request as req
-from django.http import JsonResponse
-
-import requests
 
 def jwt_get_username_from_payload_handler(payload):
     username = payload.get('sub').replace('|', '.')
@@ -48,8 +45,7 @@ def requires_scopes(required_scopes):
         def decorated(*args, **kwargs):       
         
             request = args[0]
-            auth = request.META.get("HTTP_AUTHORIZATION", None)
-            
+            auth = request.META.get("HTTP_AUTHORIZATION", None)            
             if auth:
                 parts = auth.split()
                 token = parts[1]            
@@ -57,17 +53,13 @@ def requires_scopes(required_scopes):
                 response = JsonResponse({'detail': 'Authentication credentials were not provided'})
                 response.status_code = 401
                 return response
-
             
             API_IDENTIFIER = env.get('PASSPORT_AUDIENCE')
             unverified_token_headers = jwt.get_unverified_header(token)
             if 'kid' in unverified_token_headers:                   
-
-                PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))
-                
-                jsonurl = req.urlopen(PASSPORT_DOMAIN)
-                
-                jwks = json.loads(jsonurl.read())   
+                PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))                
+                jwks_data = requests.get(PASSPORT_DOMAIN).json()                                               
+                jwks = jwks_data   
                 # cert = '-----BEGIN CERTIFICATE-----\n' + \
                     # jwks['keys'][0]['x5c'][0] + '\n-----END CERTIFICATE-----'
                 # certificate = load_pem_x509_certificate(cert.encode('utf-8'), default_backend())
@@ -116,9 +108,7 @@ def requires_scopes(required_scopes):
                 except Exception as e: 
                     response = JsonResponse({'detail': 'Invalid token'})
                     response.status_code = 401
-                    return response
-
-                
+                    return response                
 
                 if decoded.get("scope"):
                     token_scopes = decoded["scope"].split()
