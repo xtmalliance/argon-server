@@ -11,6 +11,7 @@ import shapely.geometry
 import uuid
 from datetime import datetime, timedelta
 import redis
+import arrow
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
@@ -46,7 +47,7 @@ class SubscriptionHelper():
             sub_id = 'sub-' + request_id
             view_details = view
             r.set(sub_id, view_details)
-            r.expire(sub_id, timedelta(seconds=30))
+            r.expire(sub_id, timedelta(seconds=15))
 
         return subscription_response
 
@@ -68,7 +69,7 @@ def check_view_port(view_port) -> bool:
 
     box = shapely.geometry.box(view_port[0], view_port[1], view_port[2], view_port[3])
     area = abs(geod.geometry_area_perimeter(box)[0])
-    print("Area : %s" % area)
+    
     if (area) < 250000 and (area) > 90000:
         return False
 
@@ -204,8 +205,7 @@ def get_display_data(request):
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
     except Exception as ke:
-        incorrect_parameters = {
-            "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
     view_port_valid = check_view_port(view_port=view_port)
 
@@ -235,18 +235,33 @@ def get_display_data(request):
         # TODO: Get existing flight details from subscription
         stream_ops = flight_stream_helper.StreamHelperOps()
         pull_cg = stream_ops.get_pull_cg()
-
         all_streams_messages = pull_cg.read()
 
-        pending_messages = []
-        for all_observations_messages in all_streams_messages:
-            timestamp = all_observations_messages.timestamp
+        unique_flights =[]
+        # Keep only the latest message
+        try:
+            for message in all_streams_messages:          
+                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
+            
+            # sort by date
+            unique_flights.sort(key=lambda item:item['timestamp'], reverse=True)
+            # Keep only the latest message
+            distinct_messages = {i['address']:i for i in reversed(unique_flights)}.values()
+            
+        except KeyError as ke: 
+            logging.error("Error in sorting distinct messages, ICAO name not defined")                     
+            distinct_messages = []
+        distinct_flights = []
+        for all_observations_messages in distinct_messages:            
             try:
-                pending_messages.append({'timestamp': timestamp.isoformat(), 'seq': all_observations_messages.sequence,                                       'address': all_observations_messages.data['icao_address'], 'metadata': json.loads(all_observations_messages.data['metadata'])})
+                observation_data = all_observations_messages['msg_data']
+        
+                time_stamp = arrow.get(all_observations_messages['timestamp']).isoformat()
+                distinct_flights.append({"icao_address" : observation_data['icao_address'],"traffic_source" :1, "source_type" : 11, "lat_dd" : observation_data['lat_dd'], "lon_dd" : observation_data['lon_dd'], "time_stamp" : time_stamp,"altitude_mm" : observation_data['altitude_mm'],'metadata': json.loads(observation_data['metadata'])})                
             except KeyError as ke:
                 logging.error("Error in data in the stream %s" % ke)
-
-        return HttpResponse(json.dumps({"flights": pending_messages, "clusters": []}),  status=200, content_type='application/json')
+        
+        return HttpResponse(json.dumps({"flights":distinct_flights, "clusters": []}),  status=200, content_type='application/json')
     else:
         view_port_error = {
             "message": "A incorrect view port bbox was provided"}

@@ -203,6 +203,7 @@ class RemoteIDOperations():
                 all_flights = flights_response['flights']
                 for flight in all_flights:
                     flight_id = flight['id']
+                    
                     try: 
                         assert flight.get('current_state') is not None
                     except AssertionError as ae:
@@ -213,12 +214,10 @@ class RemoteIDOperations():
                         position = flight_current_state['position']                       
                         
                         flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state}
-                        now  = datetime.now()
-                        time_stamp =  now.replace(tzinfo=timezone.utc).timestamp()
                         logging.info("Writing flight remote-id data..")
                         if {"lat", "lng", "alt"} <= position.keys():
                             # check if lat / lng / alt existis
-                            single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "time_stamp" : time_stamp,"altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
+                            single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
                             # write incoming data directly
                             all_observations.add(single_observation)                               
                             all_observations.trim(1000) 
