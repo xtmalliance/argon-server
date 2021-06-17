@@ -211,9 +211,12 @@ class RemoteIDOperations():
                         logging.debug(json.dumps(flight))
                     else:
                         flight_current_state = flight['current_state']
-                        position = flight_current_state['position']                       
+                        position = flight_current_state['position']       
                         
-                        flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state}
+                        recent_positions = flight['recent_positions'] if 'recent_positions' in flight.keys() else []                                       
+                        
+                        flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state,"recent_positions":recent_positions}
+
                         logging.info("Writing flight remote-id data..")
                         if {"lat", "lng", "alt"} <= position.keys():
                             # check if lat / lng / alt existis

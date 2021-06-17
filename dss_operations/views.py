@@ -9,14 +9,31 @@ from os import environ as env
 import uuid
 import shapely.geometry
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 import redis
+from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, ClusterDetails
 import arrow
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
+from typing import Any
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
+
+class RIDOutputHelper():
+        
+    def make_json_compatible(self, struct: Any) -> Any:
+        if isinstance(struct, tuple) and hasattr(struct, '_asdict'):
+            return {k: self.make_json_compatible(v) for k, v in struct._asdict().items()}
+        elif isinstance(struct, dict):
+            return {k: self.make_json_compatible(v) for k, v in struct.items()}
+        elif isinstance(struct, str):
+            return struct
+        try:
+            return [self.make_json_compatible(v) for v in struct]
+        except TypeError:
+            return struct
+
 
 
 class SubscriptionHelper():
@@ -201,6 +218,7 @@ def get_display_data(request):
     # get the view bounding box
     # get the existing subscription id , if no subscription exists, then reject
     request_id = str(uuid.uuid4())
+    my_rid_output_helper = RIDOutputHelper()
     try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
@@ -251,17 +269,45 @@ def get_display_data(request):
         except KeyError as ke: 
             logging.error("Error in sorting distinct messages, ICAO name not defined")                     
             distinct_messages = []
-        distinct_flights = []
-        for all_observations_messages in distinct_messages:            
-            try:
-                observation_data = all_observations_messages['msg_data']
+        rid_flights = []
         
-                time_stamp = arrow.get(all_observations_messages['timestamp']).isoformat()
-                distinct_flights.append({"icao_address" : observation_data['icao_address'],"traffic_source" :1, "source_type" : 11, "lat_dd" : observation_data['lat_dd'], "lon_dd" : observation_data['lon_dd'], "time_stamp" : time_stamp,"altitude_mm" : observation_data['altitude_mm'],'metadata': json.loads(observation_data['metadata'])})                
+        
+        for all_observations_messages in distinct_messages:                   
+            all_recent_positions = []
+            recent_paths = []
+            try:
+                observation_data = all_observations_messages['msg_data']                
             except KeyError as ke:
                 logging.error("Error in data in the stream %s" % ke)
+                
+            else:
+                try:                
+                    observation_metadata = observation_data['metadata']
+                    observation_metadata_dict = json.loads(observation_metadata)
+                    recent_positions = observation_metadata_dict['recent_positions']
+
+                    for recent_position in recent_positions:    
+                        all_recent_positions.append(Position(lat=recent_position['position']['lat'], lng= recent_position['position']['lng'], alt = recent_position['position']['alt']))
+
+                    recent_paths = RIDPositions(positions = all_recent_positions)   
+                    
+                except KeyError as ke:
+                    logging.error("Error in metadata data in the stream %s" % ke)
+                    
+
+            most_recent_position = Position(lat=observation_data['lat_dd'], lng=observation_data['lon_dd'] ,alt= observation_data['altitude_mm'])
+
+            current_flight = RIDFlight(id=observation_data['icao_address'], most_recent_position= most_recent_position,recent_paths = recent_paths)
+            print(current_flight)
+
+            rid_flights.append(current_flight)
+                # rid_flights.append({"icao_address" : observation_data['icao_address'],"traffic_source" :1, "source_type" : 11, "lat_dd" : observation_data['lat_dd'], "lon_dd" : observation_data['lon_dd'], "time_stamp" : time_stamp,"altitude_mm" : observation_data['altitude_mm'],'metadata': json.loads(observation_data['metadata'])})                
+
+
+        rid_display_data = RIDDisplayDataResponse(flights=rid_flights, clusters = [])
         
-        return HttpResponse(json.dumps({"flights":distinct_flights, "clusters": []}),  status=200, content_type='application/json')
+        rid_flights_dict = my_rid_output_helper.make_json_compatible(rid_display_data)
+        return HttpResponse(json.dumps({"flights":rid_flights_dict['flights'], "clusters": rid_flights_dict['clusters']}),  status=200, content_type='application/json')
     else:
         view_port_error = {
             "message": "A incorrect view port bbox was provided"}

@@ -521,6 +521,9 @@ components:
 
 
   schemas:
+
+
+  
     ApproveRejectDeclaration:
       description: A flight declaration approved / created
       type: object
@@ -977,7 +980,7 @@ components:
           description: Current information for set of discovered flights whose precise locations are known.
           
           type: array
-          $ref: "#/components/schemas/ArrayOfObservations"
+          $ref: '#/components/schemas/Flight'
           
         clusters:
           description: >-
