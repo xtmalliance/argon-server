@@ -15,31 +15,13 @@ def jwt_get_username_from_payload_handler(payload):
     authenticate(remote_user=username)
     return username
 
-
-def jwt_decode_token(token):
-    header = jwt.get_unverified_header(token)
-    passport_url = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))
-   
-    jwks = requests.get(passport_url).json()
-    public_key = None
-    for jwk in jwks['keys']:
-        if jwk['kid'] == header['kid']:
-            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-    if public_key is None:
-        raise Exception('Public key not found.')
-    issuer = 'https://{}/'.format(env.get('PASSPORT_DOMAIN'))
-    audience = env.get('PASSPORT_AUDIENCE')
-    
-    decoded = jwt.decode(token, public_key, audience=audience, issuer=issuer, algorithms=['RS256'])
-    return decoded
-
-
-
 def requires_scopes(required_scopes):
     """Determines if the required scope is present in the access token
     Args:
         required_scopes (list): The scopes required to access the resource
     """
+    
+    s = requests.Session()
     def require_scope(f):
         @wraps(f)
         def decorated(*args, **kwargs):       
@@ -56,14 +38,13 @@ def requires_scopes(required_scopes):
             
             API_IDENTIFIER = env.get('PASSPORT_AUDIENCE')
             unverified_token_headers = jwt.get_unverified_header(token)
+
             if 'kid' in unverified_token_headers:                   
                 PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))                
-                jwks_data = requests.get(PASSPORT_DOMAIN).json()                                               
+                jwks_data = s.get(PASSPORT_DOMAIN).json()          
+                                                     
                 jwks = jwks_data   
-                # cert = '-----BEGIN CERTIFICATE-----\n' + \
-                    # jwks['keys'][0]['x5c'][0] + '\n-----END CERTIFICATE-----'
-                # certificate = load_pem_x509_certificate(cert.encode('utf-8'), default_backend())
-                # public_key = certificate.public_key()
+                
                 public_keys = {}
                 for jwk in jwks['keys']:
                     kid = jwk['kid']
@@ -76,9 +57,9 @@ def requires_scopes(required_scopes):
                     return response
                 else:
                     public_key = public_keys[kid]
-                try:
-                    decoded = jwt.decode(token, public_key, audience=API_IDENTIFIER, algorithms=['RS256'])
                     
+                try:
+                    decoded = jwt.decode(token, public_key, audience=API_IDENTIFIER, algorithms=['RS256'])                    
                 except jwt.ImmatureSignatureError as es: 
                     response = JsonResponse({'detail': 'Token Signature has is not valid'})
                     response.status_code = 401
@@ -90,14 +71,12 @@ def requires_scopes(required_scopes):
                 except jwt.InvalidAudienceError as es: 
                     response = JsonResponse({'detail': 'Invalid audience in token'})
                     response.status_code = 401
-                    return response
-                
+                    return response                
                 except jwt.InvalidIssuerError as es: 
                     response = JsonResponse({'detail': 'Invalid issuer for token'})
                     response.status_code = 401
                     return response
-
-                except jwt.InvalidSignatureError as es: 
+                except jwt.InvalidSignatureError as es:                     
                     response = JsonResponse({'detail': 'Invalid signature in token'})
                     response.status_code = 401
                     return response
@@ -120,8 +99,8 @@ def requires_scopes(required_scopes):
                 return response
 
             else:                
-                token_details = jwt.decode(token, audience = "local.test",algorithms=['RS256'], options={"verify_signature": False})
-                
+                # This is for testing DSS locally
+                token_details = jwt.decode(token, audience = "local.test",algorithms=['RS256'], options={"verify_signature": False})                
                 if 'iss' in token_details.keys() and token_details['iss'] == 'dummy':          
                     return f(*args, **kwargs)
                 else:

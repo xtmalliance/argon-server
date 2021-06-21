@@ -28,7 +28,7 @@ urlpatterns = [
     path('dss/', include('dss_operations.urls')),    
 
     path('geo_fence_ops/', include('geo_fence_operations.urls')),    
-    path('flight_declaration_ops/', include('geo_fence_operations.urls')),
+    path('flight_declaration_ops/', include('flight_declaration_operations.urls')),
 
     
 ]
