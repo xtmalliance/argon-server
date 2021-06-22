@@ -289,7 +289,7 @@ def get_display_data(request):
                     for recent_position in recent_positions:    
                         all_recent_positions.append(Position(lat=recent_position['position']['lat'], lng= recent_position['position']['lng'], alt = recent_position['position']['alt']))
 
-                    recent_paths = RIDPositions(positions = all_recent_positions)   
+                    recent_paths.append(RIDPositions(positions = all_recent_positions))
                     
                 except KeyError as ke:
                     logging.error("Error in metadata data in the stream %s" % ke)
@@ -298,15 +298,15 @@ def get_display_data(request):
             most_recent_position = Position(lat=observation_data['lat_dd'], lng=observation_data['lon_dd'] ,alt= observation_data['altitude_mm'])
 
             current_flight = RIDFlight(id=observation_data['icao_address'], most_recent_position= most_recent_position,recent_paths = recent_paths)
-            print(current_flight)
+
 
             rid_flights.append(current_flight)
-                # rid_flights.append({"icao_address" : observation_data['icao_address'],"traffic_source" :1, "source_type" : 11, "lat_dd" : observation_data['lat_dd'], "lon_dd" : observation_data['lon_dd'], "time_stamp" : time_stamp,"altitude_mm" : observation_data['altitude_mm'],'metadata': json.loads(observation_data['metadata'])})                
 
 
         rid_display_data = RIDDisplayDataResponse(flights=rid_flights, clusters = [])
         
         rid_flights_dict = my_rid_output_helper.make_json_compatible(rid_display_data)
+        
         return HttpResponse(json.dumps({"flights":rid_flights_dict['flights'], "clusters": rid_flights_dict['clusters']}),  status=200, content_type='application/json')
     else:
         view_port_error = {

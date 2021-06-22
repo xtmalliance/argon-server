@@ -119,12 +119,12 @@ class RemoteIDOperations():
             now = datetime.now()
 
             callback_url += '/'+ new_subscription_id
-            fifteen_seconds_timedelta = timedelta(seconds=15)
+            thirty_seconds_timedelta = timedelta(seconds=30)
             current_time = now.isoformat() + 'Z'
-            fifteen_seconds_from_now = now + fifteen_seconds_timedelta
+            fifteen_seconds_from_now = now + thirty_seconds_timedelta
             fifteen_seconds_from_now_isoformat = fifteen_seconds_from_now.isoformat() +'Z'
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
-            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":400},"time_start":current_time,"time_end":fifteen_seconds_from_now_isoformat }
+            volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":800},"time_start":current_time,"time_end":fifteen_seconds_from_now_isoformat }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
             
@@ -165,7 +165,7 @@ class RemoteIDOperations():
                 
                 self.r.hmset(subscription_id_flights, flights_dict)
                 # expire keys in three minutes 
-                self.r.expire(name = subscription_id_flights, time=fifteen_seconds_timedelta)
+                self.r.expire(name = subscription_id_flights, time=thirty_seconds_timedelta)
                 return subscription_response
 
 

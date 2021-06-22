@@ -16,7 +16,7 @@ class RIDPositions(NamedTuple):
 class RIDFlight(NamedTuple):    
     id:str
     most_recent_position: Position
-    recent_paths: RIDPositions
+    recent_paths: List[RIDPositions]
 
 class ClusterDetails(NamedTuple):
     corners:List[Position]
