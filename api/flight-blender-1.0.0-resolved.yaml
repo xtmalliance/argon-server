@@ -147,6 +147,8 @@ paths:
 
   /dss/display_data/{flight_id}:
     summary: A remote ID flight reported by a remote ID service provider.
+
+  
     get:
       tags:
       - rid-qualifier
@@ -191,7 +193,7 @@ paths:
       description: Retrieve details of a flight from a remote ID service provider
         to meet remote ID requirements.
     parameters:
-    - name: id
+    - name: flight_id
       description: Remote ID flight ID for this flight; may be obtained in general
         /flights query.
       schema:
