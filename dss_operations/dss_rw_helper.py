@@ -9,10 +9,12 @@ from datetime import datetime, timedelta
 import uuid
 from dss_operations import dss_rw_helper
 
+logger = logging.getLogger('django')
 from datetime import datetime, timedelta, timezone
 import json
 import redis
 import requests
+import hashlib
 import tldextract
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -78,7 +80,7 @@ class RemoteIDOperations():
         
         self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
 
-    def create_dss_subscription(self, vertex_list, view, request_uuid):
+    def create_dss_subscription(self, vertex_list:list, view:str, request_uuid, subscription_time_delta: int=30):
         ''' This method PUTS /dss/subscriptions ''' 
         
         subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
@@ -90,14 +92,14 @@ class RemoteIDOperations():
         try: 
             assert audience
         except AssertionError as ae:
-            logging.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
+            logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
             return subscription_response
 
         try:
             auth_token = my_authorization_helper.get_cached_credentials(audience)
         except Exception as e:
 
-            logging.error("Error in getting Authority Access Token %s " % e)
+            logger.error("Error in getting Authority Access Token %s " % e)
             return subscription_response        
         else:
             error = auth_token.get("error")            
@@ -108,7 +110,7 @@ class RemoteIDOperations():
             return subscription_response
         else: 
             
-            logging.info("Successfully received Token")
+            
             # A token from authority was received, 
             new_subscription_id = str(uuid.uuid4())
             dss_subscription_url = self.dss_base_url + 'v1/dss/subscriptions/' + new_subscription_id
@@ -119,9 +121,9 @@ class RemoteIDOperations():
             now = datetime.now()
 
             callback_url += '/'+ new_subscription_id
-            thirty_seconds_timedelta = timedelta(seconds=30)
+            subscription_seconds_timedelta = timedelta(seconds=subscription_time_delta)
             current_time = now.isoformat() + 'Z'
-            fifteen_seconds_from_now = now + thirty_seconds_timedelta
+            fifteen_seconds_from_now = now + subscription_seconds_timedelta
             fifteen_seconds_from_now_isoformat = fifteen_seconds_from_now.isoformat() +'Z'
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
             volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":800},"time_start":current_time,"time_end":fifteen_seconds_from_now_isoformat }
@@ -131,18 +133,16 @@ class RemoteIDOperations():
             try:
                 dss_r = requests.put(dss_subscription_url, json= payload, headers=headers)
             except Exception as re:
-                logging.error("Error in posting to subscription URL %s " % re)
+                logger.error("Error in posting to subscription URL %s " % re)
                 return subscription_response
 
             try: 
                 assert dss_r.status_code == 200
                 subscription_response["created"] = 1
             except AssertionError as ae:              
-                logging.error("Error in creating subscription in the DSS %s" % dss_r.text)
+                logger.error("Error in creating subscription in the DSS %s" % dss_r.text)
                 return subscription_response
-            else: 	
-                
-                print("Succesfully created a subscription %s" % dss_r.text)
+            else: 	        
                 dss_response = dss_r.json()
                 service_areas = dss_response['service_areas']
                 subscription = dss_response['subscription']
@@ -150,7 +150,8 @@ class RemoteIDOperations():
                 notification_index = subscription['notification_index']
                 new_subscription_version = subscription['version']
                 subscription_response['notification_index'] = notification_index
-                subscription_response['subscription_id'] = subscription_id
+                subscription_response['subscription_id'] = subscription_id        
+                logger.info("Succesfully created a DSS subscription ID %s" % subscription_id)
 
                 # iterate over the service areas to get flights URL to poll 
                 flights_url_list = ''
@@ -165,7 +166,17 @@ class RemoteIDOperations():
                 
                 self.r.hmset(subscription_id_flights, flights_dict)
                 # expire keys in three minutes 
-                self.r.expire(name = subscription_id_flights, time=thirty_seconds_timedelta)
+                self.r.expire(name = subscription_id_flights,  time=subscription_seconds_timedelta)
+  
+                sub_id = 'sub-' + request_uuid
+                self.r.set(sub_id, view)
+                self.r.expire(sub_id, timedelta(seconds=subscription_time_delta))
+
+                view_hash = int(hashlib.sha256(view.encode('utf-8')).hexdigest(), 16) % 10**8                
+                view_sub = 'view_sub-' + str(view_hash)                
+                self.r.set(view_sub, 1)
+                self.r.expire(view_sub, timedelta(seconds=subscription_time_delta))
+
                 return subscription_response
 
 
@@ -179,6 +190,7 @@ class RemoteIDOperations():
         authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
         
         all_flights_urls_string = flights_dict['all_flights_url']        
+        logging.info("Flight urls %s" % all_flights_urls_string)
         all_flights_url = all_flights_urls_string.split()        
         for cur_flight_url in all_flights_url:
             try:
@@ -207,8 +219,8 @@ class RemoteIDOperations():
                     try: 
                         assert flight.get('current_state') is not None
                     except AssertionError as ae:
-                        logging.error('There is no current_state provided by SP on the flights url %s' % cur_flight_url)
-                        logging.debug(json.dumps(flight))
+                        logger.error('There is no current_state provided by SP on the flights url %s' % cur_flight_url)
+                        logger.debug(json.dumps(flight))
                     else:
                         flight_current_state = flight['current_state']
                         position = flight_current_state['position']       
@@ -217,7 +229,7 @@ class RemoteIDOperations():
                         
                         flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state,"recent_positions":recent_positions}
 
-                        logging.info("Writing flight remote-id data..")
+                        logger.info("Writing flight remote-id data..")
                         if {"lat", "lng", "alt"} <= position.keys():
                             # check if lat / lng / alt existis
                             single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
@@ -227,11 +239,11 @@ class RemoteIDOperations():
 
                             
                         else: 
-                            logging.error("Error in received flights data: %{url}s ".format(**flight)) 
+                            logger.error("Error in received flights data: %{url}s ".format(**flight)) 
                     
             else:
                 logs_dict = {'url':cur_flight_url, 'status_code':flights_response.status_code}
-                logging.info("Received a non 200 error from {url} : {status_code} ".format(**logs_dict))
-                logging.info    ("Detailed Response %s" % flights_response.text) 
+                logger.info("Received a non 200 error from {url} : {status_code} ".format(**logs_dict))
+                logger.info("Detailed Response %s" % flights_response.text) 
                 
 

@@ -9,16 +9,17 @@ from os import environ as env
 import uuid
 import shapely.geometry
 import uuid
-from datetime import timedelta
 import redis
 from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, ClusterDetails
-import arrow
+import hashlib
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
+
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
+logger = logging.getLogger('django')
 
 class RIDOutputHelper():
         
@@ -37,39 +38,28 @@ class RIDOutputHelper():
 
 
 class SubscriptionHelper():
+    """
+    A class to help with DSS subscriptions, check if a subscription exists or create a new one  
+
+    """
 
     def check_subscription_exists(self, view) -> bool:
         r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379), decode_responses=True)
         subscription_found = False
-        # reasonably we wont have more than 500 subscriptions active
-        for keybatch in flight_stream_helper.batcher(r.scan_iter('sub-*'), 100):
-            key_batch_unique = set(keybatch)
-            for key in key_batch_unique:
-                if key:
-                    stored_view = r.get(key)
-                    if (stored_view == view):
-                        subscription_found = True
-                        break
-
+        view_hash = int(hashlib.sha256(view.encode('utf-8')).hexdigest(), 16) % 10**8
+        view_sub = 'view_sub-'+ str(view_hash)
+        subscription_found = r.exists(view_sub)        
         return subscription_found
 
-    def create_new_subscription(self, request_id, view, vertex_list):
-        
-        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379))
-        myDSSubscriber = dss_rw_helper.RemoteIDOperations()
-        
-        subscription_response = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id)
-        
-        if subscription_response['created']:
-            sub_id = 'sub-' + request_id
-            view_details = view
-            r.set(sub_id, view_details)
-            r.expire(sub_id, timedelta(seconds=15))
-
+    def create_new_subscription(self, request_id, view:str, vertex_list:list):
+        subscription_time_delta = 15        
+        myDSSubscriber = dss_rw_helper.RemoteIDOperations()        
+        subscription_response = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id, subscription_time_delta = subscription_time_delta)      
         return subscription_response
 
 
 def check_view_port(view_port) -> bool:
+
     geod = Geod(ellps="WGS84")
     if len(view_port) != 4:
         return False
@@ -96,6 +86,7 @@ def check_view_port(view_port) -> bool:
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
 def create_dss_subscription(request, *args, **kwargs):
+
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
 
     try:
@@ -108,8 +99,7 @@ def create_dss_subscription(request, *args, **kwargs):
     view_port_valid = check_view_port(view_port=view_port)
 
     if not view_port_valid:
-        incorrect_parameters = {
-            "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
     b = shapely.geometry.box(view_port[1], view_port[0], view_port[3], view_port[2])
@@ -129,9 +119,9 @@ def create_dss_subscription(request, *args, **kwargs):
     # TODO: Make this a asnyc call
     my_subscription_helper = SubscriptionHelper()
     subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view=view)
+
     if subscription_response['created']:
-        msg = {"message": "DSS Subscription created", 'id': request_id,
-               "subscription_response": subscription_response}
+        msg = {"message": "DSS Subscription created", 'id': request_id, "subscription_response": subscription_response}
         status = 201
     else:
         msg = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
@@ -143,7 +133,7 @@ def create_dss_subscription(request, *args, **kwargs):
 @api_view(['GET'])
 @requires_scopes(['blender.read'])
 def get_rid_data(request, subscription_id):
-    ''' This is the GET endpoint for remote id data given a subscription id. Blender will store flight URLs and everytime '''
+    ''' This is the GET endpoint for remote id data given a DSS subscription id. Blender will store flight URLs and everytime the data is queried'''
 
     try:
         is_uuid = UUID(subscription_id, version=4)
@@ -154,14 +144,12 @@ def get_rid_data(request, subscription_id):
     flights_dict = {}
     # Get the flights URL from the DSS and put it in
     # reasonably we wont have more than 500 subscriptions active
-    for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights:*'), 500):
+    sub_to_check = 'sub-' + subscription_id
 
-        for key in keybatch:
-            if key:
-                stored_subscription_id = key.split(':')[1]
-                if (subscription_id == stored_subscription_id):
-                    flights_dict = r.get(*key)
-                    break
+    if r.exists(sub_to_check):
+        stored_subscription_details = "all_uss_flights:"+ subscription_id
+        flights_dict = r.get(stored_subscription_details)
+
 
     if bool(flights_dict):
         # TODO for Pull operations Flights Dict is not being used at all
@@ -181,17 +169,18 @@ def get_rid_data(request, subscription_id):
 def dss_isa_callback(request, subscription_id):
     ''' This is the call back end point that other USSes in the DSS network call once a subscription is updated '''
     service_areas = request.get('service_area', 0)
+    
     try:
         assert service_areas != 0
         r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
             'REDIS_PORT', 6379), decode_responses=True)
         # Get the flights URL from the DSS and put it in the flights_url
-
         flights_key = "all_uss_flights:" + subscription_id
 
         subscirption_view_key = "sub-" + subscription_id
 
         flights_dict = r.hgetall(flights_key)
+        
         subscription_view = r.get(subscirption_view_key)
         all_flights_url = flights_dict['all_flights_url']
 
@@ -201,6 +190,7 @@ def dss_isa_callback(request, subscription_id):
 
         flights_dict["all_uss_flights"] = all_flights_url
         r.hmset(flights_key, flights_dict)
+        r.expire(name = flights_key, time=30)# if a AOI is updated then keep the subscription active for 30 seconds
 
     except AssertionError as ae:
         return HttpResponse("Incorrect data in the POST URL", status=400, content_type='application/json')
@@ -245,10 +235,12 @@ def get_display_data(request):
         my_subscription_helper = SubscriptionHelper()
         subscription_exists = my_subscription_helper.check_subscription_exists(view)
         
+        
+
         if not subscription_exists:
-            logging.info("Creating Subscription..")
+            logger.info("Creating Subscription..")
             subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
-            logging.info(subscription_response)
+            logger.info(subscription_response)
 
         # TODO: Get existing flight details from subscription
         stream_ops = flight_stream_helper.StreamHelperOps()
@@ -267,7 +259,7 @@ def get_display_data(request):
             distinct_messages = {i['address']:i for i in reversed(unique_flights)}.values()
             
         except KeyError as ke: 
-            logging.error("Error in sorting distinct messages, ICAO name not defined")                     
+            logger.error("Error in sorting distinct messages, ICAO name not defined")                     
             distinct_messages = []
         rid_flights = []
         
@@ -278,7 +270,7 @@ def get_display_data(request):
             try:
                 observation_data = all_observations_messages['msg_data']                
             except KeyError as ke:
-                logging.error("Error in data in the stream %s" % ke)
+                logger.error("Error in data in the stream %s" % ke)
                 
             else:
                 try:                
@@ -292,7 +284,7 @@ def get_display_data(request):
                     recent_paths.append(RIDPositions(positions = all_recent_positions))
                     
                 except KeyError as ke:
-                    logging.error("Error in metadata data in the stream %s" % ke)
+                    logger.error("Error in metadata data in the stream %s" % ke)
                     
 
             most_recent_position = Position(lat=observation_data['lat_dd'], lng=observation_data['lon_dd'] ,alt= observation_data['altitude_mm'])
