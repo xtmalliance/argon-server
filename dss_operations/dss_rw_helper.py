@@ -190,7 +190,7 @@ class RemoteIDOperations():
         authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
         
         all_flights_urls_string = flights_dict['all_flights_url']        
-        logging.info("Flight urls %s" % all_flights_urls_string)
+        # logging.info("Flight urls %s" % all_flights_urls_string)
         all_flights_url = all_flights_urls_string.split()        
         for cur_flight_url in all_flights_url:
             try:
@@ -206,6 +206,7 @@ class RemoteIDOperations():
             auth_credentials = authority_credentials.get_cached_credentials(audience)
             
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials['access_token']}
+            
             
             flights_request = requests.get(cur_flight_url, headers=headers)
             if flights_request.status_code == 200:
@@ -242,8 +243,8 @@ class RemoteIDOperations():
                             logger.error("Error in received flights data: %{url}s ".format(**flight)) 
                     
             else:
-                logs_dict = {'url':cur_flight_url, 'status_code':flights_response.status_code}
+                logs_dict = {'url':cur_flight_url, 'status_code':flights_request.status_code}
                 logger.info("Received a non 200 error from {url} : {status_code} ".format(**logs_dict))
-                logger.info("Detailed Response %s" % flights_response.text) 
+                logger.info("Detailed Response %s" % flights_request.text) 
                 
 

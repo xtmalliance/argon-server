@@ -30,6 +30,7 @@ def poll_uss_for_flights_async():
         key_batch_set = set(keybatch)
         for key in key_batch_set:
             if key:
-                flights_dict = r.hgetall(key)                
-                subscription_id = key.split(':')[1]                                
-                myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)
+                flights_dict = r.hgetall(key)          
+                if bool(flights_dict):
+                    subscription_id = key.split(':')[1]                    
+                    myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)

@@ -37,7 +37,7 @@ def requires_scopes(required_scopes):
                 return response
             
             API_IDENTIFIER = env.get('PASSPORT_AUDIENCE')
-            unverified_token_headers = jwt.get_unverified_header(token)
+            unverified_token_headers = jwt.get_unverified_header(token)            
 
             if 'kid' in unverified_token_headers:                   
                 PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))                
@@ -100,7 +100,8 @@ def requires_scopes(required_scopes):
 
             else:                
                 # This is for testing DSS locally
-                token_details = jwt.decode(token, audience = "local.test",algorithms=['RS256'], options={"verify_signature": False})                
+                token_details = jwt.decode(token, audience = "local.test",algorithms=['RS256'], options={"verify_signature": False})        
+
                 if 'iss' in token_details.keys() and token_details['iss'] == 'dummy':          
                     return f(*args, **kwargs)
                 else:
