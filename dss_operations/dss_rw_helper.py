@@ -10,7 +10,7 @@ import uuid
 from dss_operations import dss_rw_helper
 
 logger = logging.getLogger('django')
-from datetime import datetime, timedelta, timezone
+
 import json
 import redis
 import requests
@@ -47,8 +47,7 @@ class AuthorityCredentialsGetter():
             else: 
                 credentials = token_details['credentials']
         else:   
-            credentials = self.get_read_credentials(audience)
-            
+            credentials = self.get_read_credentials(audience)            
             access_token = credentials.get('access_token')
             if access_token: # there is no error in the token
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
@@ -108,8 +107,7 @@ class RemoteIDOperations():
             assert error is None
         except AssertionError as ae:             
             return subscription_response
-        else: 
-            
+        else:            
             
             # A token from authority was received, 
             new_subscription_id = str(uuid.uuid4())
@@ -144,6 +142,7 @@ class RemoteIDOperations():
                 return subscription_response
             else: 	        
                 dss_response = dss_r.json()
+                
                 service_areas = dss_response['service_areas']
                 subscription = dss_response['subscription']
                 subscription_id = subscription['id']
@@ -151,8 +150,7 @@ class RemoteIDOperations():
                 new_subscription_version = subscription['version']
                 subscription_response['notification_index'] = notification_index
                 subscription_response['subscription_id'] = subscription_id        
-                logger.info("Succesfully created a DSS subscription ID %s" % subscription_id)
-
+                # logger.info("Succesfully created a DSS subscription ID %s" % subscription_id)
                 # iterate over the service areas to get flights URL to poll 
                 flights_url_list = ''
                 
@@ -160,22 +158,23 @@ class RemoteIDOperations():
                     flights_url = service_area['flights_url']
                     flights_url_list += flights_url +'?view='+ view + ' '
 
-                flights_dict = {'request_id':request_uuid, 'subscription_id': subscription_id,'all_flights_url':flights_url_list, 'notification_index': notification_index, 'view':view, 'expire_at': fifteen_seconds_from_now_isoformat, 'version':new_subscription_version}
+                flights_dict = {'request_id': request_uuid, 'subscription_id': subscription_id,'all_flights_url': flights_url_list, 'notification_index': notification_index, 'view': view, 'expire_at': fifteen_seconds_from_now_isoformat, 'version': new_subscription_version}
 
                 subscription_id_flights = "all_uss_flights:" + new_subscription_id 
                 
                 self.r.hmset(subscription_id_flights, flights_dict)
-                # expire keys in three minutes 
-                self.r.expire(name = subscription_id_flights,  time=subscription_seconds_timedelta)
-  
+                # expire keys in fifteen seconds                                 
+                self.r.expire(name = subscription_id_flights,  time = subscription_seconds_timedelta)  
+                
                 sub_id = 'sub-' + request_uuid
-                self.r.set(sub_id, view)
-                self.r.expire(sub_id, timedelta(seconds=subscription_time_delta))
 
-                view_hash = int(hashlib.sha256(view.encode('utf-8')).hexdigest(), 16) % 10**8                
+                self.r.set(sub_id, view)
+                self.r.expire(name = sub_id, time = subscription_seconds_timedelta)
+
+                view_hash = int(hashlib.sha256(view.encode('utf-8')).hexdigest(), 16) % 10**8            
                 view_sub = 'view_sub-' + str(view_hash)                
                 self.r.set(view_sub, 1)
-                self.r.expire(view_sub, timedelta(seconds=subscription_time_delta))
+                self.r.expire(name = view_sub, time =subscription_seconds_timedelta)
 
                 return subscription_response
 
@@ -187,10 +186,9 @@ class RemoteIDOperations():
 
     def query_uss_for_rid(self, flights_dict, all_observations, subscription_id:str):
         
-        authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()
-        
+        authority_credentials = dss_rw_helper.AuthorityCredentialsGetter()        
         all_flights_urls_string = flights_dict['all_flights_url']        
-        # logging.info("Flight urls %s" % all_flights_urls_string)
+        logging.debug("Flight url list : %s" % all_flights_urls_string)
         all_flights_url = all_flights_urls_string.split()        
         for cur_flight_url in all_flights_url:
             try:
@@ -203,20 +201,16 @@ class RemoteIDOperations():
                 else:
                     audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
             
-            auth_credentials = authority_credentials.get_cached_credentials(audience)
-            
-            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials['access_token']}
-            
-            
+            auth_credentials = authority_credentials.get_cached_credentials(audience)            
+            headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials['access_token']}                        
             flights_request = requests.get(cur_flight_url, headers=headers)
+            
             if flights_request.status_code == 200:
                 # https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights/get
-                flights_response = flights_request.json()
-                
+                flights_response = flights_request.json()                
                 all_flights = flights_response['flights']
                 for flight in all_flights:
-                    flight_id = flight['id']
-                    
+                    flight_id = flight['id']                    
                     try: 
                         assert flight.get('current_state') is not None
                     except AssertionError as ae:
@@ -228,17 +222,14 @@ class RemoteIDOperations():
                         
                         recent_positions = flight['recent_positions'] if 'recent_positions' in flight.keys() else []                                       
                         
-                        flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state,"recent_positions":recent_positions}
-
-                        logger.info("Writing flight remote-id data..")
+                        flight_metadata = {'id':flight_id,"simulated": flight["simulated"],"aircraft_type":flight["aircraft_type"],'subscription_id':subscription_id, "current_state":flight_current_state,"recent_positions":recent_positions }
+                        # logger.info("Writing flight remote-id data..")
                         if {"lat", "lng", "alt"} <= position.keys():
                             # check if lat / lng / alt existis
                             single_observation = {"icao_address" : flight_id,"traffic_source" :1, "source_type" : 1, "lat_dd" : position['lat'], "lon_dd" : position['lng'], "altitude_mm" : position['alt'],'metadata':json.dumps(flight_metadata)}
                             # write incoming data directly
                             all_observations.add(single_observation)                               
-                            all_observations.trim(1000) 
-
-                            
+                            all_observations.trim(1000)                             
                         else: 
                             logger.error("Error in received flights data: %{url}s ".format(**flight)) 
                     

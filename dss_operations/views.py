@@ -55,6 +55,7 @@ class SubscriptionHelper():
         subscription_time_delta = 15        
         myDSSubscriber = dss_rw_helper.RemoteIDOperations()        
         subscription_response = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id, subscription_time_delta = subscription_time_delta)      
+        
         return subscription_response
 
 
@@ -176,14 +177,15 @@ def dss_isa_callback(request, subscription_id):
             'REDIS_PORT', 6379), decode_responses=True)
         # Get the flights URL from the DSS and put it in the flights_url
         flights_key = "all_uss_flights:" + subscription_id
-
-        subscirption_view_key = "sub-" + subscription_id
+        subscription_view_key = "sub-" + subscription_id        
 
         flights_dict = r.hgetall(flights_key)
         
-        subscription_view = r.get(subscirption_view_key)
-        all_flights_url = flights_dict['all_flights_url']
+        subscription_view = r.get(subscription_view_key)
+        
 
+        all_flights_url = flights_dict['all_flights_url']
+        logging.info(all_flights_url)
         for new_flight in service_areas:
             all_flights_url += new_flight['flights_url'] + \
                 '?view=' + subscription_view + " "
@@ -233,14 +235,11 @@ def get_display_data(request):
         # stream_id = hashlib.md5(view.encode('utf-8')).hexdigest()
         # create a subscription
         my_subscription_helper = SubscriptionHelper()
-        subscription_exists = my_subscription_helper.check_subscription_exists(view)
-        
-        
-
+        subscription_exists = my_subscription_helper.check_subscription_exists(view)        
         if not subscription_exists:
             logger.info("Creating Subscription..")
             subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
-            logger.info(subscription_response)
+            logger.debug(subscription_response)
 
         # TODO: Get existing flight details from subscription
         stream_ops = flight_stream_helper.StreamHelperOps()
@@ -263,15 +262,13 @@ def get_display_data(request):
             distinct_messages = []
         rid_flights = []
         
-        
         for all_observations_messages in distinct_messages:                   
             all_recent_positions = []
             recent_paths = []
             try:
                 observation_data = all_observations_messages['msg_data']                
             except KeyError as ke:
-                logger.error("Error in data in the stream %s" % ke)
-                
+                logger.error("Error in data in the stream %s" % ke)                
             else:
                 try:                
                     observation_metadata = observation_data['metadata']
@@ -294,7 +291,7 @@ def get_display_data(request):
 
             rid_flights.append(current_flight)
 
-
+        
         rid_display_data = RIDDisplayDataResponse(flights=rid_flights, clusters = [])
         
         rid_flights_dict = my_rid_output_helper.make_json_compatible(rid_display_data)
