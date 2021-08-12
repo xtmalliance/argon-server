@@ -1,4 +1,5 @@
-from typing import List, NamedTuple
+from typing import List, NamedTuple,Optional
+from uuid import uuid4
 
 
 class Position(NamedTuple):
@@ -9,7 +10,7 @@ class Position(NamedTuple):
 
 
 class RIDPositions(NamedTuple):
-    ''' A list of positions '''
+    ''' A list of positions for RID'''
     positions: List[Position]
 
 
@@ -27,3 +28,10 @@ class ClusterDetails(NamedTuple):
 class RIDDisplayDataResponse(NamedTuple):
     flights: List[RIDFlight]
     clusters: List[ClusterDetails]
+
+
+class SubscriptionResponse(NamedTuple):
+    ''' A object to hold details of a request for creation of subscription in the DSS '''
+    created: bool
+    subscription_id: Optional[uuid4]
+    notification_index: int

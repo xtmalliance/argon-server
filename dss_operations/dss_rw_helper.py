@@ -2,6 +2,7 @@
 ## For more information review: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml 
 ## and this diagram https://github.com/interuss/dss/blob/master/assets/generated/rid_display.png
 
+from dss_operations.rid_utils import SubscriptionResponse
 import json
 import redis
 import logging
@@ -82,8 +83,8 @@ class RemoteIDOperations():
     def create_dss_subscription(self, vertex_list:list, view:str, request_uuid, subscription_time_delta: int=30):
         ''' This method PUTS /dss/subscriptions ''' 
         
-        subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
-            
+        # subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
+        subscription_response = SubscriptionResponse(created=0, notification_index=0)
         my_authorization_helper = AuthorityCredentialsGetter()
         audience = env.get("DSS_SELF_AUDIENCE", 0)        
         error = None
@@ -127,7 +128,7 @@ class RemoteIDOperations():
             volume_object = {"spatial_volume":{"footprint":{"vertices":vertex_list},"altitude_lo":0.5,"altitude_hi":800},"time_start":current_time,"time_end":fifteen_seconds_from_now_isoformat }
             
             payload = {"extents": volume_object, "callbacks":{"identification_service_area_url":callback_url}}
-            
+
             try:
                 dss_r = requests.put(dss_subscription_url, json= payload, headers=headers)
             except Exception as re:
@@ -144,12 +145,12 @@ class RemoteIDOperations():
                 dss_response = dss_r.json()
                 
                 service_areas = dss_response['service_areas']
-                subscription = dss_response['subscription']
-                subscription_id = subscription['id']
-                notification_index = subscription['notification_index']
-                new_subscription_version = subscription['version']
-                subscription_response['notification_index'] = notification_index
-                subscription_response['subscription_id'] = subscription_id        
+                subscription_response = dss_response['subscription']
+                subscription_id = subscription_response['id']
+                notification_index = subscription_response['notification_index']
+                new_subscription_version = subscription_response['version']
+                subscription_response.notification_index = notification_index
+                subscription_response.subscription_id = subscription_id        
                 # logger.info("Succesfully created a DSS subscription ID %s" % subscription_id)
                 # iterate over the service areas to get flights URL to poll 
                 flights_url_list = ''

@@ -42,6 +42,9 @@ class SubscriptionHelper():
     A class to help with DSS subscriptions, check if a subscription exists or create a new one  
 
     """
+    def __init__(self):
+        
+        self.my_rid_output_helper = RIDOutputHelper()
 
     def check_subscription_exists(self, view) -> bool:
         r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379), decode_responses=True)
@@ -54,8 +57,8 @@ class SubscriptionHelper():
     def create_new_subscription(self, request_id, view:str, vertex_list:list):
         subscription_time_delta = 15        
         myDSSubscriber = dss_rw_helper.RemoteIDOperations()        
-        subscription_response = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id, subscription_time_delta = subscription_time_delta)      
-        
+        subscription_r = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id, subscription_time_delta = subscription_time_delta)      
+        subscription_response = self.my_rid_output_helper.make_json_compatible(subscription_r)
         return subscription_response
 
 
@@ -89,7 +92,8 @@ def check_view_port(view_port) -> bool:
 def create_dss_subscription(request, *args, **kwargs):
 
     ''' This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA '''
-
+    
+    my_rid_output_helper = RIDOutputHelper()
     try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
@@ -119,8 +123,8 @@ def create_dss_subscription(request, *args, **kwargs):
     request_id = str(uuid.uuid4())
     # TODO: Make this a asnyc call
     my_subscription_helper = SubscriptionHelper()
-    subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view=view)
-
+    subscription_r = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view=view)
+    subscription_response = my_rid_output_helper.make_json_compatible(subscription_r)
     if subscription_response['created']:
         msg = {"message": "DSS Subscription created", 'id': request_id, "subscription_response": subscription_response}
         status = 201
