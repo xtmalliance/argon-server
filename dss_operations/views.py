@@ -10,7 +10,7 @@ import uuid
 import shapely.geometry
 import uuid
 import redis
-from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, ClusterDetails
+from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse
 import hashlib
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
@@ -124,14 +124,16 @@ def create_dss_subscription(request, *args, **kwargs):
     # TODO: Make this a asnyc call
     my_subscription_helper = SubscriptionHelper()
     subscription_r = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view=view)
-    subscription_response = my_rid_output_helper.make_json_compatible(subscription_r)
-    if subscription_response['created']:
-        msg = {"message": "DSS Subscription created", 'id': request_id, "subscription_response": subscription_response}
+    
+    if subscription_r.created:
+        m = CreateSubscriptionResponse(message= "DSS Subscription created",id=request_id, dss_subscription_response= subscription_r)
+
         status = 201
     else:
-        msg = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
+        m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= subscription_r)
+        m = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         status = 400
-
+    msg = my_rid_output_helper.make_json_compatible(m)
     return HttpResponse(json.dumps(msg), status=status, content_type='application/json')
 
 

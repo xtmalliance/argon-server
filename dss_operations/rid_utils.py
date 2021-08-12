@@ -33,5 +33,11 @@ class RIDDisplayDataResponse(NamedTuple):
 class SubscriptionResponse(NamedTuple):
     ''' A object to hold details of a request for creation of subscription in the DSS '''
     created: bool
-    subscription_id: Optional[uuid4]
+    dss_subscription_id: Optional[uuid4]
     notification_index: int
+
+class CreateSubscriptionResponse(NamedTuple):
+    ''' Output of a request to create subscription '''
+    message: str
+    id: uuid4
+    dss_subscription_response: Optional[SubscriptionResponse]

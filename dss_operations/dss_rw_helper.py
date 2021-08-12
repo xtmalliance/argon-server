@@ -150,7 +150,7 @@ class RemoteIDOperations():
                 notification_index = subscription_response['notification_index']
                 new_subscription_version = subscription_response['version']
                 subscription_response.notification_index = notification_index
-                subscription_response.subscription_id = subscription_id        
+                subscription_response.dss_subscription_id = subscription_id        
                 # logger.info("Succesfully created a DSS subscription ID %s" % subscription_id)
                 # iterate over the service areas to get flights URL to poll 
                 flights_url_list = ''
