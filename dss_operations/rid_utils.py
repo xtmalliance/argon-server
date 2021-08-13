@@ -1,5 +1,6 @@
 from typing import List, NamedTuple,Optional
 from uuid import uuid4
+from dataclasses import dataclass
 
 
 class Position(NamedTuple):
@@ -30,7 +31,8 @@ class RIDDisplayDataResponse(NamedTuple):
     clusters: List[ClusterDetails]
 
 
-class SubscriptionResponse(NamedTuple):
+@dataclass
+class SubscriptionResponse():
     ''' A object to hold details of a request for creation of subscription in the DSS '''
     created: bool
     dss_subscription_id: Optional[uuid4]

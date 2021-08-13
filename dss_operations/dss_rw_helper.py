@@ -84,7 +84,8 @@ class RemoteIDOperations():
         ''' This method PUTS /dss/subscriptions ''' 
         
         # subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
-        subscription_response = SubscriptionResponse(created=0, notification_index=0)
+        subscription_response = SubscriptionResponse(created=0,dss_subscription_id = None, notification_index=0)
+         
         my_authorization_helper = AuthorityCredentialsGetter()
         audience = env.get("DSS_SELF_AUDIENCE", 0)        
         error = None
@@ -137,7 +138,7 @@ class RemoteIDOperations():
 
             try: 
                 assert dss_r.status_code == 200
-                subscription_response["created"] = 1
+                subscription_response.created = 1
             except AssertionError as ae:              
                 logger.error("Error in creating subscription in the DSS %s" % dss_r.text)
                 return subscription_response
@@ -145,10 +146,10 @@ class RemoteIDOperations():
                 dss_response = dss_r.json()
                 
                 service_areas = dss_response['service_areas']
-                subscription_response = dss_response['subscription']
-                subscription_id = subscription_response['id']
-                notification_index = subscription_response['notification_index']
-                new_subscription_version = subscription_response['version']
+                dss_subscription_details = dss_response['subscription']
+                subscription_id = dss_subscription_details['id']
+                notification_index = dss_subscription_details['notification_index']
+                new_subscription_version = dss_subscription_details['version']
                 subscription_response.notification_index = notification_index
                 subscription_response.dss_subscription_id = subscription_id        
                 # logger.info("Succesfully created a DSS subscription ID %s" % subscription_id)

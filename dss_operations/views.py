@@ -1,6 +1,6 @@
 from requests.adapters import HTTPResponse
 from auth_helper.utils import requires_scopes
-import json
+import dataclasses, json
 from pyproj import Geod
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
@@ -16,6 +16,9 @@ from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
+import time
+
+
 
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -34,6 +37,12 @@ class RIDOutputHelper():
             return [self.make_json_compatible(v) for v in struct]
         except TypeError:
             return struct
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if dataclasses.is_dataclass(o):
+                return dataclasses.asdict(o)
+            return super().default(o)
 
 
 
@@ -130,7 +139,7 @@ def create_dss_subscription(request, *args, **kwargs):
 
         status = 201
     else:
-        m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= subscription_r)
+        m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= dataclasses.asdict(subscription_r))
         m = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         status = 400
     msg = my_rid_output_helper.make_json_compatible(m)
@@ -156,6 +165,8 @@ def get_rid_data(request, subscription_id):
     if r.exists(sub_to_check):
         stored_subscription_details = "all_uss_flights:"+ subscription_id
         flights_dict = r.get(stored_subscription_details)
+        logger.info("Sleeping 2 seconds..")
+        time.sleep(2)
 
 
     if bool(flights_dict):
@@ -245,6 +256,10 @@ def get_display_data(request):
         if not subscription_exists:
             logger.info("Creating Subscription..")
             subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
+                
+            logger.info("Sleeping 2 seconds..")
+            time.sleep(2)
+
             logger.debug(subscription_response)
 
         # TODO: Get existing flight details from subscription
