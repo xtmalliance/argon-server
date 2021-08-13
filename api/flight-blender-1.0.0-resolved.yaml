@@ -27,13 +27,29 @@ paths:
         "200":
           description: "pong"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
 
   /dss/create_dss_subscription:
     put:
@@ -54,17 +70,36 @@ paths:
           required: true
 
       responses:
-                  
-        "201":
-          $ref: "#/components/schemas/SubscriptionCreated"
+        "200":
+          description: Subscription Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionCreated"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
         - dss
 
@@ -96,13 +131,29 @@ paths:
                 $ref: "#/components/schemas/FlightFeedJSON"
 
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
         - dss
 
@@ -132,16 +183,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetDisplayDataResponse'
           description: Details about the requested flight were retrieved successfully.
-        '404':
-          description: Requested flight was not found.          
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
         - rid-qualifier
 
@@ -228,13 +293,29 @@ paths:
         "201":
           description: "Airtraffic data added"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
         - air-traffic
   /flight_declaration_ops/flight_declaration:
@@ -270,13 +351,29 @@ paths:
               schema: 
                 $ref: "#/components/schemas/FlightDeclarationList"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
         - flight-declaration
 
@@ -298,19 +395,37 @@ paths:
           required: true
 
       responses:
-        "200":          
+
+        "200":      
+          description: Declaration successfully retrieved    
           content: 
             application/json:
               schema: 
                 $ref: "#/components/schemas/FlightDeclarationDetail"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
 
       tags:
         - flight-declaration
@@ -342,18 +457,35 @@ paths:
 
       responses:
         "200":
+          description: Review successfully submitted
           content: 
             application/json:
               schema: 
                 $ref: "#/components/schemas/FlightDeclarationDetail"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
 
       tags:
         - flight-declaration
@@ -384,15 +516,30 @@ paths:
                 id: 842bde46-6559-49af-8272-3da722a48a7d
                 message: "Flight Declaration submitted"
                 is_approved: 0
-                
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
 
       tags:
         - flight-declaration
@@ -416,17 +563,35 @@ paths:
 
       responses:
         "200":
-          $ref: "#/components/schemas/GeoFenceCreated"
-        "201":
-          $ref: "#/components/schemas/GeoFenceCreated"
+          description: Geofence successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoFenceCreated"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
 
       tags:
         - geo-fence
@@ -464,13 +629,29 @@ paths:
               schema: 
                 $ref: "#/components/schemas/GeoFenceGeoJSONList"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
       tags:
         - geo-fence
 
@@ -499,13 +680,29 @@ paths:
               schema: 
                 $ref: "#/components/schemas/GeoFenceDetails"
         "400":
-          $ref: "#/components/schemas/BadRequest400ErrorResponse"
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BadRequest400ErrorResponse"
         "401":
-          $ref: "#/components/schemas/Unauthorized401ErrorResponse"
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
         "403":
-          $ref: "#/components/schemas/Forbidden403ErrorResponse"
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Forbidden403ErrorResponse"
         "500":
-          $ref: "#/components/schemas/Standard500ErrorResponse"
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Standard500ErrorResponse"
 
       tags:
         - geo-fence
@@ -560,6 +757,26 @@ components:
           type: string
           format: uuid
           readOnly: true
+        dss_subscription_response:
+          type: object
+          properties:
+            created:
+              type: integer
+              format: uuid
+              readOnly: true
+            dss_subscription_id:
+              type: string
+              format: uuid
+              readOnly: true
+            notification_index:
+              type: integer
+              format: uuid
+              readOnly: true
+
+
+
+
+
 
 
     GeoFenceCreated:
