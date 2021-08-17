@@ -16,11 +16,11 @@ There are different modules that enable this:
 
 ## First steps / Get Started
 
-Normally a "Display Provider" is used in conjunction with a "Display Application". In this case Flight Blender output is directed to a Flight Spotlight instance. You can customize a application instance by choosing what kind of modules you want to support, you can pick any or all from the above.
+Normally a "Display Provider" is used in conjunction with a "Display Application". In this case Flight Blender output is directed to a Flight Spotlight instance. You can customize an application instance by choosing what kind of modules you want to support, you can pick any or all from the above.
 
 ## Openskies stack
 
-Flight tracking data can be submitted to Flight Spotlight by an Display provider like [Flight Blender](https://github.com/openskies-sh/flight-blender) via the accompying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below
+Flight tracking data can be submitted to Flight Spotlight by an Display provider like [Flight Blender](https://github.com/openskies-sh/flight-blender) via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below
 
 ![OpenskiesStack](images/openskies-stack.png)
 
