@@ -1,11 +1,10 @@
 # API to submit Geo fence into Spotlight -> for a non API call look at set_geo_fence_secured.py file in importers directory
 
-from functools import wraps
-import json
-import os
-from os import environ as env
 
-import redis, celery
+import json
+
+from os import environ as env
+import redis
 import geojson, requests
 from geojson import Polygon
 from datetime import datetime, timedelta
@@ -79,14 +78,15 @@ class GeoFenceUploader():
                     assert securl != ""
                 except AssertionError as ae: 
                     return {"message":"FLIGHT_SPOTLIGHT_URL not set in the environment"}
-                else:
-                    securl = env.get("FLIGHT_SPOTLIGHT_URL")+ '/set_geo_fence'
-                    try:
-                        response = requests.post(securl, data= payload, headers=headers)
-                        logging.debug(response.content)                
-                    except Exception as e:
-                        logging.error(e)
-                    else:            
-                        logging.debug("Uploaded Geofence")
-                        # print("Uploaded Geofence")                 
-                        return {"message":"Successfully uploaded Geofence"}   
+
+                securl = securl + '/set_geo_fence'
+
+                try:
+                    response = requests.post(securl, data= payload, headers=headers)
+                    logging.debug(response.content)                
+                except Exception as e:
+                    logging.error(e)
+                else:            
+                    logging.info("Uploaded Geofence")
+                    # print("Uploaded Geofence")                 
+                    return {"message":"Successfully uploaded Geofence"}   

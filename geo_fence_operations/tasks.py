@@ -1,6 +1,5 @@
 
 from celery.decorators import task
-from celery.utils.log import get_task_logger
 import logging
 from . import geo_fence_rw_helper
 
@@ -13,7 +12,7 @@ def write_geo_fence(geo_fence):
         assert 'error' not in gf_credentials # Credentials dictionary is populated
     except AssertionError as ae: 
         # Error in getting a Geofence credentials getting
-        logging.error('Error in getting Flight Declaration Token')
+        logging.error('Error in getting Geofence Token')
         logging.error(ae)
     else:
         my_uploader = geo_fence_rw_helper.GeoFenceUploader(credentials = gf_credentials)

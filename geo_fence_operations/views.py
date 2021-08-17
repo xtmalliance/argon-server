@@ -6,7 +6,7 @@ import json
 import arrow
 from rest_framework.decorators import api_view
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from .models import GeoFence
 from .tasks import write_geo_fence
 from shapely.geometry import asShape
@@ -69,10 +69,13 @@ def set_geo_fence(request):
         name = geo_json_fc[0]['properties']["name"]
     except KeyError as ke:
         name = "Standard Geofence"
-             
-    geo_f = GeoFence(raw_geo_fence = json.dumps(geo_json_fc),start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
+    raw_geo_fence = json.dumps(geo_json_fc)
+    geo_f = GeoFence(raw_geo_fence = raw_geo_fence,start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
     geo_f.save()
+
+    write_geo_fence.delay(geo_fence = raw_geo_fence)
     
+
     op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f.id)})
     return HttpResponse(op, status=200)
 
