@@ -13,8 +13,8 @@ class GeoFence(models.Model):
 
     raw_geo_fence = models.TextField()
 
-    upper_limit = models.DecimalField(max_digits=4, decimal_places=2)
-    lower_limit = models.DecimalField(max_digits=4, decimal_places=2)
+    upper_limit = models.DecimalField(max_digits=6, decimal_places=2)
+    lower_limit = models.DecimalField(max_digits=6, decimal_places=2)
 
     altitude_ref = models.IntegerField(choices=ALTITUDE_REF, default=0)
     

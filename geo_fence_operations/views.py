@@ -5,21 +5,18 @@ from auth_helper.utils import requires_scopes, BearerAuth
 import json
 import arrow
 from rest_framework.decorators import api_view
-import logging
+
 from django.http import HttpResponse, JsonResponse
 from .models import GeoFence
 from .tasks import write_geo_fence
 from shapely.geometry import asShape
 from shapely.ops import unary_union
-from django.http import Http404
+
 from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
-from django.utils import timezone
-from datetime import datetime, timedelta
-from datetime import date
-from django.utils.timezone import make_aware
 
+from decimal import Decimal
 
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
@@ -36,37 +33,48 @@ def set_geo_fence(request):
     except KeyError as ke: 
         msg = json.dumps({"message":"A geofence object is necessary in the body of the request"})        
         return HttpResponse(msg, status=400)    
-    else:    
-        gf = json.dumps(geo_json_fc)
-        # write_geo_fence.delay(gf)  # Send a job to the task queue
 
-        geo_json_fc = geo_fence
-        shp_features = []
-        for feature in geo_json_fc['features']:
-            shp_features.append(asShape(feature['geometry']))
-        combined_features = unary_union(shp_features)
-        bnd_tuple = combined_features.bounds
-        bounds = ''.join(['{:.7f}'.format(x) for x in bnd_tuple])
-        try:
-            s_time = geo_json_fc[0]['properties']["start_time"]
-        except KeyError as ke: 
-            start_time = arrow.now().isoformat()
-        else:
-            start_time = arrow.get(req["s_time"]).isoformat()
-        
-        try:
-            e_time = geo_json_fc[0]['properties']["end_time"]
-        except KeyError as ke:
-            end_time = arrow.now().shift(hours=1).isoformat()
-        else:            
-            end_time = arrow.get(e_time).isoformat()
-                  
-        
-        geo_f = GeoFence(raw_geo_fence = json.dumps(flight_declaration_data),start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
-        geo_f.save()
-        
-        op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f.id)})
-        return HttpResponse(op, status=200)
+    
+    shp_features = []
+    for feature in geo_json_fc['features']:
+        shp_features.append(asShape(feature['geometry']))
+    combined_features = unary_union(shp_features)
+    bnd_tuple = combined_features.bounds
+    bounds = ''.join(['{:.7f}'.format(x) for x in bnd_tuple])
+    try:
+        s_time = geo_json_fc[0]['properties']["start_time"]
+    except KeyError as ke: 
+        start_time = arrow.now().isoformat()
+    else:
+        start_time = arrow.get(s_time).isoformat()
+    
+    try:
+        e_time = geo_json_fc[0]['properties']["end_time"]
+    except KeyError as ke:
+        end_time = arrow.now().shift(hours=1).isoformat()
+    else:            
+        end_time = arrow.get(e_time).isoformat()
+
+    try:
+        upper_limit = Decimal(geo_json_fc[0]['properties']["upper_limit"])
+    except KeyError as ke: 
+        upper_limit = 500.00
+    
+    try:
+        lower_limit = Decimal(geo_json_fc[0]['properties']["upper_limit"])
+    except KeyError as ke:
+        lower_limit = 100.00
+             
+    try:
+        name = geo_json_fc[0]['properties']["name"]
+    except KeyError as ke:
+        name = "Standard Geofence"
+             
+    geo_f = GeoFence(raw_geo_fence = json.dumps(geo_json_fc),start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
+    geo_f.save()
+    
+    op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f.id)})
+    return HttpResponse(op, status=200)
 
 
 
