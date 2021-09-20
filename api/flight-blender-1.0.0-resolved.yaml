@@ -1367,3 +1367,17 @@ components:
         data:
           description: Authentication data in form specified by `format`.
           type: string          
+
+
+
+tags:
+  - name: dss
+    description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data
+  - name: rid-qualifier
+    description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these enpoints implement the Observation API as described by the test suite. 
+  - name: air-traffic
+    description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be intergrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display. Use these endpoints to submit air-traffic data.
+  - name: flight-declaration
+    description: Using tools like Flight Launchpad (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system. 
+  - name: geo-fence
+    description: You can submit geo-fences compliant with the ED-269 standard, use these operations into Flight Blender. 
