@@ -1,16 +1,17 @@
-from celery.decorators import task
+
+from celery import Celery
 import os, json
 import logging
 import time, datetime
 import requests
 from . import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
-
+from flight_blender.celery import app
 load_dotenv(find_dotenv())
 
 #### Airtraffic Endpoint
 
-@task(name='write_incoming_air_traffic_data')
+@app.task(name='write_incoming_air_traffic_data')
 def write_incoming_air_traffic_data(observation):         
     obs = json.loads(observation)    
     my_stream_ops = flight_stream_helper.StreamHelperOps()   
@@ -32,7 +33,7 @@ def write_incoming_air_traffic_data(observation):
 #     logger.info("Hello")
     
 # This method submits flight information to Spotlight
-@task(name='submit_flights_to_spotlight')
+@app.task(name='submit_flights_to_spotlight')
 def submit_flights_to_spotlight():
     # get existing consumer group
     my_cg_ops = flight_stream_helper.StreamHelperOps()

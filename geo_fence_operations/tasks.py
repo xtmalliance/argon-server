@@ -1,10 +1,9 @@
-
-from celery.decorators import task
+from flight_blender.celery import app
 import logging
 from . import geo_fence_rw_helper
 
 
-@task(name="write_geo_fence")
+@app.task(name="write_geo_fence")
 def write_geo_fence(geo_fence): 
     my_credentials = geo_fence_rw_helper.PassportCredentialsGetter()
     gf_credentials = my_credentials.get_cached_credentials()

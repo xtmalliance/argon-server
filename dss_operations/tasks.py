@@ -1,4 +1,4 @@
-from celery.decorators import task
+from flight_blender.celery import app
 import logging
 from . import dss_rw_helper
 import redis
@@ -7,14 +7,14 @@ from flight_feed_operations import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-@task(name='submit_dss_subscription')
+@app.task(name='submit_dss_subscription')
 def submit_dss_subscription(view , vertex_list, request_uuid):
     subscription_time_delta = 30
     myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
     subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = request_uuid,subscription_time_delta=subscription_time_delta)
     logging.success("Subscription creation status: %s" % subscription_created['created'])
 
-@task(name='poll_uss_for_flights_async')
+@app.task(name='poll_uss_for_flights_async')
 def poll_uss_for_flights_async():
     myDSSSubscriber = dss_rw_helper.RemoteIDOperations()
 
