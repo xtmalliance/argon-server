@@ -789,7 +789,7 @@ components:
           readOnly: true
         message:
           type: string
-          example: "Submitted Geofence"
+          example: "Geofence successfully created"
 
     Standard500ErrorResponse:
       description: An unexpected error occured.      
