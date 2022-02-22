@@ -51,7 +51,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
-  /dss/create_dss_subscription:
+  /rid/create_dss_subscription:
     put:
       summary: 'Create a Remote ID Subscription in the DSS'
       security:
@@ -104,7 +104,7 @@ paths:
       tags:
         - dss
 
-  /dss/get_rid_data/{subscription_id}:
+  /rid/get_rid_data/{subscription_id}:
     get:
       summary: 'Get flight data from network remote id given a subscription id'
       security:
@@ -156,7 +156,7 @@ paths:
       tags:
         - dss
 
-  /dss/display_data:
+  /rid/display_data:
     get:
       parameters:
         - in: path
@@ -207,7 +207,7 @@ paths:
       tags:
         - rid-qualifier
 
-  /dss/display_data/{flight_id}:
+  /rid/display_data/{flight_id}:
     summary: A remote ID flight reported by a remote ID service provider.
 
     get:

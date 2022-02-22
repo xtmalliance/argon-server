@@ -25,7 +25,8 @@ urlpatterns = [
     path('ping', flight_feed_views.ping),
     path('set_air_traffic', flight_feed_views.set_air_traffic),
 
-    path('dss/', include('dss_operations.urls')),    
+    path('rid/', include('dss_operations.urls')),    
+    path('scd/', include('scd_operations.urls')),    
 
     path('geo_fence_ops/', include('geo_fence_operations.urls')),    
     path('flight_declaration_ops/', include('flight_declaration_operations.urls')),
