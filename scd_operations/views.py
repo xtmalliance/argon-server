@@ -4,14 +4,24 @@ import json
 from rest_framework.response import Response
 from dataclasses import asdict
 from rest_framework.views import APIView
-from .data_definitions import FlightAuthorizationOperatorDataPayload, OperatorDataPayload, TestInjectionResult
+from .data_definitions import FlightAuthorizationOperatorDataPayload, OperatorDataPayload, TestInjectionResult,StatusResponse
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
+from django.http import JsonResponse
+import dataclasses
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-@api_view(['PUT'])
-def operator_auth_test(request):
-    return Response({"message":"OK"}, status = status.HTTP_200_OK)
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if dataclasses.is_dataclass(o):
+                return dataclasses.asdict(o)
+            return super().default(o)
+
+@api_view(['GET'])
+def ping(request):
+    status = StatusResponse(status="Ready")
+    return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
 
 
 class SCDAuthTest(APIView):
@@ -43,17 +53,17 @@ class SCDAuthTest(APIView):
             
         if not is_serial_number_valid:
             injection_response = asdict(rejected_test_injection_response)
-            return Response(json.loads(json.dumps(injection_response)), status = status.HTTP_403_FORBIDDEN)
+            return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_403_FORBIDDEN)
         
         if not is_reg_number_valid:            
             injection_response = asdict(rejected_test_injection_response)
-            return Response(json.loads(json.dumps(injection_response)), status = status.HTTP_403_FORBIDDEN)
+            return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_403_FORBIDDEN)
               
         try: 
             injection_response = asdict(planned_test_injection_response)            
-            return Response(json.loads(json.dumps(injection_response)), status = status.HTTP_200_OK)
+            return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
 
         except KeyError as ke:
             injection_response = asdict(failed_test_injection_response)            
-            return Response(json.loads(json.dumps(injection_response)), status = status.HTTP_400_BAD_REQUEST)
+            return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)
         

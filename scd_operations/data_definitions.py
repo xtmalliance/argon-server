@@ -106,6 +106,11 @@ class IDTechnology(str, enum.Enum):
     Network = 'network'
     Broadcast = 'broadcast'
 
+class StatusResponseEnum(str, enum.Enum):
+    ''' A enum to hold ID technologies for an operation '''
+    Starting = 'Starting'
+    Ready = 'Ready'
+
 @dataclass
 class FlightAuthorizationOperatorDataPayload:
     '''A class to hold information about Flight Authorization Test'''
@@ -131,3 +136,7 @@ class TestInjectionResult:
     result: Literal[TestInjectionResultState.Planned, TestInjectionResultState.Rejected, TestInjectionResultState.ConflictWithFlight,TestInjectionResultState.Failed]
     notes:str
     operational_intent_id: UUID
+
+@dataclass
+class StatusResponse:
+    status: Literal[StatusResponseEnum.Starting, StatusResponseEnum.Ready]
