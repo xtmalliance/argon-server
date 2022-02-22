@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-import uuid
+from uuid import UUID
 import enum
 import arrow
 from typing import List, Literal
@@ -93,10 +93,12 @@ class UASClass(str, enum.Enum):
     C3 = 'C3'
     C4 = 'C4'
 
-class TestResultState(str, enum.Enum):
+class TestInjectionResultState(str, enum.Enum):
     ''' A test is either pass or fail or could not be processed, currently not  '''
-    Pass = 'Pass'
-    Fail = 'Fail'
+    Planned = 'Planned'
+    Rejected = 'Rejected'
+    ConflictWithFlight = 'ConflictWithFlight'
+    Failed = 'Failed'
     
 
 class IDTechnology(str, enum.Enum):
@@ -125,7 +127,7 @@ class OperatorDataPayload:
 
 
 @dataclass
-class ExpectedTestResult:
-    ''' A class to hold result of a test '''
-    result: Literal[TestResultState.Pass, TestResultState.Fail]
-
+class TestInjectionResult: 
+    result: Literal[TestInjectionResultState.Planned, TestInjectionResultState.Rejected, TestInjectionResultState.ConflictWithFlight,TestInjectionResultState.Failed]
+    notes:str
+    operational_intent_id: UUID
