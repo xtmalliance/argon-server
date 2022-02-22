@@ -1,59 +1,59 @@
 ---
-openapi: "3.0.0"
+openapi: '3.0.0'
 info:
-  title: "Flight Blender API specification"
+  title: 'Flight Blender API specification'
   description: |-
     All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations. 
 
     Unless otherwise specified, fields specified in a message but not declared in the API shall be ignored.
-  version: "1.0.0"
+  version: '1.0.0'
 servers:
-  - url: "https://virtserver.swaggerhub.com/cygnus2936/flight-blender/1.0.0"
-    description: "Flight Blender API"
+  - url: 'https://virtserver.swaggerhub.com/cygnus2936/flight-blender/1.0.0'
+    description: 'Flight Blender API'
 security:
   - AuthFromPassport:
-      - "write"
-      - "read"
+      - 'write'
+      - 'read'
 
 paths:
   /ping:
     get:
-      summary: "Server heartbeat operation"
+      summary: 'Server heartbeat operation'
 
-      description: "This operation is a ping to check if the server is running "
+      description: 'This operation is a ping to check if the server is running '
 
       security: []
       responses:
-        "200":
-          description: "pong"
-        "400":
+        '200':
+          description: 'pong'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
 
   /dss/create_dss_subscription:
     put:
-      summary: "Create a Remote ID Subscription in the DSS"
+      summary: 'Create a Remote ID Subscription in the DSS'
       security:
         - AuthFromPassport: [write]
       description:
@@ -61,7 +61,8 @@ paths:
         \ get a appropriate token and create a subscription with a DSS, the DSS url needs to be confirmed / set as a part of Flight Blender setup. It will then poll flights through the Flights URLs provided by the DSS "
       parameters:
         - name: view
-          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box
+          description:
+            'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box
             bounded by the provided corner points.'
           schema:
             type: string
@@ -70,98 +71,95 @@ paths:
           required: true
 
       responses:
-        "200":
+        '200':
           description: Subscription Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SubscriptionCreated"
-        "400":
+                $ref: '#/components/schemas/SubscriptionCreated'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - dss
 
-
   /dss/get_rid_data/{subscription_id}:
-
     get:
-      summary: "Get flight data from network remote id given a subscription id"
+      summary: 'Get flight data from network remote id given a subscription id'
       security:
         - AuthFromPassport: [read]
       description:
         "By default flight blender sends flight data to Flight Spotlight as a scheduled job every x seconds (which can be configured) \
         \ in case you want to use a different polling mechanism, use this endpoint to get flights if you are using a polling mechanism for your display client"
       parameters:
-        - in: path 
+        - in: path
           name: subscription_id
           description: 'This is the ID of the subscription'
           schema:
             type: string
-            format: uuid            
+            format: uuid
           required: true
 
       responses:
-        "200":
+        '200':
           description: A list of aircraft observations
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FlightFeedJSON"
+                $ref: '#/components/schemas/FlightFeedJSON'
 
-        "400":
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - dss
 
   /dss/display_data:
-
     get:
       parameters:
-        - in: path 
+        - in: path
         - name: view_port
           description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
           schema:
@@ -170,53 +168,51 @@ paths:
           in: query
           required: true
 
-      summary: "Get remote id data for a given view bounding box"
+      summary: 'Get remote id data for a given view bounding box'
       security:
         - AuthFromPassport: [read]
-      description:
-        "This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application. It follows the specification in the [Airtraffic Data Protocol](https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#traffic-source-and-mandatory-fields)."
+      description: 'This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application. It follows the specification in the [Airtraffic Data Protocol](https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#traffic-source-and-mandatory-fields).'
 
-      responses:        
+      responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetDisplayDataResponse'
           description: Details about the requested flight were retrieved successfully.
-        "400":
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - rid-qualifier
 
   /dss/display_data/{flight_id}:
     summary: A remote ID flight reported by a remote ID service provider.
 
-  
     get:
       tags:
-      - rid-qualifier
+        - rid-qualifier
 
       responses:
         200:
@@ -236,14 +232,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
-          description: Bearer access token was not provided in Authorization header,
+          description:
+            Bearer access token was not provided in Authorization header,
             token could not be decoded, or token was invalid.
         403:
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
-          description: The access token was decoded successfully but did not include
+          description:
+            The access token was decoded successfully but did not include
             a scope appropriate to this endpoint.
         404:
           content:
@@ -252,25 +250,27 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
           description: The requested flight could not be found.
       security:
-      - AuthFromAuthorizationAuthority:
-        - dss.read.identification_service_areas
+        - AuthFromAuthorizationAuthority:
+            - dss.read.identification_service_areas
       summary: Get flight details
-      description: Retrieve details of a flight from a remote ID service provider
+      description:
+        Retrieve details of a flight from a remote ID service provider
         to meet remote ID requirements.
     parameters:
-    - name: flight_id
-      description: Remote ID flight ID for this flight; may be obtained in general
-        /flights query.
-      schema:
-        $ref: '#/components/schemas/RIDFlightID'
-      in: path
-      required: true
+      - name: flight_id
+        description:
+          Remote ID flight ID for this flight; may be obtained in general
+          /flights query.
+        schema:
+          $ref: '#/components/schemas/RIDFlightID'
+        in: path
+        required: true
     tags:
-        - rid-qualifier
+      - rid-qualifier
 
   /set_air_traffic:
     put:
-      summary: "Add Airtraffic observation"
+      summary: 'Add Airtraffic observation'
       security:
         - AuthFromPassport: [write]
       description:
@@ -285,48 +285,46 @@ paths:
               type: object
               properties:
                 observations:
-                  $ref: "#/components/schemas/ArrayOfObservations"
+                  $ref: '#/components/schemas/ArrayOfObservations'
 
       responses:
-        "200":
-          description: "OK"
-        "201":
-          description: "Airtraffic data added"
-        "400":
+        '200':
+          description: 'OK'
+        '201':
+          description: 'Airtraffic data added'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - air-traffic
   /flight_declaration_ops/flight_declaration:
-    
     get:
-      summary: "Get a list of all submitted flight declarations"
+      summary: 'Get a list of all submitted flight declarations'
       security:
         - AuthFromPassport: [read]
-      description:
-        "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
-        
+      description: "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
+
       parameters:
         - name: start_date
           in: query
@@ -343,108 +341,102 @@ paths:
           description: >
             The end date for the report. Must be used together with `start_date`.
       responses:
-
-        "200":
+        '200':
           description: Get a list of declared operations, `start_date`+`end_date` are optional, by default declared operations for the past month are displayed.
-          content: 
+          content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/FlightDeclarationList"
-        "400":
+              schema:
+                $ref: '#/components/schemas/FlightDeclarationList'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - flight-declaration
 
   /flight_declaration_ops/flight_declaration/{flight_declaration_id}:
-    
     get:
-      summary: "Get the details of a single flight declaration"
+      summary: 'Get the details of a single flight declaration'
       security:
         - AuthFromPassport: [read]
-      description:
-        "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
+      description: "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
       parameters:
-        - in: path 
+        - in: path
           name: flight_declaration_id
           description: 'This is the ID of the flight declaration'
           schema:
             type: string
-            format: uuid            
+            format: uuid
           required: true
 
       responses:
-
-        "200":      
-          description: Declaration successfully retrieved    
-          content: 
+        '200':
+          description: Declaration successfully retrieved
+          content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/FlightDeclarationDetail"
-        "400":
+              schema:
+                $ref: '#/components/schemas/FlightDeclarationDetail'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
         - flight-declaration
 
   /flight_declaration_ops/flight_declaration_review/{flight_declaration_id}:
-    
     put:
-      summary: "Approve / Reject a flight declaration"
+      summary: 'Approve / Reject a flight declaration'
       security:
         - AuthFromPassport: [read]
-      description:
-        "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point to change the status of operation"
+      description: "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point to change the status of operation"
       parameters:
-        - in: path 
+        - in: path
           name: flight_declaration_id
           description: 'This is the ID of the flight declaration'
           schema:
             type: string
-            format: uuid            
+            format: uuid
           required: true
 
       requestBody:
@@ -453,46 +445,46 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApproveRejectDeclaration'          
+              $ref: '#/components/schemas/ApproveRejectDeclaration'
 
       responses:
-        "200":
+        '200':
           description: Review successfully submitted
-          content: 
+          content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/FlightDeclarationDetail"
-        "400":
+              schema:
+                $ref: '#/components/schemas/FlightDeclarationDetail'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
         - flight-declaration
 
   /flight_declaration_ops/set_flight_declaration:
     put:
-      summary: "Add a Flight Declaration"
+      summary: 'Add a Flight Declaration'
       description: "Submit a Flight Declaration into Flight Blender  \
         \ A flight declaration can be upto 24 hours in advance and follows the Flight Declaration format etc."
       security:
@@ -503,51 +495,50 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FlightDeclarationJSON"
+              $ref: '#/components/schemas/FlightDeclarationJSON'
 
       responses:
-        "200":
+        '200':
           description: A flight declaration created notification
-          content: 
+          content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/FlightDeclarationCreated"
-              example: 
+              schema:
+                $ref: '#/components/schemas/FlightDeclarationCreated'
+              example:
                 id: 842bde46-6559-49af-8272-3da722a48a7d
-                message: "Flight Declaration submitted"
+                message: 'Flight Declaration submitted'
                 is_approved: 0
-        "400":
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
         - flight-declaration
 
-
   /geo_fence_ops/set_geo_fence:
     put:
-      summary: "Add a Geofence"
+      summary: 'Add a Geofence'
       security:
         - AuthFromPassport: [write]
       description:
@@ -559,52 +550,50 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GeoFenceGeoJSON"
+              $ref: '#/components/schemas/GeoFenceGeoJSON'
 
       responses:
-        "200":
+        '200':
           description: Geofence successfully created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GeoFenceCreated"
-        "400":
+                $ref: '#/components/schemas/GeoFenceCreated'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
         - geo-fence
-        
+
   /geo_fence_ops/geo_fence:
-    
     get:
-      summary: "Get a list of all submitted Geofence"
+      summary: 'Get a list of all submitted Geofence'
       security:
         - AuthFromPassport: [read]
-      description:
-        "By default all geo fence submitted in Flight Blender have a start and end date, if none is provided, the server will default to today as start and end date"
-        
+      description: 'By default all geo fence submitted in Flight Blender have a start and end date, if none is provided, the server will default to today as start and end date'
+
       parameters:
         - name: start_date
           in: query
@@ -621,88 +610,85 @@ paths:
           description: >
             The end date for the report. Must be used together with `start_date`.
       responses:
-
-        "200":
+        '200':
           description: Get a list of submitted geo fence, `start_date`+`end_date` are optional, by default geo fences for today displayed.
-          content: 
+          content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/GeoFenceGeoJSONList"
-        "400":
+              schema:
+                $ref: '#/components/schemas/GeoFenceGeoJSONList'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - geo-fence
 
   /geo_fence_ops/geo_fence/{geo_fence_id}:
-    
     get:
-      summary: "Get the details of a single geo fence"
+      summary: 'Get the details of a single geo fence'
       security:
         - AuthFromPassport: [read]
-      description:
-        "Show details of a geofence as stored in the database"
+      description: 'Show details of a geofence as stored in the database'
       parameters:
-        - in: path 
+        - in: path
           name: geo_fence_id
           description: 'This is the ID of the geo fence'
           schema:
             type: string
-            format: uuid            
+            format: uuid
           required: true
 
       responses:
-        "200":
+        '200':
           description: 'Details of all Geofences in the database'
-          content: 
+          content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/GeoFenceDetails"
-        "400":
+              schema:
+                $ref: '#/components/schemas/GeoFenceDetails'
+        '400':
           description: Bad request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BadRequest400ErrorResponse"
-        "401":
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
           description: Un-authorized request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Unauthorized401ErrorResponse"
-        "403":
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
           description: Forbidden request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Forbidden403ErrorResponse"
-        "500":
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Standard500ErrorResponse"
+                $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
         - geo-fence
@@ -713,21 +699,17 @@ components:
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: "http://id.openskies.sh/oauth/token"
+          tokenUrl: 'http://id.openskies.sh/oauth/token'
           scopes:
-            blender.write: "Write data into Flight Blender"
-            blender.read: "Read data into Flight Blender"
-
+            blender.write: 'Write data into Flight Blender'
+            blender.read: 'Read data into Flight Blender'
 
   schemas:
-
-
-  
     ApproveRejectDeclaration:
       description: A flight declaration approved / created
       type: object
       properties:
-        is_approved: 
+        is_approved:
           type: boolean
           example: 1
 
@@ -741,15 +723,15 @@ components:
           readOnly: true
         message:
           type: string
-          example: "Submitted Flight Declaration"
-        is_approved: 
+          example: 'Submitted Flight Declaration'
+        is_approved:
           type: boolean
           example: 1
 
     SubscriptionCreated:
       description: A subscription in the DSS for the area has been created
       type: object
-      properties: 
+      properties:
         message:
           type: string
           example: DSS Subscription created
@@ -773,12 +755,6 @@ components:
               format: uuid
               readOnly: true
 
-
-
-
-
-
-
     GeoFenceCreated:
       description: A Geofence has been created
       type: object
@@ -789,29 +765,29 @@ components:
           readOnly: true
         message:
           type: string
-          example: "Geofence successfully created"
+          example: 'Geofence successfully created'
 
     Standard500ErrorResponse:
-      description: An unexpected error occured.      
-      $ref: "#/components/schemas/Error"
+      description: An unexpected error occured.
+      $ref: '#/components/schemas/Error'
 
     BadRequest400ErrorResponse:
       description: The JSON is not valid
-      
-      $ref: "#/components/schemas/Error"
+
+      $ref: '#/components/schemas/Error'
 
     Unauthorized401ErrorResponse:
       description: The request requires an user authentication
-      
-      $ref: "#/components/schemas/Error"
+
+      $ref: '#/components/schemas/Error'
 
     Forbidden403ErrorResponse:
       description: the access is not allowed
-      
-      $ref: "#/components/schemas/Error"
-    
+
+      $ref: '#/components/schemas/Error'
+
     FlightFeedJSON:
-      type: object  
+      type: object
       properties:
         observations:
           type: array
@@ -823,7 +799,7 @@ components:
       items:
         $ref: '#/components/schemas/FlightDeclarationDetail'
 
-    FlightDeclarationDetail: 
+    FlightDeclarationDetail:
       type: object
       properties:
         id:
@@ -838,7 +814,7 @@ components:
         end_datetime:
           type: string
           format: date-time
-        gutma_flight_declaration: 
+        gutma_flight_declaration:
           type: object
           $ref: '#/components/schemas/FlightDeclarationJSON'
 
@@ -846,12 +822,12 @@ components:
       type: object
       required:
         - flight_declaration
-      properties:      
+      properties:
         operation_mode:
           type: string
-          enum: [vlos,bvlos]      
+          enum: [vlos, bvlos]
         operator_name:
-          type: string          
+          type: string
         exchange_type:
           type: string
           enum:
@@ -872,7 +848,7 @@ components:
             parts:
               type: array
               items:
-                $ref: "#/components/schemas/FlightDeclarationFeatureGeoJSON"
+                $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
 
     FlightDeclarationFeatureGeoJSON:
       type: object
@@ -886,7 +862,7 @@ components:
           enum:
             - Feature
         geometry:
-          $ref: "#/components/schemas/FlightDeclarationGeometryGeoJSON"
+          $ref: '#/components/schemas/FlightDeclarationGeometryGeoJSON'
 
         properties:
           type: object
@@ -905,7 +881,7 @@ components:
                 datum:
                   type: string
                   enum:
-                    - "WGS84"
+                    - 'WGS84'
             min_altitude:
               type: object
               properties:
@@ -914,7 +890,7 @@ components:
                 datum:
                   type: string
                   enum:
-                    - "WGS84"
+                    - 'WGS84'
 
           nullable: true
         id:
@@ -953,9 +929,9 @@ components:
       type: object
       properties:
         lng:
-          $ref: "#/components/schemas/Longitude"
+          $ref: '#/components/schemas/Longitude'
         lat:
-          $ref: "#/components/schemas/Latitude"
+          $ref: '#/components/schemas/Latitude'
 
     GeoPolygon:
       description: |-
@@ -973,9 +949,8 @@ components:
           minItems: 3
           type: array
           items:
-            $ref: "#/components/schemas/LatLngPoint"
+            $ref: '#/components/schemas/LatLngPoint'
 
-            
     Volume3D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
       description:
         A three-dimensional geographic volume consisting of a vertically-extruded
@@ -986,15 +961,15 @@ components:
       properties:
         footprint:
           anyOf:
-            - $ref: "#/components/schemas/GeoPolygon"
+            - $ref: '#/components/schemas/GeoPolygon'
           description: Projection of this volume onto the earth's surface.
         altitude_lo:
           anyOf:
-            - $ref: "#/components/schemas/Altitude"
+            - $ref: '#/components/schemas/Altitude'
           description: Minimum bounding altitude of this volume.
         altitude_hi:
           anyOf:
-            - $ref: "#/components/schemas/Altitude"
+            - $ref: '#/components/schemas/Altitude'
           description: Maximum bounding altitude of this volume.
 
     Altitude:
@@ -1011,7 +986,7 @@ components:
       properties:
         spatial_volume:
           anyOf:
-            - $ref: "#/components/schemas/Volume3D"
+            - $ref: '#/components/schemas/Volume3D'
           description: Constant spatial extent of this volume.
         time_start:
           format: date-time
@@ -1037,7 +1012,7 @@ components:
         features:
           type: array
           items:
-            $ref: "#/components/schemas/GeoFenceFeatures"
+            $ref: '#/components/schemas/GeoFenceFeatures'
 
     GeoFenceDetails:
       type: object
@@ -1046,15 +1021,15 @@ components:
           type: string
           format: uuid
           readOnly: true
-        raw_geo_fence:                    
-            type: object
-            $ref: "#/components/schemas/GeoFenceGeoJSON"
+        raw_geo_fence:
+          type: object
+          $ref: '#/components/schemas/GeoFenceGeoJSON'
         upper_limit:
           type: number
-          multipleOf: 0.01  
+          multipleOf: 0.01
         lower_limit:
           type: number
-          multipleOf: 0.01  
+          multipleOf: 0.01
         name:
           type: string
         bounds:
@@ -1099,7 +1074,7 @@ components:
           enum:
             - Feature
         geometry:
-          $ref: "#/components/schemas/GeoFenceGeometryGeoJSON"
+          $ref: '#/components/schemas/GeoFenceGeometryGeoJSON'
 
         properties:
           type: object
@@ -1132,7 +1107,7 @@ components:
         coordinates:
           type: array
           items:
-            $ref: "#/components/schemas/Point2D"
+            $ref: '#/components/schemas/Point2D'
     GeoFenceGeometryGeoJSON:
       type: object
       required:
@@ -1147,9 +1122,8 @@ components:
         coordinates:
           type: array
           items:
-            $ref: "#/components/schemas/Point2D"
+            $ref: '#/components/schemas/Point2D'
 
-    
     Error:
       required:
         - code
@@ -1192,15 +1166,15 @@ components:
             type: object
 
     GetDisplayDataResponse:
-      description: Response to a request for current data that would be visualized by a Display Application. 
+      description: Response to a request for current data that would be visualized by a Display Application.
       type: object
       properties:
         flights:
           description: Current information for set of discovered flights whose precise locations are known.
-          
+
           type: array
           $ref: '#/components/schemas/Flight'
-          
+
         clusters:
           description: >-
             Current information for sets of discovered flights whose precise locations are not
@@ -1304,21 +1278,23 @@ components:
       example: uss1.JA6kHYCcByQ-6AfU
 
     GetFlightDetailsResponse:
-      description: Response to remote ID provider query for details about a specific
+      description:
+        Response to remote ID provider query for details about a specific
         flight.
       required:
-      - details
+        - details
       type: object
       properties:
         details:
           $ref: '#/components/schemas/RIDFlightDetails'
 
     RIDFlightDetails:
-      description: Details about a flight reported by a remote ID service provider.  At
+      description:
+        Details about a flight reported by a remote ID service provider.  At
         least one of the registration or serial fields must be filled if required
         by CAA.
       required:
-      - id
+        - id
       type: object
       properties:
         id:
@@ -1326,39 +1302,44 @@ components:
           type: string
           example: a3423b-213401-0023
         operator_id:
-          description: 'CAA-issued registration/license ID for the remote pilot or
+          description:
+            'CAA-issued registration/license ID for the remote pilot or
             operator. '
           type: string
         operator_location:
           anyOf:
-          - $ref: '#/components/schemas/LatLngPoint'
+            - $ref: '#/components/schemas/LatLngPoint'
           description: Location of party controlling the aircraft.
         operation_description:
-          description: Free-text field that enables the operator to describe the purpose
+          description:
+            Free-text field that enables the operator to describe the purpose
             of a flight, if so desired.
           type: string
-          example: SafeFlightDrone company doing survey with DJI Inspire 2. See my
+          example:
+            SafeFlightDrone company doing survey with DJI Inspire 2. See my
             privacy policy www.example.com/privacy.
         auth_data:
           $ref: '#/components/schemas/RIDAuthData'
         serial_number:
-          description: Can be specified when no registration ID exists and required
+          description:
+            Can be specified when no registration ID exists and required
             by law in a region. This is expressed in the ANSI/CTA-2063-A Physical Serial
             Number format.
           type: string
           example: INTCJ123-4567-890
         registration_number:
-          description: If a CAA provides a method of registering UAS, this number
+          description:
+            If a CAA provides a method of registering UAS, this number
             is provided by the CAA or its authorized representative.  Required when
             required by law in a region.
           type: string
-          example: FA12345897  
+          example: FA12345897
 
     RIDAuthData:
       description: Additional authentication data.
       required:
-      - format
-      - data
+        - format
+        - data
       type: object
       properties:
         format:
@@ -1366,18 +1347,16 @@ components:
           type: string
         data:
           description: Authentication data in form specified by `format`.
-          type: string          
-
-
+          type: string
 
 tags:
   - name: dss
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data
   - name: rid-qualifier
-    description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these enpoints implement the Observation API as described by the test suite. 
+    description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these enpoints implement the Observation API as described by the test suite.
   - name: air-traffic
     description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be intergrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display. Use these endpoints to submit air-traffic data.
   - name: flight-declaration
-    description: Using tools like Flight Launchpad (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system. 
+    description: Using tools like Flight Launchpad (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system.
   - name: geo-fence
-    description: You can submit geo-fences compliant with the ED-269 standard, use these operations into Flight Blender. 
+    description: You can submit geo-fences compliant with the ED-269 standard, use these operations into Flight Blender.
