@@ -2,13 +2,13 @@
 ## For more information review: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml 
 ## and this diagram https://github.com/interuss/dss/blob/master/assets/generated/rid_display.png
 
-from dss_operations.rid_utils import SubscriptionResponse
+from rid_operations.rid_utils import SubscriptionResponse
 import json
 import redis
 import logging
 from datetime import datetime, timedelta
 import uuid
-from dss_operations import dss_rw_helper
+from rid_operations import dss_rw_helper
 
 logger = logging.getLogger('django')
 

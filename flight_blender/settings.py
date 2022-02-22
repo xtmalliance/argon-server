@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'geo_fence_operations',
     'scd_operations',
     'flight_feed_operations',
-    'dss_operations'
+    'rid_operations'
 ]
 
 MIDDLEWARE = [

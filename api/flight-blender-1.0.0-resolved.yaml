@@ -102,7 +102,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
-        - dss
+        - rid
 
   /rid/get_rid_data/{subscription_id}:
     get:
@@ -154,7 +154,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
-        - dss
+        - rid
 
   /rid/display_data:
     get:
@@ -1350,7 +1350,7 @@ components:
           type: string
 
 tags:
-  - name: dss
+  - name: rid
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data
   - name: rid-qualifier
     description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these enpoints implement the Observation API as described by the test suite.
