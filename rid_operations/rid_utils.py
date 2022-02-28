@@ -1,5 +1,5 @@
 from typing import List, NamedTuple,Optional
-from uuid import uuid4
+import uuid
 from dataclasses import dataclass
 
 
@@ -35,11 +35,11 @@ class RIDDisplayDataResponse(NamedTuple):
 class SubscriptionResponse():
     ''' A object to hold details of a request for creation of subscription in the DSS '''
     created: bool
-    dss_subscription_id: Optional[uuid4]
+    dss_subscription_id: Optional[uuid.uuid4]
     notification_index: int
 
 class CreateSubscriptionResponse(NamedTuple):
     ''' Output of a request to create subscription '''
     message: str
-    id: uuid4
+    id: uuid.uuid4
     dss_subscription_response: Optional[SubscriptionResponse]

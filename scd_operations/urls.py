@@ -1,8 +1,8 @@
 
-from django.urls import path
+from django.urls import path, re_path
 from . import views as scd_auth_views
 
 urlpatterns = [
-    path('v1/flights/(?P<flight_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', scd_auth_views.SCDAuthTest.as_view()),    
-    path('v1/status', scd_auth_views.SCDTestStatus.as_view()),    
+    re_path('v1/flights/(?P<flight_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', scd_auth_views.SCDAuthTest),    
+    path('v1/status', scd_auth_views.SCDTestStatus),    
 ]

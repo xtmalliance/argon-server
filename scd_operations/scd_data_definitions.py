@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from uuid import UUID
+from uuid import uuid4
 import enum
 import arrow
-from typing import List, Literal
-
+from typing import List, Literal, Optional
 
 class StringBasedDateTime(str):
   """String that only allows values which describe a datetime."""
@@ -15,7 +14,6 @@ class StringBasedDateTime(str):
     str_value = str.__new__(cls, arrow.get(t).to('UTC').format('YYYY-MM-DDTHH:mm:ss.SSSSSS') + 'Z')
     str_value.datetime = t
     return str_value
-
 
 @dataclass
 class LatLngPoint:
@@ -29,6 +27,17 @@ class Radius:
     value: float
     units:str
 
+@dataclass
+class Time:
+    ''' A class to hold time objects'''
+    format: str
+    value: StringBasedDateTime
+
+@dataclass
+class Radius:
+    ''' A class to hold the radius object '''
+    value: float
+    units:str
 
 @dataclass
 class Polygon:
@@ -48,11 +57,10 @@ class Altitude:
     reference:str
     units: str
 
-
 @dataclass
 class OperationalIntentReference:
     """Class for keeping track of an operational intent reference"""
-    id: uuid.uuid4()
+    id: uuid4
 
 @dataclass
 class Volume3D:
@@ -62,6 +70,12 @@ class Volume3D:
     altitude_lower: Altitude
     altitude_upper: Altitude
 
+class OperationalIntentState(str, enum.Enum):
+    ''' A test is either pass or fail or could not be processed, currently not  '''
+    Accepted = 'Accepted'
+    Activated = 'Activated'
+    Nonconforming = 'Nonconforming'
+    Contingent = 'Contingent'
 
 @dataclass
 class Volume4D:
@@ -71,19 +85,17 @@ class Volume4D:
     time_end: StringBasedDateTime
 
 @dataclass
-class OperationalIntentDetails:
-    """Class for keeping track of an operational intent reference"""
+class OperationalIntentTestInjection:
+    """Class for keeping track of an operational intent test injections"""
     volumes: List[Volume4D]
     priority: int
-
-
-
+    off_nomial_volumes: Optional[List[Volume4D]]
+    state: Literal[OperationalIntentState.Accepted,OperationalIntentState.Activated,OperationalIntentState.Nonconforming,OperationalIntentState.Contingent]
 
 class OperationCategory(str, enum.Enum):
     ''' A enum to hold all categories of an operation '''
     Vlos = 'vlos'
     Bvlos = 'bvlos'
-
 
 class UASClass(str, enum.Enum):
     ''' A enum to hold all UAS Classes '''
@@ -100,7 +112,6 @@ class TestInjectionResultState(str, enum.Enum):
     ConflictWithFlight = 'ConflictWithFlight'
     Failed = 'Failed'
     
-
 class IDTechnology(str, enum.Enum):
     ''' A enum to hold ID technologies for an operation '''
     Network = 'network'
@@ -111,8 +122,13 @@ class StatusResponseEnum(str, enum.Enum):
     Starting = 'Starting'
     Ready = 'Ready'
 
+class DeleteFlightStatusResponseEnum(str, enum.Enum):
+    ''' A enum to hold ID technologies for an operation '''
+    Closed = 'Closed'
+    Failed = 'Failed'
+
 @dataclass
-class FlightAuthorizationOperatorDataPayload:
+class FlightAuthorizationDataPayload:
     '''A class to hold information about Flight Authorization Test'''
     uas_serial_number: str
     operation_mode: Literal[OperationCategory.Vlos, OperationCategory.Bvlos]
@@ -126,17 +142,23 @@ class FlightAuthorizationOperatorDataPayload:
     emergency_procedure_url: str
     operator_id: str
 @dataclass
-class OperatorDataPayload:
-    priority: int
-    flight_authorisation: FlightAuthorizationOperatorDataPayload
+class SCDTestInjectionDataPayload:
+    operational_intent: OperationalIntentTestInjection
+    flight_authorisation: FlightAuthorizationDataPayload
 
 
 @dataclass
 class TestInjectionResult: 
     result: Literal[TestInjectionResultState.Planned, TestInjectionResultState.Rejected, TestInjectionResultState.ConflictWithFlight,TestInjectionResultState.Failed]
     notes:str
-    operational_intent_id: UUID
+    operational_intent_id: uuid4
 
 @dataclass
 class StatusResponse:
     status: Literal[StatusResponseEnum.Starting, StatusResponseEnum.Ready]
+
+@dataclass
+class DeleteFlightResponse:
+    ''' Delete flight status response'''
+    result: Literal[DeleteFlightStatusResponseEnum.Failed, DeleteFlightStatusResponseEnum.Closed]
+    notes: str
