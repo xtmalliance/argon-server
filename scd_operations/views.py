@@ -4,7 +4,7 @@ import json
 from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict
-from .scd_data_definitions import FlightAuthorizationOperatorDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection
+from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
 import dataclasses
@@ -35,7 +35,7 @@ def SCDAuthTest(request, flight_id):
         scd_test_data = request.data        
         try:
             flight_authorization_data = scd_test_data['flight_authorisation']
-            f_a = FlightAuthorizationOperatorDataPayload(uas_serial_number = flight_authorization_data['uas_serial_number'],operation_category = flight_authorization_data['operation_category'], operation_mode = flight_authorization_data['operation_mode'], uas_class = flight_authorization_data['uas_class'], identification_technologies = flight_authorization_data['identification_technologies'],connectivity_methods = flight_authorization_data['connectivity_methods'],  endurance_minutes = flight_authorization_data['endurance_minutes'], emergency_procedure_url = flight_authorization_data['emergency_procedure_url'],operator_id = flight_authorization_data['operator_id'])
+            f_a = FlightAuthorizationDataPayload(uas_serial_number = flight_authorization_data['uas_serial_number'],operation_category = flight_authorization_data['operation_category'], operation_mode = flight_authorization_data['operation_mode'], uas_class = flight_authorization_data['uas_class'], identification_technologies = flight_authorization_data['identification_technologies'],connectivity_methods = flight_authorization_data['connectivity_methods'],  endurance_minutes = flight_authorization_data['endurance_minutes'], emergency_procedure_url = flight_authorization_data['emergency_procedure_url'],operator_id = flight_authorization_data['operator_id'])
 
             operational_intent = scd_test_data['operational_intent']
             operational_intent_volumes = operational_intent['volumes']
