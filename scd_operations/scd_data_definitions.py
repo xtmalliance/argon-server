@@ -4,6 +4,7 @@ import enum
 import arrow
 from typing import List, Literal, Optional
 
+
 class StringBasedDateTime(str):
   """String that only allows values which describe a datetime."""
   def __new__(cls, value):
@@ -89,7 +90,7 @@ class OperationalIntentTestInjection:
     """Class for keeping track of an operational intent test injections"""
     volumes: List[Volume4D]
     priority: int
-    off_nomial_volumes: Optional[List[Volume4D]]
+    off_nominal_volumes: Optional[List[Volume4D]]
     state: Literal[OperationalIntentState.Accepted,OperationalIntentState.Activated,OperationalIntentState.Nonconforming,OperationalIntentState.Contingent]
 
 class OperationCategory(str, enum.Enum):
@@ -162,3 +163,24 @@ class DeleteFlightResponse:
     ''' Delete flight status response'''
     result: Literal[DeleteFlightStatusResponseEnum.Failed, DeleteFlightStatusResponseEnum.Closed]
     notes: str
+
+@dataclass 
+class ClearAreaResponse:
+    ''' Response after clearing flights in an area '''
+    success: bool
+    message: str
+    timestamp: StringBasedDateTime
+
+@dataclass 
+class ClearAreaRequestData:
+    ''' Request to clear flights in an area '''
+    request_id: uuid4
+    extent: Volume4D
+
+class OperationalIntentReference: 
+    ''' A operational intent reference for the DSS '''
+    extents: List[Volume4D]
+    key: List[str]
+    state:str
+    uss_base_url:str
+    subscription_id:str    

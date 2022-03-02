@@ -4,7 +4,8 @@ import dataclasses, json
 from pyproj import Geod
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
-from . import dss_rw_helper
+from auth_helper import dss_auth_helper
+from . import dss_rid_helper
 from os import environ as env
 import uuid
 import shapely.geometry
@@ -65,7 +66,7 @@ class SubscriptionHelper():
 
     def create_new_subscription(self, request_id, view:str, vertex_list:list):
         subscription_time_delta = 15        
-        myDSSubscriber = dss_rw_helper.RemoteIDOperations()        
+        myDSSubscriber = dss_rid_helper.RemoteIDOperations()        
         subscription_r = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id, subscription_time_delta = subscription_time_delta)      
         subscription_response = self.my_rid_output_helper.make_json_compatible(subscription_r)
         return subscription_response
