@@ -81,12 +81,17 @@ def SCDAuthTest(request, flight_id):
                 altitude_lower = Altitude(value = volume['volume']['altitude_lower']['value'],reference= volume['volume']['altitude_lower']['reference'], units =volume['volume']['altitude_lower']['units'])
                 altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])                        
                 volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
-                time_start = Time(format = volume['time_start']['format'], value = volume['time_start']['value'])
-                time_end = Time(format =volume['time_end']['format'] , value = volume['time_end']['value'])
+
+                now = arrow.now()
+                ten_minutes_from_now = now.shift(minutes=10).isoformat()
+                twenty_minutes_from_now = now.shift(minutes=20).isoformat()
+                time_start = Time(format = volume['time_start']['format'], value = ten_minutes_from_now)
+                time_end = Time(format =volume['time_end']['format'] , value = twenty_minutes_from_now)
+                
                 volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
                 all_volumes.append(volume4D)
             
-            operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority =operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state= operational_intent['state'])            
+            operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])            
         except KeyError as ke:
             return Response({"result":"Could not parse test injection payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
 

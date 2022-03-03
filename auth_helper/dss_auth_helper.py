@@ -20,11 +20,12 @@ class AuthorityCredentialsGetter():
     def __init__(self):
         pass
         
-    def get_cached_credentials(self, audience):  
+    def get_cached_credentials(self, audience:str, token_type:str):  
         r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
         
         now = datetime.now()
-        cache_key = audience + '_auth_dss_token'
+        token_suffix = '_auth_rid_token' if token_type == 'rid' else  '_auth_scd_token'
+        cache_key = audience + token_suffix
         token_details = r.get(cache_key)
         
         if token_details:    
@@ -32,12 +33,14 @@ class AuthorityCredentialsGetter():
             created_at = token_details['created_at']
             set_date = datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f")
             if now < (set_date - timedelta(minutes=58)):
-                credentials = self.get_read_credentials(audience)
+                credentials = self.get_rid_credentials(audience) if token_type == 'rid' else self.get_scd_credentials(audience)
+              
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
             else: 
                 credentials = token_details['credentials']
         else:   
-            credentials = self.get_read_credentials(audience)            
+            credentials = self.get_rid_credentials(audience) if token_type == 'rid' else self.get_scd_credentials(audience)
+            
             access_token = credentials.get('access_token')
             if access_token: # there is no error in the token
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
@@ -46,7 +49,7 @@ class AuthorityCredentialsGetter():
         return credentials
             
         
-    def get_read_credentials(self, audience):        
+    def get_rid_credentials(self, audience):        
         issuer = audience if audience =='localhost' else None
 
         if audience == 'localhost':
@@ -55,6 +58,22 @@ class AuthorityCredentialsGetter():
             
         else: 
             payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read.identification_service_areas'}    
+      
+        url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
+        
+        token_data = requests.post(url, params = payload)
+        t_data = token_data.json()     
+        return t_data
+
+    def get_scd_credentials(self, audience):        
+        issuer = audience if audience =='localhost' else None
+
+        if audience == 'localhost':
+            # Test instance of DSS
+            payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'utm.strategic_coordination', "issuer":issuer}       
+            
+        else: 
+            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'utm.strategic_coordination'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
         

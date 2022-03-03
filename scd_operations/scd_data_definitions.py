@@ -177,10 +177,35 @@ class ClearAreaRequestData:
     request_id: uuid4
     extent: Volume4D
 
+@dataclass
+class ImplicitSubscriptionParameters:
+    uss_base_url:str
+    notify_for_constraints: bool = False
+
+@dataclass 
 class OperationalIntentReference: 
     ''' A operational intent reference for the DSS '''
     extents: List[Volume4D]
     key: List[str]
     state:str
     uss_base_url:str
-    subscription_id:str    
+    new_subscription:ImplicitSubscriptionParameters
+
+@dataclass
+class OperationalIntentReferenceDSSResponse:
+    id: str
+    manager: str
+    uss_availability: str
+    version: int
+    state: Literal[OperationalIntentState.Accepted,OperationalIntentState.Activated,OperationalIntentState.Nonconforming,OperationalIntentState.Contingent]
+    ovn: uuid4 
+    time_start: Time
+    time_end: Time
+    uss_base_url: str
+    subscription_id: str
+
+
+@dataclass
+class DSSOperationalIntentCreateResponse: 
+    subscribers: List[str]
+    operational_intent_reference: OperationalIntentReferenceDSSResponse

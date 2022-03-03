@@ -45,7 +45,7 @@ class RemoteIDOperations():
             return subscription_response
 
         try:
-            auth_token = my_authorization_helper.get_cached_credentials(audience)
+            auth_token = my_authorization_helper.get_cached_credentials(audience = audience, token_type='rid')
         except Exception as e:
 
             logger.error("Error in getting Authority Access Token %s " % e)
@@ -151,7 +151,7 @@ class RemoteIDOperations():
                 else:
                     audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
             
-            auth_credentials = authority_credentials.get_cached_credentials(audience)            
+            auth_credentials = authority_credentials.get_cached_credentials(audience = audience, token_type='rid')            
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials['access_token']}                        
             flights_request = requests.get(cur_flight_url, headers=headers)
             
