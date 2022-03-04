@@ -47,7 +47,6 @@ class RemoteIDOperations():
         try:
             auth_token = my_authorization_helper.get_cached_credentials(audience = audience, token_type='rid')
         except Exception as e:
-
             logger.error("Error in getting Authority Access Token %s " % e)
             return subscription_response        
         else:
@@ -57,8 +56,7 @@ class RemoteIDOperations():
             assert error is None
         except AssertionError as ae:             
             return subscription_response
-        else:            
-            
+        else:                        
             # A token from authority was received, 
             new_subscription_id = str(uuid.uuid4())
             dss_subscription_url = self.dss_base_url + 'v1/dss/subscriptions/' + new_subscription_id

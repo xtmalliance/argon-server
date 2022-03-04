@@ -6,6 +6,10 @@ from dataclasses import asdict
 from typing import List
 from auth_helper import dss_auth_helper
 from rid_operations.tasks import submit_dss_subscription
+from shapely.ops import unary_union
+from shapely.geometry import Point, Polygon, LineString
+import shapely.geometry
+from pyproj import Proj
 from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,DSSOperationalIntentCreateResponse, OperationalIntentReferenceDSSResponse, Time
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -16,6 +20,77 @@ if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 logger = logging.getLogger('django')
+
+class VolumesConverter():
+    ''' A class to covert a Volume4D in to GeoJSON '''
+    def __init__(self):
+        
+        self.geo_json = {"type":"FeatureCollection","features":[]}
+        self.utm_zone = '54N'
+        self.all_volume_features =[]
+        
+    def utm_converter(self, shapely_shape: shapely.geometry, inverse:bool=False) -> shapely.geometry.shape:
+        ''' A helper function to convert from lat / lon to UTM coordinates for buffering. tracks. This is the UTM projection (https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system), we use Zone 54N which encompasses Japan, this zone has to be set for each locale / city. Adapted from https://gis.stackexchange.com/questions/325926/buffering-geometry-with-points-in-wgs84-using-shapely '''
+
+        proj = Proj(proj="utm", zone=self.utm_zone, ellps="WGS84", datum="WGS84")
+
+        geo_interface = shapely_shape.__geo_interface__
+        point_or_polygon = geo_interface['type']
+        coordinates = geo_interface['coordinates']
+        if point_or_polygon == 'Polygon':
+            new_coordinates = [[proj(*point, inverse=inverse) for point in linring] for linring in coordinates]
+        elif point_or_polygon == 'Point':
+            new_coordinates = proj(*coordinates, inverse=inverse)
+        else:
+            raise RuntimeError('Unexpected geo_interface type: {}'.format(point_or_polygon))
+
+        return shapely.geometry.shape({'type': point_or_polygon, 'coordinates': tuple(new_coordinates)})
+
+    def convert_extents_to_geojson(self, volumes: List[Volume4D]) -> None:
+        for volume in volumes:            
+            geo_json_features = self._convert_volume_to_geojson_feature(volume)
+            self.geo_json['features'] += geo_json_features
+
+    def get_volume_bounds(self)-> List(int):
+        union = unary_union(self.all_volume_features)
+        bounds = union.bounds
+        
+        return list(bounds)
+
+
+    def _convert_volume_to_geojson_feature(self, volume: Volume4D):
+        volume = volume['volume']
+        geo_json_features = []
+        
+        if ('outline_polygon' in volume.keys()):
+            outline_polygon = volume['outline_polygon']
+            point_list = []
+            for vertex in outline_polygon['vertices']:
+                p = Point(vertex['lng'], vertex['lat'])
+                point_list.append(p)
+            outline_polygon = Polygon([[p.x, p.y] for p in point_list])
+            self.all_volume_features.append(outline_polygon)
+            outline_p = shapely.geometry.mapping(outline_polygon)
+            
+            polygon_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_p}
+            geo_json_features.append(polygon_feature)
+
+        if ('outline_circle' in volume.keys()):
+            outline_circle = volume['outline_circle']
+            circle_radius = outline_circle['radius']['value']
+            center_point = Point(outline_circle['center']['lng'],outline_circle['center']['lat'])
+            utm_center = self.utm_converter(shapely_shape = center_point)
+            buffered_cicle = utm_center.buffer(circle_radius)
+            converted_circle = self.utm_converter(buffered_cicle, inverse=True)
+            self.all_volume_features.append(converted_circle)
+            outline_c = shapely.geometry.mapping(converted_circle)
+
+            circle_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_c}
+            
+            geo_json_features.append(circle_feature)
+        
+        return geo_json_features
+
 
 class SCDOperations():
     def __init__(self):
@@ -53,7 +128,7 @@ class SCDOperations():
         except Exception as re:
             logger.error("Error in putting operational intent in the DSS %s " % re)
             
-        d_r ={}
+        d_r = {}
         
         try: 
             assert dss_r.status_code == 201            

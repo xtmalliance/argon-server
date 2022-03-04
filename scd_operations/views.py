@@ -59,6 +59,12 @@ def SCDAuthTest(request, flight_id):
         try:
             operational_intent = scd_test_data['operational_intent']
             operational_intent_volumes = operational_intent['volumes']
+            # convert operational intent to GeoJSON and get bounds
+            my_geo_json_converter = dss_scd_helper.VolumesConverter()
+            my_geo_json_converter.convert_extents_to_geojson(volumes = operational_intent_volumes)
+            bounds = my_geo_json_converter.get_volume_bounds()
+
+            
             all_volumes = []
             for volume in operational_intent_volumes:
                 outline_polygon = None
@@ -114,8 +120,9 @@ def SCDAuthTest(request, flight_id):
 
         # flight authorisation data is correct, can submit the operational intent to the DSS
 
-        my_scd_dss_helper = dss_scd_helper.SCDOperations()
-        my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
+        # my_scd_dss_helper = dss_scd_helper.SCDOperations()
+
+        # my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
 
         try: 
             injection_response = asdict(planned_test_injection_response)            
