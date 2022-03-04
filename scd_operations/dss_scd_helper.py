@@ -51,7 +51,7 @@ class VolumesConverter():
             geo_json_features = self._convert_volume_to_geojson_feature(volume)
             self.geo_json['features'] += geo_json_features
 
-    def get_volume_bounds(self)-> List(int):
+    def get_volume_bounds(self)-> List[float]:
         union = unary_union(self.all_volume_features)
         bounds = union.bounds
         
