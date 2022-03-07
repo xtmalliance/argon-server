@@ -209,3 +209,10 @@ class OperationalIntentReferenceDSSResponse:
 class DSSOperationalIntentCreateResponse: 
     subscribers: List[str]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
+
+    
+@dataclass
+class LatLng:
+    lat:float
+    lng: float
+    

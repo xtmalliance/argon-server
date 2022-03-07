@@ -10,7 +10,7 @@ from shapely.ops import unary_union
 from shapely.geometry import Point, Polygon, LineString
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,DSSOperationalIntentCreateResponse, OperationalIntentReferenceDSSResponse, Time
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,DSSOperationalIntentCreateResponse, OperationalIntentReferenceDSSResponse, Time, LatLng
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -53,9 +53,12 @@ class VolumesConverter():
 
     def get_volume_bounds(self)-> List[float]:
         union = unary_union(self.all_volume_features)
-        bounds = union.bounds
-        
-        return list(bounds)
+        rect_bounds = union.minimum_rotated_rectangle
+        g_c = []
+        for coord in list(rect_bounds.exterior.coords):
+            ll = LatLng(lat = float(coord[1]), lng = float(coord[0]))
+            g_c.append(asdict(ll))
+        return g_c
 
 
     def _convert_volume_to_geojson_feature(self, volume: Volume4D):

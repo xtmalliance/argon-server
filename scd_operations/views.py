@@ -6,7 +6,7 @@ from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict
 from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, ClearAreaRequestData, ClearAreaResponse
-from . import dss_scd_helper 
+from . import dss_scd_helper, rtree_helper
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
 import dataclasses
@@ -50,6 +50,8 @@ def SCDAuthTest(request, flight_id):
 
         scd_test_data = request.data
 
+        my_rtree = rtree_helper.OperationalIntentsIndexFactory(name="op_int")
+
         try:
             flight_authorization_data = scd_test_data['flight_authorisation']
             f_a = FlightAuthorizationDataPayload(uas_serial_number = flight_authorization_data['uas_serial_number'],operation_category = flight_authorization_data['operation_category'], operation_mode = flight_authorization_data['operation_mode'], uas_class = flight_authorization_data['uas_class'], identification_technologies = flight_authorization_data['identification_technologies'],connectivity_methods = flight_authorization_data['connectivity_methods'],  endurance_minutes = flight_authorization_data['endurance_minutes'], emergency_procedure_url = flight_authorization_data['emergency_procedure_url'],operator_id = flight_authorization_data['operator_id'])
@@ -62,9 +64,8 @@ def SCDAuthTest(request, flight_id):
             # convert operational intent to GeoJSON and get bounds
             my_geo_json_converter = dss_scd_helper.VolumesConverter()
             my_geo_json_converter.convert_extents_to_geojson(volumes = operational_intent_volumes)
-            bounds = my_geo_json_converter.get_volume_bounds()
-
-            
+            rect_bounds = my_geo_json_converter.get_volume_bounds()
+            # print(my_rtree.check_box_intersection(view_box= rect_bounds))
             all_volumes = []
             for volume in operational_intent_volumes:
                 outline_polygon = None
