@@ -5,9 +5,9 @@ import logging
 from dataclasses import asdict
 from typing import List
 from auth_helper import dss_auth_helper
-from rid_operations.tasks import submit_dss_subscription
+from datetime import datetime
 from shapely.ops import unary_union
-from shapely.geometry import Point, Polygon, LineString
+from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
 from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,DSSOperationalIntentCreateResponse, OperationalIntentReferenceDSSResponse, Time, LatLng
@@ -20,6 +20,13 @@ if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 logger = logging.getLogger('django')
+
+def is_time_within_time_period(start_time:datetime, end_time:datetime, time_to_check:datetime): 
+    if start_time < end_time: 
+        return time_to_check >= start_time and time_to_check <= end_time 
+    else: 
+        #Over midnight: 
+        return time_to_check >= start_time or time_to_check <= end_time 
 
 class VolumesConverter():
     ''' A class to covert a Volume4D in to GeoJSON '''
@@ -51,7 +58,7 @@ class VolumesConverter():
             geo_json_features = self._convert_volume_to_geojson_feature(volume)
             self.geo_json['features'] += geo_json_features
 
-    def get_volume_bounds(self)-> List[float]:
+    def get_volume_bounds(self)-> List[LatLng]:
         union = unary_union(self.all_volume_features)
         rect_bounds = union.minimum_rotated_rectangle
         g_c = []
@@ -60,6 +67,12 @@ class VolumesConverter():
             g_c.append(asdict(ll))
         return g_c
 
+    def get_bounds(self)-> List[float]:
+        union = unary_union(self.all_volume_features)
+        
+        rect_bounds = union.bounds
+        
+        return rect_bounds
 
     def _convert_volume_to_geojson_feature(self, volume: Volume4D):
         volume = volume['volume']

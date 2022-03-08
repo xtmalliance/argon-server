@@ -216,3 +216,11 @@ class LatLng:
     lat:float
     lng: float
     
+
+@dataclass
+class OperationalIntentStorage:
+    bounds:str
+    start_time:str
+    end_time: str
+    alt_max:float
+    alt_min: float
