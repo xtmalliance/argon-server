@@ -53,7 +53,7 @@ def SCDAuthTest(request, flight_id):
 
         scd_test_data = request.data
         r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
-        my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name="op_int")
+        my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name="opint")
         my_rtree_helper.generate_operational_intents_index()
         try:
             flight_authorization_data = scd_test_data['flight_authorisation']
@@ -132,14 +132,17 @@ def SCDAuthTest(request, flight_id):
         deconflicted = False
         if all_existing_op_ints_in_area:
             # there are existing op_ints in the area. 
-            print(len(all_existing_op_ints_in_area))
+            deconflicted_status = []
             for existing_op_int in all_existing_op_ints_in_area:                
-                # check if start time or end time is between the existing 
+                # check if start time or end time is between the existing bounds
                 is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=ten_minutes_from_now.datetime)
                 is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=twenty_minutes_from_now.datetime)
-                
-                if not is_start_within or not is_end_within:                    
-                    deconflicted = True
+
+                if not is_start_within and not is_end_within:      
+                    deconflicted_status.append(True)
+                else:
+                    deconflicted_status.append(False)
+            deconflicted = all(deconflicted_status)
                     
         else:
             # No existing op ints we can plan it.             
@@ -155,8 +158,8 @@ def SCDAuthTest(request, flight_id):
             r.expire(name = opint_id, time = opint_subscription_end_time)
         else:
             return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-           
-
+        
+        my_rtree_helper.clear_rtree_index()
         try: 
             injection_response = asdict(planned_test_injection_response)            
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
