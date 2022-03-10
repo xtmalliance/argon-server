@@ -60,14 +60,13 @@ def SCDAuthTest(request, flight_id):
             f_a = FlightAuthorizationDataPayload(uas_serial_number = flight_authorization_data['uas_serial_number'],operation_category = flight_authorization_data['operation_category'], operation_mode = flight_authorization_data['operation_mode'], uas_class = flight_authorization_data['uas_class'], identification_technologies = flight_authorization_data['identification_technologies'],connectivity_methods = flight_authorization_data['connectivity_methods'],  endurance_minutes = flight_authorization_data['endurance_minutes'], emergency_procedure_url = flight_authorization_data['emergency_procedure_url'],operator_id = flight_authorization_data['operator_id'])
         except KeyError as ke:
             return Response({"result":"Could not parse test injection payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
-                
-        
+                        
         now = arrow.now()
 
-        ten_minutes_from_now = now.shift(minutes=10)
-        ten_minutes_from_now_str = ten_minutes_from_now.isoformat()
-        twenty_minutes_from_now = now.shift(minutes=20)
-        twenty_minutes_from_now_str = twenty_minutes_from_now.isoformat()
+        one_minute_from_now = now.shift(minutes=1)
+        one_minute_from_now_str = one_minute_from_now.isoformat()
+        two_minutes_from_now = now.shift(minutes=2)
+        two_minutes_from_now_str = two_minutes_from_now.isoformat()
         opint_subscription_end_time = timedelta(seconds=1200)
         try:
             operational_intent = scd_test_data['operational_intent']
@@ -100,8 +99,8 @@ def SCDAuthTest(request, flight_id):
                 altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])                        
                 volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
 
-                time_start = Time(format = volume['time_start']['format'], value = ten_minutes_from_now_str)
-                time_end = Time(format =volume['time_end']['format'] , value = twenty_minutes_from_now_str)
+                time_start = Time(format = volume['time_start']['format'], value = one_minute_from_now_str)
+                time_end = Time(format =volume['time_end']['format'] , value = two_minutes_from_now_str)
                 
                 volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
                 all_volumes.append(volume4D)
@@ -135,8 +134,8 @@ def SCDAuthTest(request, flight_id):
             deconflicted_status = []
             for existing_op_int in all_existing_op_ints_in_area:                
                 # check if start time or end time is between the existing bounds
-                is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=ten_minutes_from_now.datetime)
-                is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=twenty_minutes_from_now.datetime)
+                is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=one_minute_from_now.datetime)
+                is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=two_minutes_from_now.datetime)
 
                 if not is_start_within and not is_end_within:      
                     deconflicted_status.append(True)
@@ -153,7 +152,7 @@ def SCDAuthTest(request, flight_id):
             # my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
             opint_id = 'opint.' + flight_id        
             view_r_bounds = ",".join(map(str,view_rect_bounds))
-            bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=ten_minutes_from_now_str, end_time=twenty_minutes_from_now_str, alt_max=50, alt_min=25)
+            bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25)
             r.set(opint_id, json.dumps(asdict(bounds_obj)))
             r.expire(name = opint_id, time = opint_subscription_end_time)
         else:
