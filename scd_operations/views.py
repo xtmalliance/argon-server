@@ -142,19 +142,22 @@ def SCDAuthTest(request, flight_id):
                 else:
                     deconflicted_status.append(False)
             deconflicted = all(deconflicted_status)
-                    
         else:
             # No existing op ints we can plan it.             
             deconflicted = True
             
         if deconflicted: 
-            # my_scd_dss_helper = dss_scd_helper.SCDOperations()
-            # my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
-            opint_id = 'opint.' + flight_id        
-            view_r_bounds = ",".join(map(str,view_rect_bounds))
-            bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25)
-            r.set(opint_id, json.dumps(asdict(bounds_obj)))
-            r.expire(name = opint_id, time = opint_subscription_end_time)
+            my_scd_dss_helper = dss_scd_helper.SCDOperations()
+            op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
+
+            if op_int_submission.status == "success":
+                opint_id = 'opint.' + flight_id        
+                view_r_bounds = ",".join(map(str,view_rect_bounds))
+                bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response)
+                r.set(opint_id, json.dumps(asdict(bounds_obj)))
+                r.expire(name = opint_id, time = opint_subscription_end_time)
+            else: 
+                return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         else:
             return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         

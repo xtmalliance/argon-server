@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from uuid import uuid4
 import enum
 import arrow
-from typing import List, Literal, Optional
-
+from typing import List, Literal, Optional, Union
 
 class StringBasedDateTime(str):
   """String that only allows values which describe a datetime."""
@@ -192,6 +191,10 @@ class OperationalIntentReference:
     new_subscription:ImplicitSubscriptionParameters
 
 @dataclass
+class OpIntSubscribers:
+    subscribers: List[str]
+
+@dataclass
 class OperationalIntentReferenceDSSResponse:
     id: str
     manager: str
@@ -204,19 +207,16 @@ class OperationalIntentReferenceDSSResponse:
     uss_base_url: str
     subscription_id: str
 
-
 @dataclass
 class DSSOperationalIntentCreateResponse: 
     subscribers: List[str]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
-
     
 @dataclass
 class LatLng:
     lat:float
     lng: float
     
-
 @dataclass
 class OperationalIntentStorage:
     bounds:str
@@ -224,3 +224,16 @@ class OperationalIntentStorage:
     end_time: str
     alt_max:float
     alt_min: float
+    success_response: DSSOperationalIntentCreateResponse
+
+@dataclass 
+class OperationalIntentSubmissionError: 
+    result: str
+    notes: str
+
+@dataclass 
+class OperationalIntentSubmissionStatus: 
+    dss_response: Union[DSSOperationalIntentCreateResponse,OperationalIntentSubmissionError]
+    status: str
+    status_code: int
+    message: str
