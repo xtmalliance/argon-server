@@ -16,16 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from . import views as dss_views
+from . import views as rid_views
 
 urlpatterns = [
     # Flight Spotlight specific views
-    path('create_dss_subscription', dss_views.create_dss_subscription),
+    path('create_dss_subscription', rid_views.create_dss_subscription),
     # This is the call back url to DSS
-    path('uss/identification_service_areas/<uuid:subscription_id>', dss_views.dss_isa_callback),
+    path('uss/identification_service_areas/<uuid:subscription_id>', rid_views.dss_isa_callback),
     # Get RID data (PULL)
-    path('get_rid_data/<uuid:subscription_id>', dss_views.get_rid_data),
-    # RID Qualifier data
-    path('display_data', dss_views.get_display_data),
-    path('flight_data/<uuid:flight_id>', dss_views.get_flight_data),
+    path('get_rid_data/<uuid:subscription_id>', rid_views.get_rid_data),
+    # RID Qualifier data: Observation, for more information see: https://github.com/interuss/dss/tree/master/interfaces/automated-testing/rid
+    path('display_data', rid_views.get_display_data),
+    path('display_data/<uuid:flight_id>', rid_views.get_flight_data),
+    # RID Qualifier data: Injection views 
+    path('tests/<uuid:test_id>', rid_views.create_test),
+    path('tests/<uuid:test_id>/<str:version>', rid_views.delete_test)
 ]

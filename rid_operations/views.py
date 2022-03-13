@@ -351,3 +351,19 @@ def get_flight_data(request, flight_id):
     # }
 
     return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
+
+@api_view(['PUT'])
+@requires_scopes(['rid.inject_test_data'])
+def create_test(request, test_id):
+    ''' This is the end point for the rid_qualifier to get details of a flight '''
+
+
+    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
+
+@api_view(['PUT'])
+@requires_scopes(['rid.inject_test_data'])
+def create_test(request, test_id, version):
+    ''' This is the end point for the rid_qualifier to get details of a flight '''
+
+
+    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
