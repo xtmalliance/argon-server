@@ -18,7 +18,7 @@ class OperationalIntentsIndexFactory():
         self.idx.delete(id = enumerated_id, coordinates= (view[0], view[1], view[2], view[3]))
 
     def generate_operational_intents_index(self) -> None:
-        """This method generates a rTree index of currently active operational indexes """
+        """This method generates a rTree index of currently active operational indexes """      
         
         for op_int_idx, operational_intent_id in enumerate(self.all_op_ints):            
             operational_intent_str = str(operational_intent_id).split('.')[1]            

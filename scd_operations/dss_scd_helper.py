@@ -10,7 +10,7 @@ from shapely.ops import unary_union
 from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -53,8 +53,8 @@ class VolumesConverter():
 
         return shapely.geometry.shape({'type': point_or_polygon, 'coordinates': tuple(new_coordinates)})
 
-    def convert_extents_to_geojson(self, volumes: List[Volume4D]) -> None:
-        for volume in volumes:            
+    def convert_extents_to_geojson(self, volumes: List[Volume4D]) -> None:        
+        for volume in volumes:                        
             geo_json_features = self._convert_volume_to_geojson_feature(volume)
             self.geo_json['features'] += geo_json_features
 
@@ -75,6 +75,7 @@ class VolumesConverter():
         return rect_bounds
 
     def _convert_volume_to_geojson_feature(self, volume: Volume4D):
+        
         volume = volume['volume']
         geo_json_features = []
         
@@ -113,6 +114,53 @@ class SCDOperations():
         self.dss_base_url = env.get('DSS_BASE_URL')        
         self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
     
+
+    def delete_operational_intent(self, operational_intent_id:uuid.uuid4, ovn: uuid.uuid4):
+        
+        my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
+        audience = env.get("DSS_SELF_AUDIENCE", 0)        
+        try: 
+            assert audience
+        except AssertionError as ae:
+            logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
+
+        try:
+            auth_token = my_authorization_helper.get_cached_credentials(audience= audience, token_type='scd')
+        except Exception as e:
+            logger.error("Error in getting Authority Access Token %s " % e)            
+        else:
+            error = auth_token.get("error")            
+        
+        dss_subscription_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
+        headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
+        delete_payload = DeleteOperationalIntentConstuctor(entity_id= operational_intent_id, ovn = ovn)
+
+        dss_r = requests.put(dss_subscription_url, json =json.loads(json.dumps(asdict(delete_payload))), headers=headers)
+        
+        dss_response = dss_r.json()
+        dss_r_status_code = dss_r.status_code
+
+        if dss_r_status_code == 200:
+            common_200_response = CommonDSS2xxResponse(message="Successfully deleted operational intent id %s" % operational_intent_id)
+            dss_response_formatted = DeleteOperationalIntentResponseSuccess(subscribers= dss_response["subscribers"],operational_intent_reference=dss_response_formatted['operational_intent_reference'])
+            delete_op_int_status = DeleteOperationalIntentResponse(dss_response=dss_response_formatted, status =200, message= common_200_response)
+        elif dss_r_status_code == 404:
+            common_400_response = CommonDSS4xxResponse(message="URL endpoint not found")
+            delete_op_int_status = DeleteOperationalIntentResponse(dss_response=  dss_response, status = 404,message=common_400_response)
+
+        elif dss_r_status_code == 409:
+            common_400_response = CommonDSS4xxResponse(message="The provided ovn does not match the current version of existing operational intent")
+            delete_op_int_status = DeleteOperationalIntentResponse(dss_response=  dss_response, status = 409,message=common_400_response)
+
+        elif dss_r_status_code == 412:
+            common_400_response = CommonDSS4xxResponse(message="The client attempted to delete the operational intent while marked as Down in the DSS")
+            delete_op_int_status = DeleteOperationalIntentResponse(dss_response=  dss_response, status = 412,message=common_400_response)
+        else:
+            common_400_response = CommonDSS4xxResponse(message="A errror occured while deleting the operational intent")
+            delete_op_int_status = DeleteOperationalIntentResponse(dss_response=  dss_response, status = 500,message=common_400_response)
+        return delete_op_int_status
+
+
     def create_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]):        
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
         audience = env.get("DSS_SELF_AUDIENCE", 0)        
@@ -136,9 +184,7 @@ class SCDOperations():
         blender_base_url = env.get("BLENDER_FQDN", 0)
         implicit_subscription_parameters = ImplicitSubscriptionParameters(uss_base_url=blender_base_url)
         operational_intent_reference = OperationalIntentReference(extents = [asdict(volumes[0])], key =[management_key], state = state, uss_base_url = blender_base_url, new_subscription = implicit_subscription_parameters)
-
-        p = json.loads(json.dumps(asdict(operational_intent_reference)))
-        
+        p = json.loads(json.dumps(asdict(operational_intent_reference)))        
         try:
             dss_r = requests.put(dss_subscription_url, json =p , headers=headers)
         except Exception as re:
@@ -156,7 +202,8 @@ class SCDOperations():
             time_end = Time(format=o_i_r['time_end']['format'], value=o_i_r['time_end']['value'])
             operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],uss_availability=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
             dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference=operational_intent_r, subscribers=subscribers)
-            logger.info("Successfully created operational intent in the DSS %s" % dss_r.text)
+            logger.info("Successfully created operational intent in the DSS")
+            logger.debug("Response details from the DSS %s" % dss_r.text)
             d_r = OperationalIntentSubmissionStatus(status = "success", status_code= 201, message= "Successfully created operational intent in the DSS", dss_response = dss_creation_response, operational_intent_id = new_entity_id)
         elif dss_r_status_code == 409:            
             dss_creation_response_error = OperationalIntentSubmissionError(status = "failure", result = dss_response["result"], notes = dss_response["notes"])

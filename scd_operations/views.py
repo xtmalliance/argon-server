@@ -16,6 +16,15 @@ import redis
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
+from uuid import UUID
+INDEX_NAME = 'yxx'
+
+def is_valid_uuid(uuid_to_test, version=4):
+    try:
+        uuid_obj = UUID(uuid_to_test, version=version)
+    except ValueError:
+        return False
+    return str(uuid_obj) == uuid_to_test
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
@@ -38,14 +47,37 @@ def SCDClearAreaRequest(request):
         extent = clear_area_request['extent']
     except KeyError as ke: 
         return Response({"result":"Could not parse clear area payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
-    # TODO: Implement Clear area payload.
+    
+    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+    my_geo_json_converter = dss_scd_helper.VolumesConverter()
+    my_geo_json_converter.convert_extents_to_geojson(volumes = extent)
+    view_rect_bounds = my_geo_json_converter.get_bounds()
 
-    clear_area_status = ClearAreaResponse(success=True, message="", timestamp=arrow.now().toISOString())
+    my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
+    my_rtree_helper.generate_operational_intents_index()
+
+    all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
+    print(len(all_existing_op_ints_in_area))
+    if all_existing_op_ints_in_area:
+        for flight_details in all_existing_op_ints_in_area:
+            print(flight_details)
+            opint_id = 'opint.'+ flight_details['op_int_id']
+            print(opint_id)
+            op_int_details = r.get(opint_id)
+            if op_int_details:
+                print(op_int_details)
+   
+    my_rtree_helper.clear_rtree_index()
+    clear_area_status = ClearAreaResponse(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
     return JsonResponse(json.loads(json.dumps(clear_area_status, cls=EnhancedJSONEncoder)), status=200)
 
 @api_view(['PUT','DELETE'])
 @requires_scopes(['utm.inject_test_data'])
 def SCDAuthTest(request, flight_id):
+    
+    if not is_valid_uuid(flight_id):
+        return Response({"result":"Could not parse test injection payload, flight ID %s not a valid UUID " % flight_id }, status = status.HTTP_400_BAD_REQUEST)
+
     if request.method == "PUT":
         failed_test_injection_response = TestInjectionResult(result = "Failed", notes="",operational_intent_id ="")        
         rejected_test_injection_response = TestInjectionResult(result = "Rejected", notes="An existing operational intent already exists and conflicts in space and time",operational_intent_id="")
@@ -53,7 +85,7 @@ def SCDAuthTest(request, flight_id):
 
         scd_test_data = request.data
         r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
-        my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name="opint")
+        my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
         my_rtree_helper.generate_operational_intents_index()
         try:
             flight_authorization_data = scd_test_data['flight_authorisation']
@@ -151,10 +183,12 @@ def SCDAuthTest(request, flight_id):
             op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
 
             if op_int_submission.status == "success":
-                opint_id = 'opint.' + flight_id        
+                
                 view_r_bounds = ",".join(map(str,view_rect_bounds))
                 bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response)
-                r.set(opint_id, json.dumps(asdict(bounds_obj)))
+
+                opint_id = 'opint.' + flight_id        
+                
                 r.expire(name = opint_id, time = opint_subscription_end_time)
                 planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
             else: 

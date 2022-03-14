@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from email import message
 from uuid import uuid4
 import enum
 import arrow
@@ -238,3 +239,30 @@ class OperationalIntentSubmissionStatus:
     status_code: int
     message: str
     operational_intent_id: uuid4
+
+@dataclass
+class DeleteOperationalIntentConstuctor:
+    """This method holds information to send to the DSS to delete a Operational intent """
+    entity_id:uuid4
+    ovn: uuid4
+
+@dataclass
+class DeleteOperationalIntentResponseSuccess:
+    """This method holds details of the data the DSS provides once a operational intent is deleted """
+    subscribers: List[str]
+    operational_intent_reference: OperationalIntentReferenceDSSResponse
+
+@dataclass
+class CommonDSS4xxResponse:
+    message:str    
+
+@dataclass
+class CommonDSS2xxResponse:
+    message:str    
+
+@dataclass
+class DeleteOperationalIntentResponse:
+    dss_response: Union[DeleteOperationalIntentResponseSuccess,CommonDSS4xxResponse]
+    status: int
+    
+    
