@@ -1,24 +1,25 @@
 from requests.adapters import HTTPResponse
 from auth_helper.utils import requires_scopes
-import dataclasses, json
+import json
+from dataclasses import asdict
 from pyproj import Geod
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
-from auth_helper import dss_auth_helper
+from django.http import JsonResponse
 from . import dss_rid_helper
 from os import environ as env
+from datetime import timedelta
 import uuid
+import arrow
 import shapely.geometry
-import uuid
 import redis
-from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse
+from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse
 import hashlib
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
 import time
-
 
 
 from dotenv import load_dotenv, find_dotenv
@@ -140,7 +141,7 @@ def create_dss_subscription(request, *args, **kwargs):
 
         status = 201
     else:
-        m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= dataclasses.asdict(subscription_r))
+        m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= asdict(subscription_r))
         m = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         status = 400
     msg = my_rid_output_helper.make_json_compatible(m)
@@ -310,7 +311,6 @@ def get_display_data(request):
 
             current_flight = RIDFlight(id=observation_data['icao_address'], most_recent_position= most_recent_position,recent_paths = recent_paths)
 
-
             rid_flights.append(current_flight)
 
         
@@ -356,14 +356,44 @@ def get_flight_data(request, flight_id):
 @requires_scopes(['rid.inject_test_data'])
 def create_test(request, test_id):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
+    
+    rid_qualifier_payload = request.data
+    
+    try:
+        requested_flights = rid_qualifier_payload['requested_flights']        
+    except KeyError as ke:   
+        msg = HTTPErrorResponse(message="Requested Flights not present in the payload", status= 400)
+        msg_dict = asdict(msg)
+        return JsonResponse(msg_dict['message'], status=msg_dict['status'])
 
+    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
+            'REDIS_PORT', 6379), decode_responses=True)
 
-    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
+    # TODO process requested flights
+    
+    test_id = 'rid-test_' + test_id
+    # Test already exists
+    if r.exists(test_id):
+        return JsonResponse({}, status=409)
+    else:
+        now = arrow.now()
+        r.set(test_id, json.dumps({'created_at':now.isoformat()}))
+        r.expire(test_id, timedelta(minutes=5))
+   
+    create_test_response = CreateTestResponse(injected_flights = requested_flights, version = 1)
+
+    return JsonResponse(asdict(create_test_response), status=200)
 
 @api_view(['PUT'])
 @requires_scopes(['rid.inject_test_data'])
-def create_test(request, test_id, version):
+def delete_test(request, test_id, version):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
+    # Deleteing test
+    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
+            'REDIS_PORT', 6379), decode_responses=True)
 
+    if r.exists(test_id):
+        r.delete(test_id)
+        
+    return JsonResponse({}, status=200)
 
-    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
