@@ -208,7 +208,7 @@ class OperationalIntentReferenceDSSResponse:
     subscription_id: str
 
 @dataclass
-class DSSOperationalIntentCreateResponse: 
+class OperationalIntentSubmissionSuccess: 
     subscribers: List[str]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
     
@@ -224,7 +224,7 @@ class OperationalIntentStorage:
     end_time: str
     alt_max:float
     alt_min: float
-    success_response: DSSOperationalIntentCreateResponse
+    success_response: OperationalIntentSubmissionSuccess
 
 @dataclass 
 class OperationalIntentSubmissionError: 
@@ -233,7 +233,7 @@ class OperationalIntentSubmissionError:
 
 @dataclass 
 class OperationalIntentSubmissionStatus: 
-    dss_response: Union[DSSOperationalIntentCreateResponse,OperationalIntentSubmissionError]
+    dss_response: Union[OperationalIntentSubmissionSuccess,OperationalIntentSubmissionError]
     status: str
     status_code: int
     message: str

@@ -10,7 +10,7 @@ from shapely.ops import unary_union
 from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,DSSOperationalIntentCreateResponse, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -138,9 +138,7 @@ class SCDOperations():
         operational_intent_reference = OperationalIntentReference(extents = [asdict(volumes[0])], key =[management_key], state = state, uss_base_url = blender_base_url, new_subscription = implicit_subscription_parameters)
 
         p = json.loads(json.dumps(asdict(operational_intent_reference)))
-
         
-                
         try:
             dss_r = requests.put(dss_subscription_url, json =p , headers=headers)
         except Exception as re:
@@ -151,14 +149,14 @@ class SCDOperations():
             dss_response = dss_r.json()
             dss_r_status_code = dss_r.status_code
         
-        if dss_r_status_code == 201:
+        if dss_r_status_code in [200,201]:
             subscribers = dss_response['subscribers']
             o_i_r = dss_response['operational_intent_reference']
             time_start = Time(format=o_i_r['time_start']['format'], value=o_i_r['time_start']['value'])
             time_end = Time(format=o_i_r['time_end']['format'], value=o_i_r['time_end']['value'])
             operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],uss_availability=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
-            dss_creation_response = DSSOperationalIntentCreateResponse(operational_intent_reference=operational_intent_r, subscribers=subscribers)
-            logger.success("Successfully created operational intent in the DSS %s" % dss_r.text)
+            dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference=operational_intent_r, subscribers=subscribers)
+            logger.info("Successfully created operational intent in the DSS %s" % dss_r.text)
             d_r = OperationalIntentSubmissionStatus(status = "success", status_code= 201, message= re, dss_response = dss_creation_response)
         elif dss_r_status_code == 409:            
             dss_creation_response_error = OperationalIntentSubmissionError(status = "failure", result = dss_response["result"], notes = dss_response["notes"])
@@ -166,7 +164,7 @@ class SCDOperations():
             d_r = OperationalIntentSubmissionStatus(status = "failure", status_code= 409, message= dss_r.text, dss_response = dss_creation_response_error)
             
         else:
-            logger.error("Error submitting operational intent to the DSS: %s" % asdict(d_r))
+            logger.error("Error submitting operational intent to the DSS: %s" % dss_response)
 
         return d_r
            
