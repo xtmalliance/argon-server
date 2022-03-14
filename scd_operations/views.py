@@ -48,8 +48,8 @@ def SCDClearAreaRequest(request):
 def SCDAuthTest(request, flight_id):
     if request.method == "PUT":
         failed_test_injection_response = TestInjectionResult(result = "Failed", notes="",operational_intent_id ="")        
-        rejected_test_injection_response = TestInjectionResult(result = "Rejected", notes="An existing operational intent already exists and conflicts in space and time",operational_intent_id ="")
-        planned_test_injection_response = TestInjectionResult(result = "Planned", notes="",operational_intent_id ="")
+        rejected_test_injection_response = TestInjectionResult(result = "Rejected", notes="An existing operational intent already exists and conflicts in space and time",operational_intent_id="")
+        planned_test_injection_response = TestInjectionResult(result = "Planned", notes="Successfully created operational intent in the DSS",operational_intent_id ="")
 
         scd_test_data = request.data
         r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
@@ -156,6 +156,7 @@ def SCDAuthTest(request, flight_id):
                 bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response)
                 r.set(opint_id, json.dumps(asdict(bounds_obj)))
                 r.expire(name = opint_id, time = opint_subscription_end_time)
+                planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
             else: 
                 return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         else:
@@ -165,7 +166,7 @@ def SCDAuthTest(request, flight_id):
         try: 
             injection_response = asdict(planned_test_injection_response)            
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-        except KeyError as ke:
+        except KeyError as ke:            
             injection_response = asdict(failed_test_injection_response)            
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)
 

@@ -237,3 +237,4 @@ class OperationalIntentSubmissionStatus:
     status: str
     status_code: int
     message: str
+    operational_intent_id: uuid4
