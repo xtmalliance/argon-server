@@ -1,4 +1,4 @@
-from typing import List, NamedTuple,Optional
+from typing import List, NamedTuple, Optional
 import uuid
 from dataclasses import dataclass
 import arrow
@@ -118,5 +118,16 @@ class RIDTestInjection():
     details_responses: List[RIDTestDetailsResponses]
 
 @dataclass
+class HTTPErrorResponse():
+  message: str
+  status: int
+
+@dataclass
+class CreateTestPayload():
+  requested_flights: List[RIDTestInjection]
+  test_id: uuid
+
 class CreateTestResponse():
-    injected_flights: RIDTestInjection
+    injected_flights: List[RIDTestInjection]
+    version: int
+    
