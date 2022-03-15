@@ -106,6 +106,11 @@ class UASClass(str, enum.Enum):
     C3 = 'C3'
     C4 = 'C4'
 
+class DeleteFlightStatus(str, enum.Enum):
+    
+    Closed = 'Closed'
+    Failed = 'Failed'
+    
 class TestInjectionResultState(str, enum.Enum):
     ''' A test is either pass or fail or could not be processed, currently not  '''
     Planned = 'Planned'
@@ -264,5 +269,9 @@ class CommonDSS2xxResponse:
 class DeleteOperationalIntentResponse:
     dss_response: Union[DeleteOperationalIntentResponseSuccess,CommonDSS4xxResponse]
     status: int
+    message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
     
-    
+@dataclass
+class DeleteFlightResponse:
+    result:  Literal[DeleteFlightStatus.Closed, DeleteFlightStatus.Failed]
+    notes:str

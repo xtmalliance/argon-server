@@ -13,11 +13,15 @@ from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
 import dataclasses
 import redis
+import logging
+from uuid import UUID
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
+
 load_dotenv(find_dotenv())
-from uuid import UUID
-INDEX_NAME = 'yxx'
+INDEX_NAME = 'op_intent'
+
+logger = logging.getLogger('django')
 
 def is_valid_uuid(uuid_to_test, version=4):
     try:
@@ -57,18 +61,30 @@ def SCDClearAreaRequest(request):
     my_rtree_helper.generate_operational_intents_index()
 
     all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
-    print(len(all_existing_op_ints_in_area))
+    
     if all_existing_op_ints_in_area:
-        for flight_details in all_existing_op_ints_in_area:
-            print(flight_details)
-            opint_id = 'opint.'+ flight_details['op_int_id']
-            print(opint_id)
-            op_int_details = r.get(opint_id)
-            if op_int_details:
-                print(op_int_details)
+        for flight_details in all_existing_op_ints_in_area:            
+            flight_id =  flight_details['flight_id']
+            op_int_details_key = 'opint.'+ flight_id
+            
+            op_int_details = r.get(op_int_details_key)
+            
+            if op_int_details:                
+                my_scd_dss_helper = dss_scd_helper.SCDOperations()
+                op_int_detail_raw = op_int_details.decode()
+                op_int_detail = json.loads(op_int_detail_raw)                
+                ovn = op_int_detail['success_response']['operational_intent_reference']['ovn']
+                opint_id = op_int_detail['success_response']['operational_intent_reference']['id']
+                ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
+                logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
+
+                my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
+        clear_area_status = ClearAreaResponse(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
+
+    else:
+        clear_area_status = ClearAreaResponse(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
    
     my_rtree_helper.clear_rtree_index()
-    clear_area_status = ClearAreaResponse(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
     return JsonResponse(json.loads(json.dumps(clear_area_status, cls=EnhancedJSONEncoder)), status=200)
 
 @api_view(['PUT','DELETE'])
@@ -79,7 +95,7 @@ def SCDAuthTest(request, flight_id):
         return Response({"result":"Could not parse test injection payload, flight ID %s not a valid UUID " % flight_id }, status = status.HTTP_400_BAD_REQUEST)
 
     if request.method == "PUT":
-        failed_test_injection_response = TestInjectionResult(result = "Failed", notes="",operational_intent_id ="")        
+        failed_test_injection_response = TestInjectionResult(result = "Failed", notes="Processing of operational intent has failed",operational_intent_id ="")        
         rejected_test_injection_response = TestInjectionResult(result = "Rejected", notes="An existing operational intent already exists and conflicts in space and time",operational_intent_id="")
         planned_test_injection_response = TestInjectionResult(result = "Planned", notes="Successfully created operational intent in the DSS",operational_intent_id ="")
 
@@ -99,7 +115,7 @@ def SCDAuthTest(request, flight_id):
         one_minute_from_now_str = one_minute_from_now.isoformat()
         two_minutes_from_now = now.shift(minutes=2)
         two_minutes_from_now_str = two_minutes_from_now.isoformat()
-        opint_subscription_end_time = timedelta(seconds=1200)
+        opint_subscription_end_time = timedelta(seconds=60)
         try:
             operational_intent = scd_test_data['operational_intent']
             operational_intent_volumes = operational_intent['volumes']
@@ -112,7 +128,6 @@ def SCDAuthTest(request, flight_id):
             for volume in operational_intent_volumes:
                 outline_polygon = None
                 outline_circle = None
-
                 if 'outline_polygon' in volume['volume'].keys():
                     all_vertices = volume['volume']['outline_polygon']['vertices']
                     polygon_verticies = []
@@ -187,11 +202,12 @@ def SCDAuthTest(request, flight_id):
                 view_r_bounds = ",".join(map(str,view_rect_bounds))
                 bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response)
 
-                opint_id = 'opint.' + flight_id        
-                
+                opint_id = 'opint.' + flight_id                
+                r.set(opint_id, json.dumps(asdict(bounds_obj)))
                 r.expire(name = opint_id, time = opint_subscription_end_time)
                 planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
             else: 
+                failed_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
                 return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         else:
             return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
@@ -204,7 +220,25 @@ def SCDAuthTest(request, flight_id):
             injection_response = asdict(failed_test_injection_response)            
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == "DELETE":
-        delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system. ")
+    elif request.method == "DELETE":        
+        
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))      
+        op_int_details_key = 'opint.'+ flight_id        
+        op_int_details = r.get(op_int_details_key)        
+        if op_int_details:                
+            my_scd_dss_helper = dss_scd_helper.SCDOperations()
+            op_int_detail_raw = op_int_details.decode()
+            op_int_detail = json.loads(op_int_detail_raw)                
+            ovn = op_int_detail['success_response']['operational_intent_reference']['ovn']
+            opint_id = op_int_detail['success_response']['operational_intent_reference']['id']
+            ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
+            logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
+
+            my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
+
+            delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system.")
+        else:
+            delete_flight_response = DeleteFlightResponse(result="Failed", notes="The flight was not found in the USS, please check your flight ID %s" % flight_id)
+
 
         return Response(json.loads(json.dumps(delete_flight_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)

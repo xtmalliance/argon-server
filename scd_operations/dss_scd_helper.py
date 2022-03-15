@@ -115,7 +115,7 @@ class SCDOperations():
         self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
     
 
-    def delete_operational_intent(self, operational_intent_id:uuid.uuid4, ovn: uuid.uuid4):
+    def delete_operational_intent(self, operational_intent_id:uuid.uuid4, ovn:str):
         
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
         audience = env.get("DSS_SELF_AUDIENCE", 0)        
@@ -131,20 +131,22 @@ class SCDOperations():
         else:
             error = auth_token.get("error")            
         
-        dss_subscription_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
+        dss_opint_delete_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
+        
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
         delete_payload = DeleteOperationalIntentConstuctor(entity_id= operational_intent_id, ovn = ovn)
 
-        dss_r = requests.put(dss_subscription_url, json =json.loads(json.dumps(asdict(delete_payload))), headers=headers)
+        dss_r = requests.delete(dss_opint_delete_url, json =json.loads(json.dumps(asdict(delete_payload))), headers=headers)
         
         dss_response = dss_r.json()
         dss_r_status_code = dss_r.status_code
 
         if dss_r_status_code == 200:
             common_200_response = CommonDSS2xxResponse(message="Successfully deleted operational intent id %s" % operational_intent_id)
-            dss_response_formatted = DeleteOperationalIntentResponseSuccess(subscribers= dss_response["subscribers"],operational_intent_reference=dss_response_formatted['operational_intent_reference'])
+            dss_response_formatted = DeleteOperationalIntentResponseSuccess(subscribers= dss_response["subscribers"],operational_intent_reference=dss_response['operational_intent_reference'])
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=dss_response_formatted, status =200, message= common_200_response)
         elif dss_r_status_code == 404:
+            
             common_400_response = CommonDSS4xxResponse(message="URL endpoint not found")
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=  dss_response, status = 404,message=common_400_response)
 
@@ -184,7 +186,8 @@ class SCDOperations():
         blender_base_url = env.get("BLENDER_FQDN", 0)
         implicit_subscription_parameters = ImplicitSubscriptionParameters(uss_base_url=blender_base_url)
         operational_intent_reference = OperationalIntentReference(extents = [asdict(volumes[0])], key =[management_key], state = state, uss_base_url = blender_base_url, new_subscription = implicit_subscription_parameters)
-        p = json.loads(json.dumps(asdict(operational_intent_reference)))        
+        p = json.loads(json.dumps(asdict(operational_intent_reference)))     
+        d_r = OperationalIntentSubmissionStatus(status = "not started", status_code= 503, message= "Service is not available / connection not established", dss_response={}, operational_intent_id = new_entity_id)
         try:
             dss_r = requests.put(dss_subscription_url, json =p , headers=headers)
         except Exception as re:
@@ -211,7 +214,7 @@ class SCDOperations():
             d_r = OperationalIntentSubmissionStatus(status = "failure", status_code= 409, message= dss_r.text, dss_response = dss_creation_response_error, operational_intent_id = new_entity_id)
             
         else:
-            logger.error("Error submitting operational intent to the DSS: %s" % dss_response)
+            logger.error("Error submitting operational intent to the DSS: %s" % asdict(d_r))
 
         return d_r
            
