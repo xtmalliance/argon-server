@@ -15,10 +15,9 @@ There are different modules that enable this:
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this __does not__ use the USS <-> USS API but is a standalone component, for supported DSS commands see below
 - _DSS Connectivity_: There are modules to connect and read for e.g. Remote ID data from a DSS, Strategic deconfliction / flight authorization
 
-
 ## Openskies stack
 
-Flight tracking data can be submitted to [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) by an Display provider like [Flight Blender](https://github.com/openskies-sh/flight-blender) via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below.
+Flight tracking data can be submitted to "Display application" [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) by an "Display provider" like [Flight Blender](https://github.com/openskies-sh/flight-blender) via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below. In addition, standards-compliant flight authorizations can be issued using this stack.
 
 ![OpenskiesStack](images/openskies-stack.png)
 
