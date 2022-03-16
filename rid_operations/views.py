@@ -1,7 +1,7 @@
 from requests.adapters import HTTPResponse
 from auth_helper.utils import requires_scopes
 import json
-from dataclasses import asdict
+from dataclasses import asdict, is_dataclass
 from pyproj import Geod
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
@@ -15,10 +15,11 @@ import shapely.geometry
 import redis
 from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse
 import hashlib
-from flight_feed_operations import flight_stream_helper
+from flight_feed_operations import flight_stream_helper, tasks
 from uuid import UUID
 import logging
 from typing import Any
+from .tasks import stream_rid_test_data
 import time
 
 
@@ -42,8 +43,8 @@ class RIDOutputHelper():
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
-            if dataclasses.is_dataclass(o):
-                return dataclasses.asdict(o)
+            if is_dataclass(o):
+                return asdict(o)
             return super().default(o)
 
 
@@ -381,8 +382,6 @@ def create_test(request, test_id):
     r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
             'REDIS_PORT', 6379), decode_responses=True)
 
-    # TODO process requested flights
-    
     test_id = 'rid-test_' + test_id
     # Test already exists
     if r.exists(test_id):
@@ -390,7 +389,10 @@ def create_test(request, test_id):
     else:
         now = arrow.now()
         r.set(test_id, json.dumps({'created_at':now.isoformat()}))
-        r.expire(test_id, timedelta(minutes=5))
+        r.expire(test_id, timedelta(minutes=5))            
+        # TODO process requested flights
+        # stream_rid_test_data.delay(requested_flights = json.dumps(requested_flights))  # Send a job to the task queue
+        
    
     create_test_response = CreateTestResponse(injected_flights = requested_flights, version = 1)
 

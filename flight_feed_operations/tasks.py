@@ -2,7 +2,7 @@
 from celery import Celery
 import os, json
 import logging
-import time, datetime
+
 import requests
 from . import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
