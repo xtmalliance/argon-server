@@ -2,28 +2,25 @@
 
 # Flight Blender
 
-Flight Blender is two things:
+Flight Blender does three things:
 
 - a flight feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data
 - an open source Remote ID "display provider" compatible with ASTM Remote ID standard
+- an open source implementation of the ASTM USS <-> USS standard.
 
 There are different modules that enable this:
 
 - _Flight Tracking_: It takes in flight tracking feeds from various sources e.g. ADS-B, live telemetry, Broadcast Remote ID and others and outputs as a single fused JSON feed and submits it to a Display Application e.g. [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) to be shown in real-time on a display
 - _Geofence_: A Geofence can be submitted into Flight Blender and consequently transmitted to Spotlight
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this __does not__ use the USS <-> USS API but is a standalone component, for supported DSS commands see below
-- _DSS Connectivity_: There are modules to connect and read for e.g. Remote ID data from a DSS
+- _DSS Connectivity_: There are modules to connect and read for e.g. Remote ID data from a DSS, Strategic deconfliction / flight authorization
 
-## First steps / Get Started
-
-Normally a "Display Provider" is used in conjunction with a "Display Application". In this case Flight Blender output is directed to a Flight Spotlight instance. You can customize an application instance by choosing what kind of modules you want to support, you can pick any or all from the above.
 
 ## Openskies stack
 
-Flight tracking data can be submitted to Flight Spotlight by an Display provider like [Flight Blender](https://github.com/openskies-sh/flight-blender) via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below
+Flight tracking data can be submitted to [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) by an Display provider like [Flight Blender](https://github.com/openskies-sh/flight-blender) via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
-
 
 ## Installation
 
