@@ -35,3 +35,8 @@ def poll_uss_for_flights_async():
                 if bool(flights_dict):
                     subscription_id = key.split(':')[1]                    
                     myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)
+
+
+@app.task(name='submit_rid_test_flights')
+def submit_rid_test_data(requested_flights):
+    pass

@@ -352,6 +352,18 @@ def get_flight_data(request, flight_id):
 
     return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
 
+
+@api_view(['GET'])
+@requires_scopes(['dss.read.identification_service_areas'])
+def get_uss_flights(request):
+    ''' This is the end point for the rid_qualifier to get details of a flight '''
+    view = request.GET.get('view', None)
+    include_recent_positions = request.GET.get('include_recent_positions', None)
+    
+    
+
+    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
+
 @api_view(['PUT'])
 @requires_scopes(['rid.inject_test_data'])
 def create_test(request, test_id):
