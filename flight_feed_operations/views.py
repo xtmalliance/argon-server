@@ -63,12 +63,10 @@ def set_air_traffic(request):
                 logger.error("Aircraft Type not found in submitted observation details %s" % mt_ve)
                 pass            
 
-        single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address , 'metadata' : json.dumps(metadata)}
+        # single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address , 'metadata' : json.dumps(metadata)}
         so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= mtd)
         
-        msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(single_observation)))  # Send a job to the task queue
+        msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
        
     op = HTTPProcessingResponse(message="OK", status = 200)
     return JsonResponse(asdict(op), status=op.status)
-
-                

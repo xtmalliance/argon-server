@@ -2,8 +2,15 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 import redis
+from rid_utils import RIDTestInjection
+import time
+import arrow
+import json
+from dataclasses import asdict
 from os import environ as env
 from flight_feed_operations import flight_stream_helper
+from flight_feed_operations.data_definitions import RIDMetadata, SingleObervation
+from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
@@ -37,6 +44,27 @@ def poll_uss_for_flights_async():
                     myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)
 
 
-@app.task(name='submit_rid_test_flights')
-def submit_rid_test_data(requested_flights):
-    pass
+@app.task(name='stream_rid_test_data')
+def stream_rid_test_data(requested_flights):
+    all_requested_flights = []
+    for requested_flight in requested_flights:
+        requested_flight = RIDTestInjection(injection_id = requested_flight['injection_id'], telemetry = requested_flight['telemetry'], details_responses=requested_flight['details_responses'])
+        all_requested_flights.append(requested_flight)
+       
+    for r_f in all_requested_flights:    
+        pass
+
+    #     lat_dd = 
+    #     lon_dd = 
+    #     altitude_mm = 
+    #     traffic_source = 
+    #     source_type = 
+    #     icao_address = 
+    #     mtd = 
+    #     so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= mtd)
+
+    #     msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+
+
+
+    # time.sleep(3)

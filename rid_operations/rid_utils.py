@@ -171,3 +171,6 @@ class RIDFlight:
   current_state: Optional[RIDAircraftState]  
   simulated: Optional[bool]
   recent_positions: Optional[List[RIDRecentAircraftPosition]]
+
+@dataclass
+class 
