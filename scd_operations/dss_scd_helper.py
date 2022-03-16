@@ -129,7 +129,9 @@ class SCDOperations():
         except Exception as e:
             logger.error("Error in getting Authority Access Token %s " % e)            
         else:
-            error = auth_token.get("error")            
+            error = auth_token.get("error", None)     
+            if error:        
+                logger.error("Authority server provided the following error during token request %s " % error)            
         
         dss_opint_delete_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
         
@@ -176,7 +178,9 @@ class SCDOperations():
         except Exception as e:
             logger.error("Error in getting Authority Access Token %s " % e)            
         else:
-            error = auth_token.get("error")            
+            error = auth_token.get("error", None)     
+            if error:        
+                logger.error("Authority server provided the following error during token request %s " % error)       
         
         # A token from authority was received, we can now submit the operational intent
         new_entity_id = str(uuid.uuid4())

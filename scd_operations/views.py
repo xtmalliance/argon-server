@@ -5,7 +5,7 @@ import arrow
 from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict
-from datetime import datetime, timedelta
+from datetime import timedelta
 from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage, ClearAreaResponse
 from . import dss_scd_helper
 from rid_operations import rtree_helper
@@ -196,9 +196,7 @@ def SCDAuthTest(request, flight_id):
         if deconflicted: 
             my_scd_dss_helper = dss_scd_helper.SCDOperations()
             op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
-
-            if op_int_submission.status == "success":
-                
+            if op_int_submission.status == "success":                
                 view_r_bounds = ",".join(map(str,view_rect_bounds))
                 bounds_obj = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response)
 
