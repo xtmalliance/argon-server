@@ -172,5 +172,3 @@ class RIDFlight:
   simulated: Optional[bool]
   recent_positions: Optional[List[RIDRecentAircraftPosition]]
 
-@dataclass
-class 
