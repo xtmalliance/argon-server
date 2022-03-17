@@ -411,3 +411,12 @@ def delete_test(request, test_id, version):
         
     return JsonResponse({}, status=200)
 
+
+@api_view(['GET'])
+@requires_scopes(['rid.inject_test_data'])
+def get_uss_flight_details(request, flight_id):
+    ''' This is the end point for the rid_qualifier to get details of a flight '''
+
+
+    return JsonResponse({}, status=200)
+

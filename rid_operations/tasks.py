@@ -2,7 +2,7 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 import redis
-from rid_utils import RIDTestInjection
+from .rid_utils import RIDTestInjection
 import time
 import arrow
 import json
@@ -51,8 +51,9 @@ def stream_rid_test_data(requested_flights):
         requested_flight = RIDTestInjection(injection_id = requested_flight['injection_id'], telemetry = requested_flight['telemetry'], details_responses=requested_flight['details_responses'])
         all_requested_flights.append(requested_flight)
        
-    for r_f in all_requested_flights:    
-        pass
+    for r_f in all_requested_flights:
+        print(r_f)    
+        
 
     #     lat_dd = 
     #     lon_dd = 
