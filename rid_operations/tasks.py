@@ -47,10 +47,12 @@ def poll_uss_for_flights_async():
 @app.task(name='stream_rid_test_data')
 def stream_rid_test_data(requested_flights):
     all_requested_flights = []
-    for requested_flight in requested_flights:
+    
+    rf = json.loads(requested_flights)
+    for requested_flight in rf:       
         requested_flight = RIDTestInjection(injection_id = requested_flight['injection_id'], telemetry = requested_flight['telemetry'], details_responses=requested_flight['details_responses'])
         all_requested_flights.append(requested_flight)
-       
+    
     for r_f in all_requested_flights:
         print(r_f)    
         

@@ -382,7 +382,7 @@ def create_test(request, test_id):
     r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
             'REDIS_PORT', 6379), decode_responses=True)
 
-    test_id = 'rid-test_' + test_id
+    test_id = 'rid-test_' + str(test_id)
     # Test already exists
     if r.exists(test_id):
         return JsonResponse({}, status=409)
@@ -391,18 +391,19 @@ def create_test(request, test_id):
         r.set(test_id, json.dumps({'created_at':now.isoformat()}))
         r.expire(test_id, timedelta(minutes=5))            
         # TODO process requested flights
-        # stream_rid_test_data.delay(requested_flights = json.dumps(requested_flights))  # Send a job to the task queue
+        stream_rid_test_data.delay(requested_flights = json.dumps(requested_flights))  # Send a job to the task queue
         
    
     create_test_response = CreateTestResponse(injected_flights = requested_flights, version = 1)
 
     return JsonResponse(asdict(create_test_response), status=200)
 
-@api_view(['PUT'])
+@api_view(['DELETE'])
 @requires_scopes(['rid.inject_test_data'])
 def delete_test(request, test_id, version):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
     # Deleteing test
+    test_id = str(test_id)
     r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
             'REDIS_PORT', 6379), decode_responses=True)
 
