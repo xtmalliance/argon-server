@@ -1,15 +1,16 @@
+import uuid
 from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 import redis
-from .rid_utils import RIDTestInjection
+from .rid_utils import RIDTestInjection, AllRequestedFlightDetails
 import time
 import arrow
 import json
 from dataclasses import asdict
 from os import environ as env
 from flight_feed_operations import flight_stream_helper
-from flight_feed_operations.data_definitions import RIDMetadata, SingleObervation
+from flight_feed_operations.data_definitions import SingleObervation
 from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -53,21 +54,32 @@ def stream_rid_test_data(requested_flights):
         requested_flight = RIDTestInjection(injection_id = requested_flight['injection_id'], telemetry = requested_flight['telemetry'], details_responses=requested_flight['details_responses'])
         all_requested_flights.append(requested_flight)
     
-    for r_f in all_requested_flights:
-        print(r_f)    
-        
 
-    #     lat_dd = 
-    #     lon_dd = 
-    #     altitude_mm = 
-    #     traffic_source = 
-    #     source_type = 
-    #     icao_address = 
-    #     mtd = 
-    #     so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= mtd)
+    all_requested_flight_details = {}
+    max_telemetry_data_length = 0
+    telemetry_length = []
+    for flight_id, r_f in enumerate(all_requested_flights):
+        internal_flight_id = str(uuid.uuid4())
+        telemetry_length.append(len(r_f.telemetry))
+        all_requested_flight_details[flight_id+1] = AllRequestedFlightDetails(id= internal_flight_id,telemetry_length = , injection = asdict(r_f))
 
-    #     msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
-
+    max_telemetry_data_length = max(telemetry_length)
+    
+    
+    print(all_requested_flight_details.keys())
 
 
-    # time.sleep(3)
+
+
+        # lat_dd = requested_flight['position']['lat']
+        # lon_dd = requested_flight['position']['lng']    
+        # altitude_mm = requested_flight['position']['alt']
+        # traffic_source = 3
+        # source_type = 0
+        # icao_address = requested_flight['details']['id']
+        # mtd = json.dumps(requested_flight)
+        # so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= mtd)
+
+        # msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+        # # Sleep for 2 seconds before submitting the next iteration.
+        # time.sleep(env.get('HEARTBEAT_RATE_SECS', 2))
