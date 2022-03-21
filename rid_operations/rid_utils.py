@@ -172,3 +172,8 @@ class RIDFlight:
   simulated: Optional[bool]
   recent_positions: Optional[List[RIDRecentAircraftPosition]]
 
+@dataclass
+class AllRequestedFlightDetails:
+  id: uuid
+  telemetry_length: int
+  injection: List[RIDTestInjection]
