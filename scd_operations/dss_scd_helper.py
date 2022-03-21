@@ -10,7 +10,8 @@ from shapely.ops import unary_union
 from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentReferenceDSSDetails
+
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -114,9 +115,8 @@ class SCDOperations():
         self.dss_base_url = env.get('DSS_BASE_URL')        
         self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
     
-
-    def delete_operational_intent(self, operational_intent_id:uuid.uuid4, ovn:str):
-        
+    def get_auth_token(self):
+            
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
         audience = env.get("DSS_SELF_AUDIENCE", 0)        
         try: 
@@ -131,7 +131,13 @@ class SCDOperations():
         else:
             error = auth_token.get("error", None)     
             if error:        
-                logger.error("Authority server provided the following error during token request %s " % error)            
+                logger.error("Authority server provided the following error during token request %s " % error)       
+        
+        return auth_token
+
+
+    def delete_operational_intent(self, operational_intent_id:uuid.uuid4, ovn:str):
+        auth_token = self.get_auth_token()
         
         dss_opint_delete_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
         
@@ -164,24 +170,63 @@ class SCDOperations():
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=  dss_response, status = 500,message=common_400_response)
         return delete_op_int_status
 
-
-    def create_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]):        
-        my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
-        audience = env.get("DSS_SELF_AUDIENCE", 0)        
-        try: 
-            assert audience
-        except AssertionError as ae:
-            logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
-
+    def check_volume_for_conflicts(self, volume:Volume4D)->bool:
+        # This method checks if a flight volume has conflicts with any other volume in the airspace
+        auth_token = self.get_auth_token()
+        query_op_int_url = self.dss_base_url + 'dss/v1/operational_intent_references/query'
+        headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
+        area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)
         try:
-            auth_token = my_authorization_helper.get_cached_credentials(audience= audience, token_type='scd')
-        except Exception as e:
-            logger.error("Error in getting Authority Access Token %s " % e)            
-        else:
-            error = auth_token.get("error", None)     
-            if error:        
-                logger.error("Authority server provided the following error during token request %s " % error)       
+            operational_intent_ref_response = requests.get(query_op_int_url, json =json.loads(json.dumps(asdict(area_of_interest))) , headers=headers)
+        except Exception as re:
+            logger.error("Error in putting operational intents for the volume %s " % re)            
+        else:                    
+            dss_operational_intent_references = operational_intent_ref_response.json()
         
+        operational_intent_references = dss_operational_intent_references['operational_intent_references']
+     
+        # Query the operational intent reference 
+        all_deconfliction_status = []
+        for operational_intent_reference_id in operational_intent_references:
+            # Get the USS URL endpoint
+            op_int_uss_details = self.dss_base_url + 'dss/v1/operational_intent_references/'+ operational_intent_reference_id
+            try:
+                op_int_uss_details = requests.get(op_int_uss_details, headers=headers)
+            except Exception as e: 
+                logger.error("Error in getting operational intent details %s" % e)
+            else:
+                operational_intent_reference = op_int_uss_details.json()
+                o_i_r =operational_intent_reference['operational_intent_reference']
+                o_i_r_formatted =               OperationalIntentReferenceDSSResponse(id= o_i_r['id'], manager=o_i_r['manager'], uss_availability=o_i_r['uss_availability'], version= o_i_r['version'],state = o_i_r['state'], ovn = o_i_r['ovn'], time_start=o_i_r['time_start'], time_end=o_i_r['time_end'], uss_base_url= o_i_r['uss_base_url'], subscription_id= o_i_r['subscription_id'] )
+
+            # check the USS for flight volume
+            uss_operational_intent_url = o_i_r_formatted.uss_base_url + '/uss/v1/operational_intent'+ o_i_r_formatted.id
+
+                          
+            operational_intent_request = requests.get(uss_operational_intent_url, headers=headers)
+            operational_intent_details_json = operational_intent_request.json()
+            if operational_intent_request.status_code ==200:
+                operational_intent_volumes = operational_intent_details_json['details']['volumes']
+
+                my_volume_converter = VolumesConverter()
+                volume_geo_json = my_volume_converter.convert_extents_to_geojson(volumes = operational_intent_volumes)
+                # TODO: Check if the volume intersects with existing volume    
+                
+                deconflicted = False
+
+            else:
+                logger.error("Could not retrieve flight details from USS %s" % operational_intent_request.json())      
+                deconflicted = False
+
+
+            all_deconfliction_status.append(deconflicted)
+        deconfliction_status = all(all_deconfliction_status)
+        return deconfliction_status
+
+
+    def create_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]):
+        
+        auth_token = self.get_auth_token()
         # A token from authority was received, we can now submit the operational intent
         new_entity_id = str(uuid.uuid4())
         dss_subscription_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + new_entity_id
@@ -192,6 +237,9 @@ class SCDOperations():
         operational_intent_reference = OperationalIntentReference(extents = [asdict(volumes[0])], key =[management_key], state = state, uss_base_url = blender_base_url, new_subscription = implicit_subscription_parameters)
         p = json.loads(json.dumps(asdict(operational_intent_reference)))     
         d_r = OperationalIntentSubmissionStatus(status = "not started", status_code = 503, message = "Service is not available / connection not established", dss_response ={}, operational_intent_id = new_entity_id)
+        # Query other USSes for operational intent 
+        # Check if there are conflicts (or not)
+
         try:
             dss_r = requests.put(dss_subscription_url, json =p , headers=headers)
         except Exception as re:

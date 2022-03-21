@@ -59,11 +59,6 @@ class Altitude:
     units: str
 
 @dataclass
-class OperationalIntentReference:
-    """Class for keeping track of an operational intent reference"""
-    id: uuid4
-
-@dataclass
 class Volume3D:
     '''A class to hold Volume3D objects'''
     outline_circle: Circle
@@ -275,3 +270,11 @@ class DeleteOperationalIntentResponse:
 class DeleteFlightResponse:
     result:  Literal[DeleteFlightStatus.Closed, DeleteFlightStatus.Failed]
     notes:str
+
+@dataclass
+class QueryOperationalIntentPayload:
+    area_of_interest: Volume4D
+
+@dataclass
+class OperationalIntentReferenceDSSDetails:
+    operational_intent_refrence: OperationalIntentReferenceDSSResponse
