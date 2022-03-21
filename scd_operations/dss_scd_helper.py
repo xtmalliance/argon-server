@@ -191,12 +191,12 @@ class SCDOperations():
         implicit_subscription_parameters = ImplicitSubscriptionParameters(uss_base_url=blender_base_url)
         operational_intent_reference = OperationalIntentReference(extents = [asdict(volumes[0])], key =[management_key], state = state, uss_base_url = blender_base_url, new_subscription = implicit_subscription_parameters)
         p = json.loads(json.dumps(asdict(operational_intent_reference)))     
-        d_r = OperationalIntentSubmissionStatus(status = "not started", status_code= 503, message= "Service is not available / connection not established", dss_response={}, operational_intent_id = new_entity_id)
+        d_r = OperationalIntentSubmissionStatus(status = "not started", status_code = 503, message = "Service is not available / connection not established", dss_response ={}, operational_intent_id = new_entity_id)
         try:
             dss_r = requests.put(dss_subscription_url, json =p , headers=headers)
         except Exception as re:
             logger.error("Error in putting operational intent in the DSS %s " % re)            
-            d_r = OperationalIntentSubmissionStatus(status = "failure", status_code= 500, message= re, dss_response={}, operational_intent_id = new_entity_id)
+            d_r = OperationalIntentSubmissionStatus(status = "failure", status_code = 500, message = re, dss_response={}, operational_intent_id = new_entity_id)
             dss_r_status_code = d_r.status_code
         else:                    
             dss_response = dss_r.json()
@@ -208,18 +208,17 @@ class SCDOperations():
             time_start = Time(format=o_i_r['time_start']['format'], value=o_i_r['time_start']['value'])
             time_end = Time(format=o_i_r['time_end']['format'], value=o_i_r['time_end']['value'])
             operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],uss_availability=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
-            dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference=operational_intent_r, subscribers=subscribers)
+            dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference = operational_intent_r, subscribers = subscribers)
             logger.info("Successfully created operational intent in the DSS")
             logger.debug("Response details from the DSS %s" % dss_r.text)
-            d_r = OperationalIntentSubmissionStatus(status = "success", status_code= 201, message= "Successfully created operational intent in the DSS", dss_response = dss_creation_response, operational_intent_id = new_entity_id)
+            d_r = OperationalIntentSubmissionStatus(status = "success", status_code = 201, message= "Successfully created operational intent in the DSS", dss_response = dss_creation_response, operational_intent_id = new_entity_id)
         elif dss_r_status_code == 409:            
             dss_creation_response_error = OperationalIntentSubmissionError(status = "failure", result = dss_response["result"], notes = dss_response["notes"])
             logger.error("DSS operational creation error %s" % dss_r.text)
             d_r = OperationalIntentSubmissionStatus(status = "failure", status_code= 409, message= dss_r.text, dss_response = dss_creation_response_error, operational_intent_id = new_entity_id)
             
         else:
+            d_r.status_code = dss_r_status_code
             logger.error("Error submitting operational intent to the DSS: %s" % asdict(d_r))
 
         return d_r
-           
-        
