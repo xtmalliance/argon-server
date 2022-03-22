@@ -2,7 +2,7 @@
 
 # Flight Blender
 
-Flight Blender does three things:
+Flight Blender has three things:
 
 - a flight feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data
 - an open source Remote ID "display provider" compatible with ASTM Remote ID standard
