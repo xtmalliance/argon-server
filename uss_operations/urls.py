@@ -21,17 +21,11 @@ from flight_feed_operations import views as flight_feed_views
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('ping', flight_feed_views.ping),
-    path('set_air_traffic', flight_feed_views.set_air_traffic),
+    # USS Details Urls
+    # This end point is used when op-intent details is used by the USS: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#section/Authentication 
+    # re_path('uss/v1/operational_intents/', scd_auth_views.USSUpdateOpIntDetails),    
+    # re_path('uss/v1/operational_intents/(?P<flight_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', scd_auth_views.USSOpIntDetails),    
+    # re_path('uss/v1/operational_intents/(?P<flight_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/telemetry', scd_auth_views.USSOpIntDetails),      
+    # re_path('uss/v1/operational_intents/', scd_auth_views.USSOpIntDetails),    
 
-    path('rid/', include('rid_operations.urls')),    
-    path('scd/', include('scd_operations.urls')),    
-    path('uss/', include('uss_operations.urls')),    
-
-
-    path('geo_fence_ops/', include('geo_fence_operations.urls')),    
-    path('flight_declaration_ops/', include('flight_declaration_operations.urls')),
-
-    
 ]

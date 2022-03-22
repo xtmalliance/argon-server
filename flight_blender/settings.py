@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'flight_declaration_operations',
     'geo_fence_operations',
     'scd_operations',
+    'uss_operations',
     'flight_feed_operations',
     'rid_operations'
 ]
