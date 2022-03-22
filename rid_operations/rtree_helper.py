@@ -3,6 +3,10 @@ from typing import List
 from os import environ as env
 import redis
 import json 
+from shapely.geometry import Polygon
+from rtree import index
+
+
 
 class OperationalIntentsIndexFactory():
     def __init__(self, index_name:str):
@@ -44,3 +48,27 @@ class OperationalIntentsIndexFactory():
     def check_box_intersection(self, view_box:List[float]):
         intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]        
         return intersections
+
+
+
+def check_polygon_intersection(polygons:List[Polygon], polygon_to_check:Polygon ) -> True:     
+    idx = index.Index()
+    for pos, polygon in enumerate(polygons):
+        idx.insert(pos, polygon.bounds)
+
+    op_ints_of_interest_ids = list(idx.intersection(polygon_to_check.bounds))
+    does_intersect = []
+    if op_ints_of_interest_ids: 
+        for op_ints_of_interest_id in op_ints_of_interest_ids:
+            existing_op_int = polygons[op_ints_of_interest_id]
+            intersects = polygon_to_check.intersects(existing_op_int)
+            if intersects:
+                does_intersect.append(True)
+            else: 
+                does_intersect.append(False)
+
+        return all(does_intersect)
+
+
+    else: 
+        return False

@@ -4,14 +4,14 @@ import json
 import arrow
 from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
-from dataclasses import asdict
+from dataclasses import asdict, is_dataclass
 from datetime import timedelta
 from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage, ClearAreaResponse
 from . import dss_scd_helper
 from rid_operations import rtree_helper
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
-import dataclasses
+import uuid
 import redis
 import logging
 from uuid import UUID
@@ -32,8 +32,8 @@ def is_valid_uuid(uuid_to_test, version=4):
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
-            if dataclasses.is_dataclass(o):
-                return dataclasses.asdict(o)
+            if is_dataclass(o):
+                return asdict(o)
             return super().default(o)
 
 @api_view(['GET'])
@@ -54,7 +54,7 @@ def SCDClearAreaRequest(request):
     
     r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
-    my_geo_json_converter.convert_extents_to_geojson(volumes = extent)
+    my_geo_json_converter.convert_volumes_to_geojson(volumes = extent)
     view_rect_bounds = my_geo_json_converter.get_bounds()
 
     my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
@@ -98,6 +98,7 @@ def SCDAuthTest(request, flight_id):
         failed_test_injection_response = TestInjectionResult(result = "Failed", notes="Processing of operational intent has failed",operational_intent_id ="")        
         rejected_test_injection_response = TestInjectionResult(result = "Rejected", notes="An existing operational intent already exists and conflicts in space and time",operational_intent_id="")
         planned_test_injection_response = TestInjectionResult(result = "Planned", notes="Successfully created operational intent in the DSS",operational_intent_id ="")
+        conflict_with_flight_test_injection_response = TestInjectionResult(result = "ConflictWithFlight", notes="Processing of operational intent has failed, flight not deconflicted",operational_intent_id ="")        
 
         scd_test_data = request.data
         r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
@@ -121,7 +122,7 @@ def SCDAuthTest(request, flight_id):
             operational_intent_volumes = operational_intent['volumes']
             # convert operational intent to GeoJSON and get bounds
             my_geo_json_converter = dss_scd_helper.VolumesConverter()
-            my_geo_json_converter.convert_extents_to_geojson(volumes = operational_intent_volumes)
+            my_geo_json_converter.convert_volumes_to_geojson(volumes = operational_intent_volumes)
             view_rect_bounds = my_geo_json_converter.get_bounds()
             
             all_volumes = []
@@ -175,7 +176,7 @@ def SCDAuthTest(request, flight_id):
 
         # flight authorisation data is correct, can submit the operational intent to the DSS
         all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
-        deconflicted = False
+        self_deconflicted = False
         if all_existing_op_ints_in_area:
             # there are existing op_ints in the area. 
             deconflicted_status = []
@@ -188,12 +189,12 @@ def SCDAuthTest(request, flight_id):
                     deconflicted_status.append(True)
                 else:
                     deconflicted_status.append(False)
-            deconflicted = all(deconflicted_status)
+            self_deconflicted = all(deconflicted_status)
         else:
             # No existing op ints we can plan it.             
-            deconflicted = True
+            self_deconflicted = True
             
-        if deconflicted: 
+        if self_deconflicted: 
             my_scd_dss_helper = dss_scd_helper.SCDOperations()
             op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
             if op_int_submission.status == "success":                
@@ -204,10 +205,15 @@ def SCDAuthTest(request, flight_id):
                 r.set(opint_id, json.dumps(asdict(bounds_obj)))
                 r.expire(name = opint_id, time = opint_subscription_end_time)
                 planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+            elif op_int_submission.status=='conflict_with_flight':
+                conflict_with_flight_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+                return Response(json.loads(json.dumps(conflict_with_flight_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
             else: 
                 failed_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
                 return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         else:
+            tmp_operational_intent_id = str(uuid.uuid4())
+            rejected_test_injection_response.operational_intent_id = tmp_operational_intent_id
             return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         
         my_rtree_helper.clear_rtree_index()
