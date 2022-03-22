@@ -144,7 +144,7 @@ class RemoteIDOperations():
             except Exception as e: 
                 audience == 'localhost'
             else:
-                if ext.domain in ['localhost']:
+                if ext.domain in ['localhost', 'internal']:# for allowing host.docker.internal setup as well
                     audience = 'localhost'
                 else:
                     audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials

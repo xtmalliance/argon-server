@@ -120,11 +120,6 @@ def SCDAuthTest(request, flight_id):
         try:
             operational_intent = scd_test_data['operational_intent']
             operational_intent_volumes = operational_intent['volumes']
-            # convert operational intent to GeoJSON and get bounds
-            my_geo_json_converter = dss_scd_helper.VolumesConverter()
-            my_geo_json_converter.convert_volumes_to_geojson(volumes = operational_intent_volumes)
-            view_rect_bounds = my_geo_json_converter.get_bounds()
-            
             all_volumes = []
             for volume in operational_intent_volumes:
                 outline_polygon = None
@@ -147,18 +142,27 @@ def SCDAuthTest(request, flight_id):
                 altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])                        
                 volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
 
-                time_start = Time(format = volume['time_start']['format'], value = one_minute_from_now_str)
-                time_end = Time(format =volume['time_end']['format'] , value = two_minutes_from_now_str)
+                # time_start = Time(format = volume['time_start']['format'], value = one_minute_from_now_str)
+                # time_end = Time(format =volume['time_end']['format'] , value = two_minutes_from_now_str)
+                
+                time_start = Time(format = volume['time_start']['format'], value = volume['time_start']['value'])
+                time_end = Time(format =volume['time_end']['format'] , value = volume['time_end']['value'])
                 
                 volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
                 all_volumes.append(volume4D)
+                
             
-            operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])            
+            operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])   
+            # convert operational intent to GeoJSON and get bounds
         except KeyError as ke:
             return Response({"result":"Could not parse test injection payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
 
         test_injection_data = SCDTestInjectionDataPayload(operational_intent= operational_intent_data, flight_authorisation= f_a)
 
+        my_geo_json_converter = dss_scd_helper.VolumesConverter()
+        my_geo_json_converter.convert_volumes_to_geojson(volumes = all_volumes)
+        view_rect_bounds = my_geo_json_converter.get_bounds()
+                    
         # Check flight auth data first before going to DSS
         my_serial_number_validator = UAVSerialNumberValidator(serial_number = flight_authorization_data['uas_serial_number'])
         my_reg_number_validator = OperatorRegistrationNumberValidator(operator_registration_number = flight_authorization_data['operator_id'])
@@ -237,7 +241,6 @@ def SCDAuthTest(request, flight_id):
             opint_id = op_int_detail['success_response']['operational_intent_reference']['id']
             ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
             logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
-
             my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
 
             delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system.")

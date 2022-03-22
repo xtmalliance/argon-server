@@ -56,7 +56,9 @@ def check_polygon_intersection(polygons:List[Polygon], polygon_to_check:Polygon 
     for pos, polygon in enumerate(polygons):
         idx.insert(pos, polygon.bounds)
 
+
     op_ints_of_interest_ids = list(idx.intersection(polygon_to_check.bounds))
+
     does_intersect = []
     if op_ints_of_interest_ids: 
         for op_ints_of_interest_id in op_ints_of_interest_ids:
@@ -67,6 +69,7 @@ def check_polygon_intersection(polygons:List[Polygon], polygon_to_check:Polygon 
             else: 
                 does_intersect.append(False)
 
+        print(all(does_intersect))
         return all(does_intersect)
 
 

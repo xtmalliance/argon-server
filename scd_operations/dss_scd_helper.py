@@ -11,7 +11,8 @@ from rid_operations import rtree_helper
 from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentReferenceDSSDetails
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume3D, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, Circle, Altitude, LatLngPoint, Radius
+from .scd_data_definitions import Polygon as Plgn
 import tldextract
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -79,37 +80,41 @@ class VolumesConverter():
         rect_bounds = union.bounds        
         return rect_bounds
 
-    def _convert_volume_to_geojson_feature(self, volume: Volume4D):        
-        volume = volume['volume']
+    def _convert_volume_to_geojson_feature(self, volume: Volume4D):   
+
+        v = asdict(volume)
+        cur_volume = v['volume']
         geo_json_features = []
         
-        if ('outline_polygon' in volume.keys()):
-            outline_polygon = volume['outline_polygon']
-            point_list = []
-            for vertex in outline_polygon['vertices']:
-                p = Point(vertex['lng'], vertex['lat'])
-                point_list.append(p)
-            outline_polygon = Polygon([[p.x, p.y] for p in point_list])
-            self.all_volume_features.append(outline_polygon)
-            outline_p = shapely.geometry.mapping(outline_polygon)
-            
-            polygon_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_p}
-            geo_json_features.append(polygon_feature)
+        if ('outline_polygon' in cur_volume.keys()):
+            outline_polygon = cur_volume['outline_polygon']
+            if outline_polygon:
+                point_list = []
+                for vertex in outline_polygon['vertices']:
+                    p = Point(vertex['lng'], vertex['lat'])
+                    point_list.append(p)
+                outline_polygon = Polygon([[p.x, p.y] for p in point_list])
+                self.all_volume_features.append(outline_polygon)
+                outline_p = shapely.geometry.mapping(outline_polygon)
+                
+                polygon_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_p}
+                geo_json_features.append(polygon_feature)
 
-        if ('outline_circle' in volume.keys()):
-            outline_circle = volume['outline_circle']
-            circle_radius = outline_circle['radius']['value']
-            center_point = Point(outline_circle['center']['lng'],outline_circle['center']['lat'])
-            utm_center = self.utm_converter(shapely_shape = center_point)
-            buffered_cicle = utm_center.buffer(circle_radius)
-            converted_circle = self.utm_converter(buffered_cicle, inverse=True)
-            self.all_volume_features.append(converted_circle)
-            outline_c = shapely.geometry.mapping(converted_circle)
+        if ('outline_circle' in cur_volume.keys()):
+            outline_circle = cur_volume['outline_circle']
+            if outline_circle:
+                circle_radius = outline_circle['radius']['value']
+                center_point = Point(outline_circle['center']['lng'],outline_circle['center']['lat'])
+                utm_center = self.utm_converter(shapely_shape = center_point)
+                buffered_cicle = utm_center.buffer(circle_radius)
+                converted_circle = self.utm_converter(buffered_cicle, inverse=True)
+                self.all_volume_features.append(converted_circle)
+                outline_c = shapely.geometry.mapping(converted_circle)
 
-            circle_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_c}
+                circle_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_c}
+                
+                geo_json_features.append(circle_feature)
             
-            geo_json_features.append(circle_feature)
-        
         return geo_json_features
 
 
@@ -177,66 +182,139 @@ class SCDOperations():
     def check_volumes_for_conflicts(self, volumes:List[Volume4D])->bool:
         # This method checks if a flight volume has conflicts with any other volume in the airspace
         auth_token = self.get_auth_token()
+        # Query the DSS for operational intentns
         query_op_int_url = self.dss_base_url + 'dss/v1/operational_intent_references/query'
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
 
         for volume in volumes: 
+            operational_intent_references = []
             area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)
+            logging.info("Querying DSS for operational intents in the area..")
             try:
                 operational_intent_ref_response = requests.post(query_op_int_url, json =json.loads(json.dumps(asdict(area_of_interest))) , headers=headers)
             except Exception as re:
                 logger.error("Error in getting operational intent for the volume %s " % re)            
             else:                    
                 dss_operational_intent_references = operational_intent_ref_response.json()
-            
+                
             operational_intent_references = dss_operational_intent_references['operational_intent_references']
-        
+
+            if operational_intent_references:
+                logger.info("{num_intents} existing operational intent references found in the area".format(num_intents = len(operational_intent_references)))
+            else:
+                logger.info("No operational intent references found in the area")
             # Query the operational intent reference 
             all_opints_to_check = []
-            for operational_intent_reference_id in operational_intent_references:
+            all_uss_operational_intent_details = []
+            
+            for operational_intent_reference_detail in operational_intent_references:
                 # Get the USS URL endpoint              
-
+                dss_op_int_details_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_reference_detail['id']
                 # get new auth token for USS 
                 try:
-                    op_int_uss_details = requests.get(op_int_uss_details, headers=headers)
+                    op_int_uss_details = requests.get(dss_op_int_details_url, headers=headers)
                 except Exception as e: 
                     logger.error("Error in getting operational intent details %s" % e)
                 else:
                     operational_intent_reference = op_int_uss_details.json()
-                    o_i_r =operational_intent_reference['operational_intent_reference']
+                    o_i_r = operational_intent_reference['operational_intent_reference']
                     o_i_r_formatted = OperationalIntentReferenceDSSResponse(id= o_i_r['id'], manager=o_i_r['manager'], uss_availability=o_i_r['uss_availability'], version= o_i_r['version'],state = o_i_r['state'], ovn = o_i_r['ovn'], time_start=o_i_r['time_start'], time_end=o_i_r['time_end'], uss_base_url= o_i_r['uss_base_url'], subscription_id= o_i_r['subscription_id'] )
+                    all_uss_operational_intent_details.append(o_i_r_formatted)
 
+
+            for current_uss_operational_intent_detail in all_uss_operational_intent_details:
                 # check the USS for flight volume                    
                 try:
-                    ext = tldextract.extract(o_i_r_formatted.uss_base_url)  
+                    ext = tldextract.extract(current_uss_operational_intent_detail.uss_base_url)  
                 except Exception as e: 
-                    uss_audience == 'localhost'
+                    uss_audience = 'localhost'
                 else:
-                    if ext.domain in ['localhost']:
+                    if ext.domain in ['localhost', 'internal']:# for host.docker.internal type calls
                         uss_audience = 'localhost'
                     else:
                         uss_audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
                 
-                uss_auth_token = self.get_auth_token(audience = uss_audience)                
+                uss_auth_token = self.get_auth_token(audience = uss_audience)          
+                
                 uss_headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + uss_auth_token['access_token']}
-                uss_operational_intent_url = o_i_r_formatted.uss_base_url + '/uss/v1/operational_intent'+ o_i_r_formatted.id
-                            
-                operational_intent_request = requests.get(uss_operational_intent_url, headers=uss_headers)
-                operational_intent_details_json = operational_intent_request.json()
-                if operational_intent_request.status_code ==200:
-                    operational_intent_volumes = operational_intent_details_json['details']['volumes']
-                    my_volume_converter = VolumesConverter()
-                    my_volume_converter.convert_volumes_to_geojson(volumes = operational_intent_volumes)                    
-                    minimum_rotated_rect = my_volume_converter.get_minimum_rotated_rectangle()
-                    all_opints_to_check.append(minimum_rotated_rect)
-
+                uss_operational_intent_url = current_uss_operational_intent_detail.uss_base_url + '/uss/v1/operational_intents/'+ current_uss_operational_intent_detail.id
+                
+                try:
+                    uss_operational_intent_request = requests.get(uss_operational_intent_url, headers=uss_headers)
+                except Exception as e:                     
+                    logger.error("Error in getting operational intent id {uss_op_int_id} details from uss".format(uss_op_int_id= current_uss_operational_intent_detail.id))
+                    logger.error("Error details %s " % e)
                 else:
-                    logger.error("Could not retrieve flight details from USS %s" % operational_intent_request.json())   
-        if operational_intent_references:
+                    operational_intent_details_json = uss_operational_intent_request.json()
+                    
+                    if uss_operational_intent_request.status_code ==200:
+
+                        outline_polygon = None
+                        outline_circle = None
+
+                        op_int_det = operational_intent_details_json['operational_intent']['details']
+                        op_int_ref = operational_intent_details_json['operational_intent']['reference']
+
+                        all_volumes = op_int_det['volumes']
+                        all_v4d = []
+                        for cur_volume in all_volumes:
+
+                            if 'outline_polygon' in cur_volume['volume'].keys():
+                                all_vertices = cur_volume['volume']['outline_polygon']['vertices']
+                                polygon_verticies = []
+                                for vertex in all_vertices:
+                                    v = LatLngPoint(lat = vertex['lat'],lng=vertex['lng'])
+                                    polygon_verticies.append(v)
+
+                                outline_polygon = Plgn(vertices=polygon_verticies)
+
+                            if 'outline_circle' in cur_volume['volume'].keys():                
+                                circle_center =  LatLngPoint(lat = cur_volume['volume']['outline_circle']['center']['lat'], lng = cur_volume['volume']['outline_circle']['center']['lng'])
+                                circle_radius = Radius(value =cur_volume['volume']['outline_circle']['radius']['value'], units = cur_volume['volume']['outline_circle']['radius']['units'])
+                                                
+                                outline_circle = Circle(center =circle_center, radius=circle_radius)
+                                
+                            altitude_lower = Altitude(value = cur_volume['volume']['altitude_lower']['value'],reference= cur_volume['volume']['altitude_lower']['reference'], units =cur_volume['volume']['altitude_lower']['units'] )
+                            altitude_upper = Altitude(value = cur_volume['volume']['altitude_upper']['value'],reference=  cur_volume['volume']['altitude_upper']['reference'], units =cur_volume['volume']['altitude_upper']['units'] )                        
+                            volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
+                         
+                         
+                            time_start = Time(format = cur_volume['time_start']['format'], value = cur_volume['time_start']['value'])
+                            time_end = Time(format =cur_volume['time_end']['format'] , value = cur_volume['time_end']['value'])
+
+                            cur_v4d = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
+
+                            all_v4d.append(cur_v4d)
+
+                        op_int_detail = OperationalIntentUSSDetails(volumes =all_v4d, priority = op_int_det['priority'], off_nominal_volumes =  op_int_det['off_nominal_volumes'])
+
+                        time_start = Time(format=op_int_ref['time_start']['format'], value= op_int_ref['time_start']['value'] )
+                        
+                        time_end = Time(format=op_int_ref['time_end']['format'], value= op_int_ref['time_end']['value'] )
+
+                        op_int_reference = OperationalIntentReferenceDSSResponse(id = op_int_ref['id'], uss_availability =  op_int_ref['uss_availability'], manager= op_int_ref['manager'], version = op_int_ref['version'], state = op_int_ref['state'], ovn = op_int_ref['ovn'], time_start=time_start, time_end=time_end, uss_base_url= op_int_ref['uss_base_url'], subscription_id=op_int_ref['subscription_id'])
+
+
+                        uss_op_int_details = OperationalIntentDetailsUSSResponse(reference=op_int_reference, details=op_int_detail)
+
+                        operational_intent_volumes = op_int_detail.volumes
+                        my_volume_converter = VolumesConverter()
+                        
+                        my_volume_converter.convert_volumes_to_geojson(volumes = operational_intent_volumes)                    
+                        minimum_rotated_rect = my_volume_converter.get_minimum_rotated_rectangle()
+                        all_opints_to_check.append(minimum_rotated_rect)
+
+                    else:
+                        logger.error("Could not retrieve flight details from USS %s" % uss_operational_intent_request.json())   
+                        
+        if all_uss_operational_intent_details:
             logging.info("Checking deconfliction status with {num_existing_op_ints} operational intent details".format(num_existing_op_ints = len(all_opints_to_check)))            
             my_ind_volumes_converter = VolumesConverter()
-            ind_volumes_polygon = my_ind_volumes_converter.convert_volumes_to_geojson(volumes = volumes)
-            deconflicted = rtree_helper.check_polygon_intersection(polygons = all_opints_to_check, polygon_to_check=ind_volumes_polygon)
+            my_ind_volumes_converter.convert_volumes_to_geojson(volumes = volumes)
+            ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()
+
+            is_conflicted = rtree_helper.check_polygon_intersection(polygons = all_opints_to_check, polygon_to_check=ind_volumes_polygon)
+            deconflicted = False if is_conflicted else True
         else:
             deconflicted = True
             logging.info("No existing operational intents in the DSS, deconfliction status: %s" % deconflicted)
@@ -297,6 +375,6 @@ class SCDOperations():
                 logger.error("Error submitting operational intent to the DSS: %s" % asdict(d_r))
         else:        
             logger.info("Flight not deconflicted, there are other flights in the area")            
-            d_r = OperationalIntentSubmissionStatus(status = "conflict_with_flight", status_code = 500, message = re, dss_response={}, operational_intent_id = new_entity_id)
+            d_r = OperationalIntentSubmissionStatus(status = "conflict_with_flight", status_code = 500, message = "Flight not deconflicted, there are other flights in the area", dss_response={}, operational_intent_id = new_entity_id)
 
         return d_r

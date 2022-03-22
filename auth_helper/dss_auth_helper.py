@@ -52,7 +52,7 @@ class AuthorityCredentialsGetter():
     def get_rid_credentials(self, audience):        
         issuer = audience if audience =='localhost' else None
 
-        if audience == 'localhost':
+        if audience == 'localhost' or audience =='host.docker.internal':
             # Test instance of DSS
             payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas', "issuer":issuer}       
             
@@ -67,8 +67,7 @@ class AuthorityCredentialsGetter():
 
     def get_scd_credentials(self, audience):        
         issuer = audience if audience =='localhost' else None
-
-        if audience == 'localhost':
+        if audience == 'localhost' or audience =='host.docker.internal':
             # Test instance of DSS
             payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'utm.strategic_coordination', "issuer":issuer}       
             

@@ -212,7 +212,19 @@ class OperationalIntentReferenceDSSResponse:
 class OperationalIntentSubmissionSuccess: 
     subscribers: List[str]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
-    
+
+
+@dataclass
+class OperationalIntentUSSDetails:
+    volumes: List[Volume4D]
+    priority: int
+    off_nominal_volumes: Optional[List[Volume4D]]
+
+@dataclass
+class OperationalIntentDetailsUSSResponse:
+    reference:OperationalIntentReferenceDSSResponse
+    details: OperationalIntentUSSDetails
+
 @dataclass
 class LatLng:
     lat:float
