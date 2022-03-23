@@ -41,7 +41,7 @@ def USSUpdateOpIntDetails(request):
 @requires_scopes(['utm.strategic_coordination'])
 def USSOpIntDetails(request, opint_id):
     r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))      
-
+    
     opint_flightref = 'opint_flightref.' + str(opint_id)
     
     if r.exists(opint_flightref):
@@ -53,8 +53,9 @@ def USSOpIntDetails(request, opint_id):
         if r.exists(flight_opint):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
-            reference_full = op_int_details['success_response']['dss_response']['operational_intent_reference']
-            details_full = op_int_details['success_response']['operational_intent_details']
+            
+            reference_full = op_int_details['success_response']['operational_intent_reference']
+            details_full = op_int_details['operational_intent_details']
             # Load existing opint details
 
             stored_operational_intent_id= reference_full['id']
@@ -63,7 +64,7 @@ def USSOpIntDetails(request, opint_id):
             stored_version = reference_full['version']
             stored_state = reference_full['state']
             stored_ovn = reference_full['ovn']
-            stored_uss_base_url = reference_full['reference_full']
+            stored_uss_base_url = reference_full['uss_base_url']
             stored_subscription_id = reference_full['subscription_id']
             
             stored_time_start = Time(format=reference_full['time_start']['format'], value=reference_full['time_start']['value'])
@@ -78,7 +79,7 @@ def USSOpIntDetails(request, opint_id):
             details = OperationalIntentUSSDetails(volumes=stored_volumes, priority=stored_priority, off_nominal_volumes=stored_off_nominal_volumes)
             
 
-            operational_intent = OperationalIntentDetailsUSSResponse(reference=reference, deatils=details)
+            operational_intent = OperationalIntentDetailsUSSResponse(reference=reference, details=details)
             operational_intent_response = OperationalIntentDetails(operational_intent=operational_intent)
 
             return JsonResponse(json.loads(json.dumps(operational_intent_response, cls=EnhancedJSONEncoder)), status=200)

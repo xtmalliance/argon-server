@@ -4,7 +4,7 @@ from uuid import uuid4
 import enum
 import arrow
 from typing import List, Literal, Optional, Union
-
+from shapely.geometry import Polygon
 class StringBasedDateTime(str):
   """String that only allows values which describe a datetime."""
   def __new__(cls, value):
@@ -241,7 +241,7 @@ class OperationalIntentStorage:
     operational_intent_details: OperationalIntentTestInjection
 
 @dataclass 
-class OperationalIntentSubmissionError: 
+class OperationalIntentSubmissionError:     
     result: str
     notes: str
 
@@ -296,3 +296,8 @@ class OperationalIntentReferenceDSSDetails:
 class SuccessfulOperationalIntentFlightIDStorage:
     flight_id:str
     operational_intent_id:str
+
+@dataclass
+class OpInttoCheckDetails:
+    ovn: str
+    shape: Polygon

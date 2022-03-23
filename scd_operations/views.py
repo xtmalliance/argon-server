@@ -6,7 +6,7 @@ from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage, ClearAreaResponse, OperationalIntentReferenceDSSDetails,OperationalIntentUSSDetails, OperationalIntentReferenceDSSResponse, SuccessfulOperationalIntentFlightIDStorage
+from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage, ClearAreaResponse, SuccessfulOperationalIntentFlightIDStorage
 from . import dss_scd_helper
 from rid_operations import rtree_helper
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
@@ -19,7 +19,7 @@ from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
-INDEX_NAME = 'op_intent'
+INDEX_NAME = 'opint_proc'
 
 logger = logging.getLogger('django')
 
@@ -139,11 +139,10 @@ def SCDAuthTest(request, flight_id):
                 altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])                        
                 volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
 
-                # time_start = Time(format = volume['time_start']['format'], value = one_minute_from_now_str)
-                # time_end = Time(format =volume['time_end']['format'] , value = two_minutes_from_now_str)
-                
+
                 time_start = Time(format = volume['time_start']['format'], value = volume['time_start']['value'])
                 time_end = Time(format =volume['time_end']['format'] , value = volume['time_end']['value'])
+
                 
                 volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
                 all_volumes.append(volume4D)
@@ -177,57 +176,63 @@ def SCDAuthTest(request, flight_id):
 
         # flight authorisation data is correct, can submit the operational intent to the DSS
         all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
-        self_deconflicted = False
-        if all_existing_op_ints_in_area:
-            # there are existing op_ints in the area. 
-            deconflicted_status = []
-            for existing_op_int in all_existing_op_ints_in_area:                
-                # check if start time or end time is between the existing bounds
-                is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=one_minute_from_now.datetime)
-                is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=two_minutes_from_now.datetime)
-
-                if not is_start_within and not is_end_within:      
-                    deconflicted_status.append(True)
-                else:
-                    deconflicted_status.append(False)
-            self_deconflicted = all(deconflicted_status)
-        else:
-            # No existing op ints we can plan it.             
-            self_deconflicted = True
-            
-        if self_deconflicted: 
-            my_scd_dss_helper = dss_scd_helper.SCDOperations()
-            op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
-            if op_int_submission.status == "success":                
-                view_r_bounds = ",".join(map(str,view_rect_bounds))
-                operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= operational_intent_data)
-                # Store flight ID 
-                flight_opint = 'flight_opint.' + str(flight_id)
-                r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
-                r.expire(name = flight_opint, time = opint_subscription_end_time)
-
-                # Store the details of the operational intent reference
-                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(flight_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
-                
-                opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
-                r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
-                r.expire(name = opint_flightref, time = opint_subscription_end_time)
-
-                planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
-            elif op_int_submission.status=='conflict_with_flight':
-                conflict_with_flight_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
-                return Response(json.loads(json.dumps(conflict_with_flight_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-            else: 
-                failed_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
-                return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-        else:
-            tmp_operational_intent_id = str(uuid.uuid4())
-            rejected_test_injection_response.operational_intent_id = tmp_operational_intent_id
-            return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+        # self_deconflicted = False if operational_intent['priority'] == 0 else True
         
-        my_rtree_helper.clear_rtree_index()
+        # if all_existing_op_ints_in_area and self_deconflicted == False:
+        #     # there are existing op_ints in the area. 
+        #     deconflicted_status = []
+        #     for existing_op_int in all_existing_op_ints_in_area:                
+        #         # check if start time or end time is between the existing bounds
+        #         is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=arrow.get(time_start).datetime)
+        #         is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=two_minutes_from_now.datetime)
+
+        #         timeline_status = [is_end_within, is_end_within]
+        
+        #         if all(timeline_status):      
+        #             deconflicted_status.append(True)
+        #         else:
+        #             deconflicted_status.append(False)
+            
+        #     self_deconflicted = all(deconflicted_status)
+        # else:
+        #     # No existing op ints we can plan it.             
+        #     self_deconflicted = True
+        
+        my_rtree_helper.clear_rtree_index()            
+        # if self_deconflicted: 
+        
+        my_scd_dss_helper = dss_scd_helper.SCDOperations()
+        op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
+        if op_int_submission.status == "success":                
+            view_r_bounds = ",".join(map(str,view_rect_bounds))
+            operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= operational_intent_data)
+            # Store flight ID 
+            flight_opint = 'flight_opint.' + str(flight_id)
+            r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
+            r.expire(name = flight_opint, time = opint_subscription_end_time)
+
+            # Store the details of the operational intent reference
+            flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(flight_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
+            
+            opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
+            r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
+            r.expire(name = opint_flightref, time = opint_subscription_end_time)
+            
+            planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+        elif op_int_submission.status=='conflict_with_flight':
+            conflict_with_flight_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+            return Response(json.loads(json.dumps(conflict_with_flight_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+        else: 
+            failed_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+            return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+        # else:
+        #     tmp_operational_intent_id = str(uuid.uuid4())
+        #     rejected_test_injection_response.operational_intent_id = tmp_operational_intent_id
+        #     return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+        
         try: 
-            injection_response = asdict(planned_test_injection_response)            
+            injection_response = asdict(planned_test_injection_response)  
+                 
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         except KeyError as ke:            
             injection_response = asdict(failed_test_injection_response)            
@@ -237,7 +242,8 @@ def SCDAuthTest(request, flight_id):
         
         r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))      
         op_int_details_key = 'flight_opint.'+ str(flight_id)
-        op_int_details = r.get(op_int_details_key)        
+        op_int_details = r.get(op_int_details_key)   
+        
         if op_int_details:                
             my_scd_dss_helper = dss_scd_helper.SCDOperations()
             op_int_detail_raw = op_int_details.decode()
@@ -247,6 +253,7 @@ def SCDAuthTest(request, flight_id):
             ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
             logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
             my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
+            r.delete(op_int_details)
 
             delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system.")
         else:

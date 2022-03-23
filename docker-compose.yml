@@ -8,16 +8,16 @@ services:
     volumes:
       - ./config/redis.conf:/redis.conf
 
-  db:
-    image: postgres
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
+  # db:
+  #   image: postgres
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
         
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    env_file:
-      - ".env"
+  #   volumes:
+  #     - db_data:/var/lib/postgresql/data
+  #   env_file:
+  #     - ".env"
 
   web:    
     env_file:
@@ -34,19 +34,19 @@ services:
       - .:/app
 
       
-  celery:
-    container_name: flight-blender-worker
-    image: openskies-sh/flight-blender
-    build:
-      context: "."    
+  # celery:
+  #   container_name: flight-blender-worker
+  #   image: openskies-sh/flight-blender
+  #   build:
+  #     context: "."    
     
-    env_file:
-      - ".env"
-    command: celery --app=flight_blender worker --loglevel=info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
+  #   env_file:
+  #     - ".env"
+  #   command: celery --app=flight_blender worker --loglevel=info
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - redis
 
       
   # beat:
