@@ -132,11 +132,12 @@ class SCDOperations():
             assert audience
         except AssertionError as ae:
             logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
-
+        auth_token = {}
         try:
             auth_token = my_authorization_helper.get_cached_credentials(audience= audience, token_type='scd')
         except Exception as e:
-            logger.error("Error in getting Authority Access Token %s " % e)            
+            logger.error("Error in getting Authority Access Token %s " % e)           
+            auth_token['error'] = "Error in getting access token {error}".format(error = e)
         else:
             error = auth_token.get("error", None)     
             if error:        
@@ -360,7 +361,7 @@ class SCDOperations():
                 o_i_r = dss_response['operational_intent_reference']
                 time_start = Time(format=o_i_r['time_start']['format'], value=o_i_r['time_start']['value'])
                 time_end = Time(format=o_i_r['time_end']['format'], value=o_i_r['time_end']['value'])
-                operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],stored_manager=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
+                operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],uss_availability=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
                 dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference = operational_intent_r, subscribers = subscribers)
                 logger.info("Successfully created operational intent in the DSS")
                 logger.debug("Response details from the DSS %s" % dss_r.text)
