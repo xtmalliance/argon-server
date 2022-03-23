@@ -238,6 +238,7 @@ class OperationalIntentStorage:
     alt_max:float
     alt_min: float
     success_response: OperationalIntentSubmissionSuccess
+    operational_intent_details: OperationalIntentTestInjection
 
 @dataclass 
 class OperationalIntentSubmissionError: 
@@ -290,3 +291,8 @@ class QueryOperationalIntentPayload:
 @dataclass
 class OperationalIntentReferenceDSSDetails:
     operational_intent_refrence: OperationalIntentReferenceDSSResponse
+
+@dataclass
+class SuccessfulOperationalIntentFlightIDStorage:
+    flight_id:str
+    operational_intent_id:str

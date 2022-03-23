@@ -331,7 +331,7 @@ class SCDOperations():
         dss_subscription_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + new_entity_id
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
         management_key = str(uuid.uuid4())        
-        blender_base_url = env.get("BLENDER_FQDN", 0)
+        blender_base_url = env.get("BLENDER_FQDN", 0) +'/uss'
         implicit_subscription_parameters = ImplicitSubscriptionParameters(uss_base_url=blender_base_url)
         operational_intent_reference = OperationalIntentReference(extents = volumes, key =[management_key], state = state, uss_base_url = blender_base_url, new_subscription = implicit_subscription_parameters)
         p = json.loads(json.dumps(asdict(operational_intent_reference)))     
@@ -360,7 +360,7 @@ class SCDOperations():
                 o_i_r = dss_response['operational_intent_reference']
                 time_start = Time(format=o_i_r['time_start']['format'], value=o_i_r['time_start']['value'])
                 time_end = Time(format=o_i_r['time_end']['format'], value=o_i_r['time_end']['value'])
-                operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],uss_availability=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
+                operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],stored_manager=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
                 dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference = operational_intent_r, subscribers = subscribers)
                 logger.info("Successfully created operational intent in the DSS")
                 logger.debug("Response details from the DSS %s" % dss_r.text)

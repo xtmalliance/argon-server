@@ -23,7 +23,7 @@ class OperationalIntentsIndexFactory():
     def generate_operational_intents_index(self) -> None:
         """This method generates a rTree index of currently active operational indexes """      
         
-        all_op_ints = self.r.keys(pattern='opint.*')
+        all_op_ints = self.r.keys(pattern='flight_opint.*')
         for flight_idx, flight_id in enumerate(all_op_ints):                        
             flight_id_str = flight_id.decode().split('.')[1]        
             operational_intent_view_raw = self.r.get(flight_id)   
@@ -37,7 +37,7 @@ class OperationalIntentsIndexFactory():
     def clear_rtree_index(self):
         """Method to delete all boxes from the index"""
 
-        all_op_ints = self.r.keys(pattern='opint.*')
+        all_op_ints = self.r.keys(pattern='flight_opint.*')
         for flight_idx, flight_id in enumerate(all_op_ints):           
             operational_intent_view_raw = self.r.get(flight_id)   
             operational_intent_view = json.loads(operational_intent_view_raw)            
