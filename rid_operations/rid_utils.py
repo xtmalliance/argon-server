@@ -199,3 +199,20 @@ class RIDFlightResponseDetails:
 class RIDFlightResponse:
   timestamp: str
   flights: List[RIDFlightResponseDetails]
+
+@dataclass
+class ViewportTooLargeMessage:
+  message:str
+
+@dataclass
+class SummaryFlightsOnly:
+  number_of_flights:int
+
+
+@dataclass
+class FlightDetailsNotFoundMessage:
+  message:str
+
+@dataclass
+class FlightDetailsSuccessResponse: 
+  details:RIDFlightDetails
