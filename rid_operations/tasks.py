@@ -3,7 +3,7 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 import redis
-from .rid_utils import RIDTestInjection, AllRequestedFlightDetails
+from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, AllRequestedFlightDetails,RIDTestDetailsResponses, RIDFlightDetails, LatLngPoint, RIDHeight
 import time
 import arrow
 import json
@@ -51,8 +51,37 @@ def stream_rid_test_data(requested_flights):
     heartbeat = env.get('HEARTBEAT_RATE_SECS', 2)
     rf = json.loads(requested_flights)
     for requested_flight in rf:       
-        requested_flight = RIDTestInjection(injection_id = requested_flight['injection_id'], telemetry = requested_flight['telemetry'], details_responses=requested_flight['details_responses'])
+        all_telemetry = []
+        all_flight_details = []
+        provided_telemetries = requested_flight['telemetry']
+        provided_flight_details = requested_flight['details_responses']
+        for provided_flight_detail in provided_flight_details: 
+            fd = provided_flight_detail['details']
+            op_location = LatLngPoint(lat = fd['lat'], lng= fd['lng'])
+            flight_detail = RIDFlightDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location)
+            pfd = RIDTestDetailsResponses(effective_after=provided_flight_detail['effective_after'], details = flight_detail)
+            all_flight_details.append(pfd)
+
+            r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
+            flight_details_storage = 'flight_details:' + fd['id']
+            r.set(flight_details_storage, json.dumps(asdict(flight_detail)))
+            r.expire(flight_details_storage, time=60)
+
+
+        for provided_telemetry in provided_telemetries:
+            pos = provided_telemetry['position']
+            position = RIDAircraftPosition(lat=pos['lat'], lng=pos['lng'],alt=pos['alt'],accuracy_h=pos['accuracy_h'], accuracy_v=pos['accuracy_v'], extrapolated=pos['extrapolated'],pressure_altitude=pos['pressure_altitude'])
+            
+            height = RIDHeight(distance=provided_telemetry['distance'], reference=provided_telemetry['reference'])
+            t = RIDAircraftState(timestamp=provided_telemetry['timestamp'], timestamp_accuracy=provided_telemetry['timestamp_accuracy'], operational_status=provided_telemetry['operational_status'], position=position, track=provided_telemetry['track'], speed=provided_telemetry['speed'], speed_accuracy=provided_telemetry['speed_accuracy'], vertical_speed=provided_telemetry['vertical_speed'], height=height)
+            all_telemetry.append(t)
+
+
+
+        requested_flight = RIDTestInjection(injection_id = requested_flight['injection_id'], telemetry = all_telemetry, details_responses=all_flight_details)
+
         all_requested_flights.append(requested_flight)
+    
     
 
     all_requested_flight_details = []
@@ -70,16 +99,15 @@ def stream_rid_test_data(requested_flights):
             if telemetry_idx < current_flight_idx.telemetry_length:
                 telemetry_data = current_flight_idx.injection['telemetry'][telemetry_idx]
                 flight_details_id = current_flight_idx.id
-                print(telemetry_data)
-
+                
                 lat_dd = telemetry_data['position']['lat']
                 lon_dd = telemetry_data['position']['lng']    
                 altitude_mm = telemetry_data['position']['alt']
                 traffic_source = 3
                 source_type = 0
                 icao_address = flight_details_id
-                mtd = json.dumps(telemetry_data)
-                so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= mtd)
+                
+                so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= telemetry_data)
                 
                 msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
                 # Sleep for 2 seconds before submitting the next iteration.

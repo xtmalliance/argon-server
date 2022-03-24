@@ -11,19 +11,17 @@ from os import environ as env
 from datetime import timedelta
 import uuid
 import arrow
-import shapely.geometry
+from shapely.geometry import Point
 import redis
-from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse, RIDFlightResponse, RIDFlightResponseDetails, RIDRecentAircraftPosition, RIDAircraftState
+from .rid_utils import LatLngPoint, RIDAircraftPosition, RIDDisplayDataResponse, Position, RIDFlightDetails, RIDHeight, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse, RIDFlightResponse, RIDFlightResponseDetails, RIDRecentAircraftPosition, RIDAircraftState,ViewportTooLargeMessage, SummaryFlightsOnly,FlightDetailsNotFoundMessage, FlightDetailsSuccessResponse
 import shapely.geometry
 import hashlib
-from flight_feed_operations import flight_stream_helper, tasks
+from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
 from .tasks import stream_rid_test_data
 import time
-
-
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 logger = logging.getLogger('django')
@@ -99,6 +97,12 @@ def check_view_port(view_port) -> bool:
 
     return True
 
+
+def get_view_port_area(view_port) -> float:
+    geod = Geod(ellps="WGS84")
+    box = shapely.geometry.box(view_port[0], view_port[1], view_port[2], view_port[3])
+    area = abs(geod.geometry_area_perimeter(box)[0])    
+    return area
 
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
@@ -331,28 +335,17 @@ def get_display_data(request):
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_flight_data(request, flight_id):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
-
-    # get the flight ID
-    # query the /uss/flights/{id}/details with the ID (should return the RID details / https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/master/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights~1{id}~1details/get
-    # {
-    # "details": {
-    #     "id": "a3423b-213401-0023",
-    #     "operator_id": "string",
-    #     "operator_location": {
-    #     "lng": -118.456,
-    #     "lat": 34.123
-    #     },
-    #     "operation_description": "SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.",
-    #     "auth_data": {
-    #     "format": "string",
-    #     "data": "string"
-    #     },
-    #     "serial_number": "INTCJ123-4567-890",
-    #     "registration_number": "FA12345897"
-    # }
-    # }
-
-    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
+    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
+    flight_details_storage = 'flight_details:' + flight_id
+    if r.exists(flight_details_storage):
+        flight_details = r.get(flight_details_storage)
+        location = LatLngPoint(lat= flight_detail['location']['lat'], lng = flight_detail['location']['lng'])
+        flight_detail = RIDFlightDetails(id = flight_details['id'], operator_id=flight_detail['operator_id'], operator_location=location, operator_description = flight_details['operator_description'], auth_data={}, serial_number=flight_detail['serial_number'], registration_number = flight_detail['registration_number'])
+        flight_details_full = FlightDetailsSuccessResponse(details = flight_detail)
+        return JsonResponse(json.loads(json.dumps(asdict(flight_details_full))), status=200, mimetype='application/json')
+    else:
+        fd = FlightDetailsNotFoundMessage(message="The requested flight could not be found")
+        return JsonResponse(json.loads(json.dumps(asdict(fd))), status=404, mimetype='application/json')
 
 
 @api_view(['GET'])
@@ -362,26 +355,81 @@ def get_uss_flights(request):
     
     include_recent_positions = request.query_params['include_recent_positions']
 
-    my_rid_output_helper = RIDOutputHelper()
+    # my_rid_output_helper = RIDOutputHelper()
     try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
     except Exception as ke:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
-
     view_port_valid = check_view_port(view_port=view_port)
+    view_port_area = 0
+    if view_port_valid:
+        view_port_area = get_view_port_area(view_port=view_port)
+    else:
+        view_port_too_large_msg = ViewportTooLargeMessage(message='The requested view rectangle is too large')
+        return JsonResponse(json.loads(json.dumps(asdict(view_port_too_large_msg))), status=419, mimetype='application/json')
+    
+    if view_port_area > 22500:
+        summary_information_only = True
 
     # Pull Flight details from the server 
 
-    # see if it matches the viewport 
-
-    # show / add metadata it if it does 
-  
+    # TODO: Get existing flight details from subscription
+    stream_ops = flight_stream_helper.StreamHelperOps()
+    pull_cg = stream_ops.get_pull_cg()
+    all_streams_messages = pull_cg.read()
+    unique_flights =[]
+    # Keep only the latest message
+    try:
+        for message in all_streams_messages:
+            lat = message.data['lat_dd']
+            lng = message.data['lng_dd']
+            point = Point(lat, lng)
+            if view_port.contains(point):
+                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
+        # sort by date
+        unique_flights.sort(key=lambda item:item['timestamp'], reverse=True)
+        # Keep only the latest message
+        distinct_messages = {i['address']:i for i in reversed(unique_flights)}.values()
+        
+    except KeyError as ke: 
+        logger.error("Error in sorting distinct messages, ICAO name not defined")                     
+        distinct_messages = []
     
+    
+    for all_observations_messages in distinct_messages:    
+        if summary_information_only:
+            summary = SummaryFlightsOnly(number_of_flights=len(distinct_messages))
+            return JsonResponse(json.loads(json.dumps(asdict(summary))), status=200, mimetype='application/json')
+        else:
+            rid_flights = []
+            try:
+                observation_data = all_observations_messages['msg_data']                
+            except KeyError as ke:
+                logger.error("Error in data in the stream %s" % ke)                
+            else:
+                try:                
+                    observation_metadata = observation_data['metadata']
+                    telemetry_data_dict = json.loads(observation_metadata)
+                except KeyError as ke:
+                    logger.error("Error in metadata data in the stream %s" % ke)
+                    
+                position = RIDAircraftPosition(lat=observation_metadata['position']['lat'], lng=observation_metadata['position']['lng'], alt=observation_metadata['position']['alt'], accuracy_h=observation_metadata['position']['accuracy_h'], accuracy_v=observation_metadata['position']['accuracy_v'], extrapolated=observation_metadata['position']['extrapolated'], pressure_altitude=observation_metadata['position']['pressure_altitude'])
+                height = RIDHeight(distance=observation_metadata['height']['distance'], reference=observation_metadata['height']['reference'])
+                current_state = RIDAircraftState(timestamp=observation_metadata['timestamp'], timestamp_accuracy=observation_metadata['timestamp_accuracy'], operational_status=observation_metadata['operational_status'], position=position, track=observation_metadata['track'], speed=observation_metadata['speed'], speed_accuracy=observation_metadata['speed_accuracy'], vertical_speed=observation_metadata['vertical_speed'], height=height)
+                current_flight = RIDFlightResponseDetails(id=telemetry_data_dict['id'], aircraft_type=telemetry_data_dict['aircraft_type'], current_state =current_state , simulated = True, recent_positions=[])
 
-    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
+                rid_flights.append(current_flight)
+                # see if it matches the viewport 
 
+                # show / add metadata it if it does 
+                now = arrow.now().isoformat()
+                rid_response = RIDFlightResponse(timestamp=now, flights = rid_flights)
+
+                return JsonResponse(json.loads(json.dumps(asdict(rid_response))), status=200, mimetype='application/json')
+
+        
 @api_view(['PUT'])
 @requires_scopes(['rid.inject_test_data'])
 def create_test(request, test_id):
