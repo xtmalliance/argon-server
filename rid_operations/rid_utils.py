@@ -1,7 +1,10 @@
+from turtle import position
 from typing import List, NamedTuple, Optional
 import uuid
 from dataclasses import dataclass
 import arrow
+
+from scd_operations.scd_data_definitions import Volume4D
 
 class StringBasedDateTime(str):
   """String that only allows values which describe a datetime."""
@@ -177,3 +180,22 @@ class AllRequestedFlightDetails:
   id: uuid
   telemetry_length: int
   injection: List[RIDTestInjection]
+
+@dataclass
+class RIDRecentAircraftPosition:
+  time:str
+  position:Position
+
+@dataclass
+class RIDFlightResponseDetails:
+  id: str
+  aircraft_type: str
+  current_state: RIDAircraftState
+  volumes: List[Volume4D]
+  simulated: bool
+  recent_positions: List[RIDRecentAircraftPosition]
+
+@dataclass
+class RIDFlightResponse:
+  timestamp: str
+  flights: List[RIDFlightResponseDetails]

@@ -13,7 +13,8 @@ import uuid
 import arrow
 import shapely.geometry
 import redis
-from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse
+from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse, RIDFlightResponse, RIDFlightResponseDetails, RIDRecentAircraftPosition, RIDAircraftState
+import shapely.geometry
 import hashlib
 from flight_feed_operations import flight_stream_helper, tasks
 from uuid import UUID
@@ -358,9 +359,25 @@ def get_flight_data(request, flight_id):
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_uss_flights(request):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
-    view = request.GET.get('view', None)
-    include_recent_positions = request.GET.get('include_recent_positions', None)
     
+    include_recent_positions = request.query_params['include_recent_positions']
+
+    my_rid_output_helper = RIDOutputHelper()
+    try:
+        view = request.query_params['view']
+        view_port = [float(i) for i in view.split(",")]
+    except Exception as ke:
+        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        return HttpResponse(json.dumps(incorrect_parameters), status=400)
+
+    view_port_valid = check_view_port(view_port=view_port)
+
+    # Pull Flight details from the server 
+
+    # see if it matches the viewport 
+
+    # show / add metadata it if it does 
+  
     
 
     return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
@@ -389,7 +406,7 @@ def create_test(request, test_id):
     else:
         now = arrow.now()
         r.set(test_id, json.dumps({'created_at':now.isoformat()}))
-        r.expire(test_id, timedelta(minutes=5))            
+        r.expire(test_id, timedelta(seconds=30))            
         # TODO process requested flights
         stream_rid_test_data.delay(requested_flights = json.dumps(requested_flights))  # Send a job to the task queue
         
