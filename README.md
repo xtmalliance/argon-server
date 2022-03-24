@@ -2,11 +2,12 @@
 
 # Flight Blender
 
-Flight Blender has three things:
+Flight Blender enables you to be compliant with latest regulations on UTM / U-Space. It is :
 
-- a flight feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data
 - an open source Remote ID "display provider" compatible with ASTM Remote ID standard
-- an open source implementation of the ASTM USS <-> USS standard.
+- an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation
+- ability to consume geo-fences per the ED-269 standard
+- a flight traffic feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data
 
 There are different modules that enable this:
 
