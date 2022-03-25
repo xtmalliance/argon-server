@@ -216,3 +216,8 @@ class FlightDetailsNotFoundMessage:
 @dataclass
 class FlightDetailsSuccessResponse: 
   details:RIDFlightDetails
+
+@dataclass
+class AuthData:
+  format: str
+  data: str
