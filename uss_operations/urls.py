@@ -25,7 +25,8 @@ urlpatterns = [
     # This end point is used when op-intent details is used by the USS: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#section/Authentication 
     path('v1/operational_intents', uss_operations_views.USSUpdateOpIntDetails),    
     path('v1/operational_intents/<uuid:opint_id>', uss_operations_views.USSOpIntDetails),    
-    # re_path('uss/v1/operational_intents/(?P<flight_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/telemetry', scd_auth_views.USSOpIntDetails),      
-    # re_path('uss/v1/operational_intents/', scd_auth_views.USSOpIntDetails),    
+    # end points for remote id    
+    path('flights', uss_operations_views.get_uss_flights),
+    path('flights/<uuid:flight_id>/details', uss_operations_views.get_uss_flight_details),
 
 ]

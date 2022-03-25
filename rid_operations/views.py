@@ -1,26 +1,27 @@
 from requests.adapters import HTTPResponse
 from auth_helper.utils import requires_scopes
-import dataclasses, json
-from pyproj import Geod
+import json
+from dataclasses import asdict, is_dataclass
+from . import view_port_ops
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
-from auth_helper import dss_auth_helper
+from django.http import JsonResponse
 from . import dss_rid_helper
 from os import environ as env
+from datetime import timedelta
 import uuid
-import shapely.geometry
-import uuid
+import arrow
 import redis
-from .rid_utils import RIDDisplayDataResponse, Position, RIDPositions, RIDFlight, CreateSubscriptionResponse
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails
+from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
+import shapely.geometry
 import hashlib
 from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
+from .tasks import stream_rid_test_data
 import time
-
-
-
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 logger = logging.getLogger('django')
@@ -41,8 +42,8 @@ class RIDOutputHelper():
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
-            if dataclasses.is_dataclass(o):
-                return dataclasses.asdict(o)
+            if is_dataclass(o):
+                return asdict(o)
             return super().default(o)
 
 
@@ -72,31 +73,6 @@ class SubscriptionHelper():
         return subscription_response
 
 
-def check_view_port(view_port) -> bool:
-
-    geod = Geod(ellps="WGS84")
-    if len(view_port) != 4:
-        return False
-        # return '"view" argument contains the wrong number of coordinates (expected 4, found {})'.format(len(view_port)), 400
-
-    lat_min = min(view_port[0], view_port[2])
-    lat_max = max(view_port[0], view_port[2])
-    lng_min = min(view_port[1], view_port[3])
-    lng_max = max(view_port[1], view_port[3])
-
-    if (lat_min < -90 or lat_min >= 90 or lat_max <= -90 or lat_max > 90 or lng_min < -180 or lng_min >= 360 or lng_max <= -180 or lng_max > 360):
-        # return '"view" coordinates do not fall within the valid range of -90 <= lat <= 90 and -180 <= lng <= 360', 400
-        return False
-
-    box = shapely.geometry.box(view_port[0], view_port[1], view_port[2], view_port[3])
-    area = abs(geod.geometry_area_perimeter(box)[0])
-    
-    if (area) < 250000 and (area) > 90000:
-        return False
-
-    return True
-
-
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
 def create_dss_subscription(request, *args, **kwargs):
@@ -108,13 +84,13 @@ def create_dss_subscription(request, *args, **kwargs):
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
     except Exception as ke:
-        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        incorrect_parameters = {"message": "A view bounding box is necessary with four values: lat1,lng1,lat2,lng2."}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
-    view_port_valid = check_view_port(view_port=view_port)
+    view_port_valid = view_port_ops.check_view_port(view_port=view_port)
 
     if not view_port_valid:
-        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        incorrect_parameters = {"message": "A view bounding box is necessary with four values: lat1,lng1,lat2,lng2."}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
     b = shapely.geometry.box(view_port[1], view_port[0], view_port[3], view_port[2])
@@ -140,7 +116,7 @@ def create_dss_subscription(request, *args, **kwargs):
 
         status = 201
     else:
-        m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= dataclasses.asdict(subscription_r))
+        m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= asdict(subscription_r))
         m = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         status = 400
     msg = my_rid_output_helper.make_json_compatible(m)
@@ -196,11 +172,8 @@ def dss_isa_callback(request, subscription_id):
         # Get the flights URL from the DSS and put it in the flights_url
         flights_key = "all_uss_flights:" + subscription_id
         subscription_view_key = "sub-" + subscription_id        
-
-        flights_dict = r.hgetall(flights_key)
-        
-        subscription_view = r.get(subscription_view_key)
-        
+        flights_dict = r.hgetall(flights_key)        
+        subscription_view = r.get(subscription_view_key)       
 
         all_flights_url = flights_dict['all_flights_url']
         logging.info(all_flights_url)
@@ -222,6 +195,22 @@ def dss_isa_callback(request, subscription_id):
 
 @api_view(['GET'])
 @requires_scopes(['dss.read.identification_service_areas'])
+def get_flight_data(request, flight_id):
+    ''' This is the end point for the rid_qualifier to get details of a flight '''
+    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
+    flight_details_storage = 'flight_details:' + flight_id
+    if r.exists(flight_details_storage):
+        flight_details = r.get(flight_details_storage)
+        location = LatLngPoint(lat= flight_detail['location']['lat'], lng = flight_detail['location']['lng'])
+        flight_detail = RIDFlightDetails(id = flight_details['id'], operator_id=flight_detail['operator_id'], operator_location=location, operator_description = flight_details['operator_description'], auth_data={}, serial_number=flight_detail['serial_number'], registration_number = flight_detail['registration_number'])
+        flight_details_full = FlightDetailsSuccessResponse(details = flight_detail)
+        return JsonResponse(json.loads(json.dumps(asdict(flight_details_full))), status=200, mimetype='application/json')
+    else:
+        fd = FlightDetailsNotFoundMessage(message="The requested flight could not be found")
+        return JsonResponse(json.loads(json.dumps(asdict(fd))), status=404, mimetype='application/json')
+
+@api_view(['GET'])
+@requires_scopes(['dss.read.identification_service_areas'])
 def get_display_data(request):
     ''' This is the end point for the rid_qualifier test DSS network call once a subscription is updated '''
 
@@ -235,7 +224,7 @@ def get_display_data(request):
     except Exception as ke:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-    view_port_valid = check_view_port(view_port=view_port)
+    view_port_valid = view_port_ops.check_view_port(view_port=view_port)
 
     b = shapely.geometry.box(view_port[1], view_port[0], view_port[3], view_port[2])
     co_ordinates = list(zip(*b.exterior.coords.xy))
@@ -267,20 +256,20 @@ def get_display_data(request):
         stream_ops = flight_stream_helper.StreamHelperOps()
         pull_cg = stream_ops.get_pull_cg()
         all_streams_messages = pull_cg.read()
-
+        print(all_streams_messages)
         unique_flights =[]
         # Keep only the latest message
         try:
-            for message in all_streams_messages:          
-                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
-            
+            for message in all_streams_messages:     
+                print(message)     
+                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})            
             # sort by date
             unique_flights.sort(key=lambda item:item['timestamp'], reverse=True)
             # Keep only the latest message
             distinct_messages = {i['address']:i for i in reversed(unique_flights)}.values()
             
         except KeyError as ke: 
-            logger.error("Error in sorting distinct messages, ICAO name not defined")                     
+            logger.error("Error in sorting distinct messages, ICAO name not defined %s" % ke)                     
             distinct_messages = []
         rid_flights = []
         
@@ -310,7 +299,6 @@ def get_display_data(request):
 
             current_flight = RIDFlight(id=observation_data['icao_address'], most_recent_position= most_recent_position,recent_paths = recent_paths)
 
-
             rid_flights.append(current_flight)
 
         
@@ -318,36 +306,57 @@ def get_display_data(request):
         
         rid_flights_dict = my_rid_output_helper.make_json_compatible(rid_display_data)
         
-        return HttpResponse(json.dumps({"flights":rid_flights_dict['flights'], "clusters": rid_flights_dict['clusters']}),  status=200, content_type='application/json')
+        return JsonResponse(json.dumps({"flights":rid_flights_dict['flights'], "clusters": rid_flights_dict['clusters']}),  status=200, content_type='application/json')
     else:
         view_port_error = {
             "message": "A incorrect view port bbox was provided"}
-        return HttpResponse(json.dumps(view_port_error), status=400, content_type='application/json')
+        return JsonResponse(json.dumps(view_port_error), status=400, content_type='application/json')
 
-
-@api_view(['GET'])
-@requires_scopes(['dss.read.identification_service_areas'])
-def get_flight_data(request, flight_id):
+        
+@api_view(['PUT'])
+@requires_scopes(['rid.inject_test_data'])
+def create_test(request, test_id):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
+    
+    rid_qualifier_payload = request.data
+    
+    try:
+        requested_flights = rid_qualifier_payload['requested_flights']        
+    except KeyError as ke:   
+        msg = HTTPErrorResponse(message="Requested Flights not present in the payload", status= 400)
+        msg_dict = asdict(msg)
+        return JsonResponse(msg_dict['message'], status=msg_dict['status'])
 
-    # get the flight ID
-    # query the /uss/flights/{id}/details with the ID (should return the RID details / https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/uastech/standards/master/remoteid/canonical.yaml#tag/p2p_rid/paths/~1v1~1uss~1flights~1{id}~1details/get
-    # {
-    # "details": {
-    #     "id": "a3423b-213401-0023",
-    #     "operator_id": "string",
-    #     "operator_location": {
-    #     "lng": -118.456,
-    #     "lat": 34.123
-    #     },
-    #     "operation_description": "SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.",
-    #     "auth_data": {
-    #     "format": "string",
-    #     "data": "string"
-    #     },
-    #     "serial_number": "INTCJ123-4567-890",
-    #     "registration_number": "FA12345897"
-    # }
-    # }
+    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
+            'REDIS_PORT', 6379), decode_responses=True)
 
-    return HttpResponse(json.dumps({"details": {}}), mimetype='application/json')
+    test_id = 'rid-test_' + str(test_id)
+    # Test already exists
+    if r.exists(test_id):
+        return JsonResponse({}, status=409)
+    else:
+        now = arrow.now()
+        r.set(test_id, json.dumps({'created_at':now.isoformat()}))
+        r.expire(test_id, timedelta(seconds=30))            
+        # TODO process requested flights
+        stream_rid_test_data.delay(requested_flights = json.dumps(requested_flights))  # Send a job to the task queue
+        
+   
+    create_test_response = CreateTestResponse(injected_flights = requested_flights, version = 1)
+
+    return JsonResponse(asdict(create_test_response), status=200)
+
+@api_view(['DELETE'])
+@requires_scopes(['rid.inject_test_data'])
+def delete_test(request, test_id, version):
+    ''' This is the end point for the rid_qualifier to get details of a flight '''
+    # Deleteing test
+    test_id = str(test_id)
+    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
+            'REDIS_PORT', 6379), decode_responses=True)
+
+    if r.exists(test_id):
+        r.delete(test_id)
+        
+    return JsonResponse({}, status=200)
+
