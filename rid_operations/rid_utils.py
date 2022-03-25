@@ -110,7 +110,7 @@ class FlightState:
   group_time_end: StringBasedDateTime
 
 @dataclass
-class RIDTestDetailsResponses: 
+class RIDTestDetailsResponse: 
     effective_after: str
     details: RIDFlightDetails
 
@@ -118,7 +118,7 @@ class RIDTestDetailsResponses:
 class RIDTestInjection: 
     injection_id: uuid
     telemetry: List[FlightState]
-    details_responses: List[RIDTestDetailsResponses]
+    details_responses: List[RIDTestDetailsResponse]
 
 @dataclass
 class HTTPErrorResponse:
@@ -179,7 +179,7 @@ class RIDFlight:
 class AllRequestedFlightDetails:
   id: uuid
   telemetry_length: int
-  injection: List[RIDTestInjection]
+  injection_details: List[RIDTestInjection]
 
 @dataclass
 class RIDRecentAircraftPosition:
@@ -191,7 +191,7 @@ class RIDFlightResponseDetails:
   id: str
   aircraft_type: str
   current_state: RIDAircraftState
-  volumes: List[Volume4D]
+  # volumes: Optional[List[Volume4D]]
   simulated: bool
   recent_positions: List[RIDRecentAircraftPosition]
 
@@ -201,23 +201,11 @@ class RIDFlightResponse:
   flights: List[RIDFlightResponseDetails]
 
 @dataclass
-class ViewportTooLargeMessage:
-  message:str
-
-@dataclass
-class SummaryFlightsOnly:
-  number_of_flights:int
-
-
-@dataclass
-class FlightDetailsNotFoundMessage:
-  message:str
-
-@dataclass
-class FlightDetailsSuccessResponse: 
-  details:RIDFlightDetails
-
-@dataclass
 class AuthData:
   format: str
   data: str
+
+@dataclass
+class SingleObeservationMetadata:
+  details_response: RIDTestDetailsResponse
+  telemetry: RIDAircraftState
