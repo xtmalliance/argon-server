@@ -13,7 +13,7 @@ import uuid
 import arrow
 from shapely.geometry import Point
 import redis
-from .rid_utils import LatLngPoint, RIDAircraftPosition, RIDDisplayDataResponse, Position, RIDFlightDetails, RIDHeight, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse, RIDFlightResponse, RIDFlightResponseDetails, RIDRecentAircraftPosition, RIDAircraftState,ViewportTooLargeMessage, SummaryFlightsOnly,FlightDetailsNotFoundMessage, FlightDetailsSuccessResponse
+from .rid_utils import LatLngPoint, RIDAircraftPosition, RIDDisplayDataResponse, Position, RIDFlightDetails, RIDHeight, RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse, RIDFlightResponse, RIDFlightResponseDetails, RIDAircraftState,ViewportTooLargeMessage, SummaryFlightsOnly,FlightDetailsNotFoundMessage, FlightDetailsSuccessResponse
 import shapely.geometry
 import hashlib
 from flight_feed_operations import flight_stream_helper
@@ -279,8 +279,7 @@ def get_display_data(request):
         # Keep only the latest message
         try:
             for message in all_streams_messages:          
-                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
-            
+                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})            
             # sort by date
             unique_flights.sort(key=lambda item:item['timestamp'], reverse=True)
             # Keep only the latest message

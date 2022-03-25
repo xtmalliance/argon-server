@@ -3,7 +3,7 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 import redis
-from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, AllRequestedFlightDetails,RIDTestDetailsResponses, RIDFlightDetails, LatLngPoint, RIDHeight
+from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, AllRequestedFlightDetails,RIDTestDetailsResponses, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData
 import time
 import arrow
 import json
@@ -57,8 +57,10 @@ def stream_rid_test_data(requested_flights):
         provided_flight_details = requested_flight['details_responses']
         for provided_flight_detail in provided_flight_details: 
             fd = provided_flight_detail['details']
-            op_location = LatLngPoint(lat = fd['lat'], lng= fd['lng'])
-            flight_detail = RIDFlightDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location)
+            
+            op_location = LatLngPoint(lat = fd['operator_location']['lat'], lng= fd['operator_location']['lng'])
+            auth_data = AuthData(format=fd['auth_data']['format'],data=fd['auth_data']['data'])
+            flight_detail = RIDFlightDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location, operator_id= fd['operator_id'], auth_data=auth_data)
             pfd = RIDTestDetailsResponses(effective_after=provided_flight_detail['effective_after'], details = flight_detail)
             all_flight_details.append(pfd)
 
@@ -72,7 +74,7 @@ def stream_rid_test_data(requested_flights):
             pos = provided_telemetry['position']
             position = RIDAircraftPosition(lat=pos['lat'], lng=pos['lng'],alt=pos['alt'],accuracy_h=pos['accuracy_h'], accuracy_v=pos['accuracy_v'], extrapolated=pos['extrapolated'],pressure_altitude=pos['pressure_altitude'])
             
-            height = RIDHeight(distance=provided_telemetry['distance'], reference=provided_telemetry['reference'])
+            height = RIDHeight(distance=provided_telemetry['height']['distance'], reference=provided_telemetry['height']['reference'])
             t = RIDAircraftState(timestamp=provided_telemetry['timestamp'], timestamp_accuracy=provided_telemetry['timestamp_accuracy'], operational_status=provided_telemetry['operational_status'], position=position, track=provided_telemetry['track'], speed=provided_telemetry['speed'], speed_accuracy=provided_telemetry['speed_accuracy'], vertical_speed=provided_telemetry['vertical_speed'], height=height)
             all_telemetry.append(t)
 
@@ -107,7 +109,7 @@ def stream_rid_test_data(requested_flights):
                 source_type = 0
                 icao_address = flight_details_id
                 
-                so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= telemetry_data)
+                so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(telemetry_data))
                 
                 msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
                 # Sleep for 2 seconds before submitting the next iteration.
