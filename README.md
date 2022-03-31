@@ -2,19 +2,19 @@
 
 # Flight Blender
 
-Flight Blender enables you to be compliant with latest regulations on UTM / U-Space. It is :
+Flight Blender enables you to be compliant with latest regulations on UTM / U-Space in the EU. It gives you:
 
 - an open source Remote ID "display provider" compatible with ASTM Remote ID standard
-- an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation
+- an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation for flight authorisation
 - ability to consume geo-fences per the ED-269 standard
-- a flight traffic feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data
+- a flight traffic feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data.
 
 There are different modules that enable this:
 
+- _DSS Connectivity_: There are modules to connect and read for e.g. Remote ID data from a DSS, Strategic deconfliction / flight authorization
 - _Flight Tracking_: It takes in flight tracking feeds from various sources e.g. ADS-B, live telemetry, Broadcast Remote ID and others and outputs as a single fused JSON feed and submits it to a Display Application e.g. [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) to be shown in real-time on a display
 - _Geofence_: A Geofence can be submitted into Flight Blender and consequently transmitted to Spotlight
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this support both the ASTM USS <-> USS API and can also be used as a standalone component, for supported DSS APIs see below
-- _DSS Connectivity_: There are modules to connect and read for e.g. Remote ID data from a DSS, Strategic deconfliction / flight authorization
 
 ## Openskies stack
 
