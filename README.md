@@ -18,7 +18,7 @@ There are different modules that enable this:
 
 ## Openskies stack
 
-To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) by an "Display provider" like [Flight Blender](https://github.com/openskies-sh/flight-blender). To submit data into Flight Blender beyond the API you can use the user interface provided via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below.
+To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
 
