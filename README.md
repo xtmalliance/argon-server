@@ -18,7 +18,7 @@ There are different modules that enable this:
 
 ## Openskies stack
 
-Flight tracking data can be submitted to "Display application" [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) by an "Display provider" like [Flight Blender](https://github.com/openskies-sh/flight-blender) via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below. In addition, standards-compliant flight authorizations can be issued using this stack.
+To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight) by an "Display provider" like [Flight Blender](https://github.com/openskies-sh/flight-blender). To submit data into Flight Blender beyond the API you can use the user interface provided via the accompanying software like [Flight Launchpad](https://github.com/openskies-sh/flight-launchpad), for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
 
@@ -41,6 +41,6 @@ Take a look at sample data below to see the kind of data that can be submitted i
 - [Geofence](https://github.com/openskies-sh/flight-blender/blob/master/importers/aoi_geo_fence_samples/geo_fence.geojson) as a GeoJSON, we have converters to convert EuroCAE from ED-269 standard
 - [Flight Declaration](https://github.com/openskies-sh/flight-blender/blob/master/importers/flight_declarations_samples/flight-1.json). This file follows the format specified in [Flight Declaration Protocol](https://github.com/openskies-sh/flight-declaration-protocol-development), optionally when using DSS components it supports "operational intent" APIs.
 
-### Image Credit
+## Image Credit
 
 <a href="https://www.vecteezy.com/free-vector/blender">Blender Vectors by Vecteezy</a>
