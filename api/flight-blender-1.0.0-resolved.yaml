@@ -25,7 +25,11 @@ paths:
       security: []
       responses:
         '200':
-          description: 'pong'
+          description: 'Server running normally'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PongResponse'
         '400':
           description: Bad request submitted
           content:
@@ -771,6 +775,10 @@ components:
       description: An unexpected error occured.
       $ref: '#/components/schemas/Error'
 
+    PongResponse:
+      description: The server is running properly
+      $ref: '#/components/schemas/Pong'
+
     BadRequest400ErrorResponse:
       description: The JSON is not valid
 
@@ -1133,6 +1141,11 @@ components:
           type: string
         message:
           type: string
+    Pong: 
+      properties:
+        message:
+          type: string
+          example: Server running properly
 
     ArrayOfObservations:
       type: array
