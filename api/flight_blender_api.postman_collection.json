@@ -1,0 +1,2046 @@
+{
+	"info": {
+		"_postman_id": "91250cc8-22d2-43d4-8531-4e31548ed305",
+		"name": "Flight Blender Calls",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "RID DA",
+			"item": [
+				{
+					"name": "Get All Flight Data PULL",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "audience",
+									"value": {
+										"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_scopes}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MjYxODU5MTQsImlhdCI6MTYyNjE4MjMxNCwic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSBkc3MucmVhZC5pZGVudGlmaWNhdGlvbl9zZXJ2aWNlX2FyZWFzIiwidHlwIjoiQmVhcmVyIiwiYXVkIjoidGVzdGZsaWdodC5mbGlnaHRibGVuZGVyLmNvbSJ9.SbXJYYvJUXWuCtcVU_yxuWCQSV0SWntx0KIh_Y-WtYJsiOg3y2QEN7armWo64XwBTlXT7YrfnWZ_QI7pk_acIHWH5eak23AFtnoRYdggtC9J-lrmeXRFUGqqGuFk668RIOKkLwo935FD3DouGyCbdJ3cQA6Gag2nXiz-Va1DIljs09RWwtqbHcvvjLY3iVHje0SRPSgr8XkRoEd0OpHkV1viov9O7cHPRCMeQAMCSWh3v0j6Dt9jC6cMGbbczZMySPls3CiPwbt9o4odXTeNyTduqVXQJbYYmJBXnAtLl8Wa6Q8ZQmidNh9K1brUUnNc2fCYt-UwWvfLKKV3quQvg0gncjNMCXnJoXdKKElkTzsqM1cRe-4_UXUcos64WOGO1Oqg6sc3AaYwE98ylYox54gZpABWrjwnewhV3geeUCIgTKqn6SRawCsnHPf6ygKVWRJXKcG7txz7IJYNQBgVRZfmAJmFbA28rX3B2YrOMnsgbRluhdWgsRiM9jpAv-RkpTjUaaqOQFyimfmmUp1LrhlFWAeNeEo9NSRBoQGtS8K2_RdR_Bs_pHkJihGePwHeAAZ5XplXwakDjJEQSAXPmyt1dAnM0jBEuhUa7FfxWrRMhiwfKY2bJfH7l7aDi2-7N7BoWVgaJymgQ1A7ClYbQTl3hw3tVHrcb9NlkRoIogk",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:8000/",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/oauth/authorize/",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://id.openskies.sh/oauth/token/",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://local.test:8000/dss/display_data?view=46.97471588813772,7.473307389701852,46.975508163062706,7.473955394898998",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"dss",
+								"display_data"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2021-01-21",
+									"disabled": true
+								},
+								{
+									"key": "end_date",
+									"value": "2021-01-31",
+									"disabled": true
+								},
+								{
+									"key": "view",
+									"value": "46.97471588813772,7.473307389701852,46.975508163062706,7.473955394898998"
+								}
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit a DSS Subscription Request (Basel)",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "audience",
+									"value": {
+										"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MjUwNzExMDUsImlhdCI6MTYyNTA2NzUwNSwic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.suRPve0g_ZbhH1drbRuSDQfCaqCoIX5i5dWYJxHVeUHHV78i9I-OPRgkI-fOyGW8oEEEx-HlSx7s0D5_DiFyZ70AWhXDqo-pcyxduwOrwcafyHsth0qrTRZcgp7tvjfYnNZzTd1lORtqv5Fc2Q2Qv3Qwd5t7C53eYjIKA814rBPKz62_fyycY1ocTY0ImUr58a5mpbIKtIxjfpzF3D2unrdSXOl2-vu4rhfFtxPwDa6Gm5IMaG76pAvIBF3jqxxWeuaYw-8soRsfAlFG35qV_Lb1qtDPbiDXi6blWnoVIbdDx82fQbh9CaTdAGpLZ6GNuoYkovbxVA38a8VypUDp_pAtT1YCGWVuGAPiz9cDk_Bh_4MOpdKz2EdAme-ATqFLM-NoBtkfOP2X3vb4m0LiTcjeyRtE-DEQU_Fc1bU2LT1bo4YDI2_l7osBgvKqAQPV4Fap5sXvg5YIRLX3jCpj4TfhPkwo90gCpxZ0kPuO058oJ8lURkIuU7s9gWq0qbC72FKKQh0kmp1DnJQAqSe2ned8wyVWeocxAzVhbY2mWObdRXAlf-T9AiaRgorMSnua4cvmfc4QQmrQheLT5l4vEBLgfhr40sGIS-YzsQbcjsjWyMM8EgkCdj0UKgxNA-cJptWTjSJbPxeqEpEmo-jCXakxsGq2e-tgup1vVR6CHGY",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:8000/",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/oauth/authorize/",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://id.openskies.sh/oauth/token/",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://local.test:8000/dss/create_dss_subscription?view=46.97478407188788,7.473543702146228,46.97542602102813,7.4753388728502985",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"dss",
+								"create_dss_subscription"
+							],
+							"query": [
+								{
+									"key": "view",
+									"value": "46.97478407188788,7.473543702146228,46.97542602102813,7.4753388728502985"
+								}
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
+				},
+				{
+					"name": "DSS Mock RID Qualifier endpoint",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "audience",
+									"value": {
+										"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:8000/",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/oauth/authorize/",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://id.openskies.sh/oauth/token/",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8071/ridsp/v1/uss/flights?view=46.974619144541954,7.47414738933114,46.97536860541366,7.474896850202575",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8071",
+							"path": [
+								"ridsp",
+								"v1",
+								"uss",
+								"flights"
+							],
+							"query": [
+								{
+									"key": "view",
+									"value": "46.974619144541954,7.47414738933114,46.97536860541366,7.474896850202575"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Subscription",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "Flight Blender Token",
+									"type": "string"
+								},
+								{
+									"key": "audience",
+									"value": {
+										"acc399b7-7b6b-4393-af9f-8098d637a9e2": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:3000/callback",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/o/authorize",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://id.openskies.sh/oauth/token/",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://local.test:8000/dss/create_dss_subscription/?view=-4.9558482039999996,51.6912750520000017,-4.9471846910000004,51.6951759410000022",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"dss",
+								"create_dss_subscription",
+								""
+							],
+							"query": [
+								{
+									"key": "view",
+									"value": "-4.9558482039999996,51.6912750520000017,-4.9471846910000004,51.6951759410000022"
+								}
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit a DSS Subscription Request Copy",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "audience",
+									"value": {
+										"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_audience}}",
+										"083fa528-4a5d-4608-94a5-e517f207b2a7": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:8000/",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/oauth/authorize/",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://id.openskies.sh/oauth/token/",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MjM2OTI3MzgsImlhdCI6MTYyMzY4OTEzOCwic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciIsImF1ZCI6InRlc3RmbGlnaHQuZmxpZ2h0YmxlbmRlci5jb20ifQ.p7CqrGGcZVvRY2tqgsLXNggtm5xkDpm478omXHRBvfIh7vK06UVoXwmoJAUwkneJ9-_Yk5wLl_nM-jb92SeHCjf4MNBBsmcT5_VHopCUi_K8grvBL8tmelMrASazyhT28dOMmm-nEwu6q1IpVy6J55T1Hm-wB41cM7c7XhkYwIkRqKSYDjz1zskBtuuF4zyJrfF0DYKDI5AcyXm6Ics63zgEZ5MLFE0AafznV7htX8v4YtJLdElASN_WkcT6IgUJLBUgKF30hJB7hBfTgdyv85sqn7WVqm8tPrm4q77klv_kTK1_rN0pF9HySDHwBsoEUg5OpvhMecgKB0o5lEqM5LspBtMzVjH9z4HYuUfxFFKOUs6L_5a-H7MlE2Z26nDy165NsBnyn_JNaIXaTh4srY5FXQjgUdpFPJ1MqEHCnCR64u-huuQ7pndYYVk18NJrCLVI9LnP7X1xLWo7NNcWQRtdahwiv2mQ-CdCL2M2RM_L4ocY5VxR4gAn1TSJB10z0Be-UGSIVhzQeaFFH-RqEvw3_hQY-v4V7T6JJhgb9qLU-pa6s882DKk4_Eoky7v77X9q-5UnF0bDpC2JkFBW3O8daZsUJCQYrqD_S1Sp5LlFQb-wms1vrSg-fhLTl40OyWUJg_5yp97DRqztFHHq7q6x_l4p6LV7PeiQdfX0Fgo",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://local.test:8000/dss/create_dss_subscription?view=30.1121520996093750,-1.982636438429737,30.1787567138671875,-1.9543290263437825",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"dss",
+								"create_dss_subscription"
+							],
+							"query": [
+								{
+									"key": "view",
+									"value": "30.1121520996093750,-1.982636438429737,30.1787567138671875,-1.9543290263437825"
+								}
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SCD",
+			"item": [
+				{
+					"name": "Create SCD test",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbC50ZXN0IiwiZXhwIjoxNjQ2MjI1MDA2LCJpc3MiOiJkdW1teSIsInNjb3BlIjoidXRtLmluamVjdF90ZXN0X2RhdGEiLCJzdWIiOiJ1c3MxIn0.QBdU8W-9f0Jl5_OMZW2TIjRu_DuByP5iQX68NRVqdsDZIPazBY43ppELgybtRUoz_E8ML3c7TRkPRTc6rCNbYaZ31gxFbodIG0DNlJ8z2wZtOSGvh319s8oYlhexE5ofZjRDxT_B0yjD5gL8n0ASpVsbdk_Q4V3ClF7VU7tYGzQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"operational_intent\": {\r\n        \"volumes\": [\r\n            {\r\n                \"volume\": {\r\n                    \"outline_polygon\": {\r\n                        \"vertices\": [\r\n                            {\r\n                                \"lat\": 7.477852553482964,\r\n                                \"lng\": 46.97534274521997\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477864546890113,\r\n                                \"lng\": 46.97533235168366\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477874994136151,\r\n                                \"lng\": 46.97532120357769\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477883794608952,\r\n                                \"lng\": 46.97530940826485\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477890863555952,\r\n                                \"lng\": 46.97529707934086\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477896132900339,\r\n                                \"lng\": 46.97528433554032\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477899551896625,\r\n                                \"lng\": 46.97527129959326\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477901087619315,\r\n                                \"lng\": 46.97525809704315\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477900725279934,\r\n                                \"lng\": 46.975244855037865\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477898468369416,\r\n                                \"lng\": 46.97523170110515\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477894338624405,\r\n                                \"lng\": 46.975218761924495\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47788837581789,\r\n                                \"lng\": 46.97520616210707\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477880637376103,\r\n                                \"lng\": 46.97519402299574\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477871197825441,\r\n                                \"lng\": 46.97518246149645\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477860148074692,\r\n                                \"lng\": 46.97517158895238\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4778475945395035,\r\n                                \"lng\": 46.9751615100716\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477833658117529,\r\n                                \"lng\": 46.97515232191881\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477818473024099,\r\n                                \"lng\": 46.975144112980466\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477802185499665,\r\n                                \"lng\": 46.97513696231265\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477784952401429,\r\n                                \"lng\": 46.97513093877975\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477766939692743,\r\n                                \"lng\": 46.97512610039132\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477748320844831,\r\n                                \"lng\": 46.975122493743314\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477729275166192,\r\n                                \"lng\": 46.975120153569506\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477709986075822,\r\n                                \"lng\": 46.975119102406836\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477690639336822,\r\n                                \"lng\": 46.97511935037848\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477671421267468,\r\n                                \"lng\": 46.97512089509635\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477652516946903,\r\n                                \"lng\": 46.97512372168408\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477634108432785,\r\n                                \"lng\": 46.97512780292024\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47761637300802,\r\n                                \"lng\": 46.97513309950056\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477599481473472,\r\n                                \"lng\": 46.975139560416444\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477583596503102,\r\n                                \"lng\": 46.9751471234461\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477568871077345,\r\n                                \"lng\": 46.975155715753885\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477555447009859,\r\n                                \"lng\": 46.975165254591616\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475660446151406,\r\n                                \"lng\": 46.97665125214326\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4756484520214554,\r\n                                \"lng\": 46.97666164543792\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475638004049507,\r\n                                \"lng\": 46.97667279332972\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475629202855804,\r\n                                \"lng\": 46.976684588458824\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475622133201456,\r\n                                \"lng\": 46.976696917232076\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475616863172108,\r\n                                \"lng\": 46.97670966091699\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475613443522207,\r\n                                \"lng\": 46.97672269678518\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475611907186153,\r\n                                \"lng\": 46.97673589929428\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4756122689610836,\r\n                                \"lng\": 46.97674914129702\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475614525364309,\r\n                                \"lng\": 46.97676229526565\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4756186546668,\r\n                                \"lng\": 46.97677523452018\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475624617102401,\r\n                                \"lng\": 46.97678783444832\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475632355250744,\r\n                                \"lng\": 46.976799973705624\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475641794590205,\r\n                                \"lng\": 46.976811535384066\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475652844215535,\r\n                                \"lng\": 46.97682240813796\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475665397713314,\r\n                                \"lng\": 46.976832487256324\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47567933418674,\r\n                                \"lng\": 46.97684167567123\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475694519419928,\r\n                                \"lng\": 46.97684988489279\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475710807170479,\r\n                                \"lng\": 46.976857035861215\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47572804057789,\r\n                                \"lng\": 46.97686305970835\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475746053674222,\r\n                                \"lng\": 46.976867898420856\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4757646729825025,\r\n                                \"lng\": 46.97687150539895\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475783719187434,\r\n                                \"lng\": 46.976873845905175\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475803008862344,\r\n                                \"lng\": 46.97687489739904\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4758223562357395,\r\n                                \"lng\": 46.976874649753974\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475841574980439,\r\n                                \"lng\": 46.976873105354905\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475860480008055,\r\n                                \"lng\": 46.97687027907539\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475878889251555,\r\n                                \"lng\": 46.97686619813419\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4758966254187085,\r\n                                \"lng\": 46.97686090183329\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475913517699567,\r\n                                \"lng\": 46.97685444117925\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475929403411471,\r\n                                \"lng\": 46.976846878392166\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475944129565821,\r\n                                \"lng\": 46.976838286306204\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47595755434146,\r\n                                \"lng\": 46.976828747668335\r\n                            }\r\n                        ]\r\n                    },\r\n                    \"altitude_lower\": {\r\n                        \"value\": 605.0,\r\n                        \"reference\": \"W84\",\r\n                        \"units\": \"M\"\r\n                    },\r\n                    \"altitude_upper\": {\r\n                        \"value\": 635.0,\r\n                        \"reference\": \"W84\",\r\n                        \"units\": \"M\"\r\n                    }\r\n                },\r\n                \"time_start\": {\r\n                    \"value\": \"2022-02-22T16:11:26.860625+01:00\",\r\n                    \"format\": \"RFC3339\"\r\n                },\r\n                \"time_end\": {\r\n                    \"value\": \"2022-02-22T16:16:26.860625+01:00\",\r\n                    \"format\": \"RFC3339\"\r\n                }\r\n            }\r\n        ],\r\n        \"state\": \"Accepted\",\r\n        \"off_nominal_volumes\": [],\r\n        \"priority\": 0\r\n    },\r\n    \"flight_authorisation\": {\r\n        \"uas_serial_number\": \"F5GVEP0D3QED5JW0P7Z\",\r\n        \"operation_category\": \"Open\",\r\n        \"operation_mode\": \"Vlos\",\r\n        \"uas_class\": \"C0\",\r\n        \"identification_technologies\": [\r\n            \"ASTMNetRID\"\r\n        ],\r\n        \"connectivity_methods\": [\r\n            \"cellular\"\r\n        ],\r\n        \"endurance_minutes\": 30,\r\n        \"emergency_procedure_url\": \"https://uav.com/emergency\",\r\n        \"operator_id\": \"CHEkkf6z511kjv98-qth\",\r\n        \"uas_id\": \"\",\r\n        \"uas_type_certificate\": \"\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://local.test:8000/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"scd",
+								"v1",
+								"flights",
+								"ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete SCD test",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbC50ZXN0IiwiZXhwIjoxNjQ2MjI1MDA2LCJpc3MiOiJkdW1teSIsInNjb3BlIjoidXRtLmluamVjdF90ZXN0X2RhdGEiLCJzdWIiOiJ1c3MxIn0.QBdU8W-9f0Jl5_OMZW2TIjRu_DuByP5iQX68NRVqdsDZIPazBY43ppELgybtRUoz_E8ML3c7TRkPRTc6rCNbYaZ31gxFbodIG0DNlJ8z2wZtOSGvh319s8oYlhexE5ofZjRDxT_B0yjD5gL8n0ASpVsbdk_Q4V3ClF7VU7tYGzQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://local.test:8000/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"scd",
+								"v1",
+								"flights",
+								"ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Test Area",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbC50ZXN0IiwiZXhwIjoxNjQ2MjI1MDA2LCJpc3MiOiJkdW1teSIsInNjb3BlIjoidXRtLmluamVjdF90ZXN0X2RhdGEiLCJzdWIiOiJ1c3MxIn0.QBdU8W-9f0Jl5_OMZW2TIjRu_DuByP5iQX68NRVqdsDZIPazBY43ppELgybtRUoz_E8ML3c7TRkPRTc6rCNbYaZ31gxFbodIG0DNlJ8z2wZtOSGvh319s8oYlhexE5ofZjRDxT_B0yjD5gL8n0ASpVsbdk_Q4V3ClF7VU7tYGzQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n        \"request_id\":\"239fbd4c-f107-431a-8244-4d034559ab8f\",\r\n        \"extent\": [\r\n            {\r\n                \"volume\": {\r\n                    \"outline_polygon\": {\r\n                        \"vertices\": [\r\n                            {\r\n                                \"lat\": 7.477852553482964,\r\n                                \"lng\": 46.97534274521997\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477864546890113,\r\n                                \"lng\": 46.97533235168366\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477874994136151,\r\n                                \"lng\": 46.97532120357769\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477883794608952,\r\n                                \"lng\": 46.97530940826485\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477890863555952,\r\n                                \"lng\": 46.97529707934086\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477896132900339,\r\n                                \"lng\": 46.97528433554032\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477899551896625,\r\n                                \"lng\": 46.97527129959326\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477901087619315,\r\n                                \"lng\": 46.97525809704315\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477900725279934,\r\n                                \"lng\": 46.975244855037865\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477898468369416,\r\n                                \"lng\": 46.97523170110515\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477894338624405,\r\n                                \"lng\": 46.975218761924495\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47788837581789,\r\n                                \"lng\": 46.97520616210707\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477880637376103,\r\n                                \"lng\": 46.97519402299574\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477871197825441,\r\n                                \"lng\": 46.97518246149645\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477860148074692,\r\n                                \"lng\": 46.97517158895238\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4778475945395035,\r\n                                \"lng\": 46.9751615100716\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477833658117529,\r\n                                \"lng\": 46.97515232191881\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477818473024099,\r\n                                \"lng\": 46.975144112980466\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477802185499665,\r\n                                \"lng\": 46.97513696231265\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477784952401429,\r\n                                \"lng\": 46.97513093877975\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477766939692743,\r\n                                \"lng\": 46.97512610039132\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477748320844831,\r\n                                \"lng\": 46.975122493743314\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477729275166192,\r\n                                \"lng\": 46.975120153569506\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477709986075822,\r\n                                \"lng\": 46.975119102406836\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477690639336822,\r\n                                \"lng\": 46.97511935037848\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477671421267468,\r\n                                \"lng\": 46.97512089509635\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477652516946903,\r\n                                \"lng\": 46.97512372168408\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477634108432785,\r\n                                \"lng\": 46.97512780292024\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47761637300802,\r\n                                \"lng\": 46.97513309950056\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477599481473472,\r\n                                \"lng\": 46.975139560416444\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477583596503102,\r\n                                \"lng\": 46.9751471234461\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477568871077345,\r\n                                \"lng\": 46.975155715753885\r\n                            },\r\n                            {\r\n                                \"lat\": 7.477555447009859,\r\n                                \"lng\": 46.975165254591616\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475660446151406,\r\n                                \"lng\": 46.97665125214326\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4756484520214554,\r\n                                \"lng\": 46.97666164543792\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475638004049507,\r\n                                \"lng\": 46.97667279332972\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475629202855804,\r\n                                \"lng\": 46.976684588458824\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475622133201456,\r\n                                \"lng\": 46.976696917232076\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475616863172108,\r\n                                \"lng\": 46.97670966091699\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475613443522207,\r\n                                \"lng\": 46.97672269678518\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475611907186153,\r\n                                \"lng\": 46.97673589929428\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4756122689610836,\r\n                                \"lng\": 46.97674914129702\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475614525364309,\r\n                                \"lng\": 46.97676229526565\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4756186546668,\r\n                                \"lng\": 46.97677523452018\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475624617102401,\r\n                                \"lng\": 46.97678783444832\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475632355250744,\r\n                                \"lng\": 46.976799973705624\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475641794590205,\r\n                                \"lng\": 46.976811535384066\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475652844215535,\r\n                                \"lng\": 46.97682240813796\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475665397713314,\r\n                                \"lng\": 46.976832487256324\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47567933418674,\r\n                                \"lng\": 46.97684167567123\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475694519419928,\r\n                                \"lng\": 46.97684988489279\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475710807170479,\r\n                                \"lng\": 46.976857035861215\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47572804057789,\r\n                                \"lng\": 46.97686305970835\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475746053674222,\r\n                                \"lng\": 46.976867898420856\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4757646729825025,\r\n                                \"lng\": 46.97687150539895\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475783719187434,\r\n                                \"lng\": 46.976873845905175\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475803008862344,\r\n                                \"lng\": 46.97687489739904\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4758223562357395,\r\n                                \"lng\": 46.976874649753974\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475841574980439,\r\n                                \"lng\": 46.976873105354905\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475860480008055,\r\n                                \"lng\": 46.97687027907539\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475878889251555,\r\n                                \"lng\": 46.97686619813419\r\n                            },\r\n                            {\r\n                                \"lat\": 7.4758966254187085,\r\n                                \"lng\": 46.97686090183329\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475913517699567,\r\n                                \"lng\": 46.97685444117925\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475929403411471,\r\n                                \"lng\": 46.976846878392166\r\n                            },\r\n                            {\r\n                                \"lat\": 7.475944129565821,\r\n                                \"lng\": 46.976838286306204\r\n                            },\r\n                            {\r\n                                \"lat\": 7.47595755434146,\r\n                                \"lng\": 46.976828747668335\r\n                            }\r\n                        ]\r\n                    },\r\n                    \"altitude_lower\": {\r\n                        \"value\": 605.0,\r\n                        \"reference\": \"W84\",\r\n                        \"units\": \"M\"\r\n                    },\r\n                    \"altitude_upper\": {\r\n                        \"value\": 635.0,\r\n                        \"reference\": \"W84\",\r\n                        \"units\": \"M\"\r\n                    }\r\n                },\r\n                \"time_start\": {\r\n                    \"value\": \"2022-02-22T16:11:26.860625+01:00\",\r\n                    \"format\": \"RFC3339\"\r\n                },\r\n                \"time_end\": {\r\n                    \"value\": \"2022-02-22T16:16:26.860625+01:00\",\r\n                    \"format\": \"RFC3339\"\r\n                }\r\n            }\r\n        ]\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://local.test:8000/scd/v1/clear_area_requests",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"scd",
+								"v1",
+								"clear_area_requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query OpINT details (USS)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbC50ZXN0IiwiZXhwIjoxNjQ2MjI1MDA2LCJpc3MiOiJkdW1teSIsInNjb3BlIjoidXRtLmluamVjdF90ZXN0X2RhdGEiLCJzdWIiOiJ1c3MxIn0.QBdU8W-9f0Jl5_OMZW2TIjRu_DuByP5iQX68NRVqdsDZIPazBY43ppELgybtRUoz_E8ML3c7TRkPRTc6rCNbYaZ31gxFbodIG0DNlJ8z2wZtOSGvh319s8oYlhexE5ofZjRDxT_B0yjD5gL8n0ASpVsbdk_Q4V3ClF7VU7tYGzQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://local.test:8000/uss/v1/operational_intents/45a29775-21da-46ea-8d09-be7d7eef44fa",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"uss",
+								"v1",
+								"operational_intents",
+								"45a29775-21da-46ea-8d09-be7d7eef44fa"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "RID DP",
+			"item": [
+				{
+					"name": "RID Create Test",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "Flight Blender Token",
+									"type": "string"
+								},
+								{
+									"key": "audience",
+									"value": {
+										"acc399b7-7b6b-4393-af9f-8098d637a9e2": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:3000/callback",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/o/authorize",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://id.openskies.sh/oauth/token/",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"requested_flights\": [\r\n    {\r\n      \"injection_id\": \"edb7695f-8737-4b9f-91f8-e2afbb333f41\",\r\n      \"telemetry\": [\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.124,\r\n            \"lng\": -118.457,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.125,\r\n            \"lng\": -118.457,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.124,\r\n            \"lng\": -118.457,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        }\r\n      ],\r\n      \"details_responses\": [\r\n        {\r\n          \"effective_after\": \"2019-08-24T14:15:22Z\",\r\n          \"details\": {\r\n            \"id\": \"a3423b-213401-0023\",\r\n            \"operator_id\": \"string\",\r\n            \"operator_location\": {\r\n              \"lng\": -118.456,\r\n              \"lat\": 34.123\r\n            },\r\n            \"operation_description\": \"SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.\",\r\n            \"auth_data\": {\r\n              \"format\": \"string\",\r\n              \"data\": \"string\"\r\n            },\r\n            \"serial_number\": \"INTCJ123-4567-890\",\r\n            \"registration_number\": \"FA12345897\"\r\n          }\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}"
+						},
+						"url": {
+							"raw": "http://local.test:8000/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"rid",
+								"tests",
+								"ac52ccd4-2bf9-4397-9ae3-4842b63f942f"
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
+				},
+				{
+					"name": "RID Delete Test",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "Flight Blender Token",
+									"type": "string"
+								},
+								{
+									"key": "audience",
+									"value": {
+										"acc399b7-7b6b-4393-af9f-8098d637a9e2": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:3000/callback",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/o/authorize",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "https://id.openskies.sh/oauth/token/",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://local.test:8000/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f/1",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"rid",
+								"tests",
+								"ac52ccd4-2bf9-4397-9ae3-4842b63f942f",
+								"1"
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
+				},
+				{
+					"name": "RID Get Flights",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbC50ZXN0IiwiZXhwIjoxNjQ2MjI1MDA2LCJpc3MiOiJkdW1teSIsInNjb3BlIjoidXRtLmluamVjdF90ZXN0X2RhdGEiLCJzdWIiOiJ1c3MxIn0.QBdU8W-9f0Jl5_OMZW2TIjRu_DuByP5iQX68NRVqdsDZIPazBY43ppELgybtRUoz_E8ML3c7TRkPRTc6rCNbYaZ31gxFbodIG0DNlJ8z2wZtOSGvh319s8oYlhexE5ofZjRDxT_B0yjD5gL8n0ASpVsbdk_Q4V3ClF7VU7tYGzQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://local.test:8000/uss/flights?view=34.0986568654943909,-118.4733867645263530,34.1304210314761178,-118.4358787536620952",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"uss",
+								"flights"
+							],
+							"query": [
+								{
+									"key": "view",
+									"value": "34.0986568654943909,-118.4733867645263530,34.1304210314761178,-118.4358787536620952"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Submit Geofence",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"80890cef-8eb3-4561-ad4e-1addf4cfe11a": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "tokenName",
+							"value": "Flight Blender Token",
+							"type": "string"
+						},
+						{
+							"key": "challengeAlgorithm",
+							"value": "S256",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:3000/callback",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/o/authorize",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "Bearer",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"upper_limit\":500, \"lower_limit\":100},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[30.142621994018555,-1.985209815625593],[30.156269073486328,-1.985209815625593],[30.156269073486328,-1.9534712184928378],[30.142621994018555,-1.9534712184928378],[30.142621994018555,-1.985209815625593]]]}}]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://local.test:8000/geo_fence_ops/set_geo_fence",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"geo_fence_ops",
+						"set_geo_fence"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Geofence",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"56d75814-297b-4a52-b60d-94e1b4f0aee6": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MjQyNjcwMjAsImlhdCI6MTYyNDI2MzQyMCwic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSBkc3MucmVhZC5pZGVudGlmaWNhdGlvbl9zZXJ2aWNlX2FyZWFzIiwidHlwIjoiQmVhcmVyIiwiYXVkIjoidGVzdGZsaWdodC5mbGlnaHRibGVuZGVyLmNvbSJ9.RletK2EmPyJGbHLJzJbqUuaYUzO0RhzFUPOM7hDIykHDmrP8EbcXK3DXtmuirCuvPSHr6XvtXNMGWWySgvYzUucitNPhP0KXV96Ci6s7MIBBmARPS7wuSTSIZJYL7A6xW_BZp2IDV2A_tCM7BFpq8rIIBO1v_KbGm-C6lrSjjUp8JlpxkdCBmmkyEqNeppyw7kxIxBJFNnHGAE0WIQ1mANXNLIADn8v3vPh6AWNs8Pzjeh-sLkAjkg5IejMxCJCpZUbqBtDUzGbycy3a-yHK10efu1gOR5enez4ExY0jd5ZSklbO4mWlJ3Qba1WNEoqThHHzH64rPIvt89Q68RHH9umhl2_nPFPHznq4xQXBfWGHyKv_0hglFOGCxRfQB3RKkzZpvHy9BHZjnjfPx5IKjg4qVug6_yCFNTuRJlHNA_ymcpcEGHgQqm2gxRRv2JU3dCSTL4i6pse9xcMZIsJxupp-eLe8qe_PVAh0uL_F_ogBuTVYTIBXDE-MTGVkrbd-DJJ_kZI2-qKGH6PR8VsZjBp26SG88IWhF-AICnw4bVcsC3BiDf_dsUf5_EUbXI0A3XmmDJzU6G42-VaWoFF26EOYsT7g_Y3g3m9Q7dpa3GdzcAIdFU6o7hXPPIakHQwifUP8UqXpqEA5UYu_DluWhNg1cQcPG3gayzUob0tBO8U",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://local.test:8000/geo_fence_ops/geo_fence",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"geo_fence_ops",
+						"geo_fence"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "2021-01-21",
+							"disabled": true
+						},
+						{
+							"key": "end_date",
+							"value": "2021-01-31",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "Submit Flight Declaration",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "audience",
+							"value": {
+								"2cfccc06-7a63-4b07-9f3b-29137911aa03": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "Bearer",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"flight_declaration\":{\"exchange_type\":\"flight_declaration\",\"flight_id\":\"5a7f3377-b991-4cc8-af2d-379d57f786d1\",\"plan_id\":\"a5b5484c-a23c-4e83-8bb8-a6a5c294e45b\",\"flight_state\":2,\"flight_approved\":0,\"sequence_number\":0,\"time_stamp\":\"2020-08-15T14:29:08.842Z\",\"version\":\"1.0.0\",\"flight_declaration\":{\"parts\":{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"properties\":{\"id\":\"0\",\"start_time\":\"2020-08-15T15:00:00+00:00\",\"end_time\":\"2020-08-15T15:30:00+00:00\",\"max_altitude\":{\"metres\":152.4,\"datum\":\"agl\"},\"min_altitude\":{\"metres\":102.4,\"datum\":\"agl\"}},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[30.157856941223145,-1.9728146787330019],[30.142922401428223,-1.969512152604053]]}},{\"type\":\"Feature\",\"properties\":{\"id\":\"1\",\"start_time\":\"2020-08-15T15:00:00+00:00\",\"end_time\":\"2020-08-15T15:30:00+00:00\",\"max_altitude\":{\"metres\":152.4,\"datum\":\"agl\"},\"min_altitude\":{\"metres\":102.4,\"datum\":\"agl\"}},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[30.14275074005127,-1.969512152604053],[30.122408866882324,-1.9662525100057282]]}}]},\"purpose\":\"Delivery\",\"expect_telemetry\":true,\"originating_party\":\"Originating Party, Inc.\",\"contact_url\":\"https://utm.originatingparty.com/contact?5a7f3377-b991-4cc8-af2d-379d57f786d1\",\"operation_mode\":\"bvlos\",\"vehicle_id\":\"157de9bb-6b49-496b-bf3f-0b768ce6a3b6\",\"operator_id\":\"4a725cb5-02d2-4f78-888f-b93088d324be\",\"idents\":[{\"method\":\"adsb\",\"ident\":\"4840D6\"}]}}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://local.test:8000/set_flight_declaration",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"set_flight_declaration"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Details of Flight Declaration",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"29c3df1f-c177-4141-9918-542225ab0713": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "Bearer",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://local.test:8000/flight_declaration/c7bace2d-a371-4135-b411-4d2478f020aa",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"flight_declaration",
+						"c7bace2d-a371-4135-b411-4d2478f020aa"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "PING Blender",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "audience",
+							"value": {
+								"29c3df1f-c177-4141-9918-542225ab0713": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "Bearer",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://local.test:8000/ping",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"ping"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "Update Flight Declaration",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "audience",
+							"value": {
+								"4516b313-d6e4-41fb-a7ff-1835d14beb08": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "Bearer",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"is_approved\":1}"
+				},
+				"url": {
+					"raw": "http://local.test:8000/flight_declaration_review/c7bace2d-a371-4135-b411-4d2478f020aa",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"flight_declaration_review",
+						"c7bace2d-a371-4135-b411-4d2478f020aa"
+					],
+					"query": [
+						{
+							"key": "is_approved",
+							"value": "0",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Flight Declarations",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "audience",
+							"value": {
+								"56d75814-297b-4a52-b60d-94e1b4f0aee6": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MjQyNjcwMjAsImlhdCI6MTYyNDI2MzQyMCwic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSBkc3MucmVhZC5pZGVudGlmaWNhdGlvbl9zZXJ2aWNlX2FyZWFzIiwidHlwIjoiQmVhcmVyIiwiYXVkIjoidGVzdGZsaWdodC5mbGlnaHRibGVuZGVyLmNvbSJ9.RletK2EmPyJGbHLJzJbqUuaYUzO0RhzFUPOM7hDIykHDmrP8EbcXK3DXtmuirCuvPSHr6XvtXNMGWWySgvYzUucitNPhP0KXV96Ci6s7MIBBmARPS7wuSTSIZJYL7A6xW_BZp2IDV2A_tCM7BFpq8rIIBO1v_KbGm-C6lrSjjUp8JlpxkdCBmmkyEqNeppyw7kxIxBJFNnHGAE0WIQ1mANXNLIADn8v3vPh6AWNs8Pzjeh-sLkAjkg5IejMxCJCpZUbqBtDUzGbycy3a-yHK10efu1gOR5enez4ExY0jd5ZSklbO4mWlJ3Qba1WNEoqThHHzH64rPIvt89Q68RHH9umhl2_nPFPHznq4xQXBfWGHyKv_0hglFOGCxRfQB3RKkzZpvHy9BHZjnjfPx5IKjg4qVug6_yCFNTuRJlHNA_ymcpcEGHgQqm2gxRRv2JU3dCSTL4i6pse9xcMZIsJxupp-eLe8qe_PVAh0uL_F_ogBuTVYTIBXDE-MTGVkrbd-DJJ_kZI2-qKGH6PR8VsZjBp26SG88IWhF-AICnw4bVcsC3BiDf_dsUf5_EUbXI0A3XmmDJzU6G42-VaWoFF26EOYsT7g_Y3g3m9Q7dpa3GdzcAIdFU6o7hXPPIakHQwifUP8UqXpqEA5UYu_DluWhNg1cQcPG3gayzUob0tBO8U",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "blender.read blender.write",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"flight_declaration_ops",
+						"flight_declaration"
+					],
+					"query": [
+						{
+							"key": "start_date",
+							"value": "2021-01-21",
+							"disabled": true
+						},
+						{
+							"key": "end_date",
+							"value": "2021-01-31",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "Submit Flight Data",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "audience",
+							"value": {
+								"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_scopes}}",
+								"7068906a-ad47-470f-95e4-631dc62458c9": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "challengeAlgorithm",
+							"value": "S256",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "Bearer",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"observations\":[{\"lon_dd\":30.13987541,\"lat_dd\":-1.968182562,\"timestamp\":1590000020000,\"altitude_mm\":230.93,\"traffic_source\":3,\"source_type\":0,\"icao_address\":\"drone-a\",\"metadata\":{\"aircraft_type\":\"Helicopter\"}}]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://local.test:8000/set_air_traffic",
+					"protocol": "http",
+					"host": [
+						"local",
+						"test"
+					],
+					"port": "8000",
+					"path": [
+						"set_air_traffic"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				},
+				"description": "This request submits a Geofence to Flight Blender"
+			},
+			"response": []
+		},
+		{
+			"name": "Flight Blender Openskies Token",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "audience",
+							"value": {
+								"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_audience}}",
+								"083fa528-4a5d-4608-94a5-e517f207b2a7": "{{flight_blender_audience}}"
+							},
+							"type": "any"
+						},
+						{
+							"key": "challengeAlgorithm",
+							"value": "S256",
+							"type": "string"
+						},
+						{
+							"key": "scope",
+							"value": "{{flight_blender_scopes}}",
+							"type": "string"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "http://local.test:8000/",
+							"type": "string"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "string"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}",
+							"type": "string"
+						},
+						{
+							"key": "clientId",
+							"value": "{{client_id}}",
+							"type": "string"
+						},
+						{
+							"key": "authUrl",
+							"value": "http://local.test:8000/oauth/authorize/",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "client_authentication",
+							"value": "body",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "https://id.openskies.sh/oauth/token/",
+							"type": "string"
+						},
+						{
+							"key": "tokenType",
+							"value": "Bearer",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "client_id",
+							"value": "F0vkVgZBCMfBzmrA6MR4IInLSKkDgXjcQojWLVkS",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "iiYauERMGU6i4vcr4tPhAomVpCuiBGTYB0LRuUPPnkDIKTrTCgA9kCQpzmrpz2B4FHvi7FHsPClfmzoyhBRusRUGMo0exw0QPkSYCwFhnkRsG0lXTU3JfKTuvbdysdyX",
+							"type": "text"
+						},
+						{
+							"key": "audience",
+							"value": "testflight.flightblender.com",
+							"type": "text"
+						},
+						{
+							"key": "scope",
+							"value": "blender.read blender.write",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://id.openskies.sh/oauth/token/",
+					"protocol": "https",
+					"host": [
+						"id",
+						"openskies",
+						"sh"
+					],
+					"path": [
+						"oauth",
+						"token",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	}
+}

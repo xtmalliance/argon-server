@@ -8,16 +8,16 @@ services:
     volumes:
       - ./config/redis.conf:/redis.conf
 
-  # db:
-  #   image: postgres
-  #   ports:
-  #     - "5432:5432"
-  #   restart: unless-stopped
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
         
-  #   volumes:
-  #     - db_data:/var/lib/postgresql/data
-  #   env_file:
-  #     - ".env"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file:
+      - ".env"
 
   web:    
     env_file:
