@@ -43,21 +43,22 @@ def requires_scopes(required_scopes):
                 PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))                
                 jwks_data = s.get(PASSPORT_DOMAIN).json()          
                                                      
-                jwks = jwks_data   
-                
-                public_keys = {}
+                jwks = jwks_data                   
+                public_keys = {}                
                 for jwk in jwks['keys']:
                     kid = jwk['kid']
                     public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
                 try:
                     kid = unverified_token_headers['kid']
-                except ValueError as ve:
-                    response = JsonResponse({'detail': 'Invalid public key details in token'})
+                    
+                except (KeyError, ValueError) as ve:                    
+                    response = JsonResponse({'detail': 'Invalid public key details in token / token cannot be verified'})
                     response.status_code = 401
                     return response
                 else:
                     public_key = public_keys[kid]
                     
+                                    
                 try:
                     decoded = jwt.decode(token, public_key, audience=API_IDENTIFIER, algorithms=['RS256'])                    
                 except jwt.ImmatureSignatureError as es: 
@@ -91,7 +92,7 @@ def requires_scopes(required_scopes):
 
                 if decoded.get("scope"):
                     token_scopes = decoded["scope"].split()
-                    token_scopes_set = set(token_scopes)                
+                    token_scopes_set = set(token_scopes)   
                     if set(required_scopes).issubset(token_scopes_set):
                         return f(*args, **kwargs)
                 response = JsonResponse({'message': 'You don\'t have access to this resource'})

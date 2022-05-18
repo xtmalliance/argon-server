@@ -224,7 +224,8 @@ def get_display_data(request):
     except Exception as ke:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-    view_port_valid = view_port_ops.check_view_port(view_port=view_port)
+    
+    view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
 
     b = shapely.geometry.box(view_port[1], view_port[0], view_port[3], view_port[2])
     co_ordinates = list(zip(*b.exterior.coords.xy))
@@ -256,19 +257,20 @@ def get_display_data(request):
         stream_ops = flight_stream_helper.StreamHelperOps()
         pull_cg = stream_ops.get_pull_cg()
         all_streams_messages = pull_cg.read()
-        print(all_streams_messages)
+        
         unique_flights =[]
         # Keep only the latest message
         try:
             for message in all_streams_messages:     
-                print(message)     
-                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})            
+                if message.data != '':
+                    unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})            
             # sort by date
             unique_flights.sort(key=lambda item:item['timestamp'], reverse=True)
             # Keep only the latest message
             distinct_messages = {i['address']:i for i in reversed(unique_flights)}.values()
             
         except KeyError as ke: 
+
             logger.error("Error in sorting distinct messages, ICAO name not defined %s" % ke)                     
             distinct_messages = []
         rid_flights = []
@@ -294,19 +296,17 @@ def get_display_data(request):
                 except KeyError as ke:
                     logger.error("Error in metadata data in the stream %s" % ke)
                     
-
+            
             most_recent_position = Position(lat=observation_data['lat_dd'], lng=observation_data['lon_dd'] ,alt= observation_data['altitude_mm'])
 
             current_flight = RIDFlight(id=observation_data['icao_address'], most_recent_position= most_recent_position,recent_paths = recent_paths)
 
             rid_flights.append(current_flight)
-
         
-        rid_display_data = RIDDisplayDataResponse(flights=rid_flights, clusters = [])
-        
+        rid_display_data = RIDDisplayDataResponse(flights=rid_flights, clusters = [])        
         rid_flights_dict = my_rid_output_helper.make_json_compatible(rid_display_data)
         
-        return JsonResponse(json.dumps({"flights":rid_flights_dict['flights'], "clusters": rid_flights_dict['clusters']}),  status=200, content_type='application/json')
+        return JsonResponse({"flights":json.dumps(rid_flights_dict['flights']), "clusters": json.dumps(rid_flights_dict['clusters'])},  status=200, content_type='application/json')
     else:
         view_port_error = {
             "message": "A incorrect view port bbox was provided"}
@@ -326,7 +326,7 @@ def create_test(request, test_id):
         msg = HTTPErrorResponse(message="Requested Flights not present in the payload", status= 400)
         msg_dict = asdict(msg)
         return JsonResponse(msg_dict['message'], status=msg_dict['status'])
-
+    
     r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
             'REDIS_PORT', 6379), decode_responses=True)
 
@@ -335,6 +335,7 @@ def create_test(request, test_id):
     if r.exists(test_id):
         return JsonResponse({}, status=409)
     else:
+        # Create a ISA in the DSS
         now = arrow.now()
         r.set(test_id, json.dumps({'created_at':now.isoformat()}))
         r.expire(test_id, timedelta(seconds=30))            

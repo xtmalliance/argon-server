@@ -23,7 +23,7 @@ services:
     env_file:
       - ".env"      
     build: . 
-    image: openskies-sh/flight-blender
+    image: openskiessh/flight-blender
     command: python manage.py runserver 0.0.0.0:8000
     ports:
         - "8000:8000"
@@ -34,19 +34,18 @@ services:
       - .:/app
 
       
-  # celery:
-  #   container_name: flight-blender-worker
-  #   image: openskies-sh/flight-blender
-  #   build:
-  #     context: "."    
-    
-  #   env_file:
-  #     - ".env"
-  #   command: celery --app=flight_blender worker --loglevel=info
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - redis
+  celery:
+    container_name: flight-blender-worker
+    image: openskiessh/flight-blender
+    build:
+      context: "."        
+    env_file:
+      - ".env"
+    command: celery --app=flight_blender worker --loglevel=debug
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
 
       
   # beat:

@@ -102,6 +102,7 @@ def USSOpIntDetails(request, opint_id):
 @api_view(['GET'])
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_uss_flights(request):
+    
     ''' This is the end point for the rid_qualifier to get details of a flight '''
     try: 
         include_recent_positions = request.query_params['include_recent_positions']

@@ -97,7 +97,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/dss/display_data?view=46.97471588813772,7.473307389701852,46.975508163062706,7.473955394898998",
+							"raw": "http://local.test:8000/rid/display_data?view=46.97471588813772,7.473307389701852,46.975508163062706,7.473955394898998",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -105,7 +105,7 @@
 							],
 							"port": "8000",
 							"path": [
-								"dss",
+								"rid",
 								"display_data"
 							],
 							"query": [
