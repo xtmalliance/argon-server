@@ -102,11 +102,13 @@ def USSOpIntDetails(request, opint_id):
 @api_view(['GET'])
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_uss_flights(request):
+    
     ''' This is the end point for the rid_qualifier to get details of a flight '''
     try: 
         include_recent_positions = request.query_params['include_recent_positions']
     except MultiValueDictKeyError as mvke: 
         include_recent_positions = False
+
     # my_rid_output_helper = RIDOutputHelper()
     try:
         view = request.query_params['view']
@@ -135,16 +137,19 @@ def get_uss_flights(request):
     unique_flights =[]
     distinct_messages = []
     # Keep only the latest message
-
+    
     for message in all_streams_messages:        
-        message_exist = message.data.get('icao_address', None) or None        
+        message_exist = message.data.get('icao_address', None) or None   
         if message_exist:
             lat = float(message.data['lat_dd'])
             lng = float(message.data['lon_dd'])
             point = Point(lat, lng)
             point_in_polygon = view_box.contains(point)
+
             if point_in_polygon:
                 unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
+            else:
+                logging.info("Point not in polygon %s "% view_box)
     # sort by date
     unique_flights.sort(key=lambda item:item['timestamp'], reverse=True)
     

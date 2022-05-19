@@ -1,10 +1,10 @@
 from turtle import position
 from typing import List, NamedTuple, Optional
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import arrow
 
-from scd_operations.scd_data_definitions import Volume4D
+from scd_operations.scd_data_definitions import Volume3D, Volume4D
 
 class StringBasedDateTime(str):
   """String that only allows values which describe a datetime."""
@@ -48,6 +48,60 @@ class SubscriptionResponse:
     created: bool
     dss_subscription_id: Optional[uuid.uuid4]
     notification_index: int
+
+@dataclass
+class RIDVertex:
+  lat:float
+  lng: float
+
+@dataclass
+class RIDFootprint:
+  vertices: List[RIDVertex]
+
+@dataclass
+class RIDVolume3D:
+  footprint: RIDFootprint
+  altitude_lo: int
+  altitude_high: int
+
+@dataclass
+class RIDVolume4D:
+  spatial_volume: RIDVolume3D
+  time_start: str
+  time_end: str
+
+@dataclass
+class SubscriptionState:
+  subscription_id: str
+  notification_index: int = 0
+
+@dataclass
+class SubscriberToNotify:
+  url: str
+  subscriptions: List[SubscriptionState] = field(default_factory=[])
+
+@dataclass
+class ISACreationRequest:
+    ''' A object to hold details of a request that indicates the DSS '''
+    extents: Volume4D
+    flights_url: str
+
+@dataclass
+class IdentificationServiceArea:  
+  flights_url: str
+  owner: str
+  time_start: StringBasedDateTime
+  time_end: StringBasedDateTime
+  version: str
+  id: str
+
+@dataclass
+class ISACreationResponse:
+    ''' A object to hold details of a request for creation of an ISA in the DSS '''
+    created: bool
+    subscribers: List[SubscriberToNotify]
+    service_area:IdentificationServiceArea
+
 
 class CreateSubscriptionResponse(NamedTuple):
     ''' Output of a request to create subscription '''
@@ -176,7 +230,7 @@ class RIDFlight:
   recent_positions: Optional[List[RIDRecentAircraftPosition]]
 
 @dataclass
-class AllRequestedFlightDetails:
+class FullRequestedFlightDetails:
   id: uuid
   telemetry_length: int
   injection_details: List[RIDTestInjection]
@@ -209,3 +263,4 @@ class AuthData:
 class SingleObeservationMetadata:
   details_response: RIDTestDetailsResponse
   telemetry: RIDAircraftState
+
