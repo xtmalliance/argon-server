@@ -1,12 +1,13 @@
 from lib2to3.refactor import MultiprocessingUnsupported
 import uuid
+from xmlrpc.client import _iso8601_format
 from flight_blender.celery import app
 import logging
 
 from scd_operations.scd_data_definitions import Volume4D
 from . import dss_rid_helper
 import redis
-from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, FullRequestedFlightDetails,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata
+from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, FullRequestedFlightDetails,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint
 import time
 import arrow
 import json
@@ -102,42 +103,9 @@ def stream_rid_test_data(requested_flights):
     heartbeat = env.get('HEARTBEAT_RATE_SECS', 2)
     heartbeat = int(heartbeat)
     start_time = arrow.now()
-    isa_start_time = start_time.shift(seconds = 10)
-    # Computing when the requested flight data will end 
-    end_time_of_injections = max_telemetry_data_length * heartbeat
-    isa_end_time = start_time.shift(seconds = end_time_of_injections)
-    astm_rid_standard_end_time = end_time_of_injections + 65 # Enable querying for upto sixty seconds after end time. 
-    end_time_of_injections_seconds =  start_time.shift(seconds = astm_rid_standard_end_time)
-    
-    # Create a ISA in the DSS
-    
-    position_list: List[Point] = []
-    for position in all_positions:
-        position_list.append((position['lng'], position['lat']))
+    isa_start_time = start_time.shift(seconds = 5)
 
-    multi_points = MultiPoint(position_list)
-    bounds = multi_points.minimum_rotated_rectangle.bounds
 
-    b = box(bounds[1], bounds[0], bounds[3], bounds[2])
-    co_ordinates = list(zip(*b.exterior.coords.xy))
-    
-    polygon_verticies = []
-    for co_ordinate in co_ordinates:
-        v = RIDVertex(lat = co_ordinate[0],lng= co_ordinate[1])
-        polygon_verticies.append(v)
-    
-    altitude_lower = 610
-    altitude_upper = 630
-                       
-    flight_volume = RIDVolume3D(footprint=polygon_verticies, altitude_high=altitude_upper, altitude_lo= altitude_lower)
-    flight_extents = Volume4D(volume= flight_volume,time_start= isa_start_time.isoformat(), end_time = isa_end_time.isoformat())
-
-    flights_url = env.get("BLENDER_FQDN", "host.docker.internal") + '/uss/'
-    my_dss_helper = dss_rid_helper.RemoteIDOperations()
-    
-    logger.info("Creating a DSS ISA")
-    my_dss_helper.create_dss_isa(flight_extents=flight_extents, flights_url=flights_url)
-    
     all_requested_flight_details: List[FullRequestedFlightDetails] = []
     max_telemetry_data_length = 0
     telemetry_length = []
@@ -149,9 +117,47 @@ def stream_rid_test_data(requested_flights):
     max_telemetry_data_length = max(telemetry_length)
     logger.info("Telemetry length: %s" % max_telemetry_data_length)
 
+
+    # Computing when the requested flight data will end 
+    end_time_of_injections = max_telemetry_data_length * heartbeat
+    isa_end_time = start_time.shift(seconds = end_time_of_injections)
+    astm_rid_standard_end_time = end_time_of_injections + 400 # Enable querying for upto sixty seconds after end time. 
+    end_time_of_injections_seconds =  start_time.shift(seconds = astm_rid_standard_end_time)
+    
+    # Create a ISA in the DSS
+    
+    position_list: List[Point] = []
+    for position in all_positions:
+        position_list.append((position.lng, position.lat))
+
+    multi_points = MultiPoint(position_list)
+    bounds = multi_points.minimum_rotated_rectangle.bounds
+
+    b = box(bounds[1], bounds[0], bounds[3], bounds[2])
+    co_ordinates = list(zip(*b.exterior.coords.xy))
+    
+    polygon_verticies = []
+    for co_ordinate in co_ordinates:
+        v = RIDVertex(lat = co_ordinate[0],lng= co_ordinate[1])
+        polygon_verticies.append(v)
+    polygon_verticies.pop()
+    footprint = RIDFootprint(vertices=polygon_verticies)
+    altitude_lower = 610
+    altitude_upper = 630
+                       
+    flight_volume = RIDVolume3D(footprint=footprint, altitude_high=altitude_upper, altitude_lo= altitude_lower)
+    flight_extents = RIDVolume4D(spatial_volume= flight_volume,time_start= isa_start_time.isoformat(), time_end = isa_end_time.isoformat())
+
+    flights_url = env.get("BLENDER_FQDN", "http://host.docker.internal:8000") + '/uss/flights'
+    my_dss_helper = dss_rid_helper.RemoteIDOperations()
+    
+    logger.info("Creating a DSS ISA")
+    my_dss_helper.create_dss_isa(flight_extents=flight_extents, flights_url=flights_url)
+    time.sleep(5) # Wait 5 seconds before starting mission
     should_continue = True
 
-    while should_continue:     
+    def _stream_data():
+        
         for telemetry_idx in range(0, max_telemetry_data_length):
             for current_flight_idx in all_requested_flight_details:                    
                 if telemetry_idx < current_flight_idx.telemetry_length:
@@ -169,11 +175,16 @@ def stream_rid_test_data(requested_flights):
                     icao_address = flight_details_id
                     
                     so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
-                    # msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+                    msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
                     logger.debug("Submitted observation..")                    
                     logger.debug("...")
                     # Sleep for 2 seconds before submitting the next iteration.
                     time.sleep(heartbeat)
+
+    while should_continue:     
+        _stream_data()
         now = arrow.now()
-        if now < end_time_of_injections_seconds:
+        if now > end_time_of_injections_seconds:
             should_continue = False
+
+            print("ending.... %s" % arrow.now().isoformat())

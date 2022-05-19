@@ -1,7 +1,7 @@
 from turtle import position
 from typing import List, NamedTuple, Optional
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import arrow
 
 from scd_operations.scd_data_definitions import Volume3D, Volume4D
@@ -55,8 +55,12 @@ class RIDVertex:
   lng: float
 
 @dataclass
+class RIDFootprint:
+  vertices: List[RIDVertex]
+
+@dataclass
 class RIDVolume3D:
-  footprint: List[RIDVertex]
+  footprint: RIDFootprint
   altitude_lo: int
   altitude_high: int
 
@@ -66,11 +70,6 @@ class RIDVolume4D:
   time_start: str
   time_end: str
 
-@dataclass 
-class RequestRIDVolume4D:
-  extents: RIDVolume4D
-  flights_url: str
-
 @dataclass
 class SubscriptionState:
   subscription_id: str
@@ -79,7 +78,7 @@ class SubscriptionState:
 @dataclass
 class SubscriberToNotify:
   url: str
-  subscriptions: List[SubscriptionState] = []
+  subscriptions: List[SubscriptionState] = field(default_factory=[])
 
 @dataclass
 class ISACreationRequest:

@@ -32,11 +32,11 @@ class RemoteIDOperations():
         self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
 
 
-    def create_dss_isa(self, flight_extents:Volume4D,flights_url :str , expiration_time_seconds: int = 30):
+    def create_dss_isa(self, flight_extents:Volume4D,flights_url :str , expiration_time_seconds: int = 30) -> ISACreationResponse:
         ''' This method PUTS /dss/subscriptions ''' 
         
         # subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
-        isa_creation_response = ISACreationResponse(created=0,service_area= None)
+        isa_creation_response = ISACreationResponse(created=0,service_area= None, subscribers=[])
         new_isa_id = str(uuid.uuid4())
         
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
@@ -69,11 +69,10 @@ class RemoteIDOperations():
             # check if a subscription already exists for this view_port           
             
             headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_token['access_token']}
-            payload = ISACreationRequest(extents= flight_extents, flights_url= flights_url)
-            payload = {"extents": flight_extents, "flights_url":flights_url}
-
+            p = ISACreationRequest(extents= flight_extents, flights_url= flights_url)
+            p_dict = asdict(p)
             try:
-                dss_r = requests.put(dss_isa_create_url, json= payload, headers=headers)
+                dss_r = requests.put(dss_isa_create_url, json= json.loads(json.dumps(p_dict)), headers=headers)
             except Exception as re:
                 logger.error("Error in posting to subscription URL %s " % re)
                 return isa_creation_response
@@ -82,7 +81,7 @@ class RemoteIDOperations():
                 assert dss_r.status_code == 200
                 isa_creation_response.created = 1
             except AssertionError as ae:              
-                logger.error("Error in creating subscription in the DSS %s" % dss_r.text)
+                logger.error("Error in creating ISA in the DSS %s" % dss_r.text)
                 return isa_creation_response
             else: 	        
                 dss_response = dss_r.json()
@@ -103,31 +102,44 @@ class RemoteIDOperations():
                     subscriber_to_notify = SubscriberToNotify(url = subscriber['url'],subscriptions=all_s)
                     dss_r_subs.append(subscriber_to_notify)
 
-                #     # Notify subscribers
-                #     notifications: Dict[str, fetch.Query] = {}
-                #     try:
-                #         subscribers = dss_response.subscribers
-                #         isa = dss_response.isa
-                #     except ValueError:
-                #         subscribers = []
-                #         isa = None
-                #     for subscriber in subscribers:
-                #         body = {
-                #             'service_area': isa,
-                #             'subscriptions': subscriber.subscriptions,
-                #             'extents': extents
-                #         }
-                #         url = '{}/{}'.format(subscriber.url, entity_id)
-                #         notifications[subscriber.url] = fetch.query_and_describe(utm_client, 'POST', url, json=body, scope=rid.SCOPE_WRITE)
+                for subscriber in dss_r_subs:                    
+                    url = '{}/{}'.format(subscriber.url, new_isa_id)
+               
+                    try:
+                        ext = tldextract.extract(subscriber.url)  
+                    except Exception as e: 
+                        uss_audience = 'localhost'
+                    else:
+                        if ext.domain in ['localhost', 'internal']:# for host.docker.internal type calls
+                            uss_audience = 'localhost'
+                        else:
+                            uss_audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+                    
+                    uss_auth_token = self.get_auth_token(audience = uss_audience)          
+                    
+                    # Notify subscribers
+                    payload = {
+                            'service_area': service_area,
+                            'subscriptions': subscriber.subscriptions,
+                            'extents': json.loads(json.dumps(asdict(flight_extents)))
+                    }
+                        
+                    auth_credentials = my_authorization_helper.get_cached_credentials(audience = uss_audience, token_type='rid')            
+                    headers = {'content-type': 'application/json', 'Authorization': 'Bearer ' + auth_credentials['access_token']}                        
+                    try: 
+                        notification_request = requests.post(url, headers=headers, json =json.loads(json.dumps(payload)))                            
+                    except Exception as re:
+                        logger.error("Error in sending subscriber notification to %s :  %s " % (url, re))
+                    
+                    
+                    
 
 
                 logger.info("Succesfully created a DSS ISA %s" % new_isa_id)
-                # iterate over the service areas to get flights URL to poll 
-      
-                isa_key = 'isa-' + service_area.id
-                
+                # iterate over the service areas to get flights URL to poll       
+                isa_key = 'isa-' + service_area.id                
                 isa_seconds_timedelta = timedelta(seconds=expiration_time_seconds)
-                self.r.set(isa_key, {})
+                self.r.set(isa_key, 1)
                 self.r.expire(name = isa_key, time = isa_seconds_timedelta)
                 isa_creation_response.created =1 
                 isa_creation_response.service_area = service_area
