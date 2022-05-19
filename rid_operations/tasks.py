@@ -121,7 +121,7 @@ def stream_rid_test_data(requested_flights):
     # Computing when the requested flight data will end 
     end_time_of_injections = max_telemetry_data_length * heartbeat
     isa_end_time = start_time.shift(seconds = end_time_of_injections)
-    astm_rid_standard_end_time = end_time_of_injections + 400 # Enable querying for upto sixty seconds after end time. 
+    astm_rid_standard_end_time = end_time_of_injections + 180 # Enable querying for upto sixty seconds after end time. 
     end_time_of_injections_seconds =  start_time.shift(seconds = astm_rid_standard_end_time)
     
     # Create a ISA in the DSS
