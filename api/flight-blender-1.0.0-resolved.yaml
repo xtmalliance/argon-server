@@ -297,7 +297,7 @@ paths:
       summary: Clear area
       operationId: clearArea
       description: >-
-        This endpoint requests that the USS cancel and remove all flights in the specified area.
+        This endpoint requests that the USS cancel and remove all flights in the specified area and is used in the SCD Qualifier tool.
       tags:
         - scd
   /scd/v1/status:
