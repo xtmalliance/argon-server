@@ -163,19 +163,19 @@ paths:
   /rid/display_data:
     get:
       parameters:
-        - in: path
         - name: view_port
+          in: path
           description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
           schema:
             type: string
             example: 29.97816,31.13296,29.98025,31.13535
-          in: query
+
           required: true
 
       summary: 'Get remote id data for a given view bounding box'
       security:
         - AuthFromPassport: [read]
-      description: 'This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application. It follows the specification in the [Airtraffic Data Protocol](https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#traffic-source-and-mandatory-fields).'
+      description: 'This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application. '
 
       responses:
         '200':
@@ -269,8 +269,344 @@ paths:
           $ref: '#/components/schemas/RIDFlightID'
         in: path
         required: true
-    tags:
-      - rid-qualifier
+
+  /scd/v1/clear_area_requests:
+    post:
+      security:
+        - Authority:
+            - utm.inject_test_data
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClearAreaRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearAreaResponse'
+          description: Requested area was cleared successfully
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+
+      summary: Clear area
+      operationId: clearArea
+      description: >-
+        This endpoint requests that the USS cancel and remove all flights in the specified area.
+      tags:
+        - scd
+  /scd/v1/status:
+    get:
+      security:
+        - Authority:
+            - utm.inject_test_data
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+          description: >-
+            The USS automated testing interface is activated and its status was retrieved successfully.
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+        '404':
+          description: The USS automated testing interface is not activated.
+      summary: Retrieve the status of the USS automated testing interface
+      description: Get the status of the USS automated testing interface
+      tags:
+        - scd
+
+  # /uss/v1/operational_intents:
+  #   post:
+  #     operationId: createUSSUpdateOpIntDetails
+  #     description: ''
+  #     parameters: []
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema: {}
+  #         application/x-www-form-urlencoded:
+  #           schema: {}
+  #         multipart/form-data:
+  #           schema: {}
+  #     responses:
+  #       '201':
+  #         content:
+  #           application/json:
+  #             schema: {}
+  #         description: ''
+  #     tags:
+  #       - uss
+
+  /scd/v1/flights/{flight_id}:
+    parameters:
+      - name: flight_id
+        in: path
+        required: true
+        description: A UUID string identifying the injected flight.
+        schema:
+          $ref: '#/components/schemas/UUIDv4Format'
+
+    put:
+      security:
+        - Authority:
+            - utm.inject_test_data
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InjectFlightRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InjectFlightResponse'
+          description: Requested data was processed successfully
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+      summary: Inject flight
+      operationId: injectFlight
+      description: >-
+        This endpoint simulates the operator intention to submit a flight operation / flight request.
+      tags:
+        - scd
+
+    delete:
+      security:
+        - Authority:
+            - utm.inject_test_data
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteFlightResponse'
+          description: Flight was deleted from the system successfully
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+
+      summary: Delete flight
+      operationId: deleteFlight
+      description: >-
+        This endpoint simulates the operator intention to cancel or end a flight operation.
+
+      tags:
+        - scd
+
+  /uss/v1/operational_intents/{entityid}:
+    summary: Query detailed information of an operational intent from a USS.
+    parameters:
+      - name: entityid
+        description: EntityID for this operational intent.
+        schema:
+          $ref: '#/components/schemas/EntityID'
+        in: path
+        required: true
+    get:
+      tags:        
+        - uss
+      security:
+        - Authority:
+            - utm.strategic_coordination
+      summary: Retrieve the specified operational intent details
+      description: >-
+        Get details of an existing operational intent in Blender.
+      operationId: getOperationalIntentDetails
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOperationalIntentDetailsResponse'
+          description: Operational intent details were retrieved successfully.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: One or more input parameters were missing or invalid.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            Bearer access token was not provided in Authorization header, token
+            could not be decoded, or token was invalid.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The access token was decoded successfully but did not include a
+            scope appropriate to this endpoint.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The requested Entity could not be found.
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: >-
+            The client issued too many requests in a short period of time.
+
+  /uss/flights:
+    summary: Basic operation details to meet remote ID requirements.
+    description: This endpoint may be polled by remote ID display providers to display
+      basic aircraft activity near a user in real time.
+      
+    get:
+      tags:
+      - uss
+      - rid
+      operationId: searchFlights
+      
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFlightsResponse'
+          description: Flight information was successfully retrieved.
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: One or more input parameters were missing or invalid.
+        401:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bearer access token was not provided in Authorization header,
+            token could not be decoded, or token was invalid.
+        403:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The access token was decoded successfully but did not include
+            a scope appropriate to this endpoint.
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The requested view is entirely outside any remote ID service
+            provision areas (PositionReporting Entity volumes) this provider has.  A
+            display provider receiving this response should discontinue polling for
+            this endpoint for the view port requested until otherwise directed by
+            DSS interactions.
+        413:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The requested view rectangle was too large.
+      security:
+      - AuthFromAuthorizationAuthority:
+        - dss.read.identification_service_areas
+      summary: /uss/flights
+      description: Retrieve basic flight information from a remote ID service provider
+        to meet remote ID requirements.  This endpoint will be polled by remote ID
+        display providers to display basic aircraft activity near a user in real time.  All
+        flights that have any recent positions (past [NetUasInAreaWindow] seconds)
+        inside the requested view must be returned.
+    parameters:
+    - name: view
+      description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed
+        a diagonal length specified in the standard.  The view is the smallest box
+        bounded by the provided corner points.'
+      schema:
+        type: string
+        example: 29.97816,31.13296,29.98025,31.13535
+      in: query
+      required: true
+    - name: include_recent_positions
+      description: |-
+        If specified as true, include recent positions.  Otherwise, do not include recent positions.
+
+        A display provider's first poll of this endpoint for a particular view will usually request recent positions while follow-up polls for that same view will usually not need to request recent positions.
+      schema:
+        type: boolean
+      in: query
+
+
+  /v1/uss/flights/{id}/details:
+    summary: A remote ID flight reported by a remote ID service provider.
+    get:
+      tags:
+      - uss
+      operationId: getFlightDetails
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFlightDetailsResponse'
+          description: Flight details were successfully retrieved.
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: One or more input parameters were missing or invalid.
+        401:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bearer access token was not provided in Authorization header,
+            token could not be decoded, or token was invalid.
+        403:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The access token was decoded successfully but did not include
+            a scope appropriate to this endpoint.
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The requested flight could not be found.
+      security:
+      - AuthFromAuthorizationAuthority:
+        - dss.read.identification_service_areas
+      summary: /uss/flights/{id}/details
+      description: Retrieve details of a flight from a remote ID service provider
+        to meet remote ID requirements.
+    parameters:
+    - name: id
+      description: Remote ID flight ID for this flight; may be obtained in general
+        /flights query.
+      schema:
+        $ref: '#/components/schemas/RIDFlightID'
+      in: path
+      required: true
 
   /set_air_traffic:
     put:
@@ -1141,7 +1477,7 @@ components:
           type: string
         message:
           type: string
-    Pong: 
+    Pong:
       properties:
         message:
           type: string
@@ -1242,7 +1578,7 @@ components:
           description: Number of flights within the cluster.
           type: number
           format: int32
-          minValue: 1
+          # minValue: 1
     Position:
       description: 'A position on Earth.'
       required:
@@ -1362,7 +1698,999 @@ components:
           description: Authentication data in form specified by `format`.
           type: string
 
+    DeleteFlightResponse:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          description: >-
+            The result of attempted flight cancellation/closure
+
+              - `Closed`: The flight was closed successfully by the USS and is now out of the UTM system.
+
+              - `Failed`: The flight could not be closed successfully by the USS.
+
+          enum: [Closed, Failed]
+          example: Failed
+        notes:
+          description: >-
+            Human-readable explanation of the observed result.
+          type: string
+          example: DSS was unreachable when attempting to delete operational intent reference
+    ClearAreaRequest:
+      type: object
+      required:
+        - request_id
+        - extent
+      properties:
+        request_id:
+          description: >-
+            Unique string identifying this request.  If a second request with an
+            identical ID is received, the USS may return the same response from
+            the previous operation rather than attempting to clear the area
+            again (the USS may also attempt to clear the area again).
+          type: string
+        extent:
+          description: >-
+            The USS should cancel and remove any flight where any part of that
+            flight intersects this area.
+          anyOf:
+            - $ref: '#/components/schemas/Volume4D'
+    ClearAreaOutcome:
+      type: object
+      required:
+        - timestamp
+      properties:
+        success:
+          description: >-
+            True if, and only if, all flights in the specified area owned by the
+            USS were canceled and removed.
+          type: boolean
+          default: false
+        message:
+          description: >-
+            If the USS was unable to clear the entire area, this message can
+            provide information on the problem encountered.
+          type: string
+          example: >-
+            DSS at dss.example.com returned 500 when attempting to delete
+            operational intent 57e98b17-aefa-4eee-a376-5140e4a8385f
+        timestamp:
+          description: >-
+            The time at which this operation was performed by the USS.
+          type: string
+          format: datetime
+    ClearAreaResponse:
+      type: object
+      required:
+        - outcome
+      properties:
+        outcome:
+          $ref: '#/components/schemas/ClearAreaOutcome'
+
+    StatusResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          description: >-
+            The status of the USS automated testing interface.
+
+            - `Starting`: the USS is starting and the automated test driver should wait before sending requests.
+
+            - `Ready`: the USS is ready to receive test requests.
+          type: string
+          enum: [Starting, Ready]
+          example: Ready
+        version:
+          description: |-
+            Arbitrary string representing the version of the USS system to be tested.
+          type: string
+          example: v0.0.1-445ad3
+    ################################################################################
+    #################### Start of ASTM-standard definitions    #####################
+    #################### interfaces/astm-utm/Protocol/utm.yaml #####################
+    ################################################################################
+    UUIDv4Format:
+      description: >-
+        String whose format matches a version-4 UUID according to RFC 4122.
+      maxLength: 36
+      minLength: 36
+      type: string
+      format: uuid
+      pattern: >-
+        ^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-4[0-9a-fA-F]{3}\\-[8-b][0-9a-fA-F]{3}\\-[0-9a-fA-F]{12}$
+      example: 03e5572a-f733-49af-bc14-8a18bd53ee39
+    EntityID:
+      description: >-
+        Identifier for an Entity communicated through the DSS.  Formatted as a
+        UUIDv4.
+      anyOf:
+        - $ref: '#/components/schemas/UUIDv4Format'
+      example: 2f8343be-6482-4d1b-a474-16847e01af1e
+    Time:
+      required:
+        - value
+        - format
+      type: object
+      properties:
+        value:
+          type: string
+          description: >-
+            RFC3339-formatted time/date string.  The time zone must be 'Z'.
+          format: date-time
+          example: '1985-04-12T23:20:50.52Z'
+        format:
+          type: string
+          enum:
+            - RFC3339
+
+    OperationalIntentTestInjection:
+      description: >-
+        Parameters that define an operational intent: this injection is used to
+        create a operational intent reference in the DSS and also responding to
+        requests for details of that operational intent (by other USSes or the
+        test driver). The USS under test will need to process this data to both
+        create a valid operational intent reference and responding to a query for
+        details.
+      required:
+        - state
+        - priority
+        - volumes
+        - off_nominal_volumes
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/OperationalIntentState'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        volumes:
+          description: >-
+            Nominal volumes, as would be reported by a USS's operational_intents endpoint.
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume4D'
+        off_nominal_volumes:
+          description: >-
+            Off-Nominal volumes, as would be reported by a USS's operational_intents endpoint.
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume4D'
+    FlightAuthorisationData:
+      description: |-
+        A dataset to hold details of a UAS flight authorization request. Full description of a flight authorisation including mandatory information required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664 for an UAS flight authorisation request. Reference: https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32021R0664&from=EN#d1e32-178-1
+      type: object
+      properties:
+        uas_serial_number:
+          type: string
+          description: Unique serial number of the unmanned aircraft or, if the unmanned aircraft is privately built, the unique serial number of the add-on. This is expressed in the ANSI/CTA-2063 Physical Serial Number format. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 1.
+          example: MFR1C123456789ABC
+        operation_mode:
+          $ref: '#/components/schemas/OperationMode'
+        operation_category:
+          type: string
+          enum:
+            - Unknown
+            - Open
+            - Specific
+            - Certified
+          description: |-
+            Category of UAS operation (‘open’, ‘specific’, ‘certified’) as defined in COMMISSION DELEGATED REGULATION (EU) 2019/945. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
+          example: Open
+        uas_class:
+          $ref: '#/components/schemas/UASClass'
+        identification_technologies:
+          type: array
+          items:
+            type: string
+          description: Technology used to identify the UAS. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 6.
+          example: ['ADS-B', 'ASTMNetRID']
+        uas_type_certificate:
+          description: |-
+            Provisional field. Not applicable as of September 2021. Required only if `uas_class` is set to `other` by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
+          type: string
+          example: ''
+        connectivity_methods:
+          type: array
+          items:
+            type: string
+          description: Connectivity methods. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 7.
+          example: ['cellular']
+        endurance_minutes:
+          description: Endurance of the UAS. This is expressed in minutes. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 8.
+          type: number
+          format: int32
+          example: 20
+        emergency_procedure_url:
+          type: string
+          format: url
+          description: The URL at which the applicable emergency procedure in case of a loss of command and control link may be retrieved. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 9.
+          example: https://utm_uss.com/emergency_procedure
+        operator_id:
+          type: string
+          description: |-
+            Registration number of the UAS operator.
+            The format is defined in EASA Easy Access Rules for Unmanned Aircraft Systems GM1 to AMC1
+            Article 14(6) Registration of UAS operators and ‘certified’ UAS.
+            Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 10.
+          example: FIN87astrdge12k8
+        uas_id:
+          description: |-
+            When applicable, the registration number of the unmanned aircraft.
+            This is expressed using the nationality and registration mark of the unmanned aircraft in
+            line with ICAO Annex 7.
+            Specified by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 10.
+          type: string
+          example: HB-XXXX
+      required:
+        - uas_serial_number
+        - operation_mode
+        - uas_class
+        - identification_technologies
+        - operator_id
+        - operation_category
+        - connectivity_methods
+        - endurance_minutes
+        - emergency_procedure_url
+
+    OperationMode:
+      type: string
+      enum:
+        - Undeclared
+        - Vlos
+        - Bvlos
+      description: Specify if the operation is a `VLOS` or `BVLOS` operation. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 2.
+      example: Vlos
+
+    UASClass:
+      type: string
+      enum:
+        - Other
+        - C0
+        - C1
+        - C2
+        - C3
+        - C4
+        - C5
+        - C6
+      description: Specify the class of the UAS to be flown, the specifition matches EASA class identification label categories. UAS aircraft class as defined in COMMISSION DELEGATED REGULATION (EU) 2019/945 (C0 to C4) and COMMISSION DELEGATED REGULATION (EU) 2020/1058 (C5 and C6). This field is required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
+      example: C0
+
+    InjectFlightRequest:
+      type: object
+      properties:
+        operational_intent:
+          $ref: '#/components/schemas/OperationalIntentTestInjection'
+
+        flight_authorisation:
+          $ref: '#/components/schemas/FlightAuthorisationData'
+    InjectFlightResponse:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          description: >-
+            The result of the flight submission
+
+              - `Planned`: The flight submission data was valid and the flight was successfully processed by the USS and is now authorized.
+
+              - `ReadyToFly`: The flight is ready for the operator to begin flying.
+
+              - `Rejected`: The flight submission data provided was invalid and/or could not be used to attempt to authorize the flight.
+
+              - `ConflictWithFlight`: The flight submission data was valid, but the flight could not be authorized because of a disallowed conflict with another flight.
+
+              - `Failed`: The USS was not able to successfully authorize the flight due to a problem with the USS or a downstream system
+
+          type: string
+          enum: [Planned, ReadyToFly, Rejected, ConflictWithFlight, Failed]
+          example: ConflictWithFlight
+        notes:
+          description: >-
+            Human-readable explanation of the observed result.  This explanation
+            should be available to a human reviewing the test results, and
+            ideally should explain why an undesirable result was obtained.  For
+            instance, if the injection attempt Failed, then these notes may
+            indicate that the attempt failed because the DSS indicated 400 to a
+            valid request (perhaps also including the valid request as proof).
+          type: string
+          example: Requested flight intersected operational intent c036326c-c97b-4926-bf9f-c60dc83d2b57
+        operational_intent_id:
+          description: The id of the operational intent communicated to the DSS. This value is only required when the result of the flight submission is `Planned`.
+          anyOf:
+            - $ref: '#/components/schemas/EntityID'
+    Radius:
+      required:
+        - value
+        - units
+      type: object
+      properties:
+        value:
+          format: float
+          description: >-
+            Distance from the centerpoint of a circular area, along the WGS84
+            ellipsoid.
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          example: 300.183
+        units:
+          type: string
+          description: >-
+            FIXM-compatible units.  Only meters ("M") are acceptable for UTM.
+          enum:
+            - M
+    Polygon:
+      description: >-
+        An enclosed area on the earth. The bounding edges of this polygon are
+        defined to be the shortest paths between connected vertices.  This
+        means, for instance, that the edge between two points both defined at a
+        particular latitude is not generally contained at that latitude. The
+        winding order must be interpreted as the order which produces the
+        smaller area. The path between two vertices is defined to be the
+        shortest possible path between those vertices. Edges may not cross.
+        Vertices may not be duplicated.  In particular, the final polygon vertex
+        must not be identical to the first vertex.
+      required:
+        - vertices
+      type: object
+      properties:
+        vertices:
+          minItems: 3
+          type: array
+          items:
+            $ref: '#/components/schemas/LatLngPoint'
+    Circle:
+      description: A circular area on the surface of the earth.
+      type: object
+      properties:
+        center:
+          $ref: '#/components/schemas/LatLngPoint'
+        radius:
+          $ref: '#/components/schemas/Radius'
+    OperationalIntentState:
+      description: >-
+        State of an operational intent.
+        'Accepted': Operational intent is created and shared, but not yet in
+        use; see standard text for more details.
+        The create or update request for this operational intent reference must
+        include a Key containing all OVNs for all relevant Entities.
+        'Activated': Operational intent is in active use; see standard text for
+        more details.
+        The create or update request for this operational intent reference must
+        include a Key containing all OVNs for all relevant Entities.
+        'Nonconforming': UA is temporarily outside its volumes, but the
+        situation is expected to be recoverable; see standard text for more
+        details.
+        In this state, the `/uss/v1/operational_intents/{entityid}/telemetry`
+        USS-USS endpoint should respond, if available, to queries from USS
+        peers.  The create or update request for this operational intent may
+        omit a Key in this case because the operational intent is being adjusted
+        as flown and cannot necessarily deconflict.
+        'Contingent': UA is considered unrecoverably unable to conform with its
+        coordinate operational intent; see standard text for more details.
+        This state must transition to Ended.  In this state, the
+        `/uss/v1/operational_intents/{entityid}/telemetry` USS-USS endpoint
+        should respond, if available, to queries from USS peers.  The create or
+        update request for this operational intent may omit a Key in this case
+        because the operational intent is being adjusted as flown and cannot
+        necessarily deconflict.
+      type: string
+      enum:
+        - Accepted
+        - Activated
+        - Nonconforming
+        - Contingent
+
+    OperationalIntentDetails:
+      description: >-
+        Details of a UTM operational intent. Note that this data is not stored
+        in the DSS; only with the clients.
+      type: object
+      properties:
+        volumes:
+          description: >-
+            Volumes that wholly contain the operational intent while being as
+            small as practical.
+
+            Start and end times, as well as lower and upper altitudes, are
+            required for each volume. The end time may not be in the past.
+
+            Required with at least one item when the operational intent is
+            Accepted, Activated, or Nonconforming.
+
+            May not contain any items when the operational intent is Contingent.
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume4D'
+          default: []
+        off_nominal_volumes:
+          description: >-
+            Volumes that contain the anticipated area of non-conformance while
+            the aircraft is in the Nonconforming or Contingent states.
+
+            Start and end times, as well as lower and upper altitudes, are
+            required for each volume. The end time may not be in the past.
+
+            Required with at least one item when the operational intent is
+            Nonconforming or Contingent.
+
+            May not contain any items when the operational intent is Accepted or
+            Activated.
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume4D'
+          default: []
+        priority:
+          $ref: '#/components/schemas/Priority'
+
+    UssAvailabilityState:
+      type: string
+      enum:
+        - Unknown
+        - Normal
+        - Down
+      description: >-
+        A USS is presumed to be in the Unknown state absent indication otherwise
+        by a USS with availability arbitration scope.  Upon determination via
+        availability arbitration, a USS is Down when it does not respond
+        appropriately, and a Down USS may not perform the following operations
+        in the DSS:
+
+        * Create an operational intent in the Accepted or Activated states
+
+        * Modify an operational intent whose new or unchanged state is Accepted
+        or Activated
+
+        * Delete an operational intent
+
+        A USS in the Unknown state possesses all the capabilities, within the
+        DSS, of a USS in the Normal state.
+
+    Priority:
+      description: >-
+        Ordinal priority of the operational intent, as defined by the
+        regulator.  Operational intents with lesser values are lower priority
+        than all operational intents with greater values.  A lower-priority
+        operational intent may not create a conflict with a higher-priority
+        operational intent.  A higher-priority operational intent may create a
+        conflict with a lower-priority operational intent.  The regulator
+        specifies whether an operational intent may create a conflict with other
+        operational intents of the same priority.
+      type: integer
+      default: 0
+    EntityOVN:
+      title: EntityOVN
+      description: >-
+        A token associated with a particular UTM Entity+version created by the
+        DSS upon creation or modification of an Entity reference and provided to
+        the client creating or modifying the Entity reference.  The EntityOVN is
+        stored privately by the DSS and then compared against entries in a Key
+        provided to mutate the airspace.  The EntityOVN is also provided by the
+        client whenever that client transmits the full information of the Entity
+        (either via GET, or via a subscription notification).
+      type: string
+      minLength: 16
+      maxLength: 128
+      example: 9d158f59-80b7-4c11-9c0c-8a2b4d936b2d
+    OperationalIntentReference:
+      description: >-
+        The high-level information of a planned or active operational intent
+        with the URL of a USS to query for details.  Note: 'ovn' is returned
+        ONLY to the USS that created the operational intent but NEVER to other
+        USS instances.
+      required:
+        - id
+        - manager
+        - uss_availability
+        - version
+        - state
+        - time_start
+        - time_end
+        - uss_base_url
+        - subscription_id
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityID'
+        manager:
+          type: string
+          example: uss1
+          description: >-
+            Created by the DSS based on creating client's ID (via access
+            token).  Used internal to the DSS for restricting mutation and
+            deletion operations to manager.  Used by USSs to reject operational
+            intent update notifications originating from a USS that does not
+            manage the operational intent.
+        uss_availability:
+          $ref: '#/components/schemas/UssAvailabilityState'
+        version:
+          type: integer
+          format: int32
+          example: 1
+          description: >-
+            Numeric version of this operational intent which increments upon
+            each change in the operational intent, regardless of whether any
+            field of the operational intent reference changes.  A USS with the
+            details of this operational intent when it was at a particular
+            version does not need to retrieve the details again until the
+            version changes.
+        state:
+          $ref: '#/components/schemas/OperationalIntentState'
+        ovn:
+          description: >-
+            Opaque version number of this operational intent.  Populated only
+            when the OperationalIntentReference is managed by the USS retrieving
+            or providing it.  Not populated when the OperationalIntentReference
+            is not managed by the USS retrieving or providing it (instead, the
+            USS must obtain the OVN from the details retrieved from the managing
+            USS).
+          anyOf:
+            - $ref: '#/components/schemas/EntityOVN'
+        time_start:
+          description: Beginning time of operational intent.
+          anyOf:
+            - $ref: '#/components/schemas/Time'
+        time_end:
+          description: End time of operational intent.
+          anyOf:
+            - $ref: '#/components/schemas/Time'
+        uss_base_url:
+          $ref: '#/components/schemas/OperationalIntentUssBaseURL'
+        subscription_id:
+          description: >-
+            The ID of the subscription that is ensuring the operational intent
+            manager receives relevant airspace updates.
+          anyOf:
+            - $ref: '#/components/schemas/SubscriptionID'
+    SubscriptionID:
+      description: >-
+        Identifier for a subscription communicated through the DSS.  Formatted
+        as a UUIDv4.
+      anyOf:
+        - $ref: '#/components/schemas/UUIDv4Format'
+      example: 78ea3fe8-71c2-4f5c-9b44-9c02f5563c6f
+    OperationalIntentUssBaseURL:
+      description: >-
+        The base URL of a USS implementation that implements the parts of the
+        USS-USS API necessary for providing the details of this operational
+        intent, and telemetry during non-conformance or contingency, if
+        applicable.
+      anyOf:
+        - $ref: '#/components/schemas/UssBaseURL'
+    UssBaseURL:
+      description: >-
+        The base URL of a USS implementation of part or all of the USS-USS API.
+        Per the USS-USS API, the full URL of a particular resource can be
+        constructed by appending, e.g., `/uss/v1/{resource}/{id}` to this base
+        URL. Accordingly, this URL may not have a trailing '/' character.
+      type: string
+      example: https://uss.example.com/utm
+
+    OperationalIntent:
+      description: Full description of a UTM operational intent.
+      required:
+        - reference
+        - details
+      type: object
+      properties:
+        reference:
+          $ref: '#/components/schemas/OperationalIntentReference'
+        details:
+          $ref: '#/components/schemas/OperationalIntentDetails'
+
+    GetOperationalIntentDetailsResponse:
+      description: >-
+        Response to peer request for the details of operational intent with the
+        given ID.
+      required:
+        - operational_intent
+      type: object
+      properties:
+        operational_intent:
+          $ref: '#/components/schemas/OperationalIntent'
+
+    ErrorResponse:
+      description: >-
+        Human-readable string returned when an error occurs as a result of a USS
+        - DSS transaction.
+      type: object
+      properties:
+        message:
+          description: >-
+            Human-readable message indicating what error occurred and/or why.
+          type: string
+          example: The error occurred because [...]
+    GetFlightsResponse:
+      description: Response to remote ID provider query for flight information in
+        an area of interest.
+      required:
+      - timestamp
+      - flights
+      type: object
+      properties:
+        timestamp:
+          format: date-time
+          description: The remote ID service provider's timestamp for when this information
+            was current.  RFC 3339 format, per OpenAPI specification.
+          type: string
+        flights:
+          description: A list of all flights that have been within the requested area
+            within the remote ID retention period.  This includes flights that are
+            not currently within the requested area, but were within the requested
+            area within the remote ID retention period.
+          type: array
+          items:
+            $ref: '#/components/schemas/RIDFlight'
+    RIDFlight:
+      description: Description of a remote ID flight.
+      required:
+      - id
+      - aircraft_type
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/RIDFlightID'
+        aircraft_type:
+          anyOf:
+          - $ref: '#/components/schemas/RIDAircraftType'
+          description: Generic type of aircraft.
+        current_state:
+          anyOf:
+          - $ref: '#/components/schemas/RIDAircraftState'
+          description: |-
+            The most up-to-date state of the aircraft.  Required when the aircraft is currently in the requested area unless `volumes` is specified.
+
+            If current data is not being received from the UAS by the Service Provider, the lack of change in this field is sufficient to indicate that current data is not being received.
+        volumes:
+          description: The set of spacetime volumes the aircraft is within.  Required
+            if `current_state` is not specified.  The fields `time_start` and `time_end`
+            are required if `current_state` is not specified.
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume4D'
+        simulated:
+          description: If specified as true, this flight is not a physical aircraft;
+            it is just a simulation to test the system.
+          type: boolean
+        recent_positions:
+          description: |-
+            A short collection of recent aircraft movement, specified only when `include_recent_positions` is true.  If `volumes` is not specified and `include_recent_positions` is true, then this field is required.
+
+            Recent positions provided in this field must conform to requirements in the standard which generally prohibit including positions outside the requested area except transitionally when the aircraft enters or exits the requested area, and which prohibit including positions that not sufficiently recent.
+
+            Note that a UI should not draw a connective line between two consecutive position reports that both lie outside the requested area.
+          type: array
+          items:
+            $ref: '#/components/schemas/RIDRecentAircraftPosition'
+    RIDAircraftState:
+      description: State of an aircraft for the purposes of remote ID.
+      required:
+      - timestamp
+      - timestamp_accuracy
+      - accuracy_h
+      - accuracy_v
+      - speed
+      - vertical_speed
+      - track
+      - speed_accuracy
+      - position
+      type: object
+      properties:
+        timestamp:
+          format: date-time
+          description: Time at which this state was valid.  This may be the time coming
+            from the source, such as a GPS, or the time when the system computes the
+            values using an algorithm such as an Extended Kalman Filter (EKF).  Timestamp
+            must be expressed with a minimum resolution of 1/10th of a second.  RFC
+            3339 format, per OpenAPI specification.
+          type: string
+        timestamp_accuracy:
+          format: float
+          description: 'Declaration of timestamp accuracy, which is the largest difference
+            between Timestamp and true time of applicability for any of the following
+            fields: Latitude, Longitude, Geodetic Altitude, Pressure Altitude of Position,
+            Height. to determine time of applicability of the location data provided.  Expressed
+            in seconds, precise to 1/10ths of seconds. The accuracy reflects the 95%
+            uncertainty bound value for the timestamp.'
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+        operational_status:
+          $ref: '#/components/schemas/RIDOperationalStatus'
+        position:
+          $ref: '#/components/schemas/RIDAircraftPosition'
+        track:
+          format: float
+          description: Direction of flight expressed as a "True North-based" ground
+            track angle.  This value is provided in degrees East of North with a minimum
+            resolution of 1 degree.
+          maximum: 360
+          exclusiveMaximum: true
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+        speed:
+          format: float
+          description: Ground speed of flight in meters per second.
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+          example: 1.9
+        speed_accuracy:
+          anyOf:
+          - $ref: '#/components/schemas/SpeedAccuracy'
+          description: Accuracy of horizontal ground speed.
+        vertical_speed:
+          format: float
+          description: Speed up (vertically) WGS84-HAE, m/s.
+          type: number
+          example: 0.2
+        height:
+          $ref: '#/components/schemas/RIDHeight'
+        group_radius:
+          format: float
+          description: Farthest horizontal distance from reported group location at
+            which an aircraft in the group may be located (meters).  This value contains
+            the "Operating Area Radius" data from the common data dictionary when
+            group operation area is specified by point-radius.
+          minimum: 0
+          exclusiveMinimum: true
+          type: number
+        group_ceiling:
+          format: float
+          description: Maximum altitude (meters WGS84-HAE) of Group Operation.  This
+            value contains the "Operating Area Ceiling" data from the common data
+            dictionary when group operation area is specified by point-radius.
+          type: number
+        group_floor:
+          format: float
+          description: Minimum altitude (meters WGS84-HAE) of Group Operation.  If
+            not specified, ground level shall be assumed.  This value contains the
+            "Operating Area Floor" data from the common data dictionary when group
+            operation area is specified by point-radius.
+          type: number
+        group_count:
+          format: int32
+          description: When operating a group (or formation or swarm), number of aircraft
+            in group.  This value contains the "Operating Area Count" data from the
+            common data dictionary when group operation area is specified by point-radius.
+          minimum: 1
+          exclusiveMinimum: false
+          type: integer
+        group_time_start:
+          format: date-time
+          description: Time at which a group operation starts.  This value contains
+            the "Operation Area Start" data from the common data dictionary when group
+            operation area is specified by point-radius.
+          type: string
+        group_time_end:
+          format: date-time
+          description: Time at which a group operation starts.  This value contains
+            the "Operation Area End" data from the common data dictionary when group
+            operation area is specified by point-radius.
+          type: string
+    RIDOperationalStatus:
+      description: Indicates operational status of associated aircraft.
+      enum:
+      - Undeclared
+      - Ground
+      - Airborne
+      type: string
+
+    RIDHeight:
+      description: A relative altitude for the purposes of remote ID.
+      required:
+      - distance
+      - reference
+      type: object
+      properties:
+        distance:
+          format: float
+          description: Distance above reference datum.  This value is provided in
+            meters and must have a minimum resolution of 1 meter.
+          type: number
+        reference:
+          description: The reference datum above which the height is reported.
+          enum:
+          - TakeoffLocation
+          - GroundLevel
+          type: string          
+    SpeedAccuracy:
+      description: |-
+        This is the same enumeration scale and values from ADS-B NACv.
+
+        `SAUnknown`: Unknown speed accuracy
+
+        `SA10mpsPlus`: > 10 m/s
+
+        `SA10mps`: < 10 m/s
+
+        `SA3mps`: < 3 m/s
+
+        `SA1mps`: < 1 m/s
+
+        `SA03mps`: < 0.3 m/s
+      enum:
+      - SAUnknown
+      - SA10mpsPlus
+      - SA10mps
+      - SA3mps
+      - SA1mps
+      - SA03mps
+      type: string
+    RIDAircraftType:
+      description: |-
+        Type of aircraft for the purposes of remote ID.
+
+        `VTOL` is a fixed wing aircraft that can take off vertically.  `Rotocraft` includes multirotor.
+      enum:
+      - NotDeclared
+      - Aeroplane
+      - Rotorcraft
+      - Gyroplane
+      - VTOL
+      - Ornithopter
+      - Glider
+      - Kite
+      - FreeBalloon
+      - CaptiveBalloon
+      - Airship
+      - FreeFallOrParachute
+      - Rocket
+      - TetheredPoweredAircraft
+      - GroundObstacle
+      - Other
+      type: string
+    RIDRecentAircraftPosition:
+      description: ""
+      required:
+      - time
+      - position
+      type: object
+      properties:
+        time:
+          format: date-time
+          description: Time at which this position applied.  RFC 3339 format, per
+            OpenAPI specification.
+          type: string
+        position:
+          $ref: '#/components/schemas/RIDAircraftPosition'
+    RIDAircraftPosition:
+      description: Position of an aircraft as reported for remote ID purposes.
+      required:
+      - lat
+      - lng
+      - alt
+      type: object
+      properties:
+        lat:
+          $ref: '#/components/schemas/Latitude'
+        lng:
+          $ref: '#/components/schemas/Longitude'
+        alt:
+          format: float
+          description: 'Geodetic altitude (NOT altitude above launch, altitude above
+            ground, or EGM96): aircraft distance above the WGS84 ellipsoid as measured
+            along a line that passes through the aircraft and is normal to the surface
+            of the WGS84 ellipsoid.  This value is provided in meters and must have
+            a minimum resolution of 1 meter.'
+          type: number
+          example: 1321.2
+        accuracy_h:
+          anyOf:
+          - $ref: '#/components/schemas/HorizontalAccuracy'
+          description: Horizontal error that is likely to be present in this reported
+            position.  Required when `extrapolated` field is true and always in the
+            entry for the current state.
+        accuracy_v:
+          anyOf:
+          - $ref: '#/components/schemas/VerticalAccuracy'
+          description: Vertical error that is likely to be present in this reported
+            position.  Required when `extrapolated` field is true and always in the
+            entry for the current state.
+        extrapolated:
+          description: True if this position was generated primarily by computation
+            rather than primarily from a direct instrument measurement.  Assumed false
+            if not specified.
+          type: boolean
+        pressure_altitude:
+          format: float
+          description: The uncorrected altitude (based on reference standard 29.92
+            inHg, 1013.25 mb) provides a reference for algorithms that utilize "altitude
+            deltas" between aircraft.  This value is provided in meters and must have
+            a minimum resolution of 1 meter.
+          type: number
+
+    HorizontalAccuracy:
+      description: |-
+        This is the NACp enumeration from ADS-B, plus 1m for a more complete range for UAs.
+
+        `HAUnknown`: Unknown horizontal accuracy
+
+        `HA10NMPlus`: > 10NM (18.52km)
+
+        `HA10NM`: < 10NM (18.52km)
+
+        `HA4NM`: < 4NM (7.408km)
+
+        `HA2NM`: < 2NM (3.704km)
+
+        `HA1NM`: < 1NM (1852m)
+
+        `HA05NM`: < 0.5NM (926m)
+
+        `HA03NM`: < 0.3NM (555.6m)
+
+        `HA01NM`: < 0.1NM (185.2m)
+
+        `HA005NM`: < 0.05NM (92.6m)
+
+        `HA30m`: < 30m
+
+        `HA10m`: < 10m
+
+        `HA3m`: < 3m
+
+        `HA1m`: < 1m
+      enum:
+      - HAUnknown
+      - HA10NMPlus
+      - HA10NM
+      - HA4NM
+      - HA2NM
+      - HA1NM
+      - HA05NM
+      - HA03NM
+      - HA01NM
+      - HA005NM
+      - HA30m
+      - HA10m
+      - HA3m
+      - HA1m
+      type: string
+    VerticalAccuracy:
+      description: |-
+        This is the GVA enumeration from ADS-B, plus some finer values for UAs.
+
+        `VAUnknown`: Unknown vertical accuracy
+
+        `VA150mPlus`: > 150m
+
+        `VA150m`: < 150m
+
+        `VA45m`: < 45m
+
+        `VA25m`: < 25m
+
+        `VA10m`: < 10m
+
+        `VA3m`: < 3m
+
+        `VA1m`: < 1m
+      enum:
+      - VAUnknown
+      - VA150mPlus
+      - VA150m
+      - VA45m
+      - VA25m
+      - VA10m
+      - VA3m
+      - VA1m
+      type: string
+    ################################################################################
+    ####################### End of ASTM-standard definitions #######################
+    ################################################################################
+
 tags:
+  - name: uss
+    description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions, operational intents to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data and querying operational intents
+  - name: scd
+    description: Flight Blender allows connections and interactions with the USSP software testing framework for Remote ID and Stratedic deconfliction. These endpoints implement the stratetgic deconflication test framework API.
   - name: rid
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data
   - name: rid-qualifier
