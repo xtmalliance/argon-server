@@ -57,14 +57,20 @@ def requires_scopes(required_scopes):
                     kid = jwk['kid']
                     public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
                 try:
-                    kid = unverified_token_headers['kid']
-                    
+                    kid = unverified_token_headers['kid']                    
                 except (KeyError, ValueError) as ve:                    
                     response = JsonResponse({'detail': 'Invalid public key details in token / token cannot be verified'})
                     response.status_code = 401
                     return response
-                else:
-                    public_key = public_keys[kid]
+                else:     
+                    try:               
+                        assert kid in public_keys
+                    except AssertionError as ae:
+                        response = JsonResponse({'detail': 'Invalid public key details in token / token cannot be verified'})
+                        response.status_code = 401
+                        return response
+                    else:
+                        public_key = public_keys[kid]
                     
                                     
                 try:

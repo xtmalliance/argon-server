@@ -19,7 +19,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from datetime import date
 from django.utils.timezone import make_aware
-
+from .pagination import StandardResultsSetPagination
 
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
@@ -100,7 +100,7 @@ class FlightOperationList(mixins.ListModelMixin,
 
     queryset = FlightOperation.objects.all()
     serializer_class = FlightOperationSerializer
-
+    pagination_class = StandardResultsSetPagination
     def get_responses(self, start, end):
         
         present = arrow.now()
