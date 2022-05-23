@@ -28,6 +28,7 @@ def requires_scopes(required_scopes):
         
             request = args[0]
             auth = request.META.get("HTTP_AUTHORIZATION", None)            
+            
             if auth:
                 parts = auth.split()
                 token = parts[1]            
@@ -37,7 +38,14 @@ def requires_scopes(required_scopes):
                 return response
             
             API_IDENTIFIER = env.get('PASSPORT_AUDIENCE')
-            unverified_token_headers = jwt.get_unverified_header(token)            
+            try:
+                unverified_token_headers = jwt.get_unverified_header(token)            
+            except jwt.exceptions.DecodeError as de: 
+                
+                response = JsonResponse({'detail': 'Bearer token could not be decoded properly'})
+                response.status_code = 401
+                return response
+            
 
             if 'kid' in unverified_token_headers:                   
                 PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))                

@@ -9,7 +9,7 @@ import logging
 from django.http import HttpResponse, JsonResponse
 from .models import FlightOperation
 from .tasks import write_flight_declaration
-from shapely.geometry import asShape
+from shapely.geometry import shape
 from shapely.ops import unary_union
 from django.http import Http404
 from rest_framework import mixins, generics
@@ -43,7 +43,7 @@ def set_flight_declaration(request):
         geo_json_fc = flight_declaration_data['flight_declaration']['parts']
         shp_features = []
         for feature in geo_json_fc['features']:
-            shp_features.append(asShape(feature['geometry']))
+            shp_features.append(shape(feature['geometry']))
         combined_features = unary_union(shp_features)
         bnd_tuple = combined_features.bounds
         bounds = ''.join(['{:.7f}'.format(x) for x in bnd_tuple])
