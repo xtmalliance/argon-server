@@ -7,13 +7,13 @@ services:
         - "6379:6379"
     volumes:
       - ./config/redis.conf:/redis.conf
+    container_name: "redis"
 
   db:
     image: postgres
     ports:
       - "5432:5432"
-    restart: unless-stopped
-        
+    restart: unless-stopped        
     volumes:
       - db_data:/var/lib/postgresql/data
     env_file:
@@ -34,18 +34,18 @@ services:
       - .:/app
 
       
-  celery:
-    container_name: flight-blender-worker
-    image: openskiessh/flight-blender
-    build:
-      context: "."        
-    env_file:
-      - ".env"
-    command: celery --app=flight_blender worker --loglevel=debug
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
+  # celery:
+  #   container_name: flight-blender-worker
+  #   image: openskiessh/flight-blender
+  #   build:
+  #     context: "."        
+  #   env_file:
+  #     - ".env"
+  #   command: celery --app=flight_blender worker --loglevel=debug
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     - redis
 
       
   # beat:

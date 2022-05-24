@@ -20,8 +20,11 @@ def batcher(iterable, n):
 
 class StreamHelperOps():
     def __init__(self):
-        self.stream_keys = ['all_observations']        
-        self.db = Database(host=url.hostname, port=url.port)   
+        self.stream_keys = ['all_observations']      
+        if url.password:
+            self.db = Database(host=url.hostname, port=url.port, password = url.password)               
+        else: 
+            self.db = Database(host=url.hostname, port=url.port)   
         
     def create_push_cg(self):
         self.get_push_cg(create=True)
