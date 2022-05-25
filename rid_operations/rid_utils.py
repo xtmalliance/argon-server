@@ -222,14 +222,6 @@ class RIDRecentAircraftPosition:
   position: RIDAircraftPosition
 
 @dataclass
-class RIDFlight:
-  id: str
-  aircraft_type: str
-  current_state: Optional[RIDAircraftState]  
-  simulated: Optional[bool]
-  recent_positions: Optional[List[RIDRecentAircraftPosition]]
-
-@dataclass
 class FullRequestedFlightDetails:
   id: uuid
   telemetry_length: int

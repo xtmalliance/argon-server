@@ -258,7 +258,7 @@ def get_display_data(request):
         pull_cg = stream_ops.get_pull_cg()
         all_streams_messages = pull_cg.read()
         
-        unique_flights =[]
+        unique_flights = []
         # Keep only the latest message
         try:
             for message in all_streams_messages:     
@@ -306,7 +306,7 @@ def get_display_data(request):
         rid_display_data = RIDDisplayDataResponse(flights=rid_flights, clusters = [])        
         rid_flights_dict = my_rid_output_helper.make_json_compatible(rid_display_data)
         
-        return JsonResponse({"flights":json.dumps(rid_flights_dict['flights']), "clusters": json.dumps(rid_flights_dict['clusters'])},  status=200, content_type='application/json')
+        return JsonResponse({"flights":rid_flights_dict['flights'], "clusters": rid_flights_dict['clusters']},  status=200, content_type='application/json')
     else:
         view_port_error = {
             "message": "A incorrect view port bbox was provided"}
