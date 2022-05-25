@@ -7,8 +7,14 @@ from rest_framework.decorators import api_view
 from .tasks import write_incoming_air_traffic_data
 from .data_definitions import RIDMetadata, SingleObervation, HTTPProcessingResponse
 from dataclasses import asdict
+from django.views.generic import TemplateView
 
 logger = logging.getLogger('django')
+
+
+class HomeView(TemplateView):
+    template_name = 'homebase/home.html'
+
 
 @api_view(['GET'])
 def ping(request):
