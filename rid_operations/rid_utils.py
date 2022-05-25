@@ -1,4 +1,3 @@
-from turtle import position
 from typing import List, NamedTuple, Optional
 import uuid
 from dataclasses import dataclass, field

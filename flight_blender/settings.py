@@ -14,7 +14,6 @@ from pathlib import Path
 import os
 from datetime import datetime, timedelta
 
-import django_heroku
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv, find_dotenv
@@ -183,6 +182,3 @@ LOGGING = {
     },
 }
 
-
-
-django_heroku.settings(locals())
