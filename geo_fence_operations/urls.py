@@ -20,7 +20,7 @@ from . import views as geo_fence_views
 
 urlpatterns = [
     path('set_geo_fence', geo_fence_views.set_geo_fence),
-    path('geo_fence/', geo_fence_views.GeoFenceList.as_view()),
+    path('geo_fence', geo_fence_views.GeoFenceList.as_view()),
     path('geo_fence/<uuid:pk>', geo_fence_views.GeoFenceDetail.as_view()),
 
 ]

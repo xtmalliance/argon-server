@@ -3,7 +3,7 @@ openapi: '3.0.0'
 info:
   title: 'Flight Blender API specification'
   description: |-
-    All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations. 
+    All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations, enable ASTM specified network Remote-ID and U-Space Flight Authorisation. 
 
     Unless otherwise specified, fields specified in a message but not declared in the API shall be ignored.
   version: '1.0.0'
@@ -12,9 +12,11 @@ servers:
     description: 'Flight Blender API'
 security:
   - AuthFromPassport:
-      - 'write'
-      - 'read'
-
+      - 'blender.write'
+      - 'blender.read'
+  - AuthFromAuthorizationAuthority:
+    - dss.read.identification_service_areas 
+    - dss.write.identification_service_areas s
 paths:
   /ping:
     get:
@@ -59,10 +61,10 @@ paths:
     put:
       summary: 'Create a Remote ID Subscription in the DSS'
       security:
-        - AuthFromPassport: [write]
+        - AuthFromPassport: [blender.write]
       description:
-        "Create a subscription for airspace updates to a volume of interest. After extents are submitted, Flight Blender will \
-        \ get a appropriate token and create a subscription with a DSS, the DSS url needs to be confirmed / set as a part of Flight Blender setup. It will then poll flights through the Flights URLs provided by the DSS "
+        "Create a subscription for an airspace to receive updates of operations in a volume of interest. After extents are submitted, Flight Blender will \
+        \ get a appropriate token and create a subscription with a DSS instance, the DSS url needs to be confirmed / set as a part of Flight Blender setup. It will then poll flights through the Flights URLs provided by the DSS "
       parameters:
         - name: view
           description:
@@ -108,14 +110,76 @@ paths:
       tags:
         - rid
 
+  /rid/uss/identification_service_areas/{id}:
+    summary: Notifications of change to Identification Service Areas.
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutIdentificationServiceAreaNotificationParameters'
+        required: true
+      tags:
+      - rid
+      operationId: postIdentificationServiceArea
+      responses:
+        204:
+          description: Information for Identification Service Area was updated successfully.
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: |-
+            * One or more parameters were missing or invalid.
+            * The Identification Service Area information could not be parsed, or contains illegal data.
+        401:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bearer access token was not provided in Authorization header,
+            token could not be decoded, or token was invalid.
+        403:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: |-
+            * The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+            * The client identified in the access token is not the owner of this Entity according to the receiving client's records.
+        409:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The Entity version specified in this message is identical to
+            a previously-received notification and the Entity is different.
+      security:
+      - AuthFromAuthorizationAuthority:
+        - dss.write.identification_service_areas
+      summary: /uss/identification_service_areas/{id}
+      description: 'Hosted by a remote ID display provider using Subscriptions: publish
+        new full information of an Identification Service Area to the host of this
+        endpoint (usually because of instructions from the DSS triggered by a subscription).'
+        
+    parameters:
+    - name: id
+      description: EntityUUID of the Identification Service Area.
+      schema:
+        $ref: '#/components/schemas/EntityUUID'
+      in: path
+      required: true
+
+
   /rid/get_rid_data/{subscription_id}:
     get:
-      summary: 'Get flight data from network remote id given a subscription id'
+      summary: 'Get flight data compliant with network remote id given a subscription id'
       security:
-        - AuthFromPassport: [read]
+        - AuthFromPassport: [blender.read]
       description:
-        "By default flight blender sends flight data to Flight Spotlight as a scheduled job every x seconds (which can be configured) \
-        \ in case you want to use a different polling mechanism, use this endpoint to get flights if you are using a polling mechanism for your display client"
+        "By default Flight Blender sends flight data to Flight Spotlight as a scheduled job (push) every x seconds (which can be configured) \
+        \ use this endpoint if you plan to implement polling mechanism (pull). This endpoint for e.g. is used in the RID Qualifier or can be to get flights if you are using a polling mechanism for your display client"
       parameters:
         - in: path
           name: subscription_id
@@ -174,7 +238,7 @@ paths:
 
       summary: 'Get remote id data for a given view bounding box'
       security:
-        - AuthFromPassport: [read]
+        - AuthFromPassport: [blender.read]
       description: 'This endpoint is used in the context of running the rid_qualifier tool in the DSS. Poll this endpoint to get current remote ID display data as would be visualized by a Display Application. '
 
       responses:
@@ -210,7 +274,84 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - rid-qualifier
-
+  /rid/tests/{test_id}:
+    parameters:
+      -
+        examples:
+          default:
+            value: '2979bd18-7f06-441c-bda6-e82c841c35d6'
+        name: test_id
+        description: >-
+          The ID of the test.
+        schema:
+          type: string
+        in: query
+        required: true
+    put:
+      tags:
+        - rid-qualifier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTestParameters'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeTestResponse'
+          description: Requested test was created successfully.
+        '409':
+          description: Test already exists.
+      operationId: createTest
+      summary: Create test
+      description: >-
+        Request the creation of one or more logical flights based on injection of the provided test data.
+        The host Service Provider's test data injector may modify fields, such as `details.id`, as necessary to work with their system.
+        The host Service Provider's test data injector should modify as few fields as practical, and change modified fields as little as practical.
+        The `injection_id` fields may not be modified.
+      security:
+        - TestAuth:
+            - rid.inject_test_data
+  /rid/tests/{test_id}/{version}:
+    parameters:
+      -
+        examples:
+          default:
+            value: '2979bd18-7f06-441c-bda6-e82c841c35d6'
+        name: test_id
+        description: >-
+          The ID of the test.
+        schema:
+          type: string
+        in: query
+        required: true
+      -
+        name: version
+        description: >-
+          Current version of the test.
+        schema:
+          type: string
+        in: query
+        required: true
+    delete:
+      tags:
+        - rid-qualifier
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteTestResponse'
+          description: Requested test was deleted successfully.
+      operationId: deleteTest
+      summary: Delete test
+      description: Remove all injected test data associated with this test from the host Service Provider's system under test.
+      security:
+        - TestAuth:
+            - rid.inject_test_data
   /rid/display_data/{flight_id}:
     summary: A remote ID flight reported by a remote ID service provider.
 
@@ -299,7 +440,7 @@ paths:
       description: >-
         This endpoint requests that the USS cancel and remove all flights in the specified area and is used in the SCD Qualifier tool.
       tags:
-        - scd
+        - scd-qualifier
   /scd/v1/status:
     get:
       security:
@@ -322,7 +463,7 @@ paths:
       summary: Retrieve the status of the USS automated testing interface
       description: Get the status of the USS automated testing interface
       tags:
-        - scd
+        - scd-qualifier
 
   # /uss/v1/operational_intents:
   #   post:
@@ -382,7 +523,7 @@ paths:
       description: >-
         This endpoint simulates the operator intention to submit a flight operation / flight request.
       tags:
-        - scd
+        - scd-qualifier
 
     delete:
       security:
@@ -407,10 +548,10 @@ paths:
         This endpoint simulates the operator intention to cancel or end a flight operation.
 
       tags:
-        - scd
+        - scd-qualifier
 
   /uss/v1/operational_intents/{entityid}:
-    summary: Query detailed information of an operational intent from a USS.
+    summary: Query detailed information of an operational intent from submitted Blender, this is used in the context of strategic deconfliction.
     parameters:
       - name: entityid
         description: EntityID for this operational intent.
@@ -471,14 +612,13 @@ paths:
           description: >-
             The client issued too many requests in a short period of time.
 
-  /uss/flights:
+  /v1/uss/flights:
     summary: Basic operation details to meet remote ID requirements.
     description: This endpoint may be polled by remote ID display providers to display
       basic aircraft activity near a user in real time.
       
     get:
       tags:
-      - uss
       - rid
       operationId: searchFlights
       
@@ -557,6 +697,7 @@ paths:
   /v1/uss/flights/{id}/details:
     summary: A remote ID flight reported by a remote ID service provider.
     get:
+    
       tags:
       - uss
       operationId: getFlightDetails
@@ -596,7 +737,7 @@ paths:
       security:
       - AuthFromAuthorizationAuthority:
         - dss.read.identification_service_areas
-      summary: /uss/flights/{id}/details
+      summary: Retrieve details of a specific flight
       description: Retrieve details of a flight from a remote ID service provider
         to meet remote ID requirements.
     parameters:
@@ -609,14 +750,13 @@ paths:
       required: true
 
   /set_air_traffic:
-    put:
-      summary: 'Add Airtraffic observation'
+    post:
+      summary: 'Add Airtraffic observation(s)'
       security:
-        - AuthFromPassport: [write]
+        - AuthFromPassport: [blender.write]
       description:
-        "Submit air traffic data to the service, after submission, Flight Blender will \
-        \ normalizes the data and eventually send it to Flight Spotlight. A single or multiple observation can be submitted at a given time"
-
+        "Submit air traffic data into Blender, after submission, Flight Blender will \
+        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple observations can be submitted at a given time"
       requestBody:
         required: true
         content:
@@ -662,8 +802,8 @@ paths:
     get:
       summary: 'Get a list of all submitted flight declarations'
       security:
-        - AuthFromPassport: [read]
-      description: "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
+        - AuthFromPassport: [blender.read]
+      description: "Get a list of all Flight declarations in the database, if no start or end date is provided, Blender will provide declarations for today"
 
       parameters:
         - name: start_date
@@ -718,7 +858,7 @@ paths:
     get:
       summary: 'Get the details of a single flight declaration'
       security:
-        - AuthFromPassport: [read]
+        - AuthFromPassport: [blender.read]
       description: "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point can be queried to display authorization"
       parameters:
         - in: path
@@ -768,7 +908,7 @@ paths:
     put:
       summary: 'Approve / Reject a flight declaration'
       security:
-        - AuthFromPassport: [read]
+        - AuthFromPassport: [blender.read]
       description: "By default all flight declarations submitted in Flight Blender are not approved / authorized, for most most operations, authorization may \ not be necessary but in case operations needs authorization, this end point to change the status of operation"
       parameters:
         - in: path
@@ -823,12 +963,12 @@ paths:
         - flight-declaration
 
   /flight_declaration_ops/set_flight_declaration:
-    put:
+    post:
       summary: 'Add a Flight Declaration'
       description: "Submit a Flight Declaration into Flight Blender  \
-        \ A flight declaration can be upto 24 hours in advance and follows the Flight Declaration format etc."
+        \ A flight declaration can be added upto 24 hours in advance and follows the GUTMA Flight Declaration format. In most cases you can use Flight Spotlight Launchpad functionality to submit a declaration"
       security:
-        - AuthFromPassport: [write]
+        - AuthFromPassport: [blender.write]
 
       requestBody:
         required: true
@@ -880,10 +1020,10 @@ paths:
     put:
       summary: 'Add a Geofence'
       security:
-        - AuthFromPassport: [write]
+        - AuthFromPassport: [blender.write]
       description:
-        "Submit a Geofence declaration which is in turn submitted to  \
-        \ Flight Spotlight. Geofence can be used to specify areas of interest, restricted areas, constraints etc."
+        "Submit a Geofence in the form of a GeoJSON declaration which is in turn submitted to  \
+        \ Flight Spotlight. Geofence can be used to specify areas of interest, restricted areas, constraints etc., Flight Blender will convert the fence into a format that is compatible with the EuroCAE ED-269 standard."
 
       requestBody:
         required: true
@@ -931,7 +1071,7 @@ paths:
     get:
       summary: 'Get a list of all submitted Geofence'
       security:
-        - AuthFromPassport: [read]
+        - AuthFromPassport: [blender.read]
       description: 'By default all geo fence submitted in Flight Blender have a start and end date, if none is provided, the server will default to today as start and end date'
 
       parameters:
@@ -985,9 +1125,9 @@ paths:
 
   /geo_fence_ops/geo_fence/{geo_fence_id}:
     get:
-      summary: 'Get the details of a single geo fence'
+      summary: 'Get details of a single geo fence'
       security:
-        - AuthFromPassport: [read]
+        - AuthFromPassport: [blender.read]
       description: 'Show details of a geofence as stored in the database'
       parameters:
         - in: path
@@ -1000,7 +1140,7 @@ paths:
 
       responses:
         '200':
-          description: 'Details of all Geofences in the database'
+          description: 'Details of all Geofence stored in the database'
           content:
             application/json:
               schema:
@@ -1037,6 +1177,9 @@ components:
   securitySchemes:
     AuthFromPassport:
       type: oauth2
+      description: |-
+        Blender utilizes JWT tokens issued by a OAUTH server. This can be configured as an environment varaible. In this case we recommend using / deploying a Authorization Sevver: Flight Passport. For more information see https://id.openskies.sh
+
       flows:
         clientCredentials:
           tokenUrl: 'http://id.openskies.sh/oauth/token'
@@ -1044,6 +1187,30 @@ components:
             blender.write: 'Write data into Flight Blender'
             blender.read: 'Read data into Flight Blender'
 
+    AuthFromAuthorizationAuthority:
+      flows:
+        clientCredentials:
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            dss.read.identification_service_areas: Client may query, read, or create
+              subscriptions for Identification Service Areas for remote ID.  A remote
+              ID display provider shall be granted this scope upon request.
+            dss.write.identification_service_areas: Client may create, edit, and delete
+              Identification Service Areas for remote ID.  A remote ID service provider
+              shall be granted this scope upon request.
+      type: oauth2
+      description: |-
+        Authorization from, or on behalf of, an authorization authority.  This authority shall issue access tokens that are JSON Web Tokens as defined in RFC 7519, using the `RS256` algorithm for the signature, and publish to all providers the public key for verifying that signature.
+
+        The following fields shall be included in the JWT claim for access tokens issued by this authority:
+        * `iss`, with the URL at which the token generation request was received.
+        * `exp`, with a time no further than 1 hour in the future.
+        * `sub`, with unique ID of the client requesting the access token.
+        * `scope`, with an array of strings indicating the scopes granted.
+
+        Multiple scopes for a single token shall be granted if requested.  The tokens granted by this authority shall protect against reuse of received tokens to impersonate the sender to other recipients (via use of the `aud` claim or other means).
+
+        Clients shall provide these access tokens in an `Authorization` header in the form `Bearer <token>` in accordance with RFC 6750.
   schemas:
     ApproveRejectDeclaration:
       description: A flight declaration approved / created
@@ -1683,7 +1850,68 @@ components:
             required by law in a region.
           type: string
           example: FA12345897
+    URL:
+      description: Valid http or https URL.
+      type: string
+    RIDFlightsURL:
+      anyOf:
+      - $ref: '#/components/schemas/URL'
+      description: |-
+        The URL at which the remote ID flights and their details may be retrieved.  See `/flights` and `/flights/{id}/details` paths for specification of this endpoint.
+        This URL is the base flights resource.  If this URL is specified as https://example.com/flights then the flight details for a particular {id} may be obtained at the URL https://example.com/flights/{id}/details.  This URL may not have a trailing / character.
+      type: string
+      example: https://example.com/flights
 
+    UUIDv4:
+      description: UUID v4.
+      maxLength: 36
+      minLength: 36
+      type: string
+      example: 03e5572a-f733-49af-bc14-8a18bd53ee39
+    Version:
+      description: A version string used to reference an object at a particular point
+        in time. Any updates to an object must contain the corresponding version to
+        maintain idempotent updates.
+      type: string
+    EntityUUID:
+      anyOf:
+      - $ref: '#/components/schemas/UUIDv4'
+      description: Universally-unique identifier for an Entity communicated through
+        the DSS.  Formatted as UUIDv4.
+    IdentificationServiceArea:
+      description: An Identification Service Area (area in which remote ID services
+        are being provided).  The DSS reports only these declarations and clients
+        must exchange flight information peer-to-peer.
+      required:
+      - flights_url
+      - owner
+      - time_start
+      - time_end
+      - version
+      - id
+      type: object
+      properties:
+        flights_url:
+          $ref: '#/components/schemas/RIDFlightsURL'
+        owner:
+          description: Assigned by the DSS based on creating client’s ID (via access
+            token).  Used for restricting mutation and deletion operations to owner.
+          type: string
+          example: myuss
+        time_start:
+          format: date-time
+          description: Beginning time of service.  RFC 3339 format, per OpenAPI specification.
+          type: string
+        time_end:
+          format: date-time
+          description: End time of service.  RFC 3339 format, per OpenAPI specification.
+          type: string
+        version:
+          $ref: '#/components/schemas/Version'
+        id:
+          anyOf:
+          - $ref: '#/components/schemas/EntityUUID'
+          description: Unique identifier for this Identification Service Area.
     RIDAuthData:
       description: Additional authentication data.
       required:
@@ -2682,14 +2910,144 @@ components:
       - VA3m
       - VA1m
       type: string
+    PutIdentificationServiceAreaNotificationParameters:
+      description: Parameters of a message informing of new full information for an
+        Identification Service Area.  Pushed (by a client, not the DSS) directly to
+        clients with subscriptions when another client makes a change to airspace
+        within a cell with a subscription.
+      required:
+      - subscriptions
+      type: object
+      properties:
+        service_area:
+          anyOf:
+          - $ref: '#/components/schemas/IdentificationServiceArea'
+          description: |-
+            Identification Service Area that the notifying client changed or created.
+
+            If this field is populated, the Identification Service Area was created or updated.  If this field is not populated, the Identification Service Area was deleted.
+        subscriptions:
+          description: Subscription(s) prompting this notification.
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionState'
+        extents:
+          $ref: '#/components/schemas/Volume4D'
+          description: |-
+            The new or updated extents of the Identification Service Area.
+
+            Omitted if Identification Service Area was deleted.
+    SubscriptionNotificationIndex:
+      format: int32
+      description: Tracks the notifications sent for a subscription so the subscriber
+        can detect missed notifications more easily.
+      type: integer
+    SubscriptionState:
+      description: State of AreaSubscription which is causing a notification to be
+        sent.
+      required:
+      - subscription
+      type: object
+      properties:
+        subscription_id:
+          $ref: '#/components/schemas/SubscriptionUUID'
+        notification_index:
+          $ref: '#/components/schemas/SubscriptionNotificationIndex'
+    SubscriptionUUID:
+      anyOf:
+      - $ref: '#/components/schemas/UUIDv4'
+      description: Universally-unique identifier for a Subscription communicated through
+        the DSS.  Formatted as UUIDv4.          
     ################################################################################
     ####################### End of ASTM-standard definitions #######################
     ################################################################################
 
+    CreateTestParameters:
+      description: 'A complete set of data to be injected into a Service Provider system under test.'
+      required:
+        - requested_flights
+      type: object
+      properties:
+        requested_flights:
+          description: >-
+            One or more logical flights, each containing test data to inject into the system.
+            Elements should be sorted in ascending order of `timestamp`.
+          type: array
+          items:
+            $ref: '#/components/schemas/TestFlight'
+    ChangeTestResponse:
+      description: ''
+      required:
+        - injected_flights
+        - version
+      type: object
+      properties:
+        injected_flights:
+          description: 'The complete set of test data actually injected into the Service Provider system under test.'
+          type: array
+          items:
+            $ref: '#/components/schemas/TestFlight'
+        version:
+          description: Version of test.  Used to delete test.
+          type: string
+          example: 1
+    DeleteTestResponse:
+      description: ''
+      required:
+        - injected_flights
+      type: object
+      properties:
+        injected_flights:
+          description: 'The complete set of test data deleted.'
+          type: array
+          items:
+            $ref: '#/components/schemas/TestFlight'
+    TestFlight:
+      description: 'The set of data to be injected into a Service Provider system under test for a single flight.'
+      required:
+        - injection_id
+        - telemetry
+        - details_responses
+      type: object
+      properties:
+        injection_id:
+          description: 'ID of the injected test flight.  Remains the same regardless of the flight ID/UTM ID reported in the system.'
+          type: string
+          example: 'edb7695f-8737-4b9f-91f8-e2afbb333f41'
+        telemetry:
+          description: >-
+            The set of telemetry data that should be injected into the system for this flight.
+            Each element follows the RIDAircraftState schema from the ASTM remote ID standard.
+          type: array
+          items:
+            $ref: 'https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#/components/schemas/RIDAircraftState'
+        details_responses:
+          description: The details of the flight as a function of time.
+          type: array
+          items:
+            $ref: '#/components/schemas/TestFlightDetails'
+    TestFlightDetails:
+      description: The set of data with which the Service Provider system under test should respond when queried for the details of a test flight.
+      required:
+        - effective_after
+        - details
+      type: object
+      properties:
+        effective_after:
+          description: >-
+            The time after which the Service Provider system under test should respond with `details`, unless other `details` with a more recent `effective_after` time (before the current time) are available.
+          type: string
+          format: datetime
+        details:
+          description: >-
+            The details of the flight.
+            Follows the RIDFlightDetails schema from the ASTM remote ID standard.
+          $ref: 'https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#/components/schemas/RIDFlightDetails'
+
 tags:
   - name: uss
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions, operational intents to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data and querying operational intents
-  - name: scd
+  - name: scd-qualifier
     description: Flight Blender allows connections and interactions with the USSP software testing framework for Remote ID and Stratedic deconfliction. These endpoints implement the stratetgic deconflication test framework API.
   - name: rid
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data
