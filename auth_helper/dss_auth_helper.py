@@ -1,10 +1,10 @@
 import json
 import redis
+from .common import get_redis
 import logging
 from datetime import datetime, timedelta
 logger = logging.getLogger('django')
 import json
-import redis
 import requests
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -21,7 +21,7 @@ class AuthorityCredentialsGetter():
         pass
         
     def get_cached_credentials(self, audience:str, token_type:str):  
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))   
+        r = get_redis() 
         
         now = datetime.now()
         token_suffix = '_auth_rid_token' if token_type == 'rid' else  '_auth_scd_token'

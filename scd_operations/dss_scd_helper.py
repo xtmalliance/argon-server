@@ -1,5 +1,6 @@
 import uuid
-import redis, json
+from auth_helper.common import get_redis
+import json
 import requests
 import logging
 from dataclasses import asdict
@@ -121,7 +122,7 @@ class VolumesConverter():
 class SCDOperations():
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')        
-        self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+        self.r = get_redis()
     
     def get_auth_token(self, audience:str=None):
             

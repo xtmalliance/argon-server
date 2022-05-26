@@ -12,6 +12,7 @@ from datetime import timedelta
 import uuid
 import arrow
 import redis
+from auth_helper.common import get_redis
 from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails
 from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
 import shapely.geometry
@@ -167,8 +168,7 @@ def dss_isa_callback(request, subscription_id):
     
     try:
         assert service_areas != 0
-        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
-            'REDIS_PORT', 6379), decode_responses=True)
+        r = get_redis()
         # Get the flights URL from the DSS and put it in the flights_url
         flights_key = "all_uss_flights:" + subscription_id
         subscription_view_key = "sub-" + subscription_id        
@@ -327,8 +327,7 @@ def create_test(request, test_id):
         msg_dict = asdict(msg)
         return JsonResponse(msg_dict['message'], status=msg_dict['status'])
     
-    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
-            'REDIS_PORT', 6379), decode_responses=True)
+    r = get_redis()
 
     test_id = 'rid-test_' + str(test_id)
     # Test already exists
@@ -353,8 +352,7 @@ def delete_test(request, test_id, version):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
     # Deleteing test
     test_id = str(test_id)
-    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get(
-            'REDIS_PORT', 6379), decode_responses=True)
+    r = get_redis()
 
     if r.exists(test_id):
         r.delete(test_id)

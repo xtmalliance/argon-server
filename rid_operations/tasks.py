@@ -7,6 +7,7 @@ import logging
 from scd_operations.scd_data_definitions import Volume4D
 from . import dss_rid_helper
 import redis
+from auth_helper.common import get_redis
 from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, FullRequestedFlightDetails,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint
 import time
 import arrow

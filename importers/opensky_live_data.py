@@ -6,6 +6,7 @@ import json
 import requests
 import pandas as pd
 import redis
+from auth_helper.common import get_redis
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -16,7 +17,7 @@ class PassportCredentialsGetter():
         pass
 
     def get_cached_credentials(self):  
-        r = redis.Redis(host=os.getenv('REDIS_HOST'), port =os.getenv('REDIS_PORT'))   
+        r = get_redis()
         
         now = datetime.now()
         

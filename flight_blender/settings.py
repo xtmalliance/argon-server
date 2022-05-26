@@ -133,9 +133,9 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 if DEBUG:
-    BROKER_URL = os.getenv("REDIS_URL",'redis://localhost:6379/')
+    BROKER_URL = os.getenv("REDIS_BROKER_URL",'redis://localhost:6379/')
 else:
-    BROKER_URL = os.getenv("REDIS_URL","redis://redis:6379/")
+    BROKER_URL = os.getenv("REDIS_BROKER_URL","redis://redis:6379/")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

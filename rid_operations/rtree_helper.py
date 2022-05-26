@@ -2,6 +2,7 @@ from rtree import index
 from typing import List
 from os import environ as env
 import redis
+from auth_helper.common import get_redis
 import json 
 from shapely.geometry import Polygon
 from rtree import index

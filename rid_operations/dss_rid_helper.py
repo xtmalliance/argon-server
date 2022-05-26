@@ -9,6 +9,7 @@ import uuid
 from auth_helper import dss_auth_helper
 import json
 import redis
+from auth_helper.common import get_redis
 import requests
 import hashlib
 import tldextract
@@ -29,7 +30,7 @@ class RemoteIDOperations():
 
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')        
-        self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+        self.r = get_redis()
 
 
     def create_dss_isa(self, flight_extents:Volume4D,flights_url :str , expiration_time_seconds: int = 30) -> ISACreationResponse:

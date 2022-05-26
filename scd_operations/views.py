@@ -13,6 +13,7 @@ from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
 import uuid
 import redis
+from auth_helper.common import get_redis
 import logging
 from uuid import UUID
 from os import environ as env
@@ -52,7 +53,7 @@ def SCDClearAreaRequest(request):
     except KeyError as ke: 
         return Response({"result":"Could not parse clear area payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
     
-    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+    r = get_redis()
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
     my_geo_json_converter.convert_volumes_to_geojson(volumes = extent)
     view_rect_bounds = my_geo_json_converter.get_bounds()
@@ -98,7 +99,7 @@ def SCDAuthTest(request, flight_id):
         conflict_with_flight_test_injection_response = TestInjectionResult(result = "ConflictWithFlight", notes="Processing of operational intent has failed, flight not deconflicted",operational_intent_id ="")        
 
         scd_test_data = request.data
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
+        r = get_redis()
         my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
         my_rtree_helper.generate_operational_intents_index()
         try:
@@ -240,7 +241,7 @@ def SCDAuthTest(request, flight_id):
 
     elif request.method == "DELETE":        
         
-        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))      
+        r = get_redis()    
         op_int_details_key = 'flight_opint.'+ str(flight_id)
         op_int_details = r.get(op_int_details_key)   
         

@@ -15,6 +15,7 @@ import arrow
 import json 
 import logging 
 import redis
+from auth_helper.common import get_redis
 from flight_feed_operations import flight_stream_helper
 from shapely.geometry import Point
 
@@ -45,7 +46,7 @@ def USSUpdateOpIntDetails(request):
 @api_view(['GET'])
 @requires_scopes(['utm.strategic_coordination'])
 def USSOpIntDetails(request, opint_id):
-    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))      
+    r = get_redis()    
     
     opint_flightref = 'opint_flightref.' + str(opint_id)
     
