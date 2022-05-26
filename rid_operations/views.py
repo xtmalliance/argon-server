@@ -197,7 +197,7 @@ def dss_isa_callback(request, subscription_id):
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_flight_data(request, flight_id):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
-    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
+    r = get_redis()
     flight_details_storage = 'flight_details:' + flight_id
     if r.exists(flight_details_storage):
         flight_details = r.get(flight_details_storage)

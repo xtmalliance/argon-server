@@ -41,7 +41,7 @@ def poll_uss_for_flights_async():
     all_observations = push_cg.all_observations
 
     # TODO: Get existing flight details from subscription
-    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
+    r = get_redis()
     flights_dict = {}
     # Get the flights URL from the DSS and put it in 
     for keybatch in flight_stream_helper.batcher(r.scan_iter('all_uss_flights:*'), 100): # reasonably we wont have more than 100 subscriptions active        
@@ -78,7 +78,7 @@ def stream_rid_test_data(requested_flights):
             pfd = RIDTestDetailsResponse(effective_after=provided_flight_detail['effective_after'], details = flight_detail)
             all_flight_details.append(pfd)
 
-            r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
+            r = get_redis()
             flight_details_storage = 'flight_details:' + fd['id']
             r.set(flight_details_storage, json.dumps(asdict(flight_detail)))
             r.expire(flight_details_storage, time=60)

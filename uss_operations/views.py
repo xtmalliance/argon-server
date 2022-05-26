@@ -146,7 +146,7 @@ def get_uss_flights(request):
             lng = float(message.data['lon_dd'])
             point = Point(lat, lng)
             point_in_polygon = view_box.contains(point)
-
+            # logging.debug(point_in_polygon)
             if point_in_polygon:
                 unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
             else:
@@ -208,7 +208,7 @@ def get_uss_flights(request):
 @requires_scopes(['dss.read.identification_service_areas'])
 def get_uss_flight_details(request, flight_id):
     ''' This is the end point for the rid_qualifier to get details of a flight '''
-    r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379), decode_responses=True)
+    r = get_redis()
     flight_details_storage = 'flight_details:' + flight_id
     if r.exists(flight_details_storage):
         flight_details = r.get(flight_details_storage)
