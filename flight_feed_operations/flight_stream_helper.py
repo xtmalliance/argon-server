@@ -1,17 +1,15 @@
-from walrus import Database
+
 from datetime import datetime, timedelta
 import os
 import json, redis
 import logging
 import requests
-from urllib.parse import urlparse
 
+from auth_helper.common import get_walrus_database
 from itertools import zip_longest
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from os import environ as env
-
-
 
 # iterate a list in batches of size n
 def batcher(iterable, n):
@@ -21,15 +19,9 @@ def batcher(iterable, n):
 
 class StreamHelperOps():
     def __init__(self):
-        redis_host = env.get('REDIS_HOST', "redis")
-        redis_port = env.get('REDIS_PORT', 6379)
-        redis_password = env.get('REDIS_Password', None)
+        self.db = get_walrus_database()
         self.stream_keys = ['all_observations']      
-        if redis_password:
-            self.db = Database(host=redis_host, port=redis_port, password = redis_password)               
-        else: 
-            self.db = Database(host=redis_host, port=redis_port)   
-        
+
     def create_push_cg(self):
         self.get_push_cg(create=True)
 

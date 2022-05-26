@@ -20,6 +20,7 @@ class PassportCredentialsGetter():
         
         now = datetime.now()
         
+        
         token_details = r.get('blender_write_air_traffic_token')
         if token_details:    
             token_details = json.loads(token_details)
