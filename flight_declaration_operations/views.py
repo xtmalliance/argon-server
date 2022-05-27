@@ -13,7 +13,7 @@ from shapely.geometry import shape
 from shapely.ops import unary_union
 from django.http import Http404
 from rest_framework import mixins, generics
-from .serializers import FlightOperationSerializer, FlightOperationApprovalSerializer
+from .serializers import FlightOperationSerializer, FlightOperationApprovalSerializer, FlightOperationStateSerializer
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -32,46 +32,47 @@ def set_flight_declaration(request):
     else:    
         req = request.data
     try:            
-        flight_declaration_data = req["flight_declaration"]
+        flight_declaration_data = req['flight_declaration']
 
     except KeyError as ke:
-        msg = json.dumps({"message":"One parameter are required: observations with a list of observation objects. One or more of these were not found in your JSON request. For sample data see: https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#sample-traffic-object"})        
+        msg = json.dumps({"message":"A valid flight declaration as specified by the GUTMA flight declration protocol must be submitted."})        
         return HttpResponse(msg, status=400)
 
     else:
         # task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to spotlight
-        geo_json_fc = flight_declaration_data['flight_declaration']['parts']
+        geo_json_fc = flight_declaration_data['parts']
         shp_features = []
         for feature in geo_json_fc['features']:
             shp_features.append(shape(feature['geometry']))
         combined_features = unary_union(shp_features)
         bnd_tuple = combined_features.bounds
         bounds = ''.join(['{:.7f}'.format(x) for x in bnd_tuple])
-        try:
-            req["start_time"]
-        except KeyError as ke: 
-            start_time = arrow.now().isoformat()
-        else:
-            start_time = arrow.get(req["start_time"]).isoformat()
-        
-        try:
-            req["end_time"]
-        except KeyError as ke:
-            end_time = arrow.now().shift(hours=1).isoformat()
-        else:
-            
-            end_time = arrow.get(req["end_time"]).isoformat()
-        
-        type_of_operation = flight_declaration_data['operation_mode']
-        type_of_operation = 1  if (type_of_operation =='bvlos') else 0
-        fo = FlightOperation(gutma_flight_declaration = json.dumps(flight_declaration_data),start_datetime= start_time, end_datetime=end_time, bounds= bounds, type_of_operation= type_of_operation)
-        fo.save()
-        
-        op = json.dumps ({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
-        return HttpResponse(op, status=200)
+    try:
+        req["start_time"]
+    except KeyError as ke: 
+        start_time = arrow.now().isoformat()
+    else:
+        start_time = arrow.get(req["start_time"]).isoformat()
+    
+    try:
+        req["end_time"]
+    except KeyError as ke:
+        end_time = arrow.now().shift(hours=1).isoformat()
+    else:        
+        end_time = arrow.get(req["end_time"]).isoformat()
+    
+    type_of_operation = 0 if 'operation_mode' not in req else req['operation_mode']
+    submitted_by = None if 'submitted_by' not in req else req['submitted_by']
+    state = 0 if 'state' not in req else req['state']
+    # TODO: Validate GUTMA declaration format
+    fo = FlightOperation(gutma_flight_declaration = json.dumps(flight_declaration_data),start_datetime= start_time, end_datetime=end_time, bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, state = state, is_approved = 0) 
+    fo.save()
+    
+    op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
+    return HttpResponse(op, status=200, content_type= 'application/json')
 
 
-@method_decorator(requires_scopes(['blender.read']), name='dispatch')
+@method_decorator(requires_scopes(['blender.write']), name='dispatch')
 class FlightOperationApproval( 
                     mixins.UpdateModelMixin,           
                     generics.GenericAPIView):
@@ -84,6 +85,20 @@ class FlightOperationApproval(
         return self.update(request, *args, **kwargs)
 
 
+@method_decorator(requires_scopes(['blender.write']), name='dispatch')
+class FlightOperationUpdateState( 
+                    mixins.UpdateModelMixin,           
+                    generics.GenericAPIView):
+
+    queryset = FlightOperation.objects.all()
+    serializer_class = FlightOperationStateSerializer
+
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+
+
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class FlightOperationDetail(mixins.RetrieveModelMixin, 
                     generics.GenericAPIView):
@@ -93,6 +108,9 @@ class FlightOperationDetail(mixins.RetrieveModelMixin,
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
+
+
+
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class FlightOperationList(mixins.ListModelMixin,  

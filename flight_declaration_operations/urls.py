@@ -24,4 +24,5 @@ urlpatterns = [
     path('flight_declaration', flight_declaration_views.FlightOperationList.as_view()),
     path('flight_declaration/<uuid:pk>', flight_declaration_views.FlightOperationDetail.as_view()),
     path('flight_declaration_review/<uuid:pk>', flight_declaration_views.FlightOperationApproval.as_view()),
+    path('flight_declaration_state/<uuid:pk>', flight_declaration_views.FlightOperationUpdateState.as_view()),
 ]
