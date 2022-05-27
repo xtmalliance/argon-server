@@ -48,9 +48,8 @@ def requires_scopes(required_scopes):
             
 
             if 'kid' in unverified_token_headers:                   
-                PASSPORT_DOMAIN = 'https://{}/.well-known/jwks.json'.format(env.get('PASSPORT_DOMAIN'))                
-                jwks_data = s.get(PASSPORT_DOMAIN).json()          
-                                                     
+                PASSPORT_URL = '{}/.well-known/jwks.json'.format(env.get('PASSPORT_URL','http://local.test:9000'))     
+                jwks_data = s.get(PASSPORT_URL).json()      
                 jwks = jwks_data                   
                 public_keys = {}                
                 for jwk in jwks['keys']:
@@ -58,7 +57,7 @@ def requires_scopes(required_scopes):
                     public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
                 try:
                     kid = unverified_token_headers['kid']                    
-                except (KeyError, ValueError) as ve:                    
+                except (KeyError, ValueError) as ve:         
                     response = JsonResponse({'detail': 'Invalid public key details in token / token cannot be verified'})
                     response.status_code = 401
                     return response
