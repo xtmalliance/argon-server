@@ -6,7 +6,7 @@ class FlightOperationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = FlightOperation
-        fields = ('gutma_flight_declaration', 'id','is_approved','start_datetime','end_datetime',)
+        fields = ('gutma_flight_declaration', 'id','is_approved','state','type_of_operation','start_datetime','end_datetime',)
      
 class FlightOperationApprovalSerializer(serializers.ModelSerializer):
     
