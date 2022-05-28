@@ -19,6 +19,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from datetime import date
 from django.utils.timezone import make_aware
+from arrow.parser import ParserMatchError
 from .pagination import StandardResultsSetPagination
 
 @api_view(['POST'])
@@ -123,11 +124,13 @@ class FlightOperationList(mixins.ListModelMixin,
         
         present = arrow.now()
         if start and end:
-            start_date = arrow.get(start, "YYYY-MM-DD")
-            end_date = arrow.get(end, "YYYY-MM-DD")
-    
-        else: 
-            
+            try:
+                start_date = arrow.get(start, "YYYY-MM-DD")
+                end_date = arrow.get(end, "YYYY-MM-DD")    
+            except Exception as e:
+                start_date = present.shift(months=-1)
+                end_date = present.shift(days=1)
+        else:             
             start_date = present.shift(months=-1)
             end_date = present.shift(days=1)
         
