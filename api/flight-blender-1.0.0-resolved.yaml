@@ -1385,6 +1385,10 @@ components:
           description: Email address of person submitting this declaration
           type: string
           format: email
+        originating_party:
+          description: Set the name of the flight declaration
+          type: string
+          example: Flight 1023
         start_datetime:
           description: The start date and time for the flight
           type: string

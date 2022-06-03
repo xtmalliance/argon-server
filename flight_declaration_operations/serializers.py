@@ -18,7 +18,7 @@ class FlightOperationSerializer(serializers.ModelSerializer):
         return json.loads(obj.operational_intent) 
     class Meta:
         model = FlightOperation
-        fields = ('operational_intent', 'id','is_approved','start_datetime','end_datetime','flight_declaration_geojson',)
+        fields = ('operational_intent','originating_party', 'type_of_operation','id','is_approved','start_datetime','end_datetime','flight_declaration_geojson',)
      
 class FlightOperationApprovalSerializer(serializers.ModelSerializer):
     

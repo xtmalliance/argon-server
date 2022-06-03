@@ -30,9 +30,10 @@ def set_flight_declaration(request):
         req = request.data
 
     try:
-        assert all(data_keys in ['start_datetime','end_datetime','submitted_by','flight_declaration_geo_json', 'type_of_operation'] for data_keys in req.keys())
+        assert req.keys() >= {'originating_party','start_datetime','end_datetime','flight_declaration_geo_json', 'type_of_operation'}
+        
     except AssertionError as ae:        
-        msg = json.dumps({"message":"A valid operational intent as specified by the ASTM operational intent documentation must be submitted."})        
+        msg = json.dumps({"message":"Not all necessary fields were provided. Originating Party, Start Datetime, End Datetime, Flight Declaration and Type of operation must be provided."})        
         return HttpResponse(msg, status=400)
 
     try:            
@@ -44,6 +45,7 @@ def set_flight_declaration(request):
     submitted_by = None if 'submitted_by' not in req else req['submitted_by']
     approved_by = None if 'approved_by' not in req else req['approved_by']
     type_of_operation = 0 if 'type_of_operation' not in req else req['type_of_operation']
+    originating_party = 'No Flight Information' if 'originating_party' not in req else req['originating_party']
     try:
         start_datetime = arrow.now().isoformat() if 'start_datetime' not in req else arrow.get(req['start_datetime']).isoformat()
         end_datetime = arrow.now().isoformat() if 'end_datetime' not in req else arrow.get(req['end_datetime']).isoformat()
@@ -65,7 +67,7 @@ def set_flight_declaration(request):
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
     bounds = my_operational_intent_converter.get_geo_json_bounds()
 
-    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = 0, start_datetime = start_datetime,end_datetime = end_datetime)
+    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = 0, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party)
     fo.save()
     op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
     return HttpResponse(op, status=200, content_type= 'application/json')

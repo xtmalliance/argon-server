@@ -11,6 +11,8 @@ class FlightOperation(models.Model):
     type_of_operation = models.IntegerField(choices=OPERATION_TYPES, default=0, help_text="At the moment, only VLOS and BVLOS operations are supported, for other types of operations, please issue a pull-request")
     bounds = models.CharField(max_length = 140)
 
+    originating_party = models.CharField(max_length=100, help_text="Set the party originating this flight, you can add details e.g. Aerobridge Flight 105", default="Flight Blender Default")
+
     submitted_by = models.EmailField(blank= True, null= True)
     approved_by = models.EmailField(blank= True, null= True)
 
