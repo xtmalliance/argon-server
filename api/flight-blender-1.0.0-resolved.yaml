@@ -966,9 +966,9 @@ paths:
 
   /flight_declaration_ops/set_flight_declaration:
     post:
-      summary: 'Add a Flight Declaration'
-      description: "Submit a Flight Declaration into Flight Blender  \
-        \ A flight declaration can be added upto 24 hours in advance and follows the ASTM Operational Intent data format. In most cases you can use Flight Spotlight Launchpad functionality to submit a declaration"
+      summary: 'Add a new Flight Declaration'
+      description: "Submit a Flight Declaration into Flight Blender. \
+        \ A flight declaration can be added upto 24 hours in advance and follows the ASTM Operational Intent data format. In most cases, you can use Flight Spotlight Launchpad functionality to submit a declaration."
       security:
         - AuthFromPassport: [blender.write]
 
@@ -1369,12 +1369,9 @@ components:
               items:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
             
-
         operational_intent: 
           type: object
           $ref: '#/components/schemas/PutOperationalIntentReferenceParameters'
-
-
 
     FlightDeclarationFeatureGeoJSON:
       type: object
