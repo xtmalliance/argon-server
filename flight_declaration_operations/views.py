@@ -67,7 +67,7 @@ def set_flight_declaration(request):
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
     bounds = my_operational_intent_converter.get_geo_json_bounds()
 
-    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = 0, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_geojson= flight_declaration_geo_json)
+    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = 0, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= flight_declaration_geo_json)
     fo.save()
     op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
     return HttpResponse(op, status=200, content_type= 'application/json')
