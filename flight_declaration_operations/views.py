@@ -8,18 +8,14 @@ from rest_framework.decorators import api_view
 import logging
 from django.http import HttpResponse, JsonResponse
 from .models import FlightOperation
+from dataclasses import asdict
 from .tasks import write_flight_declaration
 from shapely.geometry import shape
-from shapely.ops import unary_union
-from django.http import Http404
+from .data_definitions import FlightDeclarationRequest
 from rest_framework import mixins, generics
 from .serializers import FlightOperationSerializer, FlightOperationApprovalSerializer, FlightOperationStateSerializer
 from django.utils.decorators import method_decorator
-from django.utils import timezone
-from datetime import datetime, timedelta
-from datetime import date
-from django.utils.timezone import make_aware
-from arrow.parser import ParserMatchError
+from .utils import OperationalIntentsConverter
 from .pagination import StandardResultsSetPagination
 
 @api_view(['POST'])
@@ -32,47 +28,50 @@ def set_flight_declaration(request):
         return JsonResponse(json.dumps(msg), status=415, mimetype='application/json')
     else:    
         req = request.data
-    try:            
-        flight_declaration_data = req['flight_declaration']
 
-    except KeyError as ke:
-        msg = json.dumps({"message":"A valid flight declaration as specified by the GUTMA flight declration protocol must be submitted."})        
+    try:
+        assert req.keys() >= {'originating_party','start_datetime','end_datetime','flight_declaration_geo_json', 'type_of_operation'}
+        
+    except AssertionError as ae:        
+        msg = json.dumps({"message":"Not all necessary fields were provided. Originating Party, Start Datetime, End Datetime, Flight Declaration and Type of operation must be provided."})        
         return HttpResponse(msg, status=400)
 
-    else:
-        # task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to spotlight
-        geo_json_fc = flight_declaration_data['parts']
-        shp_features = []
-        for feature in geo_json_fc['features']:
-            shp_features.append(shape(feature['geometry']))
-        combined_features = unary_union(shp_features)
-        bnd_tuple = combined_features.bounds
-        bounds = ''.join(['{:.7f}'.format(x) for x in bnd_tuple])
-    try:
-        req["start_time"]
-    except KeyError as ke: 
-        start_time = arrow.now().isoformat()
-    else:
-        start_time = arrow.get(req["start_time"]).isoformat()
-    
-    try:
-        req["end_time"]
+    try:            
+        flight_declaration_geo_json = req['flight_declaration_geo_json']
     except KeyError as ke:
-        end_time = arrow.now().shift(hours=1).isoformat()
-    else:        
-        end_time = arrow.get(req["end_time"]).isoformat()
+        msg = json.dumps({"message":"A valid flight declaration as specified by the A flight declration protocol must be submitted."})        
+        return HttpResponse(msg, status=400)
     
-    type_of_operation = 0 if 'operation_mode' not in req else req['operation_mode']
     submitted_by = None if 'submitted_by' not in req else req['submitted_by']
-    state = 0 if 'state' not in req else req['state']
-    # TODO: Validate GUTMA declaration format
-    fo = FlightOperation(gutma_flight_declaration = json.dumps(flight_declaration_data),start_datetime= start_time, end_datetime=end_time, bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, state = state, is_approved = 0) 
-    fo.save()
+    approved_by = None if 'approved_by' not in req else req['approved_by']
+    type_of_operation = 0 if 'type_of_operation' not in req else req['type_of_operation']
+    originating_party = 'No Flight Information' if 'originating_party' not in req else req['originating_party']
+    try:
+        start_datetime = arrow.now().isoformat() if 'start_datetime' not in req else arrow.get(req['start_datetime']).isoformat()
+        end_datetime = arrow.now().isoformat() if 'end_datetime' not in req else arrow.get(req['end_datetime']).isoformat()
+    except Exception as e: 
+        now = arrow.now()
+        ten_mins_from_now = now.shift(minutes =10)
+        start_datetime = now.isoformat()
+        end_datetime = ten_mins_from_now.isoformat()
+
+    all_features = []
+    for feature in flight_declaration_geo_json['features']:
+        s = shape(feature['geometry'])
+        all_features.append(s)
+
+    flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=0)
+    # task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to spotlight
     
+    my_operational_intent_converter = OperationalIntentsConverter()
+    operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
+    bounds = my_operational_intent_converter.get_geo_json_bounds()
+
+    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = 0, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party)
+    fo.save()
     op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
     return HttpResponse(op, status=200, content_type= 'application/json')
-
-
+    
 @method_decorator(requires_scopes(['blender.write']), name='dispatch')
 class FlightOperationApproval( 
                     mixins.UpdateModelMixin,           
@@ -80,19 +79,6 @@ class FlightOperationApproval(
 
     queryset = FlightOperation.objects.all()
     serializer_class = FlightOperationApprovalSerializer
-
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-@method_decorator(requires_scopes(['blender.write']), name='dispatch')
-class FlightOperationUpdateState( 
-                    mixins.UpdateModelMixin,           
-                    generics.GenericAPIView):
-
-    queryset = FlightOperation.objects.all()
-    serializer_class = FlightOperationStateSerializer
 
 
     def put(self, request, *args, **kwargs):
@@ -109,7 +95,6 @@ class FlightOperationDetail(mixins.RetrieveModelMixin,
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
-
 
 
 
@@ -134,7 +119,7 @@ class FlightOperationList(mixins.ListModelMixin,
             start_date = present.shift(months=-1)
             end_date = present.shift(days=1)
         
-        return FlightOperation.objects.filter(start_datetime__gte = start_date.isoformat(), end_datetime__lte = end_date.isoformat())
+        return FlightOperation.objects.filter(end_datetime__lte = end_date.isoformat(),start_datetime__gte = start_date.isoformat())
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date', None)

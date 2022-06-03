@@ -963,69 +963,12 @@ paths:
       tags:
         - flight-declaration
 
-  /flight_declaration_ops/flight_declaration_state/{flight_declaration_id}:
-    put:
-      summary: 'Update the state of a declared operation'
-      security:
-        - AuthFromPassport: [blender.write]
-      description: "Use this endpoint to update the current state of a declared operation "
-      parameters:
-        - in: path
-          name: flight_declaration_id
-          description: 'This is the ID of the flight declaration'
-          schema:
-            type: string
-            format: uuid
-          required: true
-
-      requestBody:
-        description: Set the state of the flight as described in the operation declaration
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateDeclarationState'
-
-      responses:
-        '200':
-          description: State successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FlightDeclarationDetail'
-        '400':
-          description: Bad request submitted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequest400ErrorResponse'
-        '401':
-          description: Un-authorized request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
-        '403':
-          description: Forbidden request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Forbidden403ErrorResponse'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Standard500ErrorResponse'
-
-      tags:
-        - flight-declaration
 
   /flight_declaration_ops/set_flight_declaration:
     post:
-      summary: 'Add a Flight Declaration'
-      description: "Submit a Flight Declaration into Flight Blender  \
-        \ A flight declaration can be added upto 24 hours in advance and follows the GUTMA Flight Declaration format. In most cases you can use Flight Spotlight Launchpad functionality to submit a declaration"
+      summary: 'Add a new Flight Declaration'
+      description: "Submit a Flight Declaration into Flight Blender. \
+        \ A flight declaration can be added upto 24 hours in advance and follows the ASTM Operational Intent data format. In most cases, you can use Flight Spotlight Launchpad functionality to submit a declaration."
       security:
         - AuthFromPassport: [blender.write]
 
@@ -1034,7 +977,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FlightDeclarationJSON'
+              $ref: '#/components/schemas/PutFlightDeclarationRequest'
 
       responses:
         '200':
@@ -1403,66 +1346,70 @@ components:
           type: string
           format: uuid
         is_approved:
+          description: Is the operation approved for flight?
           type: string
-          format: boolean
-        state:
-          enum:
-          - 0
-          - 1
-          - 2
-          - 3
-          - 4 
-          type: integer
-          description: >
-            Set the activity type and the airspace
-             * `0` - Accepted
-             * `1` - OpeActivatedn
-             * `2` - Contingent
-             * `3` - Nonconforming
-             * `4` - Completed
+          format: boolean          
         start_datetime:
+          description: The start for the query
           type: string
           format: date-time
-        submitted_by:
-          type: string
-          format: email
-        approved_by:
-          type: string
-          format: email
         end_datetime:
+          description: The enddate for the query
           type: string
           format: date-time
-        gutma_flight_declaration:
+        flight_declaration_geojson:
+          description: The operational intent for this flight declaration as a GeoJSON FeatureCollection
           type: object
-          $ref: '#/components/schemas/FlightDeclarationJSON'
-
-    FlightDeclarationJSON:
-      type: object
-      required:
-        - flight_declaration
-      properties:
-        operation_mode:
-          type: string
-          enum: [vlos, bvlos]
-        exchange_type:
-          type: string
-          enum:
-            - flight_declaration
-        flight_id:
-          type: string
-          format: uuid
-        plan_id:
-          type: string
-          format: uuid
-        flight_state:
-          type: number          
-        flight_declaration:
-          type: object
-          properties:
-            parts:
+          properties: 
+            type:
+              type: string
+              example: "FeatureCollection"
+            features:
               type: array
               items:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+            
+    PutFlightDeclarationRequest: 
+      type: object
+      properties:           
+        type_of_operation: 
+          enum:
+          - 0
+          - 1
+          type: integer
+          description: >
+            Set the activity type and the airspace
+             * `0` - VLOS
+             * `1` - BVLOS
+        submitted_by:
+          description: Email address of person submitting this declaration
+          type: string
+          format: email
+        originating_party:
+          description: Set the name of the flight declaration
+          type: string
+          example: Flight 1023
+        start_datetime:
+          description: The start date and time for the flight
+          type: string
+          format: date-time
+        end_datetime:
+          description: The end date and time for the flight
+          type: string
+          format: date-time
+        flight_declaration_geo_json: 
+          $ref: '#/components/schemas/FlightDeclarationGeoJSONFeatureCollection'
+    
+    FlightDeclarationGeoJSONFeatureCollection:
+      type: object
+      properties: 
+        type:
+          type: string
+          example: "FeatureCollection"
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
 
     FlightDeclarationFeatureGeoJSON:
       type: object
@@ -1766,6 +1713,9 @@ components:
 
         properties:
           lon_dd:
+            type: number
+            format: float
+          altitude_mm:
             type: number
             format: float
           lat_dd:
@@ -2157,7 +2107,7 @@ components:
           type: string
           enum:
             - RFC3339
-
+            
     OperationalIntentTestInjection:
       description: >-
         Parameters that define an operational intent: this injection is used to
@@ -2189,6 +2139,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Volume4D'
+
     FlightAuthorisationData:
       description: |-
         A dataset to hold details of a UAS flight authorization request. Full description of a flight authorisation including mandatory information required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664 for an UAS flight authorisation request. Reference: https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32021R0664&from=EN#d1e32-178-1
