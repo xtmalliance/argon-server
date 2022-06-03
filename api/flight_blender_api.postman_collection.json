@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "91250cc8-22d2-43d4-8531-4e31548ed305",
+		"_postman_id": "b15cf272-66f7-4a7a-8036-8ffda1a1a253",
 		"name": "Flight Blender Calls",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "393882"
@@ -1244,10 +1244,10 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\"is_approved\":1}"
+							"raw": "{\"is_approved\":1, \"approved_by\":\"hh@auth.com\"}"
 						},
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration_review/7cad4370-a020-4f6e-9c32-b51ae64b9ae8",
+							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration_review/677437a5-e086-421f-9419-2619eb2a4cf9",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -1257,119 +1257,7 @@
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration_review",
-								"7cad4370-a020-4f6e-9c32-b51ae64b9ae8"
-							],
-							"query": [
-								{
-									"key": "is_approved",
-									"value": "0",
-									"disabled": true
-								}
-							]
-						},
-						"description": "This request submits a Geofence to Flight Blender"
-					},
-					"response": []
-				},
-				{
-					"name": "Update Flight Declaration State",
-					"protocolProfileBehavior": {
-						"disabledSystemHeaders": {
-							"content-type": true
-						}
-					},
-					"request": {
-						"auth": {
-							"type": "oauth2",
-							"oauth2": [
-								{
-									"key": "audience",
-									"value": {
-										"4516b313-d6e4-41fb-a7ff-1835d14beb08": "{{flight_blender_audience}}"
-									},
-									"type": "any"
-								},
-								{
-									"key": "scope",
-									"value": "{{flight_blender_scopes}}",
-									"type": "string"
-								},
-								{
-									"key": "clientSecret",
-									"value": "{{client_secret}}",
-									"type": "string"
-								},
-								{
-									"key": "clientId",
-									"value": "{{client_id}}",
-									"type": "string"
-								},
-								{
-									"key": "redirect_uri",
-									"value": "http://local.test:8000/",
-									"type": "string"
-								},
-								{
-									"key": "grant_type",
-									"value": "client_credentials",
-									"type": "string"
-								},
-								{
-									"key": "authUrl",
-									"value": "http://local.test:8000/oauth/authorize/",
-									"type": "string"
-								},
-								{
-									"key": "client_authentication",
-									"value": "body",
-									"type": "string"
-								},
-								{
-									"key": "accessTokenUrl",
-									"value": "https://id.openskies.sh/oauth/token/",
-									"type": "string"
-								},
-								{
-									"key": "accessToken",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
-									"type": "string"
-								},
-								{
-									"key": "tokenType",
-									"value": "Bearer",
-									"type": "string"
-								},
-								{
-									"key": "addTokenTo",
-									"value": "header",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"state\":3, \"submitted_by\":\"user@user.com\"}"
-						},
-						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration_state/7cad4370-a020-4f6e-9c32-b51ae64b9ae8",
-							"protocol": "http",
-							"host": [
-								"local",
-								"test"
-							],
-							"port": "8000",
-							"path": [
-								"flight_declaration_ops",
-								"flight_declaration_state",
-								"7cad4370-a020-4f6e-9c32-b51ae64b9ae8"
+								"677437a5-e086-421f-9419-2619eb2a4cf9"
 							],
 							"query": [
 								{
@@ -1394,6 +1282,11 @@
 						"auth": {
 							"type": "oauth2",
 							"oauth2": [
+								{
+									"key": "tokenName",
+									"value": "Blender RW",
+									"type": "string"
+								},
 								{
 									"key": "scope",
 									"value": "{{flight_blender_scopes}}",
@@ -1467,7 +1360,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration?start_date=2022-05-01&end_date=2022-05-24",
+							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration?start_date=2022-05-01&end_date=2022-06-24",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -1485,7 +1378,7 @@
 								},
 								{
 									"key": "end_date",
-									"value": "2022-05-24"
+									"value": "2022-06-24"
 								}
 							]
 						},
@@ -1577,7 +1470,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration/c7bace2d-a371-4135-b411-4d2478f020aa",
+							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration/677437a5-e086-421f-9419-2619eb2a4cf9",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -1585,8 +1478,9 @@
 							],
 							"port": "8000",
 							"path": [
+								"flight_declaration_ops",
 								"flight_declaration",
-								"c7bace2d-a371-4135-b411-4d2478f020aa"
+								"677437a5-e086-421f-9419-2619eb2a4cf9"
 							],
 							"query": [
 								{
@@ -1611,6 +1505,11 @@
 						"auth": {
 							"type": "oauth2",
 							"oauth2": [
+								{
+									"key": "tokenName",
+									"value": "Blender RW",
+									"type": "string"
+								},
 								{
 									"key": "audience",
 									"value": {
@@ -1685,7 +1584,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"exchange_type\": \"flight_declaration\",\r\n    \"flight_id\": \"5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n    \"plan_id\": \"a5b5484c-a23c-4e83-8bb8-a6a5c294e45b\",\r\n    \"flight_state\": 2,\r\n    \"flight_approved\": 0,\r\n    \"flight_declaration\": {\r\n        \"parts\": {\r\n            \"type\": \"FeatureCollection\",\r\n            \"features\": [\r\n                {\r\n                    \"type\": \"Feature\",\r\n                    \"properties\": {\r\n                        \"id\": \"0\",\r\n                        \"start_time\": \"2020-08-15T15:00:00+00:00\",\r\n                        \"end_time\": \"2020-08-15T15:30:00+00:00\",\r\n                        \"max_altitude\": {\r\n                            \"metres\": 152.4,\r\n                            \"datum\": \"agl\"\r\n                        },\r\n                        \"min_altitude\": {\r\n                            \"metres\": 102.4,\r\n                            \"datum\": \"agl\"\r\n                        }\r\n                    },\r\n                    \"geometry\": {\r\n                        \"type\": \"LineString\",\r\n                        \"coordinates\": [\r\n                            [\r\n                                30.157856941223145,\r\n                                -1.9728146787330019\r\n                            ],\r\n                            [\r\n                                30.142922401428223,\r\n                                -1.969512152604053\r\n                            ]\r\n                        ]\r\n                    }\r\n                },\r\n                {\r\n                    \"type\": \"Feature\",\r\n                    \"properties\": {\r\n                        \"id\": \"1\",\r\n                        \"start_time\": \"2020-08-15T15:00:00+00:00\",\r\n                        \"end_time\": \"2020-08-15T15:30:00+00:00\",\r\n                        \"max_altitude\": {\r\n                            \"metres\": 152.4,\r\n                            \"datum\": \"agl\"\r\n                        },\r\n                        \"min_altitude\": {\r\n                            \"metres\": 102.4,\r\n                            \"datum\": \"agl\"\r\n                        }\r\n                    },\r\n                    \"geometry\": {\r\n                        \"type\": \"LineString\",\r\n                        \"coordinates\": [\r\n                            [\r\n                                30.14275074005127,\r\n                                -1.969512152604053\r\n                            ],\r\n                            [\r\n                                30.122408866882324,\r\n                                -1.9662525100057282\r\n                            ]\r\n                        ]\r\n                    }\r\n                }\r\n            ]\r\n        },\r\n        \"purpose\": \"Delivery\",\r\n        \"expect_telemetry\": true,\r\n        \"originating_party\": \"Originating Party, Inc.\",\r\n        \"contact_url\": \"https://utm.originatingparty.com/contact?5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n        \"operation_mode\": \"bvlos\",\r\n        \"vehicle_id\": \"157de9bb-6b49-496b-bf3f-0b768ce6a3b6\",\r\n        \"operator_id\": \"4a725cb5-02d2-4f78-888f-b93088d324be\",\r\n        \"idents\": [\r\n            {\r\n                \"method\": \"adsb\",\r\n                \"ident\": \"4840D6\"\r\n            }\r\n        ]\r\n    }\r\n}",
+							"raw": "{\r\n    \r\n    \"submitted_by\":\"hb@hb.com\",\r\n    \"type_of_operation\":0, \r\n    \"operational_intent\":  {\r\n        \"state\": \"Accepted\",\r\n        \"priority\": 0,\r\n        \"extents\": [\r\n            {\r\n                \"volume\": {\r\n                    \"outline_polygon\": {\r\n                        \"vertices\": [\r\n                            {\r\n                                \"lng\":30.145186185836796,\r\n                                \"lat\":  -1.967088866280024\r\n                            },\r\n                            {\r\n                                \"lng\":    30.14699935913086,\r\n                                \"lat\":  -1.9657914416240025\r\n                            },\r\n                            {\r\n                                \"lng\": 30.149306058883667,\r\n                                \"lat\":-1.967099588793643\r\n                            }\r\n                        ]\r\n                    },\r\n                    \"altitude_lower\": {\r\n                        \"value\": 0,\r\n                        \"units\": \"M\",\r\n                        \"reference\": \"W84\"\r\n                    },\r\n                    \"altitude_upper\": {\r\n                        \"value\": 122,\r\n                        \"units\": \"M\",\r\n                        \"reference\": \"W84\"\r\n                    }\r\n                },\r\n                \"time_start\": {\r\n                    \"value\": \"{{timestamp_start}}\",\r\n                    \"format\": \"RFC3339\"\r\n                },\r\n                \"time_end\": {\r\n                    \"value\": \"{{timestamp_end}}\",\r\n                    \"format\": \"RFC3339\"\r\n                }\r\n            }\r\n        ],\r\n        \"off_nominal_volumes\": []\r\n    }\r\n    \r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
