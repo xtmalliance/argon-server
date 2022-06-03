@@ -1711,6 +1711,9 @@ components:
           lon_dd:
             type: number
             format: float
+          altitude_mm:
+            type: number
+            format: float
           lat_dd:
             type: number
             format: float

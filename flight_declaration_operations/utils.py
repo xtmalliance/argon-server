@@ -16,8 +16,6 @@ class OperationalIntentsConverter():
         self.geo_json = {"type":"FeatureCollection","features":[]}
         self.utm_zone = '54N'
         self.all_features = []
-        self.start_datetime = None
-        self.end_datetime = None
         
     def utm_converter(self, shapely_shape: shapely.geometry, inverse:bool=False) -> shapely.geometry.shape:
         ''' A helper function to convert from lat / lon to UTM coordinates for buffering. tracks. This is the UTM projection (https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system), we use Zone 54N which encompasses Japan, this zone has to be set for each locale / city. Adapted from https://gis.stackexchange.com/questions/325926/buffering-geometry-with-points-in-wgs84-using-shapely '''
@@ -42,20 +40,8 @@ class OperationalIntentsConverter():
             geo_json_features = self._convert_operational_intent_to_geojson_feature(volume)
             self.geo_json['features'] += geo_json_features
 
-            time_start = arrow.get(extent['time_start']['value'])
-            if self.start_datetime:
-                self.start_datetime = self.start_datetime if self.start_datetime < time_start else time_start            
-            else:
-                self.start_datetime = time_start
 
-                
-            time_end = arrow.get(extent['time_end']['value'])
-            if self.end_datetime:
-                self.end_datetime = self.end_datetime if self.end_datetime > time_end else time_end            
-            else:
-                self.end_datetime = time_end
-
-    def convert_geo_json_to_operational_intent(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime:str, submitted_by:str) -> Volume4D:
+    def convert_geo_json_to_operational_intent(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime:str) -> Volume4D:
         all_v4d = []
         all_shapes = []
         all_features = geo_json_fc['features']
@@ -79,7 +65,7 @@ class OperationalIntentsConverter():
             # remove the final point
             polygon_verticies.pop()
                 
-            volume3D = Volume3D(outline_polygon=Plgn(vertices= polygon_verticies),altitude_lower=Altitude(value=max_altitude), altitude_upper=Altitude(value=min_altitude,reference='W84',units='M'))
+            volume3D = Volume3D(outline_polygon=Plgn(vertices= polygon_verticies),altitude_lower=Altitude(value=max_altitude,reference='W84',units='M'), altitude_upper=Altitude(value=min_altitude,reference='W84',units='M'))
 
             volume4D = Volume4D(volume = volume3D, time_start=Time(format="RFC3339",value=start_datetime), time_end=Time(format="RFC3339", value=end_datetime))
             all_v4d.append(volume4D)
@@ -117,7 +103,7 @@ class OperationalIntentsConverter():
             polygon_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_p}
             geo_json_features.append(polygon_feature)
 
-        if ('outline_circle' in volume.keys()):
+        if ('outline_circle' in volume.keys() and volume['outline_circle'] is not None):
             outline_circle = volume['outline_circle']
             circle_radius = outline_circle['radius']['value']
             center_point = Point(outline_circle['center']['lng'],outline_circle['center']['lat'])

@@ -61,10 +61,10 @@ class Altitude:
 @dataclass
 class Volume3D:
     '''A class to hold Volume3D objects'''
-    outline_circle: Circle
     outline_polygon: Polygon
     altitude_lower: Altitude
     altitude_upper: Altitude
+    outline_circle: Circle = None
 
 class OperationalIntentState(str, enum.Enum):
     ''' A test is either pass or fail or could not be processed, currently not  '''
@@ -189,7 +189,7 @@ class OperationalIntentReference:
     key: List[str]
     state:str
     uss_base_url:str
-    new_subscription:Optional[ImplicitSubscriptionParameters]
+    new_subscription:Optional[ImplicitSubscriptionParameters] = None
 
 @dataclass
 class OpIntSubscribers:
