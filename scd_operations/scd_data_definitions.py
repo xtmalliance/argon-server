@@ -189,7 +189,7 @@ class OperationalIntentReference:
     key: List[str]
     state:str
     uss_base_url:str
-    new_subscription:ImplicitSubscriptionParameters
+    new_subscription:Optional[ImplicitSubscriptionParameters]
 
 @dataclass
 class OpIntSubscribers:

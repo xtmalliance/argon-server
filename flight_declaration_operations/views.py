@@ -29,15 +29,15 @@ def set_flight_declaration(request):
         req = request.data
 
     try:
-        assert all(data_keys in ['submitted_by','operational_intent', 'type_of_operation'] for data_keys in req.keys())
+        assert all(data_keys in ['submitted_by','flight_declaration_geo_json', 'type_of_operation'] for data_keys in req.keys())
     except AssertionError as ae:        
         msg = json.dumps({"message":"A valid operational intent as specified by the ASTM operational intent documentation."})        
         return HttpResponse(msg, status=400)
 
     try:            
-        operational_intent = req['operational_intent']
+        flight_declaration_geo_json = req['flight_declaration_geo_json']
     except KeyError as ke:
-        msg = json.dumps({"message":"A valid flight declaration as specified by the GUTMA flight declration protocol must be submitted."})        
+        msg = json.dumps({"message":"A valid flight declaration as specified by the A flight declration protocol must be submitted."})        
         return HttpResponse(msg, status=400)
     
     submitted_by = None if 'submitted_by' not in req else req['submitted_by']

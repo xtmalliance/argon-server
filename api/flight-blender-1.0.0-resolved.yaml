@@ -977,7 +977,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PutOperationalIntentReferenceParameters'
+              $ref: '#/components/schemas/PutFlightDeclarationRequest'
 
       responses:
         '200':
@@ -1369,9 +1369,43 @@ components:
               items:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
             
-        operational_intent: 
-          type: object
-          $ref: '#/components/schemas/PutOperationalIntentReferenceParameters'
+    PutFlightDeclarationRequest: 
+      type: object
+      properties:           
+        type_of_operation: 
+          enum:
+          - 0
+          - 1
+          type: integer
+          description: >
+            Set the activity type and the airspace
+             * `0` - VLOS
+             * `1` - BVLOS
+        submitted_by:
+          description: Email address of person submitting this declaration
+          type: string
+          format: email
+        start_datetime:
+          description: The start date and time for the flight
+          type: string
+          format: date-time
+        end_datetime:
+          description: The end date and time for the flight
+          type: string
+          format: date-time
+        flight_declaration_geo_json: 
+          $ref: '#/components/schemas/FlightDeclarationGeoJSONFeatureCollection'
+    
+    FlightDeclarationGeoJSONFeatureCollection:
+      type: object
+      properties: 
+        type:
+          type: string
+          example: "FeatureCollection"
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
 
     FlightDeclarationFeatureGeoJSON:
       type: object
@@ -2066,43 +2100,7 @@ components:
           type: string
           enum:
             - RFC3339
-    PutOperationalIntentReferenceParameters:
-      description: >-
-        Create a Flight Declaration / Operational Intent, this is in the database.
-      required:
-      - operational_intent
-      - type_of_operation
-      type: object
-      properties:
-        type_of_operation: 
-          enum:
-          - 0
-          - 1
-          type: integer
-          description: >
-            Set the activity type and the airspace
-             * `0` - VLOS
-             * `1` - BVLOS
-
-        submitted_by:
-          type: string
-          format: email
-
-        operational_intent:
-          type: object
-          properties:
-              state:
-                $ref: '#/components/schemas/OperationalIntentState'
-              priority:
-                $ref: '#/components/schemas/Priority'
-              extents:
-                description: >-
-                  Nominal volumes, as would be reported by a USS's operational_intents endpoint.
-                type: array
-                items:
-                  $ref: '#/components/schemas/Volume4D'
-                minItems: 1
-              
+            
     OperationalIntentTestInjection:
       description: >-
         Parameters that define an operational intent: this injection is used to
