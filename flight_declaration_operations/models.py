@@ -8,6 +8,7 @@ class FlightOperation(models.Model):
     OPERATION_TYPES = ((0, _('VLOS')),(1, _('BVLOS')),)    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     operational_intent = models.TextField()
+    flight_declaration_geojson = models.TextField(null=True, blank=True)
     type_of_operation = models.IntegerField(choices=OPERATION_TYPES, default=0, help_text="At the moment, only VLOS and BVLOS operations are supported, for other types of operations, please issue a pull-request")
     bounds = models.CharField(max_length = 140)
 
