@@ -35,7 +35,7 @@ DEBUG = os.environ.get('IS_DEBUG', False)
 
 if DEBUG:
     ALLOWED_HOSTS = ['*']
-else: 
+else:
     ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(",")
 
 # Application definition
