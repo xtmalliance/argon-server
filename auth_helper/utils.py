@@ -27,7 +27,7 @@ def requires_scopes(required_scopes):
         def decorated(*args, **kwargs):       
         
             request = args[0]
-            auth = request.META.get("HTTP_AUTHORIZATION", None)            
+            auth = request.META.get("HTTP_AUTHORIZATION", None)        
             
             if auth:
                 parts = auth.split()
@@ -49,8 +49,8 @@ def requires_scopes(required_scopes):
 
             if 'kid' in unverified_token_headers:                   
                 PASSPORT_URL = '{}/.well-known/jwks.json'.format(env.get('PASSPORT_URL','http://local.test:9000'))     
-                jwks_data = s.get(PASSPORT_URL).json()      
-                jwks = jwks_data                   
+                jwks_data = s.get(PASSPORT_URL).json()                 
+                jwks = jwks_data
                 public_keys = {}                
                 for jwk in jwks['keys']:
                     kid = jwk['kid']
