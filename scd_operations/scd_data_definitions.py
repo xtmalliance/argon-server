@@ -119,14 +119,20 @@ class IDTechnology(str, enum.Enum):
     Broadcast = 'broadcast'
 
 class StatusResponseEnum(str, enum.Enum):
-    ''' A enum to hold ID technologies for an operation '''
+    ''' A enum to specify if the USS is ready (or not) '''
     Starting = 'Starting'
     Ready = 'Ready'
 
 class DeleteFlightStatusResponseEnum(str, enum.Enum):
-    ''' A enum to hold ID technologies for an operation '''
+    ''' A enum to hold Flight Status '''
     Closed = 'Closed'
     Failed = 'Failed'
+
+class USSCapabilitiesResponseEnum(str, enum.Enum):
+    ''' A enum to hold USS capabilites operation '''
+    BasicStrategicConflictDetection = 'BasicStrategicConflictDetection'
+    FlightAuthorisationValidation = 'FlightAuthorisationValidation'
+    HighPriorityFlights = 'HighPriorityFlights'
 
 @dataclass
 class FlightAuthorizationDataPayload:
@@ -157,6 +163,12 @@ class TestInjectionResult:
 @dataclass
 class StatusResponse:
     status: Literal[StatusResponseEnum.Starting, StatusResponseEnum.Ready]
+    version: str
+
+@dataclass
+class CapabilitiesResponse:
+    capabilities: List[Literal[USSCapabilitiesResponseEnum.BasicStrategicConflictDetection, USSCapabilitiesResponseEnum.FlightAuthorisationValidation, USSCapabilitiesResponseEnum.HighPriorityFlights]]
+    
 
 @dataclass
 class DeleteFlightResponse:

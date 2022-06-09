@@ -5,7 +5,7 @@ import json, redis
 import logging
 import requests
 
-from auth_helper.common import get_walrus_database
+from auth_helper.common import get_walrus_database, get_redis
 from itertools import zip_longest
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -72,7 +72,7 @@ class PassportCredentialsGetter():
         pass
 
     def get_cached_credentials(self):  
-        r = redis.Redis(host=os.getenv('REDIS_HOST',"redis"), port =os.getenv('REDIS_PORT',6379))   
+        r = get_redis()
         now = datetime.now()
         cache_key = 'airtraffic_access_token_details'
         token_details = r.get(cache_key)

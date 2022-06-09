@@ -6,6 +6,7 @@ urlpatterns = [
     # SCD Test URLS
     path('v1/flights/<uuid:flight_id>', scd_auth_views.SCDAuthTest),    
     re_path('v1/clear_area_requests', scd_auth_views.SCDClearAreaRequest),    
-    path('v1/status', scd_auth_views.SCDTestStatus),    
+    path('v1/status', scd_auth_views.SCDTestStatus),      
+    path('v1/capabilities', scd_auth_views.SCDTestCapabilities),    
 
 ]

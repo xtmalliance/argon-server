@@ -13,7 +13,7 @@ from scd_operations.scd_data_definitions import OpInttoCheckDetails
 class OperationalIntentsIndexFactory():
     def __init__(self, index_name:str):
         self.idx = index.Index(index_name)
-        self.r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379)) 
+        self.r = get_redis()
 
     def add_box_to_index(self,enumerated_id:int,  flight_id:str, view:List[float], start_time:str, end_time:str):        
         metadata = {"start_time":start_time, "end_time":end_time, "flight_id":flight_id }

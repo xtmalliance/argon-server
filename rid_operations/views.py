@@ -11,6 +11,7 @@ from os import environ as env
 from datetime import timedelta
 import uuid
 import arrow
+
 import redis
 from auth_helper.common import get_redis
 from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails
@@ -59,7 +60,7 @@ class SubscriptionHelper():
         self.my_rid_output_helper = RIDOutputHelper()
 
     def check_subscription_exists(self, view) -> bool:
-        r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379), decode_responses=True)
+        r = get_redis()
         subscription_found = False
         view_hash = int(hashlib.sha256(view.encode('utf-8')).hexdigest(), 16) % 10**8
         view_sub = 'view_sub-'+ str(view_hash)
@@ -134,7 +135,7 @@ def get_rid_data(request, subscription_id):
     except ValueError as ve:
         return HttpResponse("Incorrect UUID passed in the parameters, please send a valid subscription ID", status=400, mimetype='application/json')
 
-    r = redis.Redis(host=env.get('REDIS_HOST', "redis"), port=env.get('REDIS_PORT', 6379), charset="utf-8", decode_responses=True)
+    r = get_redis()
     flights_dict = {}
     # Get the flights URL from the DSS and put it in
     # reasonably we wont have more than 500 subscriptions active
