@@ -33,26 +33,26 @@ class AuthorityCredentialsGetter():
             created_at = token_details['created_at']
             set_date = datetime.strptime(created_at,"%Y-%m-%dT%H:%M:%S.%f")
             if now < (set_date - timedelta(minutes=58)):
-                credentials = self.get_rid_credentials(audience) if token_type == 'rid' else self.get_scd_credentials(audience)
+                credentials = self.get_rid_credentials(audience = audience) if token_type == 'rid' else self.get_scd_credentials(audience = audience)
               
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
             else: 
                 credentials = token_details['credentials']
         else:   
-            credentials = self.get_rid_credentials(audience) if token_type == 'rid' else self.get_scd_credentials(audience)
+            credentials = self.get_rid_credentials(audience = audience) if token_type == 'rid' else self.get_scd_credentials(audience = audience)
             
             access_token = credentials.get('access_token')
             if access_token: # there is no error in the token
                 r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))            
                 r.expire(cache_key, timedelta(minutes=58))
-                
+        
         return credentials
             
         
     def get_rid_credentials(self, audience:str):        
         issuer = audience if audience =='localhost' else None
         
-        if audience == 'localhost' or audience =='host.docker.internal':
+        if audience in ['localhost','host.docker.internal']:
             # Test instance of DSS
             payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas dss.write.identification_service_areas', "issuer":issuer}       
             
@@ -66,8 +66,9 @@ class AuthorityCredentialsGetter():
         return t_data
 
     def get_scd_credentials(self, audience):        
+        
         issuer = audience if audience =='localhost' else None
-        if audience == 'localhost' or audience =='host.docker.internal':
+        if audience in ['localhost','host.docker.internal']:
             # Test instance of DSS
             payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'utm.strategic_coordination', "issuer":issuer}       
             

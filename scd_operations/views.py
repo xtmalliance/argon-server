@@ -134,6 +134,7 @@ def SCDAuthTest(request, flight_id):
                     for vertex in all_vertices:
                         v = LatLngPoint(lat = vertex['lat'],lng=vertex['lng'])
                         polygon_verticies.append(v)
+                    polygon_verticies.pop() # remove the last vertex to prevent interseaction
 
                     outline_polygon = Polygon(vertices=polygon_verticies)
 
@@ -182,15 +183,15 @@ def SCDAuthTest(request, flight_id):
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
 
         # flight authorisation data is correct, can submit the operational intent to the DSS
-        all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
-        # self_deconflicted = False if operational_intent['priority'] == 0 else True
+        # all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
+        self_deconflicted = False if operational_intent['priority'] == 0 else True
         
         # if all_existing_op_ints_in_area and self_deconflicted == False:
         #     # there are existing op_ints in the area. 
         #     deconflicted_status = []
-        #     for existing_op_int in all_existing_op_ints_in_area:                
+        #     for existing_op_int in all_existing_op_ints_in_area:     
         #         # check if start time or end time is between the existing bounds
-        #         is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=arrow.get(time_start).datetime)
+        #         is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=arrow.get(time_start.value).datetime)
         #         is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=two_minutes_from_now.datetime)
 
         #         timeline_status = [is_end_within, is_end_within]
@@ -249,18 +250,18 @@ def SCDAuthTest(request, flight_id):
         
         r = get_redis()    
         op_int_details_key = 'flight_opint.'+ str(flight_id)
-        op_int_details = r.get(op_int_details_key)   
+        op_int_detail_raw = r.get(op_int_details_key)   
         
-        if op_int_details:                
-            my_scd_dss_helper = dss_scd_helper.SCDOperations()
-            op_int_detail_raw = op_int_details.decode()
-            op_int_detail = json.loads(op_int_detail_raw)                
+        if op_int_detail_raw:                
+            my_scd_dss_helper = dss_scd_helper.SCDOperations()          
+            op_int_detail = json.loads(op_int_detail_raw)
+          
             ovn = op_int_detail['success_response']['operational_intent_reference']['ovn']
             opint_id = op_int_detail['success_response']['operational_intent_reference']['id']
             ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
             logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
             my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
-            r.delete(op_int_details)
+            r.delete(op_int_details_key)
 
             delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system.")
         else:

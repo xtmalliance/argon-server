@@ -201,7 +201,7 @@ class SCDOperations():
                 logger.error("Error in getting operational intent for the volume %s " % re)            
             else:                    
                 dss_operational_intent_references = operational_intent_ref_response.json()
-                
+            
             operational_intent_references = dss_operational_intent_references['operational_intent_references']
 
             if operational_intent_references:
@@ -230,11 +230,15 @@ class SCDOperations():
                     ext = tldextract.extract(current_uss_operational_intent_detail.uss_base_url)  
                 except Exception as e: 
                     uss_audience = 'localhost'
-                else:
+                else:                    
+                    switch = {'localhost':'localhost', 'internal':'host.docker.internal'}                
                     if ext.domain in ['localhost', 'internal']:# for host.docker.internal type calls
-                        uss_audience = 'localhost'
+                        uss_audience = switch[ext.domain]
                     else:
-                        uss_audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
+                        if ext.suffix in (''):
+                            uss_audience = ext.domain
+                        else:
+                            uss_audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
                 
                 uss_auth_token = self.get_auth_token(audience = uss_audience)          
                 
@@ -334,8 +338,7 @@ class SCDOperations():
             my_ind_volumes_converter = VolumesConverter()
             my_ind_volumes_converter.convert_volumes_to_geojson(volumes = volumes)
             ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()
-            if priority ==100:
-                
+            if priority ==100:                
                 for cur_op_int_detail in all_existing_operational_intent_details:
                     airspace_keys.append(cur_op_int_detail.ovn)
                 deconflicted = True
