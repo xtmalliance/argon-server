@@ -453,15 +453,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
           description: >-
-            The USS automated testing interface is activated and its status was retrieved successfully.
+            Flight Blender's automated testing interface is activated and its status was retrieved successfully.
         '401':
           description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
         '403':
           description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
         '404':
-          description: The USS automated testing interface is not activated.
-      summary: Retrieve the status of the USS automated testing interface
-      description: Get the status of the USS automated testing interface
+          description: Blender's testing interface is not activated.
+      summary: Retrieve the status of Fight Blender's automated testing interface
+      description: Get the status of of Fight Blender's automated testing interface
+      tags:
+        - scd-qualifier
+
+  /scd/v1/capabilities:
+    get:
+      security:
+      - Authority:
+          - utm.inject_test_data
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilitiesResponse'
+          description: >-
+            The capabilities of Flight Blender which is under test
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+      summary: Retrieve the SCD testing capabilities of Blender
+      description: Retrieve the capabilities of the USS under test
       tags:
         - scd-qualifier
 
@@ -2049,6 +2071,33 @@ components:
       properties:
         outcome:
           $ref: '#/components/schemas/ClearAreaOutcome'
+
+    Capability:
+      type: string
+      description: >-
+        Capability of a USS.
+          `FlightAuthorisationValidation`: USS supports EU flight authorisation
+            parameter validation.
+          `BasicStrategicConflictDetection`: USS supports strategic conflict
+            detection for typical flights, including future planning (Accepted
+            operational intents), activation (Accepted operational intents), and
+            closing (deleting the operational intent reference).
+          `HighPriorityFlights`: USS supports flights at priority levels higher
+            than typical flights.
+      enum:
+      - FlightAuthorisationValidation
+      - BasicStrategicConflictDetection
+      - HighPriorityFlights
+
+    CapabilitiesResponse:
+      type: object
+      properties:
+        capabilities:
+          type: array
+          description: Set of capabilities supported by this USS.
+          items:
+            $ref: '#/components/schemas/Capability'
+          default: []
 
     StatusResponse:
       type: object
