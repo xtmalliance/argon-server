@@ -11,7 +11,9 @@ class GeoFence(models.Model):
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    raw_geo_fence = models.TextField()
+    raw_geo_fence = models.TextField(blank=True, null=True, help_text="Set a GeoJSON as a GeoFence")
+
+    geozone = models.TextField(help_text="Set a ED-269 Compliant GeoZone",blank=True, null=True)
 
     upper_limit = models.DecimalField(max_digits=6, decimal_places=2)
     lower_limit = models.DecimalField(max_digits=6, decimal_places=2)

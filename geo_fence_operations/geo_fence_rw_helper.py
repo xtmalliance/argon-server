@@ -91,3 +91,15 @@ class GeoFenceUploader():
                     logging.info("Uploaded Geofence")
                     # print("Uploaded Geofence")                 
                     return {"message":"Successfully uploaded Geofence"}   
+
+
+
+class GeoZonetoGeoJSONConverter():
+    """ A class to convert GeoZone into a GeoJSON Feature collection"""
+    def __init__(self) -> None:
+        pass
+
+    def convert_to_geojson(self, geozone):
+        geo_json_fc = {"type":"FeatureCollection", "features":[]}
+
+        return geo_json_fc

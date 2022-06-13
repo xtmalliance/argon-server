@@ -1,4 +1,5 @@
 # Create your views here.
+from uuid import uuid
 from django.shortcuts import render
 from auth_helper.utils import requires_scopes, BearerAuth
 # Create your views here.
@@ -78,6 +79,35 @@ def set_geo_fence(request):
 
     op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f.id)})
     return HttpResponse(op, status=200)
+
+@api_view(['POST'])
+@requires_scopes(['blender.write'])
+def set_geozone(request):  
+    
+    try:
+        assert request.headers['Content-Type'] == 'application/json'   
+    except AssertionError as ae:     
+        msg = {"message":"Unsupported Media Type"}
+        return HttpResponse(json.dumps(msg), status=415, mimetype='application/json')
+
+    try:         
+        geo_zone = request.data
+    except KeyError as ke: 
+        msg = json.dumps({"message":"A geozone object is necessary in the body of the request"})        
+        return HttpResponse(msg, status=400)    
+
+    
+    # geo_f = GeoFence(geo_zone = geo_zone,start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
+    # geo_f.save()
+
+
+
+    # write_geo_fence.delay(geo_fence = raw_geo_fence)
+    
+    geo_f = uuid.uuid4()
+    op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f)})
+    return HttpResponse(op, status=200)
+
 
 
 
