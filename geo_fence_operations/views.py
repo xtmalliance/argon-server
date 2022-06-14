@@ -1,5 +1,5 @@
 # Create your views here.
-from uuid import uuid
+import uuid
 from django.shortcuts import render
 from auth_helper.utils import requires_scopes, BearerAuth
 # Create your views here.

@@ -6,6 +6,7 @@ from .utils import OperationalIntentsConverter
 class FlightOperationSerializer(serializers.ModelSerializer):
     operational_intent = serializers.SerializerMethodField() 
     flight_declaration_geojson = serializers.SerializerMethodField() 
+    flight_declaration_raw_geojson = serializers.SerializerMethodField() 
     
     def get_flight_declaration_geojson(self, obj):
         o = json.loads(obj.operational_intent) 
@@ -13,12 +14,15 @@ class FlightOperationSerializer(serializers.ModelSerializer):
         my_operational_intent_converter.convert_operational_intent_to_geo_json(extents = o['extents'])
         return my_operational_intent_converter .geo_json   
    
+    def get_flight_declaration_raw_geojson(self, obj):
+        
+        return json.loads(obj.flight_declaration_raw_geojson)
 
     def get_operational_intent(self, obj):
-        return json.loads(obj.operational_intent) 
+        return json.loads(obj.flight_declaration_raw_geojson) 
     class Meta:
         model = FlightOperation
-        fields = ('operational_intent','originating_party', 'type_of_operation','id','is_approved','start_datetime','end_datetime','flight_declaration_geojson',)
+        fields = ('operational_intent','originating_party', 'type_of_operation','id','is_approved','start_datetime','end_datetime','flight_declaration_geojson','flight_declaration_raw_geojson',)
      
 class FlightOperationApprovalSerializer(serializers.ModelSerializer):
     
