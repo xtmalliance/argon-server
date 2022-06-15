@@ -15,16 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
 from flight_feed_operations import views as flight_feed_views
-
-
-
 urlpatterns = [
     path('', flight_feed_views.HomeView.as_view()),
     path('admin/', admin.site.urls),    
     path('ping', flight_feed_views.ping),
-    path('set_air_traffic', flight_feed_views.set_air_traffic),
+
+    path('flight_stream/', include('flight_feed_operations.urls')),    
 
     path('rid/', include('rid_operations.urls')),    
     path('scd/', include('scd_operations.urls')),    

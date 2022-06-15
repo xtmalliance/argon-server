@@ -16,7 +16,7 @@ from typing import List
 from dataclasses import asdict
 from os import environ as env
 from flight_feed_operations import flight_stream_helper
-from flight_feed_operations.data_definitions import SingleObervation
+from flight_feed_operations.data_definitions import SingleRIDObservation
 from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from shapely.geometry import Point, MultiPoint, box
 from .rid_utils import RIDVertex, RIDVolume3D, RIDVolume4D
@@ -175,7 +175,7 @@ def stream_rid_test_data(requested_flights):
                     source_type = 0
                     icao_address = flight_details_id
                     
-                    so = SingleObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
+                    so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
                     msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
                     logger.debug("Submitted observation..")                    
                     logger.debug("...")

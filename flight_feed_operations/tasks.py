@@ -2,7 +2,7 @@
 from celery import Celery
 import os, json
 import logging
-
+from .data_definitions import SingleAirtrafficObervation
 import requests
 from . import flight_stream_helper
 from dotenv import load_dotenv, find_dotenv
@@ -62,7 +62,7 @@ def submit_flights_to_spotlight():
         for message in distinct_messages:
             
             unix_time = int(message['timestamp'].timestamp())
-                                               
+            # TODO Convert to a SingleAirtrafficObservation object
             payload = {"icao_address" : message['address'],"traffic_source" :message['msg_data']['traffic_source'], "source_type" : message['msg_data']['source_type'], "lat_dd" : message['msg_data']['lat_dd'], "lon_dd" : message['msg_data']['lon_dd'], "time_stamp" : unix_time,"altitude_mm" : message['msg_data']['altitude_mm'], "metadata": message['msg_data']['metadata']}
             
             response = requests.post(securl, data= payload, headers=headers)
