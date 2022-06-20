@@ -1,4 +1,3 @@
-from re import I
 import redis
 from walrus import Database
 import logging

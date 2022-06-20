@@ -9,9 +9,10 @@ from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from .models import GeoFence
 from .tasks import write_geo_fence
-from shapely.geometry import asShape
+from shapely.geometry import asShape, Point, mapping
 from shapely.ops import unary_union
-from data_definitions import ZoneAuthority, HorizontalProjection, ED269Geometry, GeoZoneFeature, GeoZone
+
+from .data_definitions import ImplicitDict, ZoneAuthority, HorizontalProjection, ED269Geometry, GeoZoneFeature, GeoZone
 from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
@@ -93,7 +94,55 @@ def set_geozone(request):
         msg = json.dumps({"message":"A geozone object is necessary in the body of the request"})        
         return HttpResponse(msg, status=400)    
 
-    geo_zone
+
+    if 'title' not in geo_zone:
+        msg = json.dumps({"message":"A geozone object with a title is necessary the body of the request"})        
+        return HttpResponse(msg, status=400)   
+
+    if 'description' not in geo_zone:
+        msg = json.dumps({"message":"A geozone object with a description is necessary the body of the request"})        
+        return HttpResponse(msg, status=400)   
+
+
+    if 'features' in geo_zone:
+        geo_zone_features = geo_zone['features']
+    else: 
+        geo_zone_features = []
+
+    for _geo_zone_feature in geo_zone_features:
+        zone_authorities = _geo_zone_feature['zoneAuthority']
+        all_zone_authorities = []
+        for z_a in zone_authorities:
+            zone_authority = ImplicitDict.parse(z_a, ZoneAuthority)
+            all_zone_authorities.append(zone_authority)
+        ed_269_geometries = []
+        
+        all_ed_269_geometries = _geo_zone_feature['geometry']
+        for ed_269_geometry in all_ed_269_geometries:
+            if (ed_269_geometry['horizontalProjection']['type']=='Polygon'):
+                horizontal_projection = ImplicitDict.parse(ed_269_geometry['horizontalProjection'], HorizontalProjection)    
+
+            elif (ed_269_geometry['horizontalProjection']['type']=='Circle'):
+                lat = ed_269_geometry['horizontalProjection']['center'][1]
+                lng = ed_269_geometry['horizontalProjection']['center'][0]
+                radius = ed_269_geometry['horizontalProjection']['radius']
+
+                p = Point(lng, lat)
+                buf = p.buffer(radius)
+                geo_json = mapping(buf)               
+
+
+
+            ed_269_geometry = ED269Geometry(uomDimensions =ed_269_geometry['uomDimensions'],lowerLimit= ed_269_geometry['lowerLimit'],lowerVerticalReference=ed_269_geometry['lowerVerticalReference'], upperLimit=ed_269_geometry['upperLimit'], upperVerticalReference=ed_269_geometry['upperVerticalReference'], horizontalProjection= horizontal_projection)
+            ed_269_geometries.append(ed_269_geometry)
+        
+        geo_zone_feature = GeoZoneFeature(identifier= _geo_zone_feature['identifier'], country= _geo_zone_feature['country'],name= _geo_zone_feature['name'],type= _geo_zone_feature['type'], restriction=_geo_zone_feature['restriction'] ,restrictionConditions=_geo_zone_feature['restrictionConditions'], region=_geo_zone_feature['region'], reason = _geo_zone_feature['reason'], otherReasonInfo=_geo_zone_feature['otherReasonInfo'] ,regulationExemption=_geo_zone_feature['regulationExemption'], uSpaceClass=_geo_zone_feature['uSpaceClass'], message =_geo_zone_feature['message'] , applicability=_geo_zone_feature['applicability'], zoneAuthority = all_zone_authorities , geometry = ed_269_geometries)
+        geo_zone_features.append(geo_zone_feature)
+    
+
+    geo_zone = GeoZone(title= geo_zone['title'], description = geo_zone['description'],  features = geo_zone_features)
+
+    print(json.dumps(geo_zone))
     # geo_f = GeoFence(geo_zone = geo_zone,start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
     # geo_f.save()
 

@@ -1,5 +1,5 @@
 from .geofence_typing import ImplicitDict
-from typing import List
+from typing import List, Dict
 
 class ZoneAuthority(ImplicitDict):
     name: str
@@ -11,7 +11,6 @@ class ZoneAuthority(ImplicitDict):
     purpose: str
     intervalBefore: str
 
-
 class HorizontalProjection(ImplicitDict):
     type: str
     coordinates: List[list]
@@ -22,7 +21,7 @@ class ED269Geometry(ImplicitDict):
     lowerVerticalReference: str
     upperLimit: float
     upperVerticalReference: str
-    horizontalProjection: 
+    horizontalProjection: HorizontalProjection
 
 class GeoZoneFeature(ImplicitDict):
     identifier: str
@@ -38,8 +37,8 @@ class GeoZoneFeature(ImplicitDict):
     uSpaceClass: str
     message: str
     applicability: List[Dict[str, str]]
-    zoneAuthority: ZoneAuthority
-    geometry: ED269Geometry
+    zoneAuthority: List[ZoneAuthority]
+    geometry: List[ED269Geometry]
 
 
 class GeoZone(ImplicitDict):

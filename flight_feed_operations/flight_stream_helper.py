@@ -1,7 +1,7 @@
 
 from datetime import datetime, timedelta
 import os
-import json, redis
+import json
 import logging
 import requests
 

@@ -11,7 +11,7 @@ from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
 from rid_operations import view_port_ops
-import flight_stream_helper
+from . import flight_stream_helper
 logger = logging.getLogger('django')
 
 class HomeView(TemplateView):
