@@ -771,7 +771,7 @@ paths:
       in: path
       required: true
 
-  /set_air_traffic:
+  /flight_stream/set_air_traffic:
     post:
       summary: 'Add Airtraffic observation(s)'
       security:
@@ -794,6 +794,58 @@ paths:
           description: 'OK'
         '201':
           description: 'Airtraffic data added'
+        '400':
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+      tags:
+        - air-traffic
+        
+  /flight_stream/get_air_traffic:
+    get:
+      parameters:
+        - name: view_port
+          in: path
+          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
+          schema:
+            type: string
+            example: 29.97816,31.13296,29.98025,31.13535
+
+          required: true
+
+      summary: 'Get Airtraffic observation(s)'
+      security:
+        - AuthFromPassport: [blender.read]
+      description:
+        "Get all air traffic observations within Flight Blender for a view port. No Network Remote ID data is provided from this endpoint."
+      responses:
+        '200':
+          description: 'Airtraffic data retrieved'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightFeedJSON'
+            
         '400':
           description: Bad request submitted
           content:
@@ -1403,8 +1455,6 @@ components:
       type: object
       properties:
         observations:
-          type: array
-          items:
             $ref: '#/components/schemas/ArrayOfObservations'
 
     FlightDeclarationList:
@@ -3549,7 +3599,7 @@ components:
             Each element follows the RIDAircraftState schema from the ASTM remote ID standard.
           type: array
           items:
-            $ref: 'https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#/components/schemas/RIDAircraftState'
+            $ref: '#/components/schemas/RIDAircraftState'
         details_responses:
           description: The details of the flight as a function of time.
           type: array
@@ -3571,7 +3621,7 @@ components:
           description: >-
             The details of the flight.
             Follows the RIDFlightDetails schema from the ASTM remote ID standard.
-          $ref: 'https://raw.githubusercontent.com/uastech/standards/astm_rid_1.0/remoteid/canonical.yaml#/components/schemas/RIDFlightDetails'
+          $ref: '#/components/schemas/RIDFlightDetails'
 
 tags:
   - name: uss

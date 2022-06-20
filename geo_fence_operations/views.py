@@ -1,7 +1,6 @@
 # Create your views here.
 import uuid
-from django.shortcuts import render
-from auth_helper.utils import requires_scopes, BearerAuth
+from auth_helper.utils import requires_scopes
 # Create your views here.
 import json
 import arrow
@@ -12,11 +11,10 @@ from .models import GeoFence
 from .tasks import write_geo_fence
 from shapely.geometry import asShape
 from shapely.ops import unary_union
-
+from data_definitions import ZoneAuthority, HorizontalProjection, ED269Geometry, GeoZoneFeature, GeoZone
 from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
-
 from decimal import Decimal
 
 @api_view(['POST'])
@@ -35,7 +33,6 @@ def set_geo_fence(request):
         msg = json.dumps({"message":"A geofence object is necessary in the body of the request"})        
         return HttpResponse(msg, status=400)    
 
-    
     shp_features = []
     for feature in geo_json_fc['features']:
         shp_features.append(asShape(feature['geometry']))
@@ -96,7 +93,7 @@ def set_geozone(request):
         msg = json.dumps({"message":"A geozone object is necessary in the body of the request"})        
         return HttpResponse(msg, status=400)    
 
-    
+    geo_zone
     # geo_f = GeoFence(geo_zone = geo_zone,start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
     # geo_f.save()
 

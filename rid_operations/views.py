@@ -11,8 +11,6 @@ from os import environ as env
 from datetime import timedelta
 import uuid
 import arrow
-
-import redis
 from auth_helper.common import get_redis
 from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails
 from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
