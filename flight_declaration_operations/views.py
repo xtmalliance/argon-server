@@ -1,4 +1,5 @@
 # Create your views here.
+import re
 from django.shortcuts import render
 from auth_helper.utils import requires_scopes
 # Create your views here.
@@ -44,6 +45,7 @@ def set_flight_declaration(request):
     
     submitted_by = None if 'submitted_by' not in req else req['submitted_by']
     approved_by = None if 'approved_by' not in req else req['approved_by']
+    is_approved = None if 'is_approved' not in req else req['is_approved']
     type_of_operation = 0 if 'type_of_operation' not in req else req['type_of_operation']
     originating_party = 'No Flight Information' if 'originating_party' not in req else req['originating_party']
     try:
@@ -60,14 +62,14 @@ def set_flight_declaration(request):
         s = shape(feature['geometry'])
         all_features.append(s)
 
-    flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=0)
+    flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved)
     # task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to spotlight
     
     my_operational_intent_converter = OperationalIntentsConverter()
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
     bounds = my_operational_intent_converter.get_geo_json_bounds()
 
-    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = 0, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json))
+    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json))
     fo.save()
     op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
     return HttpResponse(op, status=200, content_type= 'application/json')

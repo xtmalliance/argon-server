@@ -6,7 +6,7 @@ import os
 class FlightOperation(models.Model):
     ''' A flight operation object for permission ''' 
     OPERATION_TYPES = ((0, _('VLOS')),(1, _('BVLOS')),)    
-    DEFAULT_APPROVED_FLAG = os.getenv("OPERATION_APPROVALS_BY_DEFAULT", True)
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     operational_intent = models.TextField()
     flight_declaration_raw_geojson = models.TextField(null=True, blank=True)
@@ -20,7 +20,7 @@ class FlightOperation(models.Model):
 
     start_datetime = models.DateTimeField(default=datetime.now)
     end_datetime = models.DateTimeField(default=datetime.now)
-    is_approved = models.BooleanField(default =DEFAULT_APPROVED_FLAG)
+    is_approved = models.BooleanField(default =False)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
