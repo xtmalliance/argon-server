@@ -8,13 +8,13 @@ import arrow
 from rest_framework.decorators import api_view
 import logging
 from django.http import HttpResponse, JsonResponse
-from .models import FlightOperation
+from .models import FlightDeclaration
 from dataclasses import asdict
 from .tasks import write_flight_declaration
 from shapely.geometry import shape
 from .data_definitions import FlightDeclarationRequest
 from rest_framework import mixins, generics
-from .serializers import FlightOperationSerializer, FlightOperationApprovalSerializer, FlightOperationStateSerializer
+from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
 from .pagination import StandardResultsSetPagination
@@ -69,18 +69,18 @@ def set_flight_declaration(request):
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
     bounds = my_operational_intent_converter.get_geo_json_bounds()
 
-    fo = FlightOperation(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json))
+    fo = FlightDeclaration(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json))
     fo.save()
     op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
     return HttpResponse(op, status=200, content_type= 'application/json')
     
 @method_decorator(requires_scopes(['blender.write']), name='dispatch')
-class FlightOperationApproval( 
+class FlightDeclarationApproval( 
                     mixins.UpdateModelMixin,           
                     generics.GenericAPIView):
 
-    queryset = FlightOperation.objects.all()
-    serializer_class = FlightOperationApprovalSerializer
+    queryset = FlightDeclaration.objects.all()
+    serializer_class = FlightDeclarationApprovalSerializer
 
 
     def put(self, request, *args, **kwargs):
@@ -89,11 +89,11 @@ class FlightOperationApproval(
 
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
-class FlightOperationDetail(mixins.RetrieveModelMixin, 
+class FlightDeclarationDetail(mixins.RetrieveModelMixin, 
                     generics.GenericAPIView):
 
-    queryset = FlightOperation.objects.all()
-    serializer_class = FlightOperationSerializer
+    queryset = FlightDeclaration.objects.all()
+    serializer_class = FlightDeclarationSerializer
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -101,11 +101,11 @@ class FlightOperationDetail(mixins.RetrieveModelMixin,
 
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
-class FlightOperationList(mixins.ListModelMixin,  
+class FlightDeclarationList(mixins.ListModelMixin,  
     generics.GenericAPIView):
 
-    queryset = FlightOperation.objects.all()
-    serializer_class = FlightOperationSerializer
+    queryset = FlightDeclaration.objects.all()
+    serializer_class = FlightDeclarationSerializer
     pagination_class = StandardResultsSetPagination
     def get_responses(self, start, end):
         
@@ -121,7 +121,7 @@ class FlightOperationList(mixins.ListModelMixin,
             start_date = present.shift(months=-1)
             end_date = present.shift(days=1)
         
-        return FlightOperation.objects.filter(end_datetime__lte = end_date.isoformat(),start_datetime__gte = start_date.isoformat())
+        return FlightDeclaration.objects.filter(end_datetime__lte = end_date.isoformat(),start_datetime__gte = start_date.isoformat())
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date', None)

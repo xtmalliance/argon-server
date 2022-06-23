@@ -5,7 +5,7 @@ from dotenv import load_dotenv, find_dotenv
 import json
 import requests
 import pandas as pd
-import redis
+import logging
 from auth_helper.common import get_redis
 
 ENV_FILE = find_dotenv()
@@ -39,14 +39,12 @@ class PassportCredentialsGetter():
             
         return credentials
             
-        
     def get_write_credentials(self):        
         payload = {"grant_type":"client_credentials","client_id": env.get('BLENDER_WRITE_CLIENT_ID'),"client_secret": env.get('BLENDER_WRITE_CLIENT_SECRET'),"audience": env.get('BLENDER_AUDIENCE'),"scope": env.get('BLENDER_WRITE_SCOPE')}        
-        url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
+        url = env.get('PASSPORT_URL') + env.get('PASSPORT_TOKEN_URL')
         
         token_data = requests.post(url, data = payload)
         t_data = token_data.json()
-        
         
         return t_data
 
@@ -69,7 +67,7 @@ if __name__ == '__main__':
 
     url_data='https://opensky-network.org/api/states/all?'+'lamin='+str(lat_min)+'&lomin='+str(lng_min)+'&lamax='+str(lat_max)+'&lomax='+str(lng_max)
 
-    response=requests.get(url_data,  auth=(username, password)).json()
+    response=requests.get(url_data, auth=(username, password)).json()
 
     #LOAD TO PANDAS DATAFRAME
     col_name=['icao24','callsign','origin_country','time_position','last_contact','long','lat','baro_altitude','on_ground','velocity',       
@@ -89,9 +87,9 @@ if __name__ == '__main__':
     securl = 'http://localhost:8000/set_air_traffic' # set this to self (Post the json to itself)
 
     try:
-        response = requests.post(securl, json = payload, headers = headers)
-        
+        response = requests.post(securl, json = payload, headers = headers)        
     except Exception as e:
-        print(e)
+        logging.error("Error in posting data to Spotlight")
+        logging.error(e.json())
     else:
         response.json()

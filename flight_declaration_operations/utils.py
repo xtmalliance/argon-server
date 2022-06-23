@@ -1,13 +1,10 @@
 from scd_operations.scd_data_definitions import Altitude, Volume3D, Volume4D, LatLngPoint,OperationalIntentReference, Time
 from scd_operations.scd_data_definitions import Polygon as Plgn
 import shapely.geometry
-from shapely.geometry import Point, Polygon
-from shapely.geometry import shape
+from shapely.geometry import shape, Point, Polygon
 from pyproj import Proj
-
 from typing import List
 from geojson import FeatureCollection
-import arrow
 from shapely.ops import unary_union
 
 class OperationalIntentsConverter():
@@ -53,16 +50,14 @@ class OperationalIntentsConverter():
             buffed_s = s.buffer(0.00001)
             all_shapes.append(buffed_s)
             
-
         feature_union = unary_union(all_shapes)
         b = feature_union.minimum_rotated_rectangle
         
         co_ordinates = list(zip(*b.exterior.coords.xy))
-
         # Convert bounds vertex list
         polygon_verticies = []
         for cur_co_ordinate in co_ordinates:
-            v = LatLngPoint(lat =cur_co_ordinate[1],lng= cur_co_ordinate[0])
+            v = LatLngPoint(lat = cur_co_ordinate[1],lng = cur_co_ordinate[0])
             polygon_verticies.append(v)
 
         # remove the final point
@@ -76,10 +71,7 @@ class OperationalIntentsConverter():
         o_i = OperationalIntentReference(extents= all_v4d,key= [], state ='Accepted',uss_base_url="https://flightblender.com")
 
         return o_i
-
-
-        
-
+    
 
     def get_geo_json_bounds(self) -> str:
             

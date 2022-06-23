@@ -136,3 +136,17 @@ def get_air_traffic(request):
     else:
         view_port_error = {"message": "A incorrect view port bbox was provided"}
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
+
+
+
+@api_view(['GET'])
+@requires_scopes(['blender.write'])
+def start_opensky_stream(request):
+    # This method takes in a view port as a lat1,lon1,lat2,lon2 co-ordinate system and for 60 seconds starts the stream of data from the OpenSky Network. 
+
+    # Check view port
+    # see if it is valid
+
+    # submit task to write to the flight stream
+
+    pass
