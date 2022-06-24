@@ -1491,6 +1491,38 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+        flight_declaration_raw_geojson:
+          description: The raw / original Flight Plan as GeoJSON
+          type: object
+          properties: 
+            type:
+              type: string
+              example: "FeatureCollection"
+            features:
+              type: array
+              items:
+                $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+        operational_intent:
+          description: The operational intent for this flight declaration as a GeoJSON FeatureCollection, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
+          type: object
+          properties: 
+            type:
+              type: string
+              example: "FeatureCollection"
+            features:
+              type: array
+              items:
+                $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+            
+        type_of_operation: 
+          enum:
+          - 0
+          - 1
+          type: integer
+          description: >
+            Set the activity type and the airspace
+             * `0` - VLOS
+             * `1` - BVLOS
             
     PutFlightDeclarationRequest: 
       type: object

@@ -45,7 +45,7 @@ def set_flight_declaration(request):
     
     submitted_by = None if 'submitted_by' not in req else req['submitted_by']
     approved_by = None if 'approved_by' not in req else req['approved_by']
-    is_approved = None if 'is_approved' not in req else req['is_approved']
+    is_approved = False if 'is_approved' not in req else req['is_approved']
     type_of_operation = 0 if 'type_of_operation' not in req else req['type_of_operation']
     originating_party = 'No Flight Information' if 'originating_party' not in req else req['originating_party']
     try:
