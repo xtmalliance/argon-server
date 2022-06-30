@@ -6,7 +6,7 @@ import os
 
 class FlightDeclaration(models.Model):
     ''' A flight operation object for permission ''' 
-    OPERATION_TYPES = ((0, _('VLOS')),(1, _('BVLOS')),)    
+    OPERATION_TYPES = ((1, _('VLOS')),(2, _('BVLOS')),(3,_('CREWED')),)    
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     operational_intent = models.TextField()

@@ -1516,26 +1516,31 @@ components:
             
         type_of_operation: 
           enum:
-          - 0
           - 1
+          - 2
+          - 3
+
           type: integer
           description: >
-            Set the activity type and the airspace
-             * `0` - VLOS
-             * `1` - BVLOS
+            Set the type of operation
+             * `1` - VLOS
+             * `2` - BVLOS
+             * `3` - CREWED
             
     PutFlightDeclarationRequest: 
       type: object
       properties:           
         type_of_operation: 
           enum:
-          - 0
           - 1
+          - 2
+          - 3
           type: integer
           description: >
             Set the activity type and the airspace
-             * `0` - VLOS
-             * `1` - BVLOS
+             * `1` - VLOS
+             * `2` - BVLOS
+             * `3` - CREWED
         submitted_by:
           description: Email address of person submitting this declaration
           type: string
@@ -2780,6 +2785,7 @@ components:
         - Undeclared
         - Vlos
         - Bvlos
+        - Crewed
       description: Specify if the operation is a `VLOS` or `BVLOS` operation. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 2.
       example: Vlos
 
