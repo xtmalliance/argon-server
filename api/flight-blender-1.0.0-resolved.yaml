@@ -1037,6 +1037,64 @@ paths:
       tags:
         - flight-declaration
 
+  /flight_declaration_ops/flight_declaration_state/{flight_declaration_id}:
+    put:
+      summary: 'Update the state of a existing Flight Declaration'
+      security:
+        - AuthFromPassport: [blender.write]
+      description: "By default all flight declarations submitted in Flight Blender are not set a 'Accepted' state, for most operations this would suffice, however the state may be changed / updated manually. "
+      parameters:
+        - in: path
+          name: flight_declaration_id
+          description: This is the ID of the flight declaration
+          schema:
+            type: string
+            format: uuid
+          required: true
+
+      requestBody:
+        description: Set the current state of the Flight Declaration
+        required: true
+        content:
+          application/json:
+            schema:
+                $ref: '#/components/schemas/UpdateDeclarationState'
+                
+      responses:
+        '200':
+          description: Flight State successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightDeclarationDetail'
+        '400':
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+
+      tags:
+        - flight-declaration
+
 
   /flight_declaration_ops/set_flight_declaration:
     post:
@@ -1367,11 +1425,11 @@ components:
             type: integer
             description: >
               Set the new state of the operation
-              * `0` - Accepted
-              * `1` - OpeActivatedn
-              * `2` - Contingent
-              * `3` - Nonconforming
-              * `4` - Completed          
+                - `0` - Accepted
+                - `1` - Activated
+                - `2` - Contingent
+                - `3` - Nonconforming
+                - `4` - Completed          
 
 
     FlightDeclarationCreated:

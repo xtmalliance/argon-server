@@ -10,3 +10,4 @@ class FlightDeclarationRequest:
     submitted_by: Optional[str]
     approved_by: Optional[str]
     is_approved: bool
+    state:int
