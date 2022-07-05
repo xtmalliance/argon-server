@@ -1670,11 +1670,11 @@ components:
                   type: string
                   enum:
                     - 'WGS84'
-
           nullable: true
         id:
           oneOf:
             - type: string
+              format: uuid
             - type: integer
 
     Latitude:

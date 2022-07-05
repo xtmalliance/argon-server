@@ -4,12 +4,13 @@ import logging
 from django.http import JsonResponse
 from auth_helper.utils import requires_scopes
 from rest_framework.decorators import api_view
-from .tasks import write_incoming_air_traffic_data
+from .tasks import write_incoming_air_traffic_data, start_openskies_stream
 from .data_definitions import RIDMetadata, SingleAirtrafficObervation, FlightObservationsProcessingResponse
 from dataclasses import asdict
 from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
+import requests
 from rid_operations import view_port_ops
 from . import flight_stream_helper
 logger = logging.getLogger('django')
@@ -138,7 +139,6 @@ def get_air_traffic(request):
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
 
 
-
 @api_view(['GET'])
 @requires_scopes(['blender.write'])
 def start_opensky_stream(request):
@@ -146,7 +146,17 @@ def start_opensky_stream(request):
 
     # Check view port
     # see if it is valid
+    try:
+        view = request.query_params['view']
+        view_port = [float(i) for i in view.split(",")]
+    except Exception as ke:
+        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        return JsonResponse(json.loads(json.dumps(incorrect_parameters)), status=400, content_type='application/json')
+    
+    view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
 
-    # submit task to write to the flight stream
-
-    pass
+    if view_port_valid:
+        return JsonResponse({},  status=200, content_type='application/json')
+    else:
+        view_port_error = {"message": "A incorrect view port bbox was provided"}
+        return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')

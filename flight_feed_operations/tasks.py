@@ -1,13 +1,21 @@
-
-from celery import Celery
 import os, json
 import logging
 from .data_definitions import SingleAirtrafficObervation
 import requests
+import time
+import arrow
+import pandas as pd
 from . import flight_stream_helper
-from dotenv import load_dotenv, find_dotenv
 from flight_blender.celery import app
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
+ 
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
+logger = logging.getLogger('django')
 
 #### Airtraffic Endpoint
 
@@ -68,3 +76,55 @@ def submit_flights_to_spotlight():
             response = requests.post(securl, data= payload, headers=headers)
             
             logging.info(response.status_code)
+
+@app.task(name='start_openskies_stream')
+def start_openskies_stream(view_port:str):   
+    view_port = json.loads(view_port)
+    # submit task to write to the flight stream
+    lat_min = min(view_port[0], view_port[2])
+    lat_max = max(view_port[0], view_port[2])
+    lng_min = min(view_port[1], view_port[3])
+    lng_max = max(view_port[1], view_port[3])
+
+    heartbeat = env.get('HEARTBEAT_RATE_SECS', 2)
+    heartbeat = int(heartbeat)
+    my_credentials = flight_stream_helper.PassportCredentialsGetter()
+    credentials = my_credentials.get_cached_credentials()
+    
+    FLIGHT_SPOTLIGHT_URL = os.getenv('FLIGHT_SPOTLIGHT_URL', 'http://localhost:5000')
+    securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
+    headers = {"Authorization": "Bearer " + credentials['access_token']}
+    now = arrow.now()
+    one_minute_from_now = now.shift(seconds = 60)
+
+    logger.info("Querying OpenSkies Network for one minute.. ")
+
+    while arrow.now() < one_minute_from_now:
+        url_data='https://opensky-network.org/api/states/all?'+'lamin='+str(lat_min)+'&lomin='+str(lng_min)+'&lamax='+str(lat_max)+'&lomax='+str(lng_max)
+        openskies_username = env.get('DSS_BASE_URL')
+        openskies_password = env.get('OPENSKY_NETWORK_PASSWORD')
+        response= requests.get(url_data, auth=(openskies_username, openskies_password)).json()
+
+        #LOAD TO PANDAS DATAFRAME
+        col_name=['icao24','callsign','origin_country','time_position','last_contact','long','lat','baro_altitude','on_ground','velocity',       
+        'true_track','vertical_rate','sensors','geo_altitude','squawk','spi','position_source']
+        flight_df=pd.DataFrame(response['states'],columns=col_name)
+        flight_df=flight_df.fillna('No Data') 
+        
+        all_observations = []
+        for index, row in flight_df.iterrows():
+            metadata = {'velocity':row['velocity']}
+            
+            all_observations.append({"icao_address" : row['icao24'],"traffic_source" :2, "source_type" : 1, "lat_dd" : row['lat'], "lon_dd" : row['long'], "time_stamp" :  row['time_position'],"altitude_mm" :  row['baro_altitude'], 'metadata':metadata})    
+
+        payload = {"observations":all_observations}    
+
+        try:
+            response = requests.post(securl, json = payload, headers = headers)        
+        except Exception as e:
+            logger.error("Error in posting data to Flight Spotlight")
+            logger.error(e.json())
+        else:
+            response.json()
+        
+        time.sleep(heartbeat)
