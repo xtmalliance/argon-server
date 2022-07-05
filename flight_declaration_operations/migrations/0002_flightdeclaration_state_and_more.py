@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='flightdeclaration',
             name='state',
-            field=models.IntegerField(choices=[(1, 'Accepted'), (2, 'Activated'), (3, 'Nonconforming'), (3, 'Contingent'), (4, 'Ended')], default=1, help_text='Set the state of operation'),
+            field=models.IntegerField(choices=[(1, 'Accepted'), (2, 'Activated'), (3, 'Nonconforming'), (4, 'Contingent'), (5, 'Ended')], default=1, help_text='Set the state of operation'),
         ),
         migrations.AlterField(
             model_name='flightdeclaration',

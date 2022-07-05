@@ -1572,6 +1572,21 @@ components:
               items:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
             
+        state:
+          enum:
+          - 1
+          - 2
+          - 3
+          - 4
+          description: >           
+            The state of the operation
+             * `1` - Accepted
+             * `2` - Activated
+             * `3` - Nonconforming
+             * `4` - Contingent
+             * `5` - Ended
+
+          type: integer
         type_of_operation: 
           enum:
           - 1
