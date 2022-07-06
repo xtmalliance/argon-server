@@ -6,13 +6,13 @@ from auth_helper.utils import requires_scopes
 import json
 import arrow
 from rest_framework.decorators import api_view
-import logging
+
 from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
 from dataclasses import asdict
 from .tasks import write_flight_declaration
 from shapely.geometry import shape
-from .data_definitions import FlightDeclarationRequest
+from .data_definitions import FlightDeclarationRequest, Altitude
 from rest_framework import mixins, generics
 from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
 from django.utils.decorators import method_decorator
@@ -59,8 +59,25 @@ def set_flight_declaration(request):
 
     all_features = []
     for feature in flight_declaration_geo_json['features']:
-        s = shape(feature['geometry'])
-        all_features.append(s)
+        geometry =feature['geometry']         
+        s = shape(geometry)
+        if s.is_valid:
+            all_features.append(s)
+        else:
+            op = json.dumps({"message":"Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a valid geometry"})
+            return HttpResponse(op, status=400, content_type= 'application/json')
+
+
+        props = feature['properties']
+        try:
+            assert ['min_altitude', 'max_altitude'] in props
+        except AssertionError as ae:
+            op = json.dumps({"message":"Error in processing the submitted GeoJSON every Feature in a GeoJSON FeatureCollection must have a min_altitude and max_altitude data structure"})
+            return HttpResponse(op, status=400, content_type= 'application/json')
+        
+        min_altitude = Altitude(meters = props['min_altitude']['meters'], datum =props['min_altitude']['dautm'])
+        max_altitude = Altitude(meters = props['max_altitude']['meters'], datum =props['max_altitude']['dautm'])
+    
 
     default_state = 1 # Default state is Acccepted
 
@@ -71,7 +88,6 @@ def set_flight_declaration(request):
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
     bounds = my_operational_intent_converter.get_geo_json_bounds()
 
-    print(bounds)
 
     fo = FlightDeclaration(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
 

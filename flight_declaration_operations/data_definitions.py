@@ -11,3 +11,8 @@ class FlightDeclarationRequest:
     approved_by: Optional[str]
     is_approved: bool
     state:int
+
+@dataclass
+class Altitude:
+    meters: int
+    datum: str
