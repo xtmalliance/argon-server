@@ -64,9 +64,8 @@ def set_flight_declaration(request):
         if s.is_valid:
             all_features.append(s)
         else:
-            op = json.dumps({"message":"Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a valid geometry"})
+            op = json.dumps({"message":"Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a valid geometry, please check your submitted FeatureCollection"})
             return HttpResponse(op, status=400, content_type= 'application/json')
-
 
         props = feature['properties']
         try:
