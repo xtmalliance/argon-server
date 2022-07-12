@@ -821,6 +821,60 @@ paths:
       tags:
         - air-traffic
         
+  /flight_stream/start_opensky_feed:
+    get:
+      parameters:
+        - name: view_port
+          in: path
+          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
+          schema:
+            type: string
+            example: 29.97816,31.13296,29.98025,31.13535
+
+          required: true
+
+      summary: 'Start a stream of air-traffic data'
+      security:
+        - AuthFromPassport: [blender.write]
+      description:
+        "Using this endpoint, you can start a stream of air-traffic observations for sixty seconds using the Opensky Network (https://opensky-network.org/).These observations are automatically submitted to Flight Spotlight for display"
+
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenskiesNetworkDataRequestSuccessful'
+        '201':
+          description: 'Openskies Network stream started'
+        '400':
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenskiesNetworkDataRequestError'
+        '401':
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+      tags:
+        - air-traffic
+        
   /flight_stream/get_air_traffic:
     get:
       parameters:
@@ -1485,6 +1539,18 @@ components:
         message:
           type: string
           example: 'Geofence successfully created'
+
+    OpenskiesNetworkDataRequestSuccessful:
+      properties:
+        message:
+          type: string
+          example: Openskies Newtork stream started
+
+    OpenskiesNetworkDataRequestError:
+      properties:
+        message:
+          type: string
+          example: An incorrect view port bbox was provided
 
     Standard500ErrorResponse:
       description: An unexpected error occured.

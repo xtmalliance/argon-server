@@ -10,7 +10,7 @@ from dataclasses import asdict
 from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
-import requests
+
 from rid_operations import view_port_ops
 from . import flight_stream_helper
 logger = logging.getLogger('django')
@@ -140,8 +140,8 @@ def get_air_traffic(request):
 
 
 @api_view(['GET'])
-@requires_scopes(['blender.write'])
-def start_opensky_stream(request):
+@requires_scopes(['blender.read'])
+def start_opensky_feed(request):
     # This method takes in a view port as a lat1,lon1,lat2,lon2 co-ordinate system and for 60 seconds starts the stream of data from the OpenSky Network. 
 
     # Check view port
@@ -154,9 +154,10 @@ def start_opensky_stream(request):
         return JsonResponse(json.loads(json.dumps(incorrect_parameters)), status=400, content_type='application/json')
     
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
-
+    
     if view_port_valid:
-        return JsonResponse({},  status=200, content_type='application/json')
+        start_openskies_stream.delay(view_port = json.dumps(view_port))
+        return JsonResponse({"message":"Openskies Newtork stream started"},  status=200, content_type='application/json')
     else:
-        view_port_error = {"message": "A incorrect view port bbox was provided"}
+        view_port_error = {"message": "An incorrect view port bbox was provided"}
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')

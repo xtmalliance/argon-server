@@ -88,15 +88,15 @@ class PassportCredentialsGetter():
         else:   
             
             credentials = self.get_write_credentials()
-            r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
-            r.expire(cache_key, timedelta(minutes=58))
+            if 'error' not in credentials:
+                r.set(cache_key, json.dumps({'credentials': credentials, 'created_at':now.isoformat()}))
+                r.expire(cache_key, timedelta(minutes=58))
         return credentials
             
             
     def get_write_credentials(self):        
         payload = {"grant_type":"client_credentials","client_id": os.getenv('SPOTLIGHT_WRITE_CLIENT_ID'),"client_secret": os.getenv('SPOTLIGHT_WRITE_CLIENT_SECRET'),"audience": os.getenv('SPOTLIGHT_AUDIENCE'),"scope": os.getenv('SPOTLIGHT_AIR_TRAFFIC_SCOPE')}        
         url = os.getenv('PASSPORT_URL') + os.getenv('PASSPORT_TOKEN_URL')
-        
         token_data = requests.post(url, data = payload)
         t_data = token_data.json()
         

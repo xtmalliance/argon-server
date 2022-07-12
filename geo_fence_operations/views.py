@@ -117,8 +117,6 @@ def set_geozone(request):
     return HttpResponse(op, status=200)
 
 
-
-
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class GeoFenceDetail(mixins.RetrieveModelMixin, 
                     generics.GenericAPIView):
@@ -145,7 +143,7 @@ class GeoFenceList(mixins.ListModelMixin,
     
         else: 
             
-            start_date = present.shift(months=-1)
+            start_date = present.shift(days=-1)
             end_date = present.shift(days=1)
         
         return GeoFence.objects.filter(start_datetime__gte = start_date.isoformat(), end_datetime__lte = end_date.isoformat())

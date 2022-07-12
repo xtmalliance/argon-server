@@ -90,18 +90,17 @@ def start_openskies_stream(view_port:str):
     heartbeat = int(heartbeat)
     my_credentials = flight_stream_helper.PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
-    
     FLIGHT_SPOTLIGHT_URL = os.getenv('FLIGHT_SPOTLIGHT_URL', 'http://localhost:5000')
     securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
     headers = {"Authorization": "Bearer " + credentials['access_token']}
     now = arrow.now()
-    one_minute_from_now = now.shift(seconds = 60)
+    one_minute_from_now = now.shift(seconds = 10)
 
     logger.info("Querying OpenSkies Network for one minute.. ")
 
     while arrow.now() < one_minute_from_now:
         url_data='https://opensky-network.org/api/states/all?'+'lamin='+str(lat_min)+'&lomin='+str(lng_min)+'&lamax='+str(lat_max)+'&lomax='+str(lng_max)
-        openskies_username = env.get('DSS_BASE_URL')
+        openskies_username = env.get('OPENSKY_NETWORK_USERNAME')
         openskies_password = env.get('OPENSKY_NETWORK_PASSWORD')
         response= requests.get(url_data, auth=(openskies_username, openskies_password)).json()
 
@@ -122,7 +121,7 @@ def start_openskies_stream(view_port:str):
         try:
             response = requests.post(securl, json = payload, headers = headers)        
         except Exception as e:
-            logger.error("Error in posting data to Flight Spotlight")
+            logger.error("Error in posting Openskies Network data to Flight Spotlight")
             logger.error(e.json())
         else:
             response.json()
