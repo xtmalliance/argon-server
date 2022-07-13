@@ -69,13 +69,14 @@ def set_flight_declaration(request):
 
         props = feature['properties']
         try:
-            assert ['min_altitude', 'max_altitude'] in props
+            assert 'min_altitude' in props
+            assert 'max_altitude' in props
         except AssertionError as ae:
             op = json.dumps({"message":"Error in processing the submitted GeoJSON every Feature in a GeoJSON FeatureCollection must have a min_altitude and max_altitude data structure"})
             return HttpResponse(op, status=400, content_type= 'application/json')
         
-        min_altitude = Altitude(meters = props['min_altitude']['meters'], datum =props['min_altitude']['dautm'])
-        max_altitude = Altitude(meters = props['max_altitude']['meters'], datum =props['max_altitude']['dautm'])
+        min_altitude = Altitude(meters = props['min_altitude']['meters'], datum =props['min_altitude']['datum'])
+        max_altitude = Altitude(meters = props['max_altitude']['meters'], datum =props['max_altitude']['datum'])
     
 
     default_state = 1 # Default state is Acccepted
