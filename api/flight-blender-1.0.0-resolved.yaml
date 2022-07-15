@@ -1592,6 +1592,14 @@ components:
         id:
           type: string
           format: uuid
+        approved_by:
+          description: Email address of person approving this declaration
+          type: string
+          format: email
+        submitted_by:
+          description: Email address of person submitting this declaration
+          type: string
+          format: email  
         is_approved:
           description: Is the operation approved for flight?
           type: string
