@@ -2262,6 +2262,125 @@
 			]
 		},
 		{
+			"name": "RID",
+			"item": [
+				{
+					"name": "RID Sample data",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "accessTokenUrl",
+									"value": "http://local.test:9000/oauth/token/",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "Flight Blender Token",
+									"type": "string"
+								},
+								{
+									"key": "audience",
+									"value": {
+										"acc399b7-7b6b-4393-af9f-8098d637a9e2": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "challengeAlgorithm",
+									"value": "S256",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:3000/callback",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/o/authorize",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "Bearer",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"flights\":\r\n    [\r\n        {\r\n            \"id\": \"5efb0a92-1c22-4274-9096-98787beeb83b\",\r\n            \"aircraft_type\": \"Helicopter\",\r\n            \"current_state\":\r\n            [\r\n                {\r\n                    \"timestamp\": \"2022-07-18T14:22:52.541652+00:00\",\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\":\r\n                    {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": 620,\r\n                        \"accuracy_h\": \"HAUnkown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\":\r\n                    {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ]\r\n        }\r\n    ]\r\n}"
+						},
+						"url": {
+							"raw": "http://local.test:8000/rid/flight_data",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"rid",
+								"flight_data"
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "PING Blender",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
