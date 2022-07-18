@@ -171,6 +171,43 @@ paths:
       in: path
       required: true
 
+  /rid/flight_data:
+    put: 
+      tags:
+      - rid
+      summary: 'Add Remote-ID observation(s)'
+      security:
+        - AuthFromPassport: [blender.write]
+      description:
+        "Submit data that is compliant with ASTM RemoteID from the vehicle into Blender, after submission, Flight Blender will \
+        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple flight statescan be submitted at a given time"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                observations:
+                  $ref: '#/components/schemas/FlightRIDData'
+
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteIDDataProcessed'
+          description: Remote ID data successfully submitted and processed.
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: |-
+            * One or more parameters were missing or invalid.
+            * The Identification Service Area information could not be parsed, or contains illegal data.
+     
+
 
   /rid/get_rid_data/{subscription_id}:
     get:
@@ -643,7 +680,6 @@ paths:
       tags:
       - rid
       operationId: searchFlights
-      
       responses:
         200:
           content:
@@ -1485,6 +1521,14 @@ components:
                 - `3` - Nonconforming
                 - `4` - Completed          
 
+    RemoteIDDataProcessed:
+      description: Remote ID data processed successfully
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'RemoteID data succesfully submitted'
+
 
     FlightDeclarationCreated:
       description: A flight declaration has been created
@@ -2012,6 +2056,29 @@ components:
         message:
           type: string
           example: Server running properly
+
+
+    FlightRIDData:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - aircraft_type
+          - current_state
+          
+        properties:
+          id:
+            type: number
+            format: float
+          aircraft_type:
+            type: number
+            format: float
+          current_state:
+            type: array
+            items:
+              $ref: '#/components/schemas/RIDAircraftState'
+                
 
     ArrayOfObservations:
       type: array

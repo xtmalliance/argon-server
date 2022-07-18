@@ -55,6 +55,25 @@ def poll_uss_for_flights_async():
                     myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations,subscription_id)
 
 
+@app.task(name='stream_rid_data')
+def stream_rid_data(rid_data):
+    rid_data = json.loads(rid_data)
+    for r_data in rid_data:
+        observation_metadata = SingleObeservationMetadata(telemetry= r_data, details_response=r_data)                
+        flight_details_id = r_data['id']
+        lat_dd = r_data['position']['lat']
+        lon_dd = r_data['position']['lng']                    
+        altitude_mm = r_data['position']['alt']
+        traffic_source = 11
+        source_type = 0
+        icao_address = flight_details_id
+
+        so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
+        msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+        logger.debug("Submitted observation..")                    
+        logger.debug("...")
+
+
 @app.task(name='stream_rid_test_data')
 def stream_rid_test_data(requested_flights):
     all_requested_flights : List[RIDTestInjection] = []
@@ -117,7 +136,6 @@ def stream_rid_test_data(requested_flights):
 
     max_telemetry_data_length = max(telemetry_length)
     logger.info("Telemetry length: %s" % max_telemetry_data_length)
-
 
     # Computing when the requested flight data will end 
     end_time_of_injections = max_telemetry_data_length * heartbeat

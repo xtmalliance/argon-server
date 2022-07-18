@@ -5,7 +5,7 @@
     "lat_dd": -1.968182562,
     "timestamp": 1590000020000,
     "altitude_mm": 230.93,
-    "traffic_source":3,
+    "traffic_source":9,
     "source_type" :0,
     "icao_address": "drone-a",
     "metadata":{"aircraft_type":"Helicopter"}
@@ -15,7 +15,7 @@
     "lat_dd": -1.969340593,
     "timestamp": 1590000015000,
     "altitude_mm": 250.67,
-    "traffic_source":3,
+    "traffic_source":9,
     "source_type" :0,
     "icao_address": "drone-a",
     "metadata":{"aircraft_type":"Helicopter"}
@@ -25,7 +25,7 @@
     "lat_dd": -1.970241282,
     "timestamp": 1590000010000,
     "altitude_mm": 270.22,
-    "traffic_source":3,
+    "traffic_source":9,
     "source_type" :0,
     "icao_address": "drone-a",
     "metadata":{"aircraft_type":"Helicopter"}
@@ -35,7 +35,7 @@
     "lat_dd": -1.970927522,
     "timestamp": 1590000005000,
     "altitude_mm": 285.23,
-    "traffic_source":3,
+    "traffic_source":9,
     "source_type" :0,
     "icao_address": "drone-a",
     "metadata":{"aircraft_type":"Helicopter"}
@@ -45,7 +45,7 @@
     "lat_dd": -1.971613761,
     "timestamp": 1590000000000,
     "altitude_mm": 290.42,
-    "traffic_source":3,
+    "traffic_source":9,
     "source_type" :0,
     "icao_address": "drone-a",
     "metadata":{"aircraft_type":"Helicopter"}

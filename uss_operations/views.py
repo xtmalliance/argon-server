@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.utils.datastructures import MultiValueDictKeyError
 from .uss_data_definitions import OperationalIntentNotFoundResponse, OperationalIntentDetails, UpdateOperationalIntent, GenericErrorResponseMessage, SummaryFlightsOnly,FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
 from scd_operations.scd_data_definitions import OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, OperationalIntentReferenceDSSResponse, Time
-from rid_operations.rid_utils import RIDAircraftPosition, RIDHeight, RIDAircraftState, RIDFlightResponseDetails, RIDFlightResponse, LatLngPoint, RIDFlightDetails
+from rid_operations.rid_utils import RIDAircraftPosition, RIDHeight, RIDAircraftState, RIDFlightDetails, RIDFlightResponse, LatLngPoint, RIDFlightDetails
 import arrow
 import json 
 import logging 
@@ -187,7 +187,7 @@ def get_uss_flights(request):
                     height = RIDHeight(distance=telemetry_data_dict['height']['distance'], reference=telemetry_data_dict['height']['reference'])
                     current_state = RIDAircraftState(timestamp=telemetry_data_dict['timestamp'], timestamp_accuracy=telemetry_data_dict['timestamp_accuracy'], operational_status=telemetry_data_dict['operational_status'], position=position, track=telemetry_data_dict['track'], speed=telemetry_data_dict['speed'], speed_accuracy=telemetry_data_dict['speed_accuracy'], vertical_speed=telemetry_data_dict['vertical_speed'], height=height)
                     
-                    current_flight = RIDFlightResponseDetails(id=details_response_dict['details']['id'], aircraft_type="NotDeclared", current_state = current_state , simulated = True, recent_positions=[])
+                    current_flight = RIDFlightDetails(id=details_response_dict['details']['id'], aircraft_type="NotDeclared", current_state = current_state , simulated = True, recent_positions=[])
 
                     rid_flights.append(current_flight)
                     # see if it matches the viewport 

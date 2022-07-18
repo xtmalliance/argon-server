@@ -12,7 +12,7 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails, RIDTime, RIDAircraftPosition, RIDAircraftState
 from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
 import shapely.geometry
 import hashlib
@@ -310,6 +310,64 @@ def get_display_data(request):
         view_port_error = {
             "message": "A incorrect view port bbox was provided"}
         return JsonResponse(json.dumps(view_port_error), status=400, content_type='application/json')
+
+
+        
+@api_view(['PUT'])
+@requires_scopes(['blender.write'])
+def flight_data(request):
+    ''' A RIDFlightDetails object is posted here'''
+  
+    raw_data = request.data
+    
+    try: 
+        assert 'flights' in raw_data
+    except AssertionError as ae:
+        incorrect_parameters = {"message": "A flights objects with current state is necessary"}
+        return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
+    rid_flights_data =raw_data['flights']
+    all_rid_data = []
+    for flight in rid_flights_data: 
+
+        try: 
+            assert 'id' in flight
+            assert 'aircraft_type' in flight
+            assert 'current_state' in flight
+        except AssertionError as ae:
+            incorrect_parameters = {"message": "A flights object with current state, id and aircraft type is necessary"}
+            return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
+        
+        flight_id = flight['id']
+        aircraft_type = flight['aircraft_type']
+        current_states = flight['current_state']
+        
+        for current_state in current_states:
+            # operational_status = current_state['operational_status']        
+            # timestamp = current_state['timestamp']
+            position = current_state['position']
+            # height = current_state['height']
+            # track = current_state['track']
+            # speed = current_state['speed']
+            # timestamp_accuracy = current_state['timestamp_accuracy']
+            speed_accuracy = current_state['speed_accuracy']
+            # vertical_speed = current_state['vertical_speed']
+
+
+        now = arrow.now().isoformat()    
+        time_format = 'RFC3339'
+        time_stamp = RIDTime(value= now, format= time_format)
+
+        aircraft_position  = RIDAircraftPosition(lat=position['lat'] , lng= position['lng'], alt =position['alt'], accuracy_h= position['accuracy_h'], accuracy_v=position['accuracy_v'], extrapolated =position['extrapolated'], pressure_altitude =0)
+        current_state = RIDAircraftState(timestamp =time_stamp ,timestamp_accuracy= 0, position =aircraft_position, speed_accuracy = speed_accuracy)
+
+        r  = RIDFlightDetails(id =flight_id,aircraft_type =aircraft_type, current_state = current_state, simulated = 0, recent_positions = [])
+        all_rid_data.append(asdict(r))
+
+    # stream_rid_data.delay(rid_data= json.dumps(all_rid_data))
+    submission_success = {"message": "RemoteID data succesfully submitted"}
+    return JsonResponse(submission_success, status=201, content_type='application/json')
+
+
 
         
 @api_view(['PUT'])

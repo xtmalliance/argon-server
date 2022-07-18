@@ -1,6 +1,7 @@
+
 from typing import List, NamedTuple, Optional
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 import arrow
 
 from scd_operations.scd_data_definitions import Volume3D, Volume4D
@@ -207,13 +208,18 @@ class RIDHeight:
 class RIDAircraftState:
   timestamp: StringBasedDateTime
   timestamp_accuracy: float
-  operational_status: Optional[str]
-  position: RIDAircraftPosition
-  track: float
-  speed: float
   speed_accuracy: str
-  vertical_speed: float
-  height: Optional[RIDHeight]
+  position: RIDAircraftPosition
+  operational_status: Optional[str]= None
+  track: Optional[float] = None
+  speed: Optional[float] = None
+  vertical_speed: Optional[float] = None
+  height: Optional[RIDHeight] = None
+
+  def as_dict(self):
+      data = asdict(self)
+      return {key: value for key, value in data.items() if value is not None}
+
 
 @dataclass
 class RIDRecentAircraftPosition:
@@ -232,7 +238,7 @@ class RIDRecentAircraftPosition:
   position:Position
 
 @dataclass
-class RIDFlightResponseDetails:
+class RIDFlightDetails:
   id: str
   aircraft_type: str
   current_state: RIDAircraftState
@@ -243,7 +249,7 @@ class RIDFlightResponseDetails:
 @dataclass
 class RIDFlightResponse:
   timestamp: str
-  flights: List[RIDFlightResponseDetails]
+  flights: List[RIDFlightDetails]
 
 @dataclass
 class AuthData:
@@ -255,3 +261,7 @@ class SingleObeservationMetadata:
   details_response: RIDTestDetailsResponse
   telemetry: RIDAircraftState
 
+@dataclass
+class RIDTime:
+  value:str
+  format: str
