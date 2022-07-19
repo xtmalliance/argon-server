@@ -3,14 +3,24 @@ from os import environ as env
 from datetime import datetime, timedelta
 from dotenv import load_dotenv, find_dotenv
 import json
+import arrow
 import requests
-import pandas as pd
-import logging
+from dataclasses import dataclass, asdict
 from auth_helper.common import get_redis
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
+
+from typing import Optional
+
+@dataclass
+class RIDOperatorDetails():
+  id: str
+  operator_id: Optional[str]
+  operation_description: Optional[str]
+  serial_number: Optional[str]
+  registration_number: Optional[str]
 
 class PassportCredentialsGetter():
     def __init__(self):
@@ -52,44 +62,48 @@ class BlenderUploader():
     
     def __init__(self, credentials):        
         
-        self.timestamps = [1590000000000,1590000005000,1590000010000,1590000015000,1590000020000]    
+        
         self.credentials = credentials
     
     def upload_to_server(self, filename):
-        with open(filename, "r") as traffic_json_file:
-            traffic_json = traffic_json_file.read()
+        with open(filename, "r") as rid_json_file:
+            rid_json = rid_json_file.read()
             
-        traffic_json = json.loads(traffic_json)
-        
-       
-        for timestamp in self.timestamps: 
-            
-            current_timestamp_readings =  [x for x in traffic_json if x['timestamp'] == timestamp]
-            
-            for current_reading in current_timestamp_readings:
-                icao_address = current_reading['icao_address']
-                traffic_source = current_reading["traffic_source"]
-                source_type = current_reading["source_type"]
-                lat_dd = current_reading['lat_dd']
-                lon_dd = current_reading['lon_dd']
-                time_stamp = current_reading['timestamp']
-                altitude_mm = current_reading['altitude_mm']                
-                metadata = current_reading['metadata']
+        rid_json = json.loads(rid_json)
+        states = rid_json['states']
+        rid_operator_details = RIDOperatorDetails(
+            id=id,
+            serial_number='d29dbf50-f411-4488-a6f1-cf2ae4d4237a',
+            operation_description="Medicine Delivery",
+            operator_id='CHE-076dh0dq  ',
+            registration_number='CHE-5bisi9bpsiesw',
+        )
 
-                # print(timestamp)
-                headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ self.credentials['access_token']}
+        for state in states: 
+            
+            icao_address = ''
+            traffic_source = 11
+            source_type = 0
+            lat_dd = state['position']['lat']
+            lon_dd = state['position']['lng']
+            time_stamp = arrow.now().isoformat()
+            altitude_mm = state['position']['alt']
+            metadata = asdict(rid_operator_details)
+
+            # print(timestamp)
+            headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ self.credentials['access_token']}
+            
+            payload = {"observations":[{"icao_address" : icao_address,"traffic_source" :traffic_source, "source_type" : source_type, "lat_dd" : lat_dd, "lon_dd" : lon_dd, "time_stamp" : time_stamp,"altitude_mm" : altitude_mm, 'metadata':metadata}]}
+            
+            securl = 'http://localhost:8000/flight_data' # set this to self (Post the json to itself)
+            try:
+                response = requests.post(securl, json = payload, headers = headers)
                 
-                payload = {"observations":[{"icao_address" : icao_address,"traffic_source" :traffic_source, "source_type" : source_type, "lat_dd" : lat_dd, "lon_dd" : lon_dd, "time_stamp" : time_stamp,"altitude_mm" : altitude_mm, 'metadata':metadata}]}
-                
-                securl = 'http://localhost:8000/set_air_traffic' # set this to self (Post the json to itself)
-                try:
-                    response = requests.post(securl, json = payload, headers = headers)
-                    
-                except Exception as e:
-                    print(e)
-                else:
-                    print("Sleeping 10 seconds..")
-                    time.sleep(10)
+            except Exception as e:
+                print(e)
+            else:
+                print("Sleeping 10 seconds..")
+                time.sleep(10)
 
 
 if __name__ == '__main__':
