@@ -20,7 +20,7 @@ from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
-from .tasks import stream_rid_test_data
+from .tasks import stream_rid_test_data, stream_rid_data
 import time
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -311,15 +311,13 @@ def get_display_data(request):
             "message": "A incorrect view port bbox was provided"}
         return JsonResponse(json.dumps(view_port_error), status=400, content_type='application/json')
 
-
         
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
 def flight_data(request):
     ''' A RIDFlightDetails object is posted here'''
   
-    raw_data = request.data
-    
+    raw_data = request.data    
     try: 
         assert 'flights' in raw_data
     except AssertionError as ae:
@@ -363,11 +361,9 @@ def flight_data(request):
         r  = RIDFlightDetails(id =flight_id,aircraft_type =aircraft_type, current_state = current_state, simulated = 0, recent_positions = [])
         all_rid_data.append(asdict(r))
 
-    # stream_rid_data.delay(rid_data= json.dumps(all_rid_data))
+    stream_rid_data.delay(rid_data= json.dumps(all_rid_data))
     submission_success = {"message": "RemoteID data succesfully submitted"}
     return JsonResponse(submission_success, status=201, content_type='application/json')
-
-
 
         
 @api_view(['PUT'])

@@ -61,9 +61,9 @@ def stream_rid_data(rid_data):
     for r_data in rid_data:
         observation_metadata = SingleObeservationMetadata(telemetry= r_data, details_response=r_data)                
         flight_details_id = r_data['id']
-        lat_dd = r_data['position']['lat']
-        lon_dd = r_data['position']['lng']                    
-        altitude_mm = r_data['position']['alt']
+        lat_dd = r_data['current_state']['position']['lat']
+        lon_dd = r_data['current_state']['position']['lng']                    
+        altitude_mm = r_data['current_state']['position']['alt']
         traffic_source = 11
         source_type = 0
         icao_address = flight_details_id
