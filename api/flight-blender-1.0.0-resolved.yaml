@@ -2066,6 +2066,7 @@ components:
           - id
           - aircraft_type
           - current_state
+          - operator_details
           
         properties:
           id:
@@ -2078,6 +2079,9 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/RIDAircraftState'
+          operator_details: 
+            type: object
+            $ref: '#/components/schemas/RIDOperatorDetails'
                 
 
     ArrayOfObservations:
@@ -3426,6 +3430,137 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RIDRecentAircraftPosition'
+
+    RIDOperatorDetails:
+      description:  Details about a flight reported by a remote ID service provider.  At least one of the registration or serial fields must be filled if required by CAA.
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          description: ID for this flight, matching argument in request.
+          type: string
+          example: a3423b-213401-0023
+        eu_classification:
+          description: When this field is specified, the Classification Type is "European
+            Union".  If no other classification field is specified, the Classification Type
+            is "Undeclared".
+          anyOf:
+          - $ref: '#/components/schemas/UAClassificationEU'
+        uas_id:
+          $ref: '#/components/schemas/UASID'
+        operator_id:
+          description: This optional field provides a CAA-issued registration/license ID for the
+            remote pilot or operator. Format is <ICAO Nationality MarkA>.<CAA Assigned ID>, ASCII
+            encoded, only uppercase letters (A-Z), dot (.), and digits (0-9) are allowed. Example
+            is valid for the US.
+          type: string
+          default: ''
+          example: N.OP123456
+        operator_location:
+          $ref: '#/components/schemas/OperatorLocation'
+        operation_description:
+          description: Free-text field that enables the operator to describe the purpose
+            of a flight, if so desired.
+          type: string
+          example: SafeFlightDrone company doing survey with DJI Inspire 2. See my
+            privacy policy www.example.com/privacy.
+          default: ''
+        auth_data:
+          $ref: '#/components/schemas/RIDAuthData'
+    OperatorLocation:
+      description: Location associated with the Remote Pilot
+      type: object
+      required:
+      - position
+      properties:
+        position:
+          anyOf:
+          - $ref: '#/components/schemas/LatLngPoint'
+          description: Position of the Remote Pilot.
+        altitude:
+          anyOf:
+          - $ref: '#/components/schemas/Altitude'
+          description: Provides the Operator Altitude based on WGS-84 height above ellipsoid (HAE)
+            (See Geodetic Altitude).  This value is provided in meters and must have a minimum
+            resolution of 1 m.
+        altitude_type:
+          description: Source of data for the altitude field.
+          type: string
+          enum:
+          - Takeoff
+          - Dynamic
+          - Fixed
+
+    SpecificSessionID:
+      description: |-
+        A unique 20 byte ID intended to identify a specific flight (session) while providing a
+        greater level of privacy to the operator. The first byte is the registered unique Specific Session ID
+        Type maintained by a registrar (see Annex A5), and the remaining 19 bytes is the Session ID per the
+        Specific Session ID Type specification.
+
+        Initial scheme registry entries include:
+
+        0 – reserved
+        1 – Internet Engineering Task Force (IETF) Drone Remote Identification Protocol (DRIP) entity ID
+        2 – IEEE 1609.2 HashedID8
+
+        Expressed as a hexadecimal string of the underlying data bytes.  A recipient should ignore any dashes in this value.  If fewer than 20 bytes are specified, the remaining bytes at the end are assumed to have value 0.
+      type: string
+      example: 02-a1b2c3d4e5f60708
+      default: ''
+    UASID:
+      description: Identification of the UAS performing this flight.  At least one
+        field of this object must be specified.
+      type: object
+      properties:
+        serial_number:
+          description: This is expressed in the CTA-2063-A Serial Number format.
+          type: string
+          example: INTCJ123-4567-890
+          default: ''
+        registration_id:
+          description: If a CAA provides a method of registering UAS, this number
+            is provided by the CAA or its authorized representative.  Format is
+            <ICAO Nationality MarkA>.<CAA Assigned ID>, ASCII encoded, only
+            uppercase letters (A-Z), dot (.), and digits (0-9) are allowed.
+            Example is valid for the US.
+          type: string
+          example: N.123456
+          default: ''
+        utm_id:
+          description: A UTM-provided universally unique ID traceable to a
+            non-obfuscated ID that acts as a "session id" to protect exposure of
+            operationally sensitive information.
+          type: string
+          example: ae1fa066-6d68-4018-8274-af867966978e
+          default: ''
+        specific_session_id:
+          $ref: '#/components/schemas/SpecificSessionID'
+    UAClassificationEU:
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+          - EUCategoryUndefined
+          - Open
+          - Specific
+          - Certified
+          default: EUCategoryUndefined
+        class:
+          type: string
+          enum:
+          - EUClassUndefined
+          - Class0
+          - Class1
+          - Class2
+          - Class3
+          - Class4
+          - Class5
+          - Class6
+          default: EUClassUndefined
+
     RIDAircraftState:
       description: State of an aircraft for the purposes of remote ID.
       required:
