@@ -80,7 +80,7 @@ def submit_flights_to_spotlight():
 @app.task(name='start_openskies_stream')
 def start_openskies_stream(view_port:str):   
     view_port = json.loads(view_port)
-    print(view_port)
+    
     # submit task to write to the flight stream
     lng_min = min(view_port[0], view_port[2])
     lng_max = max(view_port[0], view_port[2])
@@ -111,7 +111,9 @@ def start_openskies_stream(view_port:str):
         
         response_data = response.json()
         logger.debug(response_data)
+        
         if response.status_code == 200:
+            
             if response_data['states'] is not None:
                 flight_df=pd.DataFrame(response_data['states'],columns=col_name)
                 flight_df=flight_df.fillna('No Data') 
