@@ -1,6 +1,6 @@
 {
     "reference_time": "2022-07-18T14:22:51.541652+00:00",
-    "states": [
+    "current_states": [
         {
             "timestamp": "2022-07-18T14:22:52.541652+00:00",
             "operational_status": "Airborne",
@@ -633,18 +633,30 @@
         }
     ],
     "flight_details": {
-        "rid_details": {
-            "id": "0",
-            "serial_number": "a7b87a5c-e980-475d-82f1-8658380450d4",
-            "operation_description": "Traffic Monitoring",
-            "operator_location": {
-                "lat": 46.97615311620088,
-                "lng": 7.476099729537965
-            },
-            "operator_id": "OP-m288cqc7",
-            "registration_number": "CHE41h2dwji1mp02"
-        },
-        "aircraft_type": "Helicopter",
-        "operator_name": "Decker-Wong"
-    }
+		"id": "a3423b-213401-0023",
+		"eu_classification": {
+			"category": "EUCategoryUndefined",
+			"class": "EUClassUndefined"
+		},
+		"uas_id": {
+			"serial_number": "INTCJ123-4567-890",
+			"registration_id": "N.123456",
+			"utm_id": "ae1fa066-6d68-4018-8274-af867966978e",
+			"specific_session_id": "02-a1b2c3d4e5f60708"
+		},
+		"operator_id": "N.OP123456",
+		"operator_location": {
+			"position": {
+				"lng": -118.456,
+				"lat": 34.12
+			},
+			"altitude": 19.5,
+			"altitude_type": "Takeoff"
+		},
+		"operation_description": "SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.",
+		"auth_data": {
+			"format": "string",
+			"data": "string"
+		}
+	}
 }

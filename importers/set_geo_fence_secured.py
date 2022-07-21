@@ -1,5 +1,5 @@
 ## A file to import flight data into the Secured Flight Spotlight instance. 
-import time
+import redis
 import requests 
 from dotenv import load_dotenv, find_dotenv
 import json
@@ -17,7 +17,7 @@ class PassportCredentialsGetter():
         pass
 
     def get_cached_credentials(self):  
-        r = get_redis() 
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
         
         now = datetime.now()
         

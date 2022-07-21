@@ -2238,7 +2238,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://local.test:8000/flight_stream/start_opensky_feed?view=34.0986568654943909,-118.4733867645263530,34.1304210314761178,-118.4358787536620952",
+							"raw": "http://local.test:8000/flight_stream/start_opensky_feed?view=-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -2252,7 +2252,56 @@
 							"query": [
 								{
 									"key": "view",
-									"value": "34.0986568654943909,-118.4733867645263530,34.1304210314761178,-118.4358787536620952"
+									"value": "-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Opensky Stream",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbC50ZXN0IiwiZXhwIjoxNjQ2MjI1MDA2LCJpc3MiOiJkdW1teSIsInNjb3BlIjoidXRtLmluamVjdF90ZXN0X2RhdGEiLCJzdWIiOiJ1c3MxIn0.QBdU8W-9f0Jl5_OMZW2TIjRu_DuByP5iQX68NRVqdsDZIPazBY43ppELgybtRUoz_E8ML3c7TRkPRTc6rCNbYaZ31gxFbodIG0DNlJ8z2wZtOSGvh319s8oYlhexE5ofZjRDxT_B0yjD5gL8n0ASpVsbdk_Q4V3ClF7VU7tYGzQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://opensky-network.org/api/states/all?lamin=51.45721588307605&lomin=-0.48099517822265625&lamax=51.48266574245327&lomax=0.44013977050781244",
+							"protocol": "https",
+							"host": [
+								"opensky-network",
+								"org"
+							],
+							"path": [
+								"api",
+								"states",
+								"all"
+							],
+							"query": [
+								{
+									"key": "lamin",
+									"value": "51.45721588307605"
+								},
+								{
+									"key": "lomin",
+									"value": "-0.48099517822265625"
+								},
+								{
+									"key": "lamax",
+									"value": "51.48266574245327"
+								},
+								{
+									"key": "lomax",
+									"value": "0.44013977050781244"
 								}
 							]
 						}
@@ -2359,7 +2408,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"flights\":\r\n    [\r\n        {\r\n            \"id\": \"5efb0a92-1c22-4274-9096-98787beeb83b\",\r\n            \"aircraft_type\": \"Helicopter\",\r\n            \"current_state\":\r\n            [\r\n                {\r\n                    \"timestamp\": \"2022-07-18T14:22:52.541652+00:00\",\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\":\r\n                    {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": 620,\r\n                        \"accuracy_h\": \"HAUnkown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\":\r\n                    {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ]\r\n        }\r\n    ]\r\n}"
+							"raw": "{\r\n    \"flights\": [\r\n        {\r\n            \"current_states\": [\r\n                {\r\n                    \"timestamp\": \"2022-07-18T14:22:52.541652+00:00\",\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\": {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": 620,\r\n                        \"accuracy_h\": \"HAUnkown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\": {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ],\r\n            \"flight_details\": {\r\n                \"id\": \"a3423b-213401-0023\",\r\n                \"eu_classification\": {\r\n                    \"category\": \"EUCategoryUndefined\",\r\n                    \"class\": \"EUClassUndefined\"\r\n                },\r\n                \"uas_id\": {\r\n                    \"serial_number\": \"INTCJ123-4567-890\",\r\n                    \"registration_id\": \"N.123456\",\r\n                    \"utm_id\": \"ae1fa066-6d68-4018-8274-af867966978e\",\r\n                    \"specific_session_id\": \"02-a1b2c3d4e5f60708\"\r\n                },\r\n                \"operator_id\": \"N.OP123456\",\r\n                \"operator_location\": {\r\n                    \"position\": {\r\n                        \"lng\": -118.456,\r\n                        \"lat\": 34.12\r\n                    },\r\n                    \"altitude\": 19.5,\r\n                    \"altitude_type\": \"Takeoff\"\r\n                },\r\n                \"operation_description\": \"SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.\",\r\n                \"auth_data\": {\r\n                    \"format\": \"string\",\r\n                    \"data\": \"string\"\r\n                }\r\n            }\r\n        }\r\n    ]\r\n}"
 						},
 						"url": {
 							"raw": "http://local.test:8000/rid/flight_data",

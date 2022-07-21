@@ -51,6 +51,7 @@ def submit_flights_to_spotlight():
     
     my_credentials = flight_stream_helper.PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
+    
     if 'error' in credentials: 
         logging.error('Error in getting credentials %s' % credentials)
     else:
@@ -62,6 +63,8 @@ def submit_flights_to_spotlight():
 
         # Keep only the latest message
         distinct_messages = {i['address']:i for i in reversed(pending_messages)}.values()
+
+        logging.info(len(distinct_messages))
         FLIGHT_SPOTLIGHT_URL = os.getenv('FLIGHT_SPOTLIGHT_URL', 'http://localhost:5000')
         
         securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'

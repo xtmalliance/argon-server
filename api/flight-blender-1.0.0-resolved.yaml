@@ -2063,25 +2063,18 @@ components:
       items:
         type: object
         required:
-          - id
-          - aircraft_type
-          - current_state
-          - operator_details
+          - current_states
+          - flight_details
           
         properties:
-          id:
-            type: number
-            format: float
-          aircraft_type:
-            type: number
-            format: float
-          current_state:
+        
+          current_states:
             type: array
             items:
               $ref: '#/components/schemas/RIDAircraftState'
-          operator_details: 
+          flight_details: 
             type: object
-            $ref: '#/components/schemas/RIDOperatorDetails'
+            $ref: '#/components/schemas/RIDFlightDetails'
                 
 
     ArrayOfObservations:
@@ -3430,6 +3423,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RIDRecentAircraftPosition'
+
 
     RIDOperatorDetails:
       description:  Details about a flight reported by a remote ID service provider.  At least one of the registration or serial fields must be filled if required by CAA.

@@ -1,11 +1,10 @@
 import os
-from os import environ as env, stat
+from os import environ as env
 from datetime import datetime, timedelta
 from dotenv import load_dotenv, find_dotenv
 import json
 from os.path import dirname, abspath
 import requests
-import redis
 from auth_helper.common import get_redis
 import time
 import arrow

@@ -239,26 +239,25 @@ class RIDRecentAircraftPosition:
 
 @dataclass
 class RIDOperatorDetails():
-  id: str
   operator_id: Optional[str]
   operation_description: Optional[str]
   serial_number: Optional[str]
   registration_number: Optional[str]
 
 @dataclass
-class RIDFlightDetails:
+class TelemetryFlightDetails:
   id: str
   aircraft_type: str
   current_state: RIDAircraftState
   # volumes: Optional[List[Volume4D]]
   simulated: bool
   recent_positions: List[RIDRecentAircraftPosition]
-  operator_details = RIDOperatorDetails
+  operator_details: RIDOperatorDetails
 
 @dataclass
 class RIDFlightResponse:
   timestamp: str
-  flights: List[RIDFlightDetails]
+  flights: List[TelemetryFlightDetails]
 
 @dataclass
 class AuthData:

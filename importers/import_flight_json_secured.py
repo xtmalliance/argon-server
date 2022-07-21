@@ -1,14 +1,14 @@
 ## A file to import flight data into the Secured Flight Spotlight instance. 
-from sys import setrecursionlimit
+
 import time
 from django.views.generic import base
 import requests 
 from dotenv import load_dotenv, find_dotenv
 import json
-import os
+
 from os import environ as env
 import redis
-from auth_helper.common import get_redis
+
 from datetime import datetime, timedelta
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -19,7 +19,7 @@ class PassportCredentialsGetter():
         pass
 
     def get_cached_credentials(self):  
-        r = get_redis()
+        r = redis.Redis(host=env.get('REDIS_HOST',"redis"), port =env.get('REDIS_PORT',6379))  
         
         now = datetime.now()
         
@@ -100,6 +100,6 @@ if __name__ == '__main__':
 
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
-    print(credentials)
+    
     my_uploader = FlightSpotlightUploader(credentials = credentials)
     my_uploader.upload_to_server(filename='air_traffic_samples/micro_flight_data.json')

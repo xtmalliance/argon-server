@@ -3,7 +3,7 @@ from auth_helper.utils import requires_scopes
 import json
 from dataclasses import asdict, is_dataclass
 
-from importers.rid_sample_data import RIDOperatorDetails
+from .rid_utils import RIDOperatorDetails
 from . import view_port_ops
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
@@ -14,7 +14,7 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails, RIDTime, RIDAircraftPosition, RIDAircraftState
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails, RIDTime, RIDAircraftPosition, RIDAircraftState, TelemetryFlightDetails
 from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
 import shapely.geometry
 import hashlib
@@ -321,27 +321,28 @@ def flight_data(request):
   
     raw_data = request.data    
     try: 
-        assert 'flights' in raw_data
-    except AssertionError as ae:
-        incorrect_parameters = {"message": "A flights objects with current state is necessary"}
+        assert 'observations' in raw_data
+    except AssertionError as ae:        
+        logging.info(ae)
+        incorrect_parameters = {"message": "A flight observation object with current state and flight details is necessary"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-    rid_flights_data =raw_data['flights']
+    
+    rid_flights_data =raw_data['observations']
+    
     all_rid_data = []
     for flight in rid_flights_data: 
-
+        flight['flight_details'].keys()
         try: 
-            assert 'id' in flight
-            assert 'aircraft_type' in flight
-            assert 'current_state' in flight
-            assert 'operator_details' in flight
+            assert 'flight_details' in flight
+            assert 'current_states' in flight
+            
         except AssertionError as ae:
-            incorrect_parameters = {"message": "A flights object with current state, id and aircraft type is necessary"}
+            incorrect_parameters = {"message": "A flights object with current states, flight details is necessary"}
             return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
+                
         
-        flight_id = flight['id']
-        aircraft_type = flight['aircraft_type']
-        current_states = flight['current_state']
-        operator_details = flight['operator_details']
+        current_states = flight['current_states']
+        flight_details = flight['flight_details']
         
         for current_state in current_states:
             # operational_status = current_state['operational_status']        
@@ -354,17 +355,17 @@ def flight_data(request):
             speed_accuracy = current_state['speed_accuracy']
             # vertical_speed = current_state['vertical_speed']
 
-
+        flight_id = '61a8044b-d939-4326-a6c9-17bcdbb2e053'
         now = arrow.now().isoformat()    
         time_format = 'RFC3339'
         time_stamp = RIDTime(value= now, format= time_format)
-
+        
         aircraft_position  = RIDAircraftPosition(lat=position['lat'] , lng= position['lng'], alt =position['alt'], accuracy_h= position['accuracy_h'], accuracy_v=position['accuracy_v'], extrapolated =position['extrapolated'], pressure_altitude =0)
         current_state = RIDAircraftState(timestamp =time_stamp ,timestamp_accuracy= 0, position =aircraft_position, speed_accuracy = speed_accuracy)
 
-        operator_details = RIDOperatorDetails(id=operator_details['id'], operation_description=operator_details['operation_description'], serial_number = operator_details['serial_number'], registration_number = operator_details['registration_number'])
+        op_details = RIDOperatorDetails(operation_description=flight_details['operation_description'], serial_number = flight_details['serial_number'], registration_number = flight_details['registration_number'], operator_id =flight_details['operator_id'] )
 
-        r  = RIDFlightDetails(id =flight_id,aircraft_type =aircraft_type, current_state = current_state, simulated = 0, recent_positions = [], operator_details = operator_details)
+        r  = TelemetryFlightDetails(id =flight_id,aircraft_type =flight_details['aircraft_type'], current_state = current_state, simulated = 0, recent_positions = [], operator_details = op_details)
         all_rid_data.append(asdict(r))
 
     stream_rid_data.delay(rid_data= json.dumps(all_rid_data))
