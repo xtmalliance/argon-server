@@ -17,3 +17,4 @@ arrow==1.2.2
 tldextract==3.2.1
 rtree==1.0.0
 psycopg2-binary==2.9.3
+dacite==1.6.0

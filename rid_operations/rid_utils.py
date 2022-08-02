@@ -249,7 +249,6 @@ class TelemetryFlightDetails:
   id: str
   aircraft_type: str
   current_state: RIDAircraftState
-  # volumes: Optional[List[Volume4D]]
   simulated: bool
   recent_positions: List[RIDRecentAircraftPosition]
   operator_details: RIDOperatorDetails

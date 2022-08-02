@@ -2,14 +2,12 @@ from requests.adapters import HTTPResponse
 from auth_helper.utils import requires_scopes
 import json
 from dataclasses import asdict, is_dataclass
-
 from .rid_utils import RIDOperatorDetails
 from . import view_port_ops
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
 from . import dss_rid_helper
-from os import environ as env
 from datetime import timedelta
 import uuid
 import arrow
@@ -318,52 +316,82 @@ def get_display_data(request):
 @requires_scopes(['blender.write'])
 def flight_data(request):
     ''' A RIDFlightDetails object is posted here'''
+    # This endpoints receives data from GCS and / or flights and processes remote ID data. 
+    # TODO: Use dacite to parse incoming json into a dataclass
     raw_data = request.data    
     try: 
         assert 'observations' in raw_data
     except AssertionError as ae:        
-        logging.info(ae)
         incorrect_parameters = {"message": "A flight observation object with current state and flight details is necessary"}
         return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-    
-    rid_flights_data =raw_data['observations']
+    # Get a list of flight data
+    rid_observations = raw_data['observations']
     
     all_rid_data = []
-    for flight in rid_flights_data: 
-        flight['flight_details'].keys()
+    for flight in rid_observations: 
         try: 
             assert 'flight_details' in flight
             assert 'current_states' in flight
-            
         except AssertionError as ae:
             incorrect_parameters = {"message": "A flights object with current states, flight details is necessary"}
             return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
                 
-        
         current_states = flight['current_states']
         flight_details = flight['flight_details']
-        
+        # 
         for current_state in current_states:
+            # mandatory RID Fields
+            try: 
+                assert 'position' in current_state
+                assert 'speed_accuracy' in current_state
+            except AssertionError as e: 
+                incorrect_parameters = {"message": "A position and speed_accuracy object is necessary "}
+                return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
+                
+            position = current_state['position']
+            speed_accuracy = current_state['speed_accuracy']
+
+
+            # Optional RID Fields
+            if ("operational_status","height","timestamp","track","vertical_speed","timestamp_accuracy") <= current_state.keys():
+                logging.info("All optional information provided")
+            else: 
+                logging.info("Not all optional information is provided")
+
             # operational_status = current_state['operational_status']        
             # timestamp = current_state['timestamp']
-            position = current_state['position']
             # height = current_state['height']
             # track = current_state['track']
             # speed = current_state['speed']
             # timestamp_accuracy = current_state['timestamp_accuracy']
-            speed_accuracy = current_state['speed_accuracy']
             # vertical_speed = current_state['vertical_speed']
-
+        # TODO: This is the operation id provided by Aerobridge
         flight_id = '61a8044b-d939-4326-a6c9-17bcdbb2e053'
         now = arrow.now().isoformat()    
         time_format = 'RFC3339'
+        # Submit the time stamg as now
         time_stamp = RIDTime(value= now, format= time_format)
-        
-        aircraft_position  = RIDAircraftPosition(lat=position['lat'] , lng= position['lng'], alt =position['alt'], accuracy_h= position['accuracy_h'], accuracy_v=position['accuracy_v'], extrapolated =position['extrapolated'], pressure_altitude =0)
-        current_state = RIDAircraftState(timestamp =time_stamp ,timestamp_accuracy= 0, position =aircraft_position, speed_accuracy = speed_accuracy)
+        logging.info("Submitting observation as now..")
 
-        op_details = RIDOperatorDetails(operation_description=flight_details['operation_description'], serial_number = flight_details['serial_number'], registration_number = flight_details['registration_number'], operator_id =flight_details['operator_id'] )
+        try: 
+            assert ("lat","lng","alt","accuracy_v","accuracy_h","extrapolated") <= position.keys()
+        except AssertionError as ae:
+            incorrect_parameters = {"message": "A full position object is required to submit a RID operation"}
+            return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
+        else: 
+            aircraft_position  = RIDAircraftPosition(lat=position['lat'] , lng= position['lng'], alt =position['alt'], accuracy_h= position['accuracy_h'], accuracy_v=position['accuracy_v'], extrapolated =position['extrapolated'], pressure_altitude =0)
+            current_state = RIDAircraftState(timestamp =time_stamp ,timestamp_accuracy= 0, position =aircraft_position, speed_accuracy = speed_accuracy)
 
+
+        try: 
+            assert ("operation_description","serial_number","registration_number","operator_id","id") <= flight_details.keys()
+        except AssertionError as ae:
+            incorrect_parameters = {"message": "A full flight details object is required to submit a RID operation"}
+            return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
+        else: 
+            op_details = RIDOperatorDetails(operation_description=flight_details['operation_description'], serial_number = flight_details['serial_number'], registration_number = fl`ight_details['registration_number'], operator_id =flight_details['operator_id'] )
+
+        flight_id = flight_details['id']
         r  = TelemetryFlightDetails(id =flight_id,aircraft_type =flight_details['aircraft_type'], current_state = current_state, simulated = 0, recent_positions = [], operator_details = op_details)
         all_rid_data.append(asdict(r))
 
