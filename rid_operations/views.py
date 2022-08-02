@@ -318,7 +318,6 @@ def get_display_data(request):
 @requires_scopes(['blender.write'])
 def flight_data(request):
     ''' A RIDFlightDetails object is posted here'''
-  
     raw_data = request.data    
     try: 
         assert 'observations' in raw_data
