@@ -8,12 +8,11 @@ import arrow, time
 import requests
 from dataclasses import dataclass, asdict
 import redis
+from typing import Optional
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
-
-from typing import Optional
 
 @dataclass
 class RIDOperatorDetails():
@@ -63,8 +62,7 @@ class PassportCredentialsGetter():
 class BlenderUploader():
     
     def __init__(self, credentials):        
-        
-        
+    
         self.credentials = credentials
     
     def upload_to_server(self, filename):
