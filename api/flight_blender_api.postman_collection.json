@@ -2411,7 +2411,7 @@
 							"raw": "{\r\n    \"flights\": [\r\n        {\r\n            \"current_states\": [\r\n                {\r\n                    \"timestamp\": \"2022-07-18T14:22:52.541652+00:00\",\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\": {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": 620,\r\n                        \"accuracy_h\": \"HAUnkown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\": {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ],\r\n            \"flight_details\": {\r\n                \"id\": \"a3423b-213401-0023\",\r\n                \"eu_classification\": {\r\n                    \"category\": \"EUCategoryUndefined\",\r\n                    \"class\": \"EUClassUndefined\"\r\n                },\r\n                \"uas_id\": {\r\n                    \"serial_number\": \"INTCJ123-4567-890\",\r\n                    \"registration_id\": \"N.123456\",\r\n                    \"utm_id\": \"ae1fa066-6d68-4018-8274-af867966978e\",\r\n                    \"specific_session_id\": \"02-a1b2c3d4e5f60708\"\r\n                },\r\n                \"operator_id\": \"N.OP123456\",\r\n                \"operator_location\": {\r\n                    \"position\": {\r\n                        \"lng\": -118.456,\r\n                        \"lat\": 34.12\r\n                    },\r\n                    \"altitude\": 19.5,\r\n                    \"altitude_type\": \"Takeoff\"\r\n                },\r\n                \"operation_description\": \"SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.\",\r\n                \"auth_data\": {\r\n                    \"format\": \"string\",\r\n                    \"data\": \"string\"\r\n                }\r\n            }\r\n        }\r\n    ]\r\n}"
 						},
 						"url": {
-							"raw": "http://local.test:8000/rid/flight_data",
+							"raw": "http://local.test:8000/set_telemetry",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -2419,8 +2419,7 @@
 							],
 							"port": "8000",
 							"path": [
-								"rid",
-								"flight_data"
+								"set_telemetry"
 							]
 						},
 						"description": "This request submits a Geofence to Flight Blender"

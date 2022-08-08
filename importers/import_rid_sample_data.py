@@ -77,7 +77,7 @@ class BlenderUploader():
             id="382b3308-fa11-4629-a966-84bb96d3b4db",
             serial_number='d29dbf50-f411-4488-a6f1-cf2ae4d4237a',
             operation_description="Medicine Delivery",
-            operator_id='CHE-076dh0dq  ',
+            operator_id='CHE-076dh0dq',
             registration_number='CHE-5bisi9bpsiesw',
         )
 

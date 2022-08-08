@@ -171,7 +171,7 @@ paths:
       in: path
       required: true
 
-  /rid/flight_data:
+  /flight_stream/set_telemetry:
     put: 
       tags:
       - rid

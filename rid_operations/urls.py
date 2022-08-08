@@ -20,8 +20,7 @@ from . import views as rid_views
 
 urlpatterns = [
     # Flight Spotlight specific views
-    path('create_dss_subscription', rid_views.create_dss_subscription),
-    path('flight_data', rid_views.flight_data),    
+    path('create_dss_subscription', rid_views.create_dss_subscription),    
     # USSP RID views
     ### This is the call back url to DSS
     path('uss/identification_service_areas/<uuid:subscription_id>', rid_views.dss_isa_callback),

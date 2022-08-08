@@ -2,7 +2,6 @@ from requests.adapters import HTTPResponse
 from auth_helper.utils import requires_scopes
 import json
 from dataclasses import asdict, is_dataclass
-from .rid_utils import RIDOperatorDetails
 from . import view_port_ops
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
@@ -12,7 +11,7 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails, RIDTime, RIDAircraftPosition, RIDAircraftState, TelemetryFlightDetails
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails
 from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
 import shapely.geometry
 import hashlib
@@ -20,7 +19,7 @@ from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
-from .tasks import stream_rid_test_data, stream_rid_data
+from .tasks import stream_rid_test_data
 import time
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -310,94 +309,6 @@ def get_display_data(request):
         view_port_error = {
             "message": "A incorrect view port bbox was provided"}
         return JsonResponse(json.dumps(view_port_error), status=400, content_type='application/json')
-
-        
-@api_view(['PUT'])
-@requires_scopes(['blender.write'])
-def flight_data(request):
-    ''' A RIDFlightDetails object is posted here'''
-    # This endpoints receives data from GCS and / or flights and processes remote ID data. 
-    # TODO: Use dacite to parse incoming json into a dataclass
-    raw_data = request.data    
-    try: 
-        assert 'observations' in raw_data
-    except AssertionError as ae:        
-        incorrect_parameters = {"message": "A flight observation object with current state and flight details is necessary"}
-        return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-    # Get a list of flight data
-    rid_observations = raw_data['observations']
-    
-    all_rid_data = []
-    for flight in rid_observations: 
-        try: 
-            assert 'flight_details' in flight
-            assert 'current_states' in flight
-        except AssertionError as ae:
-            incorrect_parameters = {"message": "A flights object with current states, flight details is necessary"}
-            return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-                
-        current_states = flight['current_states']
-        flight_details = flight['flight_details']
-        # 
-        for current_state in current_states:
-            # mandatory RID Fields
-            try: 
-                assert 'position' in current_state
-                assert 'speed_accuracy' in current_state
-            except AssertionError as e: 
-                incorrect_parameters = {"message": "A position and speed_accuracy object is necessary "}
-                return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-                
-            position = current_state['position']
-            speed_accuracy = current_state['speed_accuracy']
-
-
-            # Optional RID Fields
-            if ("operational_status","height","timestamp","track","vertical_speed","timestamp_accuracy") <= current_state.keys():
-                logging.info("All optional information provided")
-            else: 
-                logging.info("Not all optional information is provided")
-
-            # operational_status = current_state['operational_status']        
-            # timestamp = current_state['timestamp']
-            # height = current_state['height']
-            # track = current_state['track']
-            # speed = current_state['speed']
-            # timestamp_accuracy = current_state['timestamp_accuracy']
-            # vertical_speed = current_state['vertical_speed']
-        # TODO: This is the operation id provided by Aerobridge
-        flight_id = '61a8044b-d939-4326-a6c9-17bcdbb2e053'
-        now = arrow.now().isoformat()    
-        time_format = 'RFC3339'
-        # Submit the time stamg as now
-        time_stamp = RIDTime(value= now, format= time_format)
-        logging.info("Submitting observation as now..")
-
-        try: 
-            assert ("lat","lng","alt","accuracy_v","accuracy_h","extrapolated") <= position.keys()
-        except AssertionError as ae:
-            incorrect_parameters = {"message": "A full position object is required to submit a RID operation"}
-            return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-        else: 
-            aircraft_position  = RIDAircraftPosition(lat=position['lat'] , lng= position['lng'], alt =position['alt'], accuracy_h= position['accuracy_h'], accuracy_v=position['accuracy_v'], extrapolated =position['extrapolated'], pressure_altitude =0)
-            current_state = RIDAircraftState(timestamp =time_stamp ,timestamp_accuracy= 0, position =aircraft_position, speed_accuracy = speed_accuracy)
-
-
-        try: 
-            assert ("operation_description","serial_number","registration_number","operator_id","id") <= flight_details.keys()
-        except AssertionError as ae:
-            incorrect_parameters = {"message": "A full flight details object is required to submit a RID operation"}
-            return HttpResponse(json.dumps(incorrect_parameters), status=400, content_type='application/json')
-        else: 
-            op_details = RIDOperatorDetails(operation_description=flight_details['operation_description'], serial_number = flight_details['serial_number'], registration_number = fl`ight_details['registration_number'], operator_id =flight_details['operator_id'] )
-
-        flight_id = flight_details['id']
-        r  = TelemetryFlightDetails(id =flight_id,aircraft_type =flight_details['aircraft_type'], current_state = current_state, simulated = 0, recent_positions = [], operator_details = op_details)
-        all_rid_data.append(asdict(r))
-
-    stream_rid_data.delay(rid_data= json.dumps(all_rid_data))
-    submission_success = {"message": "RemoteID data succesfully submitted"}
-    return JsonResponse(submission_success, status=201, content_type='application/json')
 
         
 @api_view(['PUT'])

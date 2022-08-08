@@ -10,8 +10,10 @@ from dataclasses import asdict
 from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
-
+from rid_operations.rid_utils import  RIDTime, RIDAircraftPosition, RIDAircraftState, TelemetryFlightDetails,RIDOperatorDetails
 from rid_operations import view_port_ops
+import arrow
+from rid_operations.tasks import stream_rid_data
 from . import flight_stream_helper
 logger = logging.getLogger('django')
 
@@ -161,3 +163,101 @@ def start_opensky_feed(request):
     else:
         view_port_error = {"message": "An incorrect view port bbox was provided"}
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
+
+
+@api_view(['PUT'])
+@requires_scopes(['blender.write'])
+def set_telemetry(request):
+    ''' A RIDFlightDetails object is posted here'''
+    # This endpoints receives data from GCS and / or flights and processes remote ID data. 
+    # TODO: Use dacite to parse incoming json into a dataclass
+    raw_data = request.data
+    
+    try: 
+        assert 'observations' in raw_data
+    except AssertionError as ae:        
+        incorrect_parameters = {"message": "A flight observation object with current state and flight details is necessary"}
+        return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
+    # Get a list of flight data
+    rid_observations = raw_data['observations']
+    
+    all_rid_data = []
+    for flight in rid_observations: 
+        try: 
+            assert 'flight_details' in flight
+            assert 'current_states' in flight
+        except AssertionError as ae:
+            incorrect_parameters = {"message": "A flights object with current states, flight details is necessary"}
+            return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
+                
+        current_states = flight['current_states']
+        flight_details = flight['flight_details']
+        # 
+        for current_state in current_states:
+            # mandatory RID Fields
+            try: 
+                assert 'position' in current_state
+                assert 'speed_accuracy' in current_state
+            except AssertionError as e: 
+                incorrect_parameters = {"message": "A position and speed_accuracy object is necessary "}
+                return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
+                
+            position = current_state['position']
+            speed_accuracy = current_state['speed_accuracy']
+
+
+            # Optional RID Fields
+            if ("operational_status","height","timestamp","track","vertical_speed","timestamp_accuracy") <= tuple(current_state.keys()):
+                logging.info("All optional information provided")
+            else: 
+                logging.info("Not all optional information is provided")
+
+            # operational_status = current_state['operational_status']        
+            # timestamp = current_state['timestamp']
+            # height = current_state['height']
+            # track = current_state['track']
+            # speed = current_state['speed']
+            # timestamp_accuracy = current_state['timestamp_accuracy']
+            # vertical_speed = current_state['vertical_speed']
+        # TODO: This is the operation id provided by Aerobridge
+        flight_id = '61a8044b-d939-4326-a6c9-17bcdbb2e053'
+        now = arrow.now().isoformat()    
+        time_format = 'RFC3339'
+        # Submit the time stamg as now
+        time_stamp = RIDTime(value= now, format= time_format)
+        logging.info("Submitting observation as now..")
+        
+        try: 
+            assert set(("lat","lng","alt","accuracy_v","accuracy_h","extrapolated")) <= set(position.keys())
+        except AssertionError as ae:
+            
+            incorrect_parameters = {"message": "A full position object is required to submit a RID observation"}
+            return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
+        else: 
+            aircraft_position  = RIDAircraftPosition(lat=position['lat'] , lng= position['lng'], alt =position['alt'], accuracy_h= position['accuracy_h'], accuracy_v=position['accuracy_v'], extrapolated =position['extrapolated'], pressure_altitude =0)
+            current_state = RIDAircraftState(timestamp =time_stamp ,timestamp_accuracy= 0, position =aircraft_position, speed_accuracy = speed_accuracy)
+        try: 
+            assert set(("rid_details","operator_name","aircraft_type")) <= set(flight_details.keys())
+        except AssertionError as ae:
+            incorrect_parameters = {"message": "A full flight details object is required to submit a RID observation"}
+            return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
+        rid_details = flight_details['rid_details']
+        print(rid_details.keys())
+        try: 
+            assert set(("serial_number","operation_description","operator_location","operator_id","registration_number")) <= set(rid_details.keys())
+        except AssertionError as ae:
+            incorrect_parameters = {"message": "A full flight details object is required to submit a RID observation"}
+            return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
+
+        else: 
+            op_details = RIDOperatorDetails(operation_description=rid_details['operation_description'], serial_number = rid_details['serial_number'], registration_number = rid_details['registration_number'], operator_id =rid_details['operator_id'] )
+
+        flight_id = rid_details['id']
+        r  = TelemetryFlightDetails(id =flight_id,aircraft_type =flight_details['aircraft_type'], current_state = current_state, simulated = 0, recent_positions = [], operator_details = op_details)
+        all_rid_data.append(asdict(r))
+
+    stream_rid_data.delay(rid_data= all_rid_data)
+    submission_success = {"message": "Telemetry data succesfully submitted"}
+    return JsonResponse(submission_success, status=201, content_type='application/json')
+
+        
