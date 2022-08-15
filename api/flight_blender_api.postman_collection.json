@@ -2095,6 +2095,127 @@
 						"description": "This request submits a Geofence to Flight Blender"
 					},
 					"response": []
+				},
+				{
+					"name": "Get All Geofence within a view",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "accessTokenUrl",
+									"value": "http://local.test:9000/oauth/token/",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "Blender RW Token",
+									"type": "string"
+								},
+								{
+									"key": "scope",
+									"value": "{{flight_blender_scopes}}",
+									"type": "string"
+								},
+								{
+									"key": "audience",
+									"value": {
+										"56d75814-297b-4a52-b60d-94e1b4f0aee6": "{{flight_blender_audience}}"
+									},
+									"type": "any"
+								},
+								{
+									"key": "clientSecret",
+									"value": "{{client_secret}}",
+									"type": "string"
+								},
+								{
+									"key": "clientId",
+									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
+									"type": "string"
+								},
+								{
+									"key": "accessToken",
+									"value": "\"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MjQyNjcwMjAsImlhdCI6MTYyNDI2MzQyMCwic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSBkc3MucmVhZC5pZGVudGlmaWNhdGlvbl9zZXJ2aWNlX2FyZWFzIiwidHlwIjoiQmVhcmVyIiwiYXVkIjoidGVzdGZsaWdodC5mbGlnaHRibGVuZGVyLmNvbSJ9.RletK2EmPyJGbHLJzJbqUuaYUzO0RhzFUPOM7hDIykHDmrP8EbcXK3DXtmuirCuvPSHr6XvtXNMGWWySgvYzUucitNPhP0KXV96Ci6s7MIBBmARPS7wuSTSIZJYL7A6xW_BZp2IDV2A_tCM7BFpq8rIIBO1v_KbGm-C6lrSjjUp8JlpxkdCBmmkyEqNeppyw7kxIxBJFNnHGAE0WIQ1mANXNLIADn8v3vPh6AWNs8Pzjeh-sLkAjkg5IejMxCJCpZUbqBtDUzGbycy3a-yHK10efu1gOR5enez4ExY0jd5ZSklbO4mWlJ3Qba1WNEoqThHHzH64rPIvt89Q68RHH9umhl2_nPFPHznq4xQXBfWGHyKv_0hglFOGCxRfQB3RKkzZpvHy9BHZjnjfPx5IKjg4qVug6_yCFNTuRJlHNA_ymcpcEGHgQqm2gxRRv2JU3dCSTL4i6pse9xcMZIsJxupp-eLe8qe_PVAh0uL_F_ogBuTVYTIBXDE-MTGVkrbd-DJJ_kZI2-qKGH6PR8VsZjBp26SG88IWhF-AICnw4bVcsC3BiDf_dsUf5_EUbXI0A3XmmDJzU6G42-VaWoFF26EOYsT7g_Y3g3m9Q7dpa3GdzcAIdFU6o7hXPPIakHQwifUP8UqXpqEA5UYu_DluWhNg1cQcPG3gayzUob0tBO8U",
+									"type": "string"
+								},
+								{
+									"key": "redirect_uri",
+									"value": "http://local.test:8000/",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "string"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://local.test:8000/oauth/authorize/",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://local.test:8000/geo_fence_ops/geo_fence?view=30.1391887664794922,-1.9744016045411854, 30.1593589782714844,-1.9683112323881620",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"geo_fence_ops",
+								"geo_fence"
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2021-01-21",
+									"disabled": true
+								},
+								{
+									"key": "end_date",
+									"value": "2021-01-31",
+									"disabled": true
+								},
+								{
+									"key": "view",
+									"value": "30.1391887664794922,-1.9744016045411854, 30.1593589782714844,-1.9683112323881620"
+								}
+							]
+						},
+						"description": "This request submits a Geofence to Flight Blender"
+					},
+					"response": []
 				}
 			]
 		},
@@ -2408,10 +2529,10 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"flights\": [\r\n        {\r\n            \"current_states\": [\r\n                {\r\n                    \"timestamp\": \"2022-07-18T14:22:52.541652+00:00\",\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\": {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": 620,\r\n                        \"accuracy_h\": \"HAUnkown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\": {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ],\r\n            \"flight_details\": {\r\n                \"id\": \"a3423b-213401-0023\",\r\n                \"eu_classification\": {\r\n                    \"category\": \"EUCategoryUndefined\",\r\n                    \"class\": \"EUClassUndefined\"\r\n                },\r\n                \"uas_id\": {\r\n                    \"serial_number\": \"INTCJ123-4567-890\",\r\n                    \"registration_id\": \"N.123456\",\r\n                    \"utm_id\": \"ae1fa066-6d68-4018-8274-af867966978e\",\r\n                    \"specific_session_id\": \"02-a1b2c3d4e5f60708\"\r\n                },\r\n                \"operator_id\": \"N.OP123456\",\r\n                \"operator_location\": {\r\n                    \"position\": {\r\n                        \"lng\": -118.456,\r\n                        \"lat\": 34.12\r\n                    },\r\n                    \"altitude\": 19.5,\r\n                    \"altitude_type\": \"Takeoff\"\r\n                },\r\n                \"operation_description\": \"SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.\",\r\n                \"auth_data\": {\r\n                    \"format\": \"string\",\r\n                    \"data\": \"string\"\r\n                }\r\n            }\r\n        }\r\n    ]\r\n}"
+							"raw": "{\r\n    \"observations\": [\r\n        {\r\n            \"current_states\": [\r\n                {\r\n                    \"timestamp\": \"2022-07-18T14:22:52.541652+00:00\",\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\": {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": 620,\r\n                        \"accuracy_h\": \"HAUnkown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\": {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ],\r\n            \"flight_details\": {\r\n                \"rid_details\": {\r\n                    \"id\": \"1\",\r\n                    \"serial_number\": \"f9edf164-1c8f-45d7-9854-bc0ffa33573d\",\r\n                    \"operation_description\": \"Delivery operation, see more details at https://deliveryops.com/operation\",\r\n                    \"operator_location\": {\r\n                        \"lat\": 46.97615311620088,\r\n                        \"lng\": 7.476099729537965\r\n                    },\r\n                    \"operator_id\": \"OP-0xn81lwa\",\r\n                    \"registration_number\": \"CHE9t1sq8bqa023t\"\r\n                },\r\n                \"aircraft_type\": \"Helicopter\",\r\n                \"operator_name\": \"Thomas-Roberts\"\r\n            }\r\n        }\r\n    ]\r\n}"
 						},
 						"url": {
-							"raw": "http://local.test:8000/set_telemetry",
+							"raw": "http://local.test:8000/flight_stream/set_telemetry",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -2419,6 +2540,7 @@
 							],
 							"port": "8000",
 							"path": [
+								"flight_stream",
 								"set_telemetry"
 							]
 						},
@@ -2617,22 +2739,22 @@
 					"formdata": [
 						{
 							"key": "client_id",
-							"value": "F0vkVgZBCMfBzmrA6MR4IInLSKkDgXjcQojWLVkS",
+							"value": "{{client_id}}",
 							"type": "text"
 						},
 						{
 							"key": "client_secret",
-							"value": "iiYauERMGU6i4vcr4tPhAomVpCuiBGTYB0LRuUPPnkDIKTrTCgA9kCQpzmrpz2B4FHvi7FHsPClfmzoyhBRusRUGMo0exw0QPkSYCwFhnkRsG0lXTU3JfKTuvbdysdyX",
+							"value": "{{client_secret}}",
 							"type": "text"
 						},
 						{
 							"key": "audience",
-							"value": "testflight.flightblender.com",
+							"value": "{{flight_blender_audience}}",
 							"type": "text"
 						},
 						{
 							"key": "scope",
-							"value": "blender.read blender.write",
+							"value": "{{flight_blender_scopes}}",
 							"type": "text"
 						},
 						{
