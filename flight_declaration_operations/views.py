@@ -6,7 +6,7 @@ from auth_helper.utils import requires_scopes
 import json
 import arrow
 from rest_framework.decorators import api_view
-
+from typing import List
 from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
 from dataclasses import asdict
