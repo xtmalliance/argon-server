@@ -4,6 +4,8 @@ from auth_helper.utils import requires_scopes
 # Create your views here.
 import json
 import arrow
+from typing import List
+from . import rtree_geo_fence_helper
 from rest_framework.decorators import api_view
 from shapely.geometry import shape
 from .models import GeoFence
@@ -15,10 +17,10 @@ from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
 from decimal import Decimal
 import logging
-
-
 logger = logging.getLogger('django')
 
+
+INDEX_NAME = 'geofence_proc'
 
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
@@ -116,7 +118,6 @@ def set_geozone(request):
     op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f)})
     return HttpResponse(op, status=200)
 
-
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class GeoFenceDetail(mixins.RetrieveModelMixin, 
                     generics.GenericAPIView):
@@ -134,26 +135,51 @@ class GeoFenceList(mixins.ListModelMixin,
     queryset = GeoFence.objects.all()
     serializer_class = GeoFenceSerializer
 
-    def get_responses(self, start, end):
-        
+    def get_relevant_geo_fence(self,start_date, end_date,  view_port:List[float]):               
+
+
         present = arrow.now()
-        if start and end:
-            start_date = arrow.get(start, "YYYY-MM-DD")
-            end_date = arrow.get(end, "YYYY-MM-DD")
+        if start_date and end_date:
+            s_date = arrow.get(start_date, "YYYY-MM-DD")
+            e_date = arrow.get(end_date, "YYYY-MM-DD")
     
-        else: 
+        else:             
+            s_date = present.shift(days=-1)
+            e_date = present.shift(days=1)
+        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__gte = s_date.isoformat(), end_datetime__lte = e_date.isoformat())
+        logging.info("Found %s geofences" % len(all_fences_within_timelimits))
+        if view_port:
             
-            start_date = present.shift(days=-1)
-            end_date = present.shift(days=1)
-        
-        return GeoFence.objects.filter(start_datetime__gte = start_date.isoformat(), end_datetime__lte = end_date.isoformat())
+            my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
+            my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
+
+
+            all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_port)
+            relevant_id_set = []
+            for i in all_relevant_fences:
+                relevant_id_set.append(i['geo_fence_id'])
+
+            my_rtree_helper.clear_rtree_index()
+            filtered_relevant_fences = GeoFence.objects.filter(id__in = relevant_id_set)
+            
+        else: 
+            filtered_relevant_fences = all_fences_within_timelimits
+
+        return filtered_relevant_fences
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date', None)
         end_date = self.request.query_params.get('end_date', None)
 
-        Responses = self.get_responses(start_date, end_date)
-        return Responses
+        view = self.request.query_params.get('view', None)
+        view_port = []
+        if view:
+            view_port = [float(i) for i in view.split(",")]
+        
+        responses = self.get_relevant_geo_fence(view_port= view_port,start_date= start_date, end_date= end_date)
+        return responses
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+        

@@ -130,7 +130,6 @@ class FlightDeclarationDetail(mixins.RetrieveModelMixin,
         return self.retrieve(request, *args, **kwargs)
 
 
-
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class FlightDeclarationList(mixins.ListModelMixin,  
     generics.GenericAPIView):

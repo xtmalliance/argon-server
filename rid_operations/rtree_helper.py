@@ -1,13 +1,11 @@
 from rtree import index
 from typing import List
-from os import environ as env
-import redis
 from auth_helper.common import get_redis
 import json 
 from shapely.geometry import Polygon
 from rtree import index
 from scd_operations.scd_data_definitions import OpInttoCheckDetails
-
+import hashlib
 
 
 class OperationalIntentsIndexFactory():
@@ -29,24 +27,29 @@ class OperationalIntentsIndexFactory():
         for flight_idx, flight_id in enumerate(all_op_ints):
                                  
             flight_id_str = flight_id.split('.')[1]        
+            
+            enumerated_flight_id = int(hashlib.sha256(flight_id_str.encode('utf-8')).hexdigest(), 16) % 10**8
             operational_intent_view_raw = self.r.get(flight_id)   
             operational_intent_view = json.loads(operational_intent_view_raw)            
             split_view = operational_intent_view['bounds'].split(",")
             start_time = operational_intent_view['start_time']
             end_time  = operational_intent_view['end_time']            
             view = [float(i) for i in split_view]            
-            self.add_box_to_index(enumerated_id= flight_idx, flight_id = flight_id_str, view = view, start_time=start_time, end_time= end_time)
+            self.add_box_to_index(enumerated_id= enumerated_flight_id, flight_id = flight_id_str, view = view, start_time=start_time, end_time= end_time)
 
     def clear_rtree_index(self):
         """Method to delete all boxes from the index"""
 
         all_op_ints = self.r.keys(pattern='flight_opint.*')
-        for flight_idx, flight_id in enumerate(all_op_ints):           
+        for flight_idx, flight_id in enumerate(all_op_ints):   
+            flight_id_str = flight_id.split('.')[1]        
+            
+            enumerated_flight_id = int(hashlib.sha256(flight_id_str.encode('utf-8')).hexdigest(), 16) % 10**8        
             operational_intent_view_raw = self.r.get(flight_id)   
             operational_intent_view = json.loads(operational_intent_view_raw)            
             split_view = operational_intent_view['bounds'].split(",")
             view = [float(i) for i in split_view]            
-            self.delete_from_index(enumerated_id= flight_idx,view = view)
+            self.delete_from_index(enumerated_id= enumerated_flight_id,view = view)
 
     def check_box_intersection(self, view_box:List[float]):
         intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]        

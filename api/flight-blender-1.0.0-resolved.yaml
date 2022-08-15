@@ -1347,9 +1347,17 @@ paths:
       summary: 'Get a list of all submitted Geofence'
       security:
         - AuthFromPassport: [blender.read]
-      description: 'By default all geo fence submitted in Flight Blender have a start and end date, if none is provided, the server will default to today as start and end date'
+      description: 'By default all geo fence submitted in Flight Blender has  a start and end date, if none is provided, the server will default to today as start and end date'
 
       parameters:
+        - name: view
+          description:
+            'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard. The view is the smallest box
+            bounded by the provided corner points.'
+          schema:
+            type: string
+            example: 29.97816,31.13296,29.98025,31.13535
+          in: query
         - name: start_date
           in: query
           schema:
@@ -3325,7 +3333,6 @@ components:
         URL. Accordingly, this URL may not have a trailing '/' character.
       type: string
       example: https://uss.example.com/utm
-
     OperationalIntent:
       description: Full description of a UTM operational intent.
       required:
@@ -3337,7 +3344,6 @@ components:
           $ref: '#/components/schemas/OperationalIntentReference'
         details:
           $ref: '#/components/schemas/OperationalIntentDetails'
-
     GetOperationalIntentDetailsResponse:
       description: >-
         Response to peer request for the details of operational intent with the
@@ -3348,7 +3354,6 @@ components:
       properties:
         operational_intent:
           $ref: '#/components/schemas/OperationalIntent'
-
     ErrorResponse:
       description: >-
         Human-readable string returned when an error occurs as a result of a USS
@@ -3423,8 +3428,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RIDRecentAircraftPosition'
-
-
     RIDOperatorDetails:
       description:  Details about a flight reported by a remote ID service provider.  At least one of the registration or serial fields must be filled if required by CAA.
       required:
@@ -3485,7 +3488,6 @@ components:
           - Takeoff
           - Dynamic
           - Fixed
-
     SpecificSessionID:
       description: |-
         A unique 20 byte ID intended to identify a specific flight (session) while providing a
@@ -3554,7 +3556,6 @@ components:
           - Class5
           - Class6
           default: EUClassUndefined
-
     RIDAircraftState:
       description: State of an aircraft for the purposes of remote ID.
       required:
@@ -3669,7 +3670,6 @@ components:
       - Ground
       - Airborne
       type: string
-
     RIDHeight:
       description: A relative altitude for the purposes of remote ID.
       required:
@@ -3793,7 +3793,6 @@ components:
             deltas" between aircraft.  This value is provided in meters and must have
             a minimum resolution of 1 meter.
           type: number
-
     HorizontalAccuracy:
       description: |-
         This is the NACp enumeration from ADS-B, plus 1m for a more complete range for UAs.

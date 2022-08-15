@@ -64,8 +64,8 @@ def SCDClearAreaRequest(request):
     my_geo_json_converter.convert_volumes_to_geojson(volumes = extent)
     view_rect_bounds = my_geo_json_converter.get_bounds()
 
-    my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
-    my_rtree_helper.generate_operational_intents_index()
+    my_rtree_helper = rtree_helper.RTreeIndexFactory(index_name=INDEX_NAME)
+    my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
 
     all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
     
@@ -91,7 +91,7 @@ def SCDClearAreaRequest(request):
     else:
         clear_area_status = ClearAreaResponse(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
    
-    my_rtree_helper.clear_rtree_index()
+    my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')
     return JsonResponse(json.loads(json.dumps(clear_area_status, cls=EnhancedJSONEncoder)), status=200)
 
 @api_view(['PUT','DELETE'])
@@ -106,8 +106,8 @@ def SCDAuthTest(request, flight_id):
 
         scd_test_data = request.data
         r = get_redis()
-        my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
-        my_rtree_helper.generate_operational_intents_index()
+        my_rtree_helper = rtree_helper.RTreeIndexFactory(index_name=INDEX_NAME)
+        my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
         try:
             flight_authorization_data = scd_test_data['flight_authorisation']
             f_a = FlightAuthorizationDataPayload(uas_serial_number = flight_authorization_data['uas_serial_number'],operation_category = flight_authorization_data['operation_category'], operation_mode = flight_authorization_data['operation_mode'], uas_class = flight_authorization_data['uas_class'], identification_technologies = flight_authorization_data['identification_technologies'],connectivity_methods = flight_authorization_data['connectivity_methods'],  endurance_minutes = flight_authorization_data['endurance_minutes'], emergency_procedure_url = flight_authorization_data['emergency_procedure_url'],operator_id = flight_authorization_data['operator_id'])
@@ -206,7 +206,7 @@ def SCDAuthTest(request, flight_id):
         #     # No existing op ints we can plan it.             
         #     self_deconflicted = True
         
-        my_rtree_helper.clear_rtree_index()            
+        my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')            
         # if self_deconflicted: 
         
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
