@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view
 from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
 from dataclasses import asdict
-from .tasks import write_flight_declaration
+from flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from shapely.geometry import shape
 from .data_definitions import FlightDeclarationRequest, Altitude
 from rest_framework import mixins, generics
@@ -18,6 +18,8 @@ from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalS
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
 from .pagination import StandardResultsSetPagination
+import logging
+logger = logging.getLogger('django')
 
 @api_view(['POST'])
 @requires_scopes(['blender.write'])
@@ -137,28 +139,51 @@ class FlightDeclarationList(mixins.ListModelMixin,
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationSerializer
     pagination_class = StandardResultsSetPagination
-    def get_responses(self, start, end):
-        
+
+    def get_relevant_flight_declaration(self,start_date, end_date,  view_port:List[float]):               
+
+
         present = arrow.now()
-        if start and end:
-            try:
-                start_date = arrow.get(start, "YYYY-MM-DD")
-                end_date = arrow.get(end, "YYYY-MM-DD")    
-            except Exception as e:
-                start_date = present.shift(months=-1)
-                end_date = present.shift(days=1)
+        if start_date and end_date:
+            s_date = arrow.get(start_date, "YYYY-MM-DD")
+            e_date = arrow.get(end_date, "YYYY-MM-DD")
+    
         else:             
-            start_date = present.shift(months=-1)
-            end_date = present.shift(days=1)
-        
-        return FlightDeclaration.objects.filter(end_datetime__lte = end_date.isoformat(),start_datetime__gte = start_date.isoformat())
+            s_date = present.shift(days=-1)
+            e_date = present.shift(days=1)
+        all_fd_within_timelimits = FlightDeclaration.objects.filter(start_datetime__gte = s_date.isoformat(), end_datetime__lte = e_date.isoformat())
+        logging.info("Found %s flight declarations" % len(all_fd_within_timelimits))
+        if view_port:
+            
+            my_rtree_helper = FlightDeclarationRTreeIndexFactory()  
+            my_rtree_helper.generate_flight_declaration_index(all_fences = all_fd_within_timelimits)
+
+            all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_port)
+            relevant_id_set = []
+            for i in all_relevant_fences:
+                relevant_id_set.append(i['flight_declaration_id'])
+
+            my_rtree_helper.clear_rtree_index()
+            filtered_relevant_fd = FlightDeclaration.objects.filter(id__in = relevant_id_set)
+            
+        else: 
+            filtered_relevant_fd = all_fd_within_timelimits
+
+        return filtered_relevant_fd
 
     def get_queryset(self):
         start_date = self.request.query_params.get('start_date', None)
         end_date = self.request.query_params.get('end_date', None)
 
-        Responses = self.get_responses(start_date, end_date)
-        return Responses
+        view = self.request.query_params.get('view', None)
+        view_port = []
+        if view:
+            view_port = [float(i) for i in view.split(",")]
+        
+        responses = self.get_relevant_flight_declaration(view_port= view_port,start_date= start_date, end_date= end_date)
+        return responses
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+        
