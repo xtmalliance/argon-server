@@ -914,7 +914,7 @@ paths:
   /flight_stream/get_air_traffic:
     get:
       parameters:
-        - name: view_port
+        - name: view
           in: path
           description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
           schema:
