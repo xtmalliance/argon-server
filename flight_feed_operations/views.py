@@ -135,7 +135,7 @@ def get_air_traffic(request):
             all_traffic_observations.append(asdict(so))
         
 
-        return JsonResponse(json.dumps(all_traffic_observations),  status=200, content_type='application/json')
+        return JsonResponse({"observations":all_traffic_observations},  status=200, content_type='application/json')
     else:
         view_port_error = {"message": "A incorrect view port bbox was provided"}
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
