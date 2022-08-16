@@ -148,7 +148,7 @@ CELERYBEAT_SCHEDULE = {
     'submit-spotlight-task': {
         'task': 'submit_flights_to_spotlight',
         # Every 30 secionds
-        'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS',3),default=4)),
+        'schedule':  timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))
     }, 
     
     # 'poll-flights':{
