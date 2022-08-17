@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 from os.path import dirname, abspath
 from dotenv import load_dotenv, find_dotenv
 from os import environ as env
-import redis
-from auth_helper.common import get_redis
+from common import get_redis
 import os
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -86,13 +85,13 @@ class BlenderUploader():
                 
                 payload = {"observations":[{"icao_address" : icao_address,"traffic_source" :traffic_source, "source_type" : source_type, "lat_dd" : lat_dd, "lon_dd" : lon_dd, "time_stamp" : time_stamp,"altitude_mm" : altitude_mm, 'metadata':metadata}]}
                 
-                securl = 'http://localhost:8000/set_air_traffic' # set this to self (Post the json to itself)
+                securl = 'http://localhost:8000/flight_stream/set_air_traffic' # set this to self (Post the json to itself)
                 try:
                     response = requests.post(securl, json = payload, headers = headers)
                     
                 except Exception as e:
                     print(e)
-                else:
+                else:                    
                     print("Sleeping 10 seconds..")
                     time.sleep(10)
 

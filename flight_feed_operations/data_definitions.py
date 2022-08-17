@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 @dataclass
-class RIDMetadata():
+class SingleObservationMetadata():
     ''' A class to store RemoteID metadata '''
     aircraft_type: str
 
@@ -15,10 +15,10 @@ class SingleRIDObservation():
     traffic_source: int
     source_type:int
     icao_address: str
-    metadata: RIDMetadata
+    metadata: Optional[dict]
 
 @dataclass
-class SingleAirtrafficObervation():
+class SingleAirtrafficObservation():
     ''' This is the object stores details of the obervation  '''
     lat_dd: float
     lon_dd: float

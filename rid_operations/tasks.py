@@ -60,7 +60,7 @@ def stream_rid_data(rid_data):
         lat_dd = r_data['current_state']['position']['lat']
         lon_dd = r_data['current_state']['position']['lng']                    
         altitude_mm = r_data['current_state']['position']['alt']
-        traffic_source = 11
+        traffic_source = 11 # Per the Air-traffic data protocol a source type of 11 means that the data is associated with RID observations
         source_type = 0
         icao_address = flight_details_id
 
