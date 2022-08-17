@@ -102,6 +102,7 @@ def write_geo_zone(geo_zone):
             all_shapes.append(s)
         u = unary_union(all_shapes)
         bounds = u.bounds
+        bounds_str = ','.join([str(x) for x in bounds])
         
         logging.debug("Bounding box for shape..")
         logging.debug(bounds)
@@ -112,7 +113,7 @@ def write_geo_zone(geo_zone):
         end_time = start_time.shift(years =1)
         upper_limit = geo_zone_feature['upperLimit'] if 'upperLimit' in geo_zone_feature else 300
         lower_limit = geo_zone_feature['lowerLimit'] if 'lowerLimit' in geo_zone_feature else 10
-        geo_f = GeoFence(geozone = json.dumps(geo_zone_feature),raw_geo_fence= json.dumps(fc), start_datetime = start_time.isoformat(), end_datetime = end_time.isoformat(), upper_limit=upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
+        geo_f = GeoFence(geozone = json.dumps(geo_zone_feature),raw_geo_fence= json.dumps(fc), start_datetime = start_time.isoformat(), end_datetime = end_time.isoformat(), upper_limit=upper_limit, lower_limit=lower_limit, bounds= bounds_str, name= name)
         geo_f.save()
 
         logging.info("Saved Geofence to database ..")
