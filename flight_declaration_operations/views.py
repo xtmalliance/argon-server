@@ -10,7 +10,7 @@ from typing import List
 from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
 from dataclasses import asdict
-from flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
+from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from shapely.geometry import shape
 from .data_definitions import FlightDeclarationRequest, Altitude
 from rest_framework import mixins, generics
@@ -85,10 +85,11 @@ def set_flight_declaration(request):
 
     flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
     # task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to spotlight
-    
+
     my_operational_intent_converter = OperationalIntentsConverter()
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
     bounds = my_operational_intent_converter.get_geo_json_bounds()
+    
 
 
     fo = FlightDeclaration(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
@@ -152,11 +153,11 @@ class FlightDeclarationList(mixins.ListModelMixin,
             s_date = present.shift(days=-1)
             e_date = present.shift(days=1)
         all_fd_within_timelimits = FlightDeclaration.objects.filter(start_datetime__gte = s_date.isoformat(), end_datetime__lte = e_date.isoformat())
+        
         logging.info("Found %s flight declarations" % len(all_fd_within_timelimits))
-        if view_port:
-            
+        if view_port:            
             my_rtree_helper = FlightDeclarationRTreeIndexFactory()  
-            my_rtree_helper.generate_flight_declaration_index(all_fences = all_fd_within_timelimits)
+            my_rtree_helper.generate_flight_declaration_index(all_flight_declarations = all_fd_within_timelimits)
 
             all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_port)
             relevant_id_set = []

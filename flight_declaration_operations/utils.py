@@ -49,7 +49,7 @@ class OperationalIntentsConverter():
             s = shape(geom)     
             buffed_s = s.buffer(0.00001)
             # all_shapes.append(buffed_s)
-                
+            self.all_features.append(buffed_s)  
             # feature_union = unary_union(all_shapes)
             # # TODO: build a better flightplan 
             # b = feature_union.minimum_rotated_rectangle
@@ -76,9 +76,9 @@ class OperationalIntentsConverter():
 
     def get_geo_json_bounds(self) -> str:
             
-        combined_features = unary_union(self.all_features)
-        bnd_tuple = combined_features.bounds
-        bounds = ''.join(['{:.7f}'.format(x) for x in bnd_tuple])
+        combined_features = unary_union(self.all_features)        
+        bnd_tuple = combined_features.bounds        
+        bounds = ','.join(['{:.7f}'.format(x) for x in bnd_tuple])
 
         return bounds    
 
