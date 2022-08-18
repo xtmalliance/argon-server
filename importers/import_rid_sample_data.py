@@ -7,7 +7,7 @@ from os.path import dirname, abspath
 import  time
 import requests
 from dataclasses import dataclass, asdict
-from commmon import get_redis
+from common import get_redis
 from typing import Optional
 
 ENV_FILE = find_dotenv()
