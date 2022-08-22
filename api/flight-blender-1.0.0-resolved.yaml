@@ -970,6 +970,14 @@ paths:
       description: "Get a list of all Flight declarations in the database, if no start or end date is provided, Blender will provide declarations for today"
 
       parameters:
+        - name: view
+          in: query
+          description:
+            'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard. The view is the smallest box
+            bounded by the provided corner points.'
+          schema:
+            type: string
+            example: 29.97816,31.13296,29.98025,31.13535
         - name: start_date
           in: query
           schema:
@@ -986,7 +994,7 @@ paths:
             The end date for the report. Must be used together with `start_date`.
       responses:
         '200':
-          description: Get a list of declared operations, `start_date`+`end_date` are optional, by default declared operations for the past month are displayed.
+          description: Get a list of declared operations, `start_date`,`end_date` and `view` parameters are optional, if they are not provided all declared operations for the past month are displayed.
           content:
             application/json:
               schema:

@@ -2,7 +2,6 @@ from django.db import models
 import uuid
 from datetime import datetime
 from django.utils.translation import gettext_lazy as _
-import os
 
 class FlightDeclaration(models.Model):
     ''' A flight operation object for permission ''' 
