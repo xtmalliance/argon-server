@@ -142,8 +142,6 @@ class FlightDeclarationList(mixins.ListModelMixin,
     pagination_class = StandardResultsSetPagination
 
     def get_relevant_flight_declaration(self,start_date, end_date,  view_port:List[float]):               
-
-
         present = arrow.now()
         if start_date and end_date:
             s_date = arrow.get(start_date, "YYYY-MM-DD")

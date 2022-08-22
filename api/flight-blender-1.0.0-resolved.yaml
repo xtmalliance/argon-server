@@ -994,7 +994,7 @@ paths:
             The end date for the report. Must be used together with `start_date`.
       responses:
         '200':
-          description: Get a list of declared operations, `start_date`+`end_date` are optional, by default declared operations for the past month are displayed.
+          description: Get a list of declared operations, `start_date`,`end_date` and `view` parameters are optional, if they are not provided all declared operations for the past month are displayed.
           content:
             application/json:
               schema:
