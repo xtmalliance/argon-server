@@ -145,17 +145,17 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 CELERY_RESULT_BACKEND = BROKER_URL
 CELERYBEAT_SCHEDULE = {
-    # 'submit-spotlight-task': {
-    #     'task': 'submit_flights_to_spotlight',
-    #     # Every 30 secionds
-    #     'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS',default=4))),
-    # }, 
-    
-    'poll-flights':{
-        'task': 'poll_uss_for_flights_async',
+    'submit-spotlight-task': {
+        'task': 'submit_flights_to_spotlight',
         # Every 30 secionds
-        'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))        
-    }
+        'schedule':  timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))
+    }, 
+    
+    # 'poll-flights':{
+    #     'task': 'poll_uss_for_flights_async',
+    #     # Every 30 secionds
+    #     'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))        
+    # }
 }
 # DataFlair #Logging Information
 LOGGING = {

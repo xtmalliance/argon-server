@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from auth_helper.utils import requires_scopes
 from rest_framework.decorators import api_view
 from .tasks import write_incoming_air_traffic_data, start_openskies_stream
-from .data_definitions import RIDMetadata, SingleAirtrafficObervation, FlightObservationsProcessingResponse
+from .data_definitions import SingleObservationMetadata, SingleAirtrafficObservation, FlightObservationsProcessingResponse
 from dataclasses import asdict
 from typing import List
 from django.views.generic import TemplateView
@@ -61,19 +61,12 @@ def set_air_traffic(request):
             return JsonResponse(msg, status=400)
             # logging.error("Not all data was provided")
         metadata = {}
-        try: 
-            metadata = observation['metadata']            
-        except KeyError as mt_ke:
-            logger.error("Metadata not found in submitted observation %s" % mt_ke)
-        else:
-            try:
-                mtd = RIDMetadata(aircraft_type = metadata['aircraft_type'])
-            except(KeyError, TypeError) as mt_ve:
-                logger.error("Aircraft Type not found in submitted observation details %s" % mt_ve)
-                pass            
 
+        if 'metadata' in observation.keys():
+            metadata = observation['metadata']
+            
         # single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address , 'metadata' : json.dumps(metadata)}
-        so = SingleAirtrafficObervation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= mtd)
+        so = SingleAirtrafficObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(metadata))
         
         msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
        
@@ -116,26 +109,24 @@ def get_air_traffic(request):
         unique_flights = []
         # Keep only the latest message
         try:
-            for message in all_streams_messages:     
-                if message.data != '':
-                    unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})            
+            for message in all_streams_messages:                     
+                unique_flights.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})            
             # sort by date
             unique_flights.sort(key=lambda item:item['timestamp'], reverse=True)
             # Keep only the latest message
             distinct_messages = {i['address']:i for i in reversed(unique_flights)}.values()
             
         except KeyError as ke: 
-
             logger.error("Error in sorting distinct messages, ICAO name not defined %s" % ke)                     
             distinct_messages = []
-        all_traffic_observations: List[SingleAirtrafficObervation] = []
-        for observation in distinct_messages:                   
-            observation_metadata = observation['metadata']
-            so = SingleAirtrafficObervation(lat_dd=observation['lat_dd'], lon_dd=observation['lon_dd'], altitude_mm=observation['altitude_mm'],traffic_source=observation['traffic_source'], icao_address=observation['icao_address'], metadata=observation_metadata)
+        all_traffic_observations: List[SingleAirtrafficObservation] = []
+        for observation in distinct_messages:     
+            observation_data = observation['msg_data']  
+            observation_metadata = json.loads(observation_data['metadata'])            
+            so = SingleAirtrafficObservation(lat_dd=observation_data['lat_dd'], lon_dd=observation_data['lon_dd'], altitude_mm=observation_data['altitude_mm'],traffic_source=observation_data['traffic_source'], source_type = observation_data['source_type'], icao_address=observation_data['icao_address'], metadata=observation_metadata)
             all_traffic_observations.append(asdict(so))
         
-
-        return JsonResponse(all_traffic_observations,  status=200, content_type='application/json')
+        return JsonResponse({"observations":all_traffic_observations},  status=200, content_type='application/json')
     else:
         view_port_error = {"message": "A incorrect view port bbox was provided"}
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
@@ -205,7 +196,6 @@ def set_telemetry(request):
             position = current_state['position']
             speed_accuracy = current_state['speed_accuracy']
 
-
             # Optional RID Fields
             if ("operational_status","height","timestamp","track","vertical_speed","timestamp_accuracy") <= tuple(current_state.keys()):
                 logging.info("All optional information provided")
@@ -242,7 +232,7 @@ def set_telemetry(request):
             incorrect_parameters = {"message": "A full flight details object is required to submit a RID observation"}
             return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
         rid_details = flight_details['rid_details']
-        print(rid_details.keys())
+        
         try: 
             assert set(("serial_number","operation_description","operator_location","operator_id","registration_number")) <= set(rid_details.keys())
         except AssertionError as ae:
@@ -256,7 +246,7 @@ def set_telemetry(request):
         r  = TelemetryFlightDetails(id =flight_id,aircraft_type =flight_details['aircraft_type'], current_state = current_state, simulated = 0, recent_positions = [], operator_details = op_details)
         all_rid_data.append(asdict(r))
 
-    stream_rid_data.delay(rid_data= all_rid_data)
+    stream_rid_data.delay(rid_data= json.dumps(all_rid_data))
     submission_success = {"message": "Telemetry data succesfully submitted"}
     return JsonResponse(submission_success, status=201, content_type='application/json')
 

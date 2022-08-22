@@ -5,7 +5,7 @@ from dotenv import load_dotenv, find_dotenv
 import json
 from os.path import dirname, abspath
 import requests
-from auth_helper.common import get_redis
+from common import get_redis
 import time
 import arrow
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     flight_id = state_json['flight_details']['rid_details']["id"]
 
     headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ credentials['access_token']}
-    securl = env.get("BLENDER_FQDN","http://localhost:8000/") +'/set_air_traffic'     
+    securl = env.get("BLENDER_FQDN","http://localhost:8000/") +'/flight_stream/set_air_traffic'     
     
     for flight_state in flight_states:
         time_stamp = arrow.now().int_timestamp
