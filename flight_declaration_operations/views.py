@@ -10,6 +10,8 @@ from typing import List
 from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
 from dataclasses import asdict
+from geo_fence_operations import rtree_geo_fence_helper
+from geo_fence_operations.models import GeoFence
 from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from shapely.geometry import shape
 from .data_definitions import FlightDeclarationRequest, Altitude
@@ -90,12 +92,25 @@ def set_flight_declaration(request):
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
     bounds = my_operational_intent_converter.get_geo_json_bounds()
     
+    # TODO check declaration bounds with existing GeoZones
+    logging.info("Checking intersections with Geofences..")
+    all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime.isoformat(), end_datetime__gte = end_datetime.isoformat())
+    my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
+    my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
+    all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = bounds)
+    relevant_id_set = []
+    for i in all_relevant_fences:
+        relevant_id_set.append(i['geo_fence_id'])
 
+    my_rtree_helper.clear_rtree_index()
+    logging.info("Geofence intersections checked, found {num_intersections} fences" %{"num_intersections": len(relevant_id_set)})
+    if all_relevant_fences: 
+        is_approved = 0
 
     fo = FlightDeclaration(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
 
     fo.save()
-    op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':0})
+    op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':is_approved})
     return HttpResponse(op, status=200, content_type= 'application/json')
     
 @method_decorator(requires_scopes(['blender.write']), name='dispatch')
