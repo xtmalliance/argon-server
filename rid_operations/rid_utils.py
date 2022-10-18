@@ -1,9 +1,10 @@
 
+from datetime import datetime
 from typing import List, NamedTuple, Optional
 import uuid
 from dataclasses import dataclass, field, asdict
 import arrow
-
+from arrow.arrow import Arrow
 from scd_operations.scd_data_definitions import Volume3D, Volume4D
 
 class StringBasedDateTime(str):
@@ -167,6 +168,24 @@ class FlightState:
 class RIDTestDetailsResponse: 
     effective_after: str
     details: RIDFlightDetails
+
+@dataclass
+class RIDTestInjection: 
+    injection_id: uuid
+    telemetry: List[FlightState]
+    details_responses: List[RIDTestDetailsResponse]
+
+@dataclass
+class TelemetryDataHelper: 
+    telemetry_loc: int
+    formatted_timestamp: Arrow
+
+@dataclass
+class RIDTestInjectionProcessing: 
+    injection_id: uuid
+    telemetry: List[FlightState]
+    telemetry_lookup: List[TelemetryDataHelper]
+    details_responses: List[RIDTestDetailsResponse]
 
 @dataclass
 class RIDTestInjection: 

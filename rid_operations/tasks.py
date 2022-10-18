@@ -4,10 +4,11 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 from auth_helper.common import get_redis
-from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, FullRequestedFlightDetails,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint
+from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection, FullRequestedFlightDetails,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint,TelemetryDataHelper, RIDTestInjectionProcessing
 import time
 import arrow
 import json
+from arrow.parser import ParserError     
 from typing import List
 from dataclasses import asdict
 from os import environ as env
@@ -78,6 +79,7 @@ def stream_rid_test_data(requested_flights):
     # Iterate over requested flights 
     for requested_flight in rf:  
         all_telemetry = []
+        all_telemetry_data_helper = []
         all_flight_details = []
         provided_telemetries = requested_flight['telemetry']
         provided_flight_details = requested_flight['details_responses']
@@ -99,7 +101,7 @@ def stream_rid_test_data(requested_flights):
             r.set(flight_details_storage, json.dumps(asdict(flight_detail)))
             r.expire(flight_details_storage, time=60)
         # Iterate over telemetry details profided
-        for provided_telemetry in provided_telemetries:
+        for (telemetry_id, provided_telemetry) in enumerate(provided_telemetries):
             pos = provided_telemetry['position']
             # In provided telemetry position and pressure altitude and extrapolated values are optional use if provided else generate them.
             pressure_altitude = pos['pressure_altitude'] if 'pressure_altitude' in pos else 0.0
@@ -110,10 +112,18 @@ def stream_rid_test_data(requested_flights):
             position = RIDAircraftPosition(lat=pos['lat'], lng=pos['lng'],alt=pos['alt'],accuracy_h=pos['accuracy_h'], accuracy_v=pos['accuracy_v'], extrapolated=extrapolated,pressure_altitude=pressure_altitude)
             
             height = RIDHeight(distance=provided_telemetry['height']['distance'], reference=provided_telemetry['height']['reference'])
-            t = RIDAircraftState(timestamp=provided_telemetry['timestamp'], timestamp_accuracy=provided_telemetry['timestamp_accuracy'], operational_status=provided_telemetry['operational_status'], position=position, track=provided_telemetry['track'], speed=provided_telemetry['speed'], speed_accuracy=provided_telemetry['speed_accuracy'], vertical_speed=provided_telemetry['vertical_speed'], height=height)
-            all_telemetry.append(t)
+            try: 
+                formatted_timestamp = arrow.get(provided_telemetry['timestamp'])
+            except ParserError as pe: 
+                logging.info("Error in parsing telemetry timestamp")
+            else:
+                
+                t = RIDAircraftState(timestamp=provided_telemetry['timestamp'], timestamp_accuracy=provided_telemetry['timestamp_accuracy'], operational_status=provided_telemetry['operational_status'], position=position, track=provided_telemetry['track'], speed=provided_telemetry['speed'], speed_accuracy=provided_telemetry['speed_accuracy'], vertical_speed=provided_telemetry['vertical_speed'], height=height)
+                all_telemetry.append(t)
+                telemetry_data_lookup = TelemetryDataHelper(telemetry_loc = telemetry_id, formatted_timestamp= formatted_timestamp)
+                all_telemetry_data_helper.append(telemetry_data_lookup)
 
-        requested_flight = RIDTestInjection(injection_id = requested_flight['injection_id'], telemetry = all_telemetry, details_responses=all_flight_details)
+        requested_flight = RIDTestInjectionProcessing(injection_id = requested_flight['injection_id'], telemetry = all_telemetry, details_responses=all_flight_details, telemetry_lookup =all_telemetry_data_helper)
 
         all_requested_flights.append(requested_flight)
         
@@ -180,12 +190,17 @@ def stream_rid_test_data(requested_flights):
         # get telemetry that is closest to the current time 
     
         for current_flight_idx in all_requested_flight_details:    
-            all_telemetry = current_flight_idx.injection_details['telemetry']
-            closest_observation = min(all_telemetry, key=lambda d: abs(d - now))              
-
+            all_telemetry = current_flight_idx.injection_details['telemetry_lookup']
+            all_telemetry_lookup = current_flight_idx.injection_details['telemetry_lookup']
+            
+            closest_observation_idx = min(all_telemetry_lookup, key=lambda d: abs(d.formatted_timestamp - now))              
+            # if closest_observation:
+            # )
             logger.debug("Current flight payload ID %s" %current_flight_idx.id)               
             # get end time                 
-            single_telemetry_data = closest_observation
+            single_telemetry_data = all_telemetry[closest_observation_idx]
+            single_telemetry_data.pop('formatted_timestamp')
+            
             # TODO: At the moment, the first details repsonse is always used, check to have appropriate after timestamp
             details_response = current_flight_idx.injection_details['details_responses'][0]
             observation_metadata = SingleObeservationMetadata(telemetry= single_telemetry_data, details_response=details_response)                
