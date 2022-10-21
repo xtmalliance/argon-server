@@ -176,15 +176,14 @@ class RIDTestInjection:
     details_responses: List[RIDTestDetailsResponse]
 
 @dataclass
-class TelemetryDataHelper: 
-    telemetry_loc: int
-    formatted_timestamp: Arrow
+class RIDTestDataStorage:
+  flight_state: FlightState
+  details_response: RIDTestDetailsResponse
 
 @dataclass
 class RIDTestInjectionProcessing: 
     injection_id: uuid
-    telemetry: List[FlightState]
-    telemetry_lookup: List[TelemetryDataHelper]
+    telemetry: List[FlightState]    
     details_responses: List[RIDTestDetailsResponse]
 
 @dataclass
