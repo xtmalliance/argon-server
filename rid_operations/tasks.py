@@ -79,7 +79,6 @@ def stream_rid_test_data(requested_flights):
     
     flight_injection_sorted_set = 'requested_flight_ss'
 
-
     r = get_redis()
     # Iterate over requested flights 
     for requested_flight in rf:  
@@ -88,7 +87,6 @@ def stream_rid_test_data(requested_flights):
         all_flight_details = []
         provided_telemetries = requested_flight['telemetry']
         provided_flight_details = requested_flight['details_responses']
-
 
         for provided_flight_detail in provided_flight_details: 
             fd = provided_flight_detail['details']
@@ -123,15 +121,14 @@ def stream_rid_test_data(requested_flights):
                 formatted_timestamp = arrow.get(provided_telemetry['timestamp'])
             except ParserError as pe: 
                 logging.info("Error in parsing telemetry timestamp")
-            else:
+            else:                
                 
                 t = RIDAircraftState(timestamp=provided_telemetry['timestamp'], timestamp_accuracy=provided_telemetry['timestamp_accuracy'], operational_status=provided_telemetry['operational_status'], position=position, track=provided_telemetry['track'], speed=provided_telemetry['speed'], speed_accuracy=provided_telemetry['speed_accuracy'], vertical_speed=provided_telemetry['vertical_speed'], height=height)
-
-                telemetry_timestamp = arrow.get(t.timestamp)
-                closest_details_response = min(all_flight_details, key=lambda d: abs(arrow.get(d.effective_after) - telemetry_timestamp))        
-                flight_state_storage = RIDTestDataStorage( flight_state = t, details_response = closest_details_response)                
-                r.zadd(flight_injection_sorted_set, {json.dumps(asdict(flight_state_storage)):telemetry_timestamp.int_timestamp})
-
+                
+                closest_details_response = min(all_flight_details, key=lambda d: abs(arrow.get(d.effective_after) - formatted_timestamp))        
+                flight_state_storage = RIDTestDataStorage(flight_state = t, details_response = closest_details_response)                
+                zadd_struct = {json.dumps(asdict(flight_state_storage)): formatted_timestamp.int_timestamp}
+                r.zadd(flight_injection_sorted_set,zadd_struct)
                 all_telemetry.append(t)             
                 
         requested_flight = RIDTestInjectionProcessing(injection_id = requested_flight['injection_id'], telemetry = all_telemetry, details_responses=all_flight_details)
@@ -190,7 +187,7 @@ def stream_rid_test_data(requested_flights):
     
     logger.info("Creating a DSS ISA")
     my_dss_helper.create_dss_isa(flight_extents=flight_extents, flights_url=flights_url)
-    # End create ISA in the DSS
+    # # End create ISA in the DSS
 
     time.sleep(5) # Wait 5 seconds before starting mission
     should_continue = True
@@ -198,34 +195,36 @@ def stream_rid_test_data(requested_flights):
     def _stream_data(now:arrow.arrow.Arrow):
         # get telemetry that is closest to the current time 
         one_second_before_now = now.shift(seconds = -1)
-        three_seconds_from_now = now.shift(seconds =4)        
-        closest_observation = r.zrange(flight_injection_sorted_set, one_second_before_now.int_timestamp, three_seconds_from_now.int_timestamp)
-    
-        single_telemetry_data = closest_observation['flight_state']
-        single_details_response = closest_observation['details_response']
+        one_seconds_from_now = now.shift(seconds = 1)        
+        closest_observations = r.zrangebyscore(flight_injection_sorted_set, now.int_timestamp, now.int_timestamp)
 
-        # TODO: At the moment, the first details repsonse is always used, check to have appropriate after timestamp
-        
-        observation_metadata = SingleObeservationMetadata(telemetry= single_telemetry_data, details_response=single_details_response)                
-        flight_details_id = single_details_response['id']
-        lat_dd = single_telemetry_data['position']['lat']
-        lon_dd = single_telemetry_data['position']['lng']                    
-        altitude_mm = single_telemetry_data['position']['alt']
-        traffic_source = 3
-        source_type = 0
-        icao_address = flight_details_id
-        
-        so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
-        msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
-        logger.debug("Submitted observation..")                    
-        logger.debug("...")
-        # Sleep for 2 seconds before submitting the next iteration.
+        logging.info("Closest observations: %s found" % closest_observations)
+        for closest_observation in closest_observations:
+            single_telemetry_data = closest_observation['flight_state']
+            single_details_response = closest_observation['details_response']
+            
+            observation_metadata = SingleObeservationMetadata(telemetry= single_telemetry_data, details_response=single_details_response)                
+            flight_details_id = single_details_response['id']
+            lat_dd = single_telemetry_data['position']['lat']
+            lon_dd = single_telemetry_data['position']['lng']                    
+            altitude_mm = single_telemetry_data['position']['alt']
+            traffic_source = 3
+            source_type = 0
+            icao_address = flight_details_id
+            
+            so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
+            msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+            logger.debug("Submitted observation..")                    
+            logger.debug("...")
+        #Sleep for 2 seconds before submitting the next iteration.
+        time.sleep(2)
     
     r.expire(flight_injection_sorted_set, time=3000)
     while should_continue:    
         now = arrow.now() 
         _stream_data(now = now)
-        if now > end_time_of_injections_seconds:
+        
+        if now > isa_end_time:
             should_continue = False
 
             print("ending.... %s" % arrow.now().isoformat())
