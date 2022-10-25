@@ -3,7 +3,7 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 from auth_helper.common import get_redis
-from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage
+from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
 import time
 import arrow
 import math
@@ -17,7 +17,7 @@ from flight_feed_operations.data_definitions import SingleRIDObservation
 from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from shapely.geometry import Point, MultiPoint, box
 from .rid_utils import RIDVertex, RIDVolume3D, RIDVolume4D
-
+from itertools import cycle, islice
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -77,13 +77,13 @@ def stream_rid_test_data(requested_flights):
     rf = json.loads(requested_flights)
     all_positions:List[LatLngPoint] = []    
     
-    flight_injection_sorted_set = 'requested_flight_ss'
-    
+    flight_injection_sorted_set = 'requested_flight_ss'    
     r = get_redis()
 
     if r.exists(flight_injection_sorted_set):
         r.delete(flight_injection_sorted_set)
     # Iterate over requested flights 
+    
     for requested_flight in rf:  
         all_telemetry = []
         
@@ -138,9 +138,6 @@ def stream_rid_test_data(requested_flights):
         requested_flight = RIDTestInjectionProcessing(injection_id = requested_flight['injection_id'], telemetry = all_telemetry, details_responses=all_flight_details)
 
         all_requested_flights.append(requested_flight)
-        
-    heartbeat = env.get('HEARTBEAT_RATE_SECS', 2)
-    heartbeat = int(heartbeat)
 
     start_time_of_injection_list = r.zrange(flight_injection_sorted_set,0,0,withscores=True)    
     start_time_of_injections = arrow.get(start_time_of_injection_list[0][1]) 
@@ -154,11 +151,13 @@ def stream_rid_test_data(requested_flights):
 
     isa_start_time = start_time_of_injections
     # isa_end_time =  end_time_of_injections
+    provided_telemetry_item_length = r.zcard(flight_injection_sorted_set)
+    logging.info("Provided Telemetry Item Count: %s" % provided_telemetry_item_length)
 
     provided_telemetry_duration_seconds = (end_time_of_injections - start_time_of_injections).total_seconds()
-    logging.info("Provided Telemetry Duration: %s" % provided_telemetry_duration_seconds)
-
-    astm_rid_standard_end_time = end_time_of_injections.shift(seconds= 90) # Enable querying for upto sixty seconds after end time. 
+    logging.info("Provided Telemetry Duration in seconds: %s" % provided_telemetry_duration_seconds)
+    ASTM_TIME_SHIFT_SECS = 65 # Enable querying for upto sixty seconds after end time. 
+    astm_rid_standard_end_time = end_time_of_injections.shift(seconds= ASTM_TIME_SHIFT_SECS) 
     
     # Create a ISA in the DSS
     
@@ -192,20 +191,25 @@ def stream_rid_test_data(requested_flights):
     # # End create ISA in the DSS
 
     r.expire(flight_injection_sorted_set, time=3000)
-    time.sleep(5) # Wait 5 seconds before starting mission
+    time.sleep(2) # Wait 5 seconds before starting mission
     should_continue = True
+    query_target = provided_telemetry_item_length  + ASTM_TIME_SHIFT_SECS # one per second
+    all_telemetry_details = r.zrange(flight_injection_sorted_set, 0,-1, withscores = True)
+    all_timestamps = []
+    for telemetry_id, cur_telemetry_detail in enumerate(all_telemetry_details):        
+        all_timestamps.append(cur_telemetry_detail[1])
+    cycled = cycle(all_timestamps)
+    query_time_lookup = list(islice(cycled, 0,query_target))
+    
 
-    def _stream_data(query_time:arrow.arrow.Arrow):
-        
-        # Query the closest    
+    def _stream_data(query_time:arrow.arrow.Arrow):        
         closest_observations = r.zrangebyscore(flight_injection_sorted_set, query_time.int_timestamp, query_time.int_timestamp)
-        obs_query_dict = {"closest_observation_count":len(closest_observations), "q_time": query_time.isoformat()}
+        obs_query_dict = {"closest_observation_count":len(closest_observations), "q_time": query_time.isoformat()}        
         logging.info("Closest observations: {closest_observation_count} found, at query time {q_time}".format(**obs_query_dict))
         for closest_observation in closest_observations:
             c_o = json.loads(closest_observation)
             single_telemetry_data = c_o['flight_state']
-            single_details_response = c_o['details_response']           
-            
+            single_details_response = c_o['details_response']                       
             observation_metadata = SingleObeservationMetadata(telemetry = single_telemetry_data, details_response = single_details_response)
             flight_details_id = single_details_response['details']['id']
             lat_dd = single_telemetry_data['position']['lat']
@@ -217,26 +221,26 @@ def stream_rid_test_data(requested_flights):
             
             so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
             msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
-            logger.debug("Submitted observation..")                    
-            logger.debug("...")
-        #Sleep for 2 seconds before submitting the next iteration.
-        
-    r.expire(flight_injection_sorted_set, minutes=5)
+            logger.debug("Submitted flight observation..")                    
+            
+
+    r.expire(flight_injection_sorted_set, time=3000)
+
     while should_continue:            
         now = arrow.now()         
         if now > astm_rid_standard_end_time:
             should_continue = False
-            print("ending.... %s" % arrow.now().isoformat())
+            logging.info("End streaming ... %s" % arrow.now().isoformat())
+
         elif now > end_time_of_injections:
             # the current time is more than the end time for flight injection, we must provide closest observation
-            seconds_after_end_of_injections = (now - end_time_of_injections).total_seconds()
-            iteration_number = math.ceil(seconds_after_end_of_injections / provided_telemetry_duration_seconds)
-            shifted_telemetry_seconds = -1 * iteration_number * seconds_after_end_of_injections            
-            iteration_dict = {"iteration_number": iteration_number,"shifted_seconds": shifted_telemetry_seconds}
-            logging.info("Iteration number {iteration_number} and shifted seconds {shifted_seconds} ".format(**iteration_dict))
-            query_time = now.shift(seconds =-30)
+            seconds_now_after_end_of_injections = (now - end_time_of_injections).total_seconds()
+            q_index = provided_telemetry_item_length + seconds_now_after_end_of_injections            
+            query_time = arrow.get(query_time_lookup[int(q_index)])            
+            logging.info("Exceeded normal end time of injections, looking up iteration, query time: %s" % query_time.isoformat())
         else: 
             query_time = now
         _stream_data(query_time = query_time)
-        time.sleep(heartbeat)
+        #Sleep for 2 seconds before submitting the next iteration.
+        time.sleep(1)
         
