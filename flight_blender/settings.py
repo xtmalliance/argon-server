@@ -151,11 +151,11 @@ CELERYBEAT_SCHEDULE = {
         'schedule':  timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))
     }, 
     
-    # 'poll-flights':{
-    #     'task': 'poll_uss_for_flights_async',
-    #     # Every 30 secionds
-    #     'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))        
-    # }
+    'poll-flights':{
+        'task': 'poll_uss_for_flights_async',
+        # Every 30 secionds
+        'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))        
+    }
 }
 # DataFlair #Logging Information
 LOGGING = {
