@@ -244,11 +244,11 @@ class RIDRecentAircraftPosition:
   time: StringBasedDateTime
   position: RIDAircraftPosition
 
-@dataclass
-class FullRequestedFlightDetails:
-  id: uuid
-  telemetry_length: int
-  injection_details: List[RIDTestInjection]
+# @dataclass
+# class FullRequestedFlightDetails:
+#   id: uuid
+#   telemetry_length: int
+#   injection_details: List[RIDTestInjection]
 
 @dataclass
 class RIDRecentAircraftPosition:
