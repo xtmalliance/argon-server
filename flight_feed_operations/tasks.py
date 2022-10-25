@@ -22,7 +22,7 @@ logger = logging.getLogger('django')
 @app.task(name='write_incoming_air_traffic_data')
 def write_incoming_air_traffic_data(observation):         
     obs = json.loads(observation)    
-    logging.info("Writing observation..")
+    logging.debug("Writing observation..")
     
     my_stream_ops = flight_stream_helper.StreamHelperOps()   
     cg = my_stream_ops.get_push_cg()     

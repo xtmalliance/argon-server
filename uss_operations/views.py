@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django.utils.datastructures import MultiValueDictKeyError
 from .uss_data_definitions import OperationalIntentNotFoundResponse, OperationalIntentDetails, UpdateOperationalIntent, GenericErrorResponseMessage, SummaryFlightsOnly,FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
 from scd_operations.scd_data_definitions import OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, OperationalIntentReferenceDSSResponse, Time
-from rid_operations.rid_utils import RIDAircraftPosition, RIDHeight, RIDAircraftState, RIDFlightDetails, RIDFlightResponse, LatLngPoint, RIDFlightDetails
+from rid_operations.rid_utils import RIDAuthData, RIDAircraftPosition, RIDHeight, RIDAircraftState, RIDFlightDetails, RIDFlightResponse, LatLngPoint, RIDFlightDetails, TelemetryFlightDetails
 import arrow
 import json 
 import logging 
@@ -182,12 +182,17 @@ def get_uss_flights(request):
                         logger.error("Error in metadata data in the stream %s" % ke)
                     
                     telemetry_data_dict = observation_data_dict['telemetry']
-                    details_response_dict = observation_data_dict['details_response']
+                    
+                    details_response_dict = observation_data_dict['details_response']['details']
+                    
                     position = RIDAircraftPosition(lat=telemetry_data_dict['position']['lat'], lng=telemetry_data_dict['position']['lng'], alt=telemetry_data_dict['position']['alt'], accuracy_h=telemetry_data_dict['position']['accuracy_h'], accuracy_v=telemetry_data_dict['position']['accuracy_v'], extrapolated=telemetry_data_dict['position']['extrapolated'], pressure_altitude=telemetry_data_dict['position']['pressure_altitude'])
                     height = RIDHeight(distance=telemetry_data_dict['height']['distance'], reference=telemetry_data_dict['height']['reference'])
                     current_state = RIDAircraftState(timestamp=telemetry_data_dict['timestamp'], timestamp_accuracy=telemetry_data_dict['timestamp_accuracy'], operational_status=telemetry_data_dict['operational_status'], position=position, track=telemetry_data_dict['track'], speed=telemetry_data_dict['speed'], speed_accuracy=telemetry_data_dict['speed_accuracy'], vertical_speed=telemetry_data_dict['vertical_speed'], height=height)
                     
-                    current_flight = RIDFlightDetails(id=details_response_dict['details']['id'], aircraft_type="NotDeclared", current_state = current_state , simulated = True, recent_positions=[])
+
+                    operator_details = RIDFlightDetails(id = details_response_dict['id'],operator_location = LatLngPoint(lat=details_response_dict['operator_location']['lat'], lng = details_response_dict['operator_location']['lng']), operator_id = details_response_dict['operator_id'],operation_description =details_response_dict['operation_description'], serial_number = details_response_dict['serial_number'], registration_number = details_response_dict['registration_number'], auth_data =RIDAuthData(format =details_response_dict['auth_data']['format'] , data= details_response_dict['auth_data']['data']),aircraft_type = details_response_dict['aircraft_type'] )
+                    
+                    current_flight = TelemetryFlightDetails(operator_details= operator_details, id=details_response_dict['id'], aircraft_type="NotDeclared", current_state = current_state , simulated = True, recent_positions=[])
 
                     rid_flights.append(current_flight)
                     # see if it matches the viewport 
