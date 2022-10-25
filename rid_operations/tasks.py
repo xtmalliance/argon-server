@@ -96,7 +96,7 @@ def stream_rid_test_data(requested_flights):
             else:
                 auth_data = AuthData(format="",data="")
 
-            flight_detail = RIDFlightDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location, operator_id= fd['operator_id'], auth_data=auth_data)
+            flight_detail = RIDFlightDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location, aircraft_type ="NotDeclared",operator_id= fd['operator_id'], auth_data=auth_data)
             pfd = RIDTestDetailsResponse(effective_after=provided_flight_detail['effective_after'], details = flight_detail)
             all_flight_details.append(pfd)
 
@@ -149,7 +149,7 @@ def stream_rid_test_data(requested_flights):
         all_requested_flight_details.append(FullRequestedFlightDetails(id= internal_flight_id,telemetry_length = len(r_f.telemetry), injection_details = asdict(r_f)))
 
     max_telemetry_data_length = max(telemetry_length)
-    logger.info("Telemetry length: %s" % max_telemetry_data_length)
+    print("Telemetry length: %s" % max_telemetry_data_length)
 
     # Computing when the requested flight data will end 
     end_time_of_injections = max_telemetry_data_length * heartbeat
@@ -203,9 +203,10 @@ def stream_rid_test_data(requested_flights):
             c_o = json.loads(closest_observation)
             single_telemetry_data = c_o['flight_state']
             single_details_response = c_o['details_response']
-    
+            
+            
             observation_metadata = SingleObeservationMetadata(telemetry = single_telemetry_data, details_response = single_details_response)
-            flight_details_id = single_details_response['id']
+            flight_details_id = single_details_response['details']['id']
             lat_dd = single_telemetry_data['position']['lat']
             lon_dd = single_telemetry_data['position']['lng']                    
             altitude_mm = single_telemetry_data['position']['alt']
@@ -223,6 +224,6 @@ def stream_rid_test_data(requested_flights):
     while should_continue:    
         now = arrow.now() 
         _stream_data(now = now)
-        if now > isa_end_time:
+        if now > end_time_of_injections_seconds:
             should_continue = False
             print("ending.... %s" % arrow.now().isoformat())

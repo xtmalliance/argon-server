@@ -144,7 +144,7 @@ class RIDFlightDetails:
   auth_data: Optional[RIDAuthData]
   serial_number: Optional[str]
   registration_number: Optional[str]
-
+  aircraft_type: Optional[str]
 
 @dataclass
 class FlightState:     
@@ -269,7 +269,7 @@ class TelemetryFlightDetails:
   current_state: RIDAircraftState
   simulated: bool
   recent_positions: List[RIDRecentAircraftPosition]
-  operator_details: RIDOperatorDetails
+  operator_details: RIDFlightDetails
 
 @dataclass
 class RIDFlightResponse:
