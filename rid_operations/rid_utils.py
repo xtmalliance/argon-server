@@ -1,9 +1,10 @@
 
+from datetime import datetime
 from typing import List, NamedTuple, Optional
 import uuid
 from dataclasses import dataclass, field, asdict
 import arrow
-
+from arrow.arrow import Arrow
 from scd_operations.scd_data_definitions import Volume3D, Volume4D
 
 class StringBasedDateTime(str):
@@ -143,7 +144,7 @@ class RIDFlightDetails:
   auth_data: Optional[RIDAuthData]
   serial_number: Optional[str]
   registration_number: Optional[str]
-
+  aircraft_type: Optional[str]
 
 @dataclass
 class FlightState:     
@@ -167,6 +168,23 @@ class FlightState:
 class RIDTestDetailsResponse: 
     effective_after: str
     details: RIDFlightDetails
+
+@dataclass
+class RIDTestInjection: 
+    injection_id: uuid
+    telemetry: List[FlightState]
+    details_responses: List[RIDTestDetailsResponse]
+
+@dataclass
+class RIDTestDataStorage:
+  flight_state: FlightState
+  details_response: RIDTestDetailsResponse
+
+@dataclass
+class RIDTestInjectionProcessing: 
+    injection_id: uuid
+    telemetry: List[FlightState]    
+    details_responses: List[RIDTestDetailsResponse]
 
 @dataclass
 class RIDTestInjection: 
@@ -230,7 +248,7 @@ class RIDRecentAircraftPosition:
 class FullRequestedFlightDetails:
   id: uuid
   telemetry_length: int
-  injection_details: List[RIDTestInjection]
+
 
 @dataclass
 class RIDRecentAircraftPosition:
@@ -251,7 +269,7 @@ class TelemetryFlightDetails:
   current_state: RIDAircraftState
   simulated: bool
   recent_positions: List[RIDRecentAircraftPosition]
-  operator_details: RIDOperatorDetails
+  operator_details: RIDFlightDetails
 
 @dataclass
 class RIDFlightResponse:
