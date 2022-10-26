@@ -1,5 +1,39 @@
 from .geofence_typing import ImplicitDict
-from typing import List, Dict
+from typing import List, Dict, Literal, Optional
+from dataclasses import dataclass
+import enum
+
+
+class GeoAwarenessStatusResponseEnum(str, enum.Enum):
+    ''' A enum to specify if the USS is ready (or not) '''
+    Starting = 'Starting'
+    Ready = 'Ready'
+
+@dataclass
+class GeoAwarenessTestHarnessStatus: 
+    status: Literal[GeoAwarenessStatusResponseEnum.Starting, GeoAwarenessStatusResponseEnum.Ready]
+    version:str
+
+@dataclass
+class GeoZoneHttpsSource:
+    url: str
+    format:str 
+
+class GeoAwarenessImportResponseEnum(str, enum.Enum):
+    ''' A enum to specify the result of processing of a GeoZone '''
+    Activating = 'Activating'
+    Ready = 'Ready'
+    Deactivating = 'Deactivating'
+    Unsupported = 'Unsupported'
+    Rejected = 'Rejected'
+    Error = 'Error'
+
+@dataclass
+class GeoAwarenessTestStatus: 
+    result: Literal[GeoAwarenessImportResponseEnum.Activating, GeoAwarenessImportResponseEnum.Ready, GeoAwarenessImportResponseEnum.Deactivating, GeoAwarenessImportResponseEnum.Unsupported, GeoAwarenessImportResponseEnum.Rejected, GeoAwarenessImportResponseEnum.Error]
+    message: Optional[str]
+
+
 
 class ZoneAuthority(ImplicitDict):
     name: str

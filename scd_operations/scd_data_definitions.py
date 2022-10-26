@@ -161,7 +161,7 @@ class TestInjectionResult:
     operational_intent_id: uuid4
 
 @dataclass
-class StatusResponse:
+class SCDTestStatusResponse:
     status: Literal[StatusResponseEnum.Starting, StatusResponseEnum.Ready]
     version: str
 

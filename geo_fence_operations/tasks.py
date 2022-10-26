@@ -3,16 +3,19 @@ import logging
 from . import geo_fence_rw_helper
 import json
 from typing import List
-from .data_definitions import ImplicitDict, ZoneAuthority, HorizontalProjection, ED269Geometry, GeoZoneFeature, GeoZone
+from .data_definitions import ImplicitDict, ZoneAuthority, HorizontalProjection, ED269Geometry, GeoZoneFeature, GeoZone, GeoAwarenessTestStatus
+from dataclasses import asdict
 from shapely.geometry import shape, Point, mapping
 from functools import partial
 import pyproj
+import requests
+from auth_helper.common import get_redis
 from shapely.ops import transform
 import arrow
 from .models import GeoFence
 from shapely.ops import unary_union
-logger = logging.getLogger('django')
 
+logger = logging.getLogger('django')
 proj_wgs84 = pyproj.Proj('+proj=longlat +datum=WGS84')
 
 
@@ -41,6 +44,32 @@ def write_geo_fence(geo_fence):
         my_uploader = geo_fence_rw_helper.GeoFenceUploader(credentials = gf_credentials)
         upload_status = my_uploader.upload_to_server(gf=geo_fence)
         logging.info(upload_status)
+
+@app.task(name="download_geozone_source")
+def download_geozone_source(geo_zone_url:str, geozone_source_id:str):    
+    r = get_redis()  
+    geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
+    geo_zone_request = requests.get(geo_zone_url)
+    
+    if geo_zone_request.status_code == 200:
+        try:
+            geo_zone_data = geo_zone_request.json()
+            geo_zone_str = json.dumps(geo_zone_data)
+            write_geo_zone.delay(geo_zone = geo_zone_str)
+        except Exception as e: 
+            test_status = 'Error'
+            test_status_storage = GeoAwarenessTestStatus(result=test_status)
+
+    else:
+        test_status = 'Unsupported'
+        test_status_storage = GeoAwarenessTestStatus(result=test_status)
+        if r.exists(geoawareness_test_data_store):
+            
+            r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
+
+
+
+
 
 @app.task(name="write_geo_zone")
 def write_geo_zone(geo_zone): 

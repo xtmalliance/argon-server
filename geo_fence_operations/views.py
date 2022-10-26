@@ -16,8 +16,23 @@ from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
 from decimal import Decimal
+from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource
+from django.http import JsonResponse
 import logging
+from auth_helper.common import get_redis
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+from dataclasses import asdict, is_dataclass
+from .common import validate_geo_zone
+
 logger = logging.getLogger('django')
+
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if is_dataclass(o):
+                return asdict(o)
+            return super().default(o)
 
 
 INDEX_NAME = 'geofence_proc'
@@ -96,27 +111,21 @@ def set_geozone(request):
     except KeyError as ke: 
         msg = json.dumps({"message":"A geozone object is necessary in the body of the request"})        
         return HttpResponse(msg, status=400)    
+    
+    is_geo_zone_valid = validate_geo_zone(geo_zone)
 
+    if is_geo_zone_valid:
+        write_geo_zone.delay(geo_zone = json.dumps(geo_zone))
+        
+        geo_f = uuid.uuid4()
+        op = json.dumps ({"message":"GeoZone Declaration submitted", 'id':str(geo_f)})
+        return HttpResponse(op, status=200)
 
-    if 'title' not in geo_zone:
-        msg = json.dumps({"message":"A geozone object with a title is necessary the body of the request"})        
-        return HttpResponse(msg, status=400)   
-
-    if 'description' not in geo_zone:
-        msg = json.dumps({"message":"A geozone object with a description is necessary the body of the request"})        
-        return HttpResponse(msg, status=400)   
-
-
-    if 'features' in geo_zone:
-        geo_zone_features = geo_zone['features']
     else: 
-        geo_zone_features = []
-    
-    write_geo_zone.delay(geo_zone = json.dumps(geo_zone))
-    
-    geo_f = uuid.uuid4()
-    op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f)})
-    return HttpResponse(op, status=200)
+        msg = json.dumps({"message":"A valid geozone object with a description is necessary the body of the request"})        
+        return HttpResponse(msg, status=400)   
+
+
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class GeoFenceDetail(mixins.RetrieveModelMixin, 
@@ -182,3 +191,72 @@ class GeoFenceList(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
         
+
+@method_decorator(requires_scopes(['geo-awareness.test']), name='dispatch')
+class GeoZoneTestHarnessStatus(generics.GenericAPIView):    
+    
+    def get(self, request, *args, **kwargs):
+        status = GeoAwarenessTestHarnessStatus(status="Ready", version="latest")
+        return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
+
+
+@method_decorator(requires_scopes(['geo-awareness.test']), name='dispatch')
+class GeoZoneSourcesOperations(generics.GenericAPIView):    
+    def put(self, request, geozone_source_id):
+        r = get_redis()        
+        geo_zone_url = request.data
+        try:
+            geo_zone_source = GeoZoneHttpsSource(url = geo_zone_url['url'], format = geo_zone_url['format'])
+        except KeyError as ke:
+            ga_import_response = GeoAwarenessTestStatus(result = 'Rejected', message ="There was an error in processing the request payload, a url and format key is required for successful processing")
+            return JsonResponse(json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)), status=200)
+
+        url_validator = URLValidator(verify_exists=False)
+        try:
+            url_validator(geo_zone_source.url)
+        except ValidationError as ve:
+            ga_import_response = GeoAwarenessTestStatus(result = 'Unsupported', message ="There was an error in the url provided")
+            return JsonResponse(json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)), status=200)
+
+        geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
+        result = 'Activating'
+        test_status_storage = GeoAwarenessTestStatus(result = result)
+        #TODO: Send the URL as a background job
+
+        r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
+
+        r.expire(name = geoawareness_test_data_store, time = 3000)
+
+        return JsonResponse(json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)), status=200)
+                  
+
+    def get(self, request, geozone_source_id):
+        geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
+        r = get_redis()  
+        
+        if r.exists(geoawareness_test_data_store):
+            test_data_status = r.get(geoawareness_test_data_store)
+            test_status = json.loads(test_data_status)
+            ga_test_status = GeoAwarenessTestStatus(result=test_status['result']) 
+            return JsonResponse(json.loads(json.dumps(ga_test_status, cls=EnhancedJSONEncoder)), status=200)
+        else: 
+            return JsonResponse({}, status=404)
+
+    def delete(self, request, geozone_source_id):
+        geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
+        r = get_redis()  
+        if r.exists(geoawareness_test_data_store):
+            # TODO: delete the test
+            deletion_status = GeoAwarenessTestStatus(result='Deactivating')
+            r.set(geoawareness_test_data_store, json.dumps(asdict(deletion_status)))
+
+            return JsonResponse(json.loads(json.dumps(deletion_status, cls=EnhancedJSONEncoder)), status=200)
+
+        else:
+            return JsonResponse({}, status=404)
+
+@method_decorator(requires_scopes(['geo-awareness.test']), name='dispatch')
+class GeoZoneCheck(generics.GenericAPIView):
+
+    def post(self, request, *args, **kwargs):
+        pass

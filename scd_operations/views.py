@@ -6,13 +6,11 @@ from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,StatusResponse, CapabilitiesResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage, ClearAreaResponse, SuccessfulOperationalIntentFlightIDStorage
+from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,SCDTestStatusResponse, CapabilitiesResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage, ClearAreaResponse, SuccessfulOperationalIntentFlightIDStorage
 from . import dss_scd_helper
 from rid_operations import rtree_helper
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
-import uuid
-import redis
 from auth_helper.common import get_redis
 import logging
 from uuid import UUID
@@ -40,7 +38,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 @api_view(['GET'])
 @requires_scopes(['utm.inject_test_data'])
 def SCDTestStatus(request):
-    status = StatusResponse(status="Ready", version="latest")
+    status = SCDTestStatusResponse(status="Ready", version="latest")
     return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
 
 @api_view(['GET'])
