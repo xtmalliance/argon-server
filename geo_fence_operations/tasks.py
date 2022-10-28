@@ -66,6 +66,8 @@ def download_geozone_source(geo_zone_url:str, geozone_source_id:str):
         if r.exists(geoawareness_test_data_store):
             
             r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
+        
+        
 
 
 

@@ -16,7 +16,7 @@ from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
 from decimal import Decimal
-from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource
+from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource, GeoZoneCheckRequestBody, GeoZoneChecksResponse
 from django.http import JsonResponse
 import logging
 from auth_helper.common import get_redis
@@ -24,7 +24,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from dataclasses import asdict, is_dataclass
 from .common import validate_geo_zone
-
+from .geofence_typing import ImplicitDict
 logger = logging.getLogger('django')
 
 
@@ -259,4 +259,10 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
 class GeoZoneCheck(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
-        pass
+
+        geo_zone_checks = ImplicitDict.parse(request.data, GeoZoneCheckRequestBody)
+
+        # TODO: Do the checks with existing Geozones. 
+
+        geo_zone_response = GeoZoneChecksResponse(applicableGeozone = ['Error'])
+        return JsonResponse(json.loads(json.dumps(geo_zone_response, cls=EnhancedJSONEncoder)), status=200)

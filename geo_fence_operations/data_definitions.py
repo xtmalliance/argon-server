@@ -19,6 +19,21 @@ class GeoZoneHttpsSource:
     url: str
     format:str 
 
+class GeoAwarenessRestrictions(str, enum.Enum):
+    ''' A enum to specify the result of processing of a GeoZone '''
+    PROHIBITED = 'PROHIBITED'
+    REQ_AUTHORISATION = 'REQ_AUTHORISATION'
+    CONDITIONAL = 'CONDITIONAL'
+    NO_RESTRICTION = 'NO_RESTRICTION'
+    
+class GeozoneCheckResultEnum(str, enum.Enum):
+    ''' A enum to specify the result of processing of a GeoZone '''
+    Present = 'Present'
+    Absent = 'Absent'
+    UnsupportedFilter = 'UnsupportedFilter'
+    Error = 'Error'
+    
+
 class GeoAwarenessImportResponseEnum(str, enum.Enum):
     ''' A enum to specify the result of processing of a GeoZone '''
     Activating = 'Activating'
@@ -32,6 +47,7 @@ class GeoAwarenessImportResponseEnum(str, enum.Enum):
 class GeoAwarenessTestStatus: 
     result: Literal[GeoAwarenessImportResponseEnum.Activating, GeoAwarenessImportResponseEnum.Ready, GeoAwarenessImportResponseEnum.Deactivating, GeoAwarenessImportResponseEnum.Unsupported, GeoAwarenessImportResponseEnum.Rejected, GeoAwarenessImportResponseEnum.Error]
     message: Optional[str]
+
 
 
 
@@ -79,3 +95,35 @@ class GeoZone(ImplicitDict):
     title: str
     description: str
     features: List[GeoZoneFeature]
+
+class GeoZoneFilterPosition(ImplicitDict):
+    uomDimensions:str
+    verticalReferenceType:str
+    height: int
+    longitude: float
+    latitude: float
+
+class ED269Filter(ImplicitDict):
+    uSpaceClass: str
+    acceptableRestrictions: Literal[GeoAwarenessRestrictions.PROHIBITED, GeoAwarenessRestrictions.REQ_AUTHORISATION, GeoAwarenessRestrictions.CONDITIONAL, GeoAwarenessRestrictions.NO_RESTRICTION]
+
+class GeoZoneFilterSet(ImplicitDict):
+    position: Optional[GeoZoneFilterPosition]
+    after: Optional[str]
+    before: Optional[str]
+    ed269: List[ED269Filter]
+
+class GeozonesCheck(ImplicitDict):
+    filterSet: List[GeoZoneFilterSet]
+
+class GeoZoneCheckRequestBody(ImplicitDict):
+    checks: List[GeozonesCheck]
+
+@dataclass
+class GeoZoneCheckResult: 
+    geozone: Literal[GeozoneCheckResultEnum.Present,GeozoneCheckResultEnum.Present,GeozoneCheckResultEnum.UnsupportedFilter,GeozoneCheckResultEnum.Error]
+
+@dataclass
+class GeoZoneChecksResponse:
+    applicableGeozone: List[GeoZoneCheckResult]
+    message:str
