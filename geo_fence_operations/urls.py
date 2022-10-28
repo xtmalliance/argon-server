@@ -25,9 +25,9 @@ urlpatterns = [
     path('geo_fence/<uuid:pk>', geo_fence_views.GeoFenceDetail.as_view()),
 
     # End points for automated testing interface
-    path('from django.views import View', geo_fence_views.GeoZoneTestHarnessStatus.as_view()),
-    path('geozone_sources/<uuid:geozone_source_id>', geo_fence_views.GeoZoneSourcesOperations.as_view()),
-    path('geozones/check', geo_fence_views.GeoZoneCheck.as_view()),
+    path('geo_awareness/status', geo_fence_views.GeoZoneTestHarnessStatus.as_view()),
+    path('geo_awareness/geozone_sources/<uuid:geozone_source_id>', geo_fence_views.GeoZoneSourcesOperations.as_view()),
+    path('geo_awareness/geozones/check', geo_fence_views.GeoZoneCheck.as_view()),
 
 
 
