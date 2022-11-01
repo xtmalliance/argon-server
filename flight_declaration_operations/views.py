@@ -94,18 +94,20 @@ def set_flight_declaration(request):
     logging.info("Checking intersections with Geofences..")
     view_box = [float(i) for i in bounds.split(',')]
 
-    all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime)
-    my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
-    my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
-    all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_box)
-    relevant_id_set = []
-    for i in all_relevant_fences:
-        relevant_id_set.append(i['geo_fence_id'])
+    fence_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime).exists()
+    if fence_within_timelimits:
+        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime).exists()
+        my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
+        my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
+        all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_box)
+        relevant_id_set = []
+        for i in all_relevant_fences:
+            relevant_id_set.append(i['geo_fence_id'])
 
-    my_rtree_helper.clear_rtree_index()
-    logging.info("Geofence intersections checked, found {num_intersections} fences" %{"num_intersections": len(relevant_id_set)})
-    if all_relevant_fences: 
-        is_approved = 0
+        my_rtree_helper.clear_rtree_index()
+        logging.info("Geofence intersections checked, found {num_intersections} fences" %{"num_intersections": len(relevant_id_set)})
+        if all_relevant_fences: 
+            is_approved = 0
 
     fo = FlightDeclaration(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
 
