@@ -95,8 +95,9 @@ def set_flight_declaration(request):
     view_box = [float(i) for i in bounds.split(',')]
 
     fence_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime).exists()
+    
     if fence_within_timelimits:
-        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime).exists()
+        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime)
         my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
         my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
         all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_box)
