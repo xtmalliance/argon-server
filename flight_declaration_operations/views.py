@@ -90,14 +90,14 @@ def set_flight_declaration(request):
 
     my_operational_intent_converter = OperationalIntentsConverter()
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
-    bounds = my_operational_intent_converter.get_geo_json_bounds()
-    
-    # TODO check declaration bounds with existing GeoZones
+    bounds = my_operational_intent_converter.get_geo_json_bounds()    
     logging.info("Checking intersections with Geofences..")
-    all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime.isoformat(), end_datetime__gte = end_datetime.isoformat())
+    view_box = [float(i) for i in bounds.split(',')]
+
+    all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime)
     my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
     my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
-    all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = bounds)
+    all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_box)
     relevant_id_set = []
     for i in all_relevant_fences:
         relevant_id_set.append(i['geo_fence_id'])
