@@ -14,10 +14,12 @@ class GeoAwarenessTestHarnessStatus:
     status: Literal[GeoAwarenessStatusResponseEnum.Starting, GeoAwarenessStatusResponseEnum.Ready]
     version:str
 
-@dataclass
-class GeoZoneHttpsSource:
+class HTTPSSource(ImplicitDict):
     url: str
     format:str 
+
+class GeoZoneHttpsSource(ImplicitDict):
+    https_source: HTTPSSource
 
 class GeoAwarenessRestrictions(str, enum.Enum):
     ''' A enum to specify the result of processing of a GeoZone '''
@@ -47,8 +49,6 @@ class GeoAwarenessImportResponseEnum(str, enum.Enum):
 class GeoAwarenessTestStatus: 
     result: Literal[GeoAwarenessImportResponseEnum.Activating, GeoAwarenessImportResponseEnum.Ready, GeoAwarenessImportResponseEnum.Deactivating, GeoAwarenessImportResponseEnum.Unsupported, GeoAwarenessImportResponseEnum.Rejected, GeoAwarenessImportResponseEnum.Error]
     message: Optional[str]
-
-
 
 
 class ZoneAuthority(ImplicitDict):
@@ -114,7 +114,7 @@ class GeoZoneFilterSet(ImplicitDict):
     ed269: List[ED269Filter]
 
 class GeozonesCheck(ImplicitDict):
-    filterSet: List[GeoZoneFilterSet]
+    filterSets: List[GeoZoneFilterSet]
 
 class GeoZoneCheckRequestBody(ImplicitDict):
     checks: List[GeozonesCheck]

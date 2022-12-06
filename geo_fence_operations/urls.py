@@ -29,6 +29,4 @@ urlpatterns = [
     path('geo_awareness/geozone_sources/<uuid:geozone_source_id>', geo_fence_views.GeoZoneSourcesOperations.as_view()),
     path('geo_awareness/geozones/check', geo_fence_views.GeoZoneCheck.as_view()),
 
-
-
 ]

@@ -16,7 +16,7 @@ from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
 from decimal import Decimal
-from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource, GeoZoneCheckRequestBody, GeoZoneChecksResponse
+from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource, GeoZoneCheckRequestBody, GeoZoneChecksResponse, GeoZoneCheckResult, HTTPSSource
 from django.http import JsonResponse
 import logging
 from auth_helper.common import get_redis
@@ -203,27 +203,26 @@ class GeoZoneTestHarnessStatus(generics.GenericAPIView):
 @method_decorator(requires_scopes(['geo-awareness.test']), name='dispatch')
 class GeoZoneSourcesOperations(generics.GenericAPIView):    
     def put(self, request, geozone_source_id):
-        r = get_redis()        
-        geo_zone_url = request.data
+        r = get_redis()                
         try:
-            geo_zone_source = GeoZoneHttpsSource(url = geo_zone_url['url'], format = geo_zone_url['format'])
+            geo_zone_url_details = ImplicitDict.parse(request.data, GeoZoneHttpsSource)
         except KeyError as ke:
             ga_import_response = GeoAwarenessTestStatus(result = 'Rejected', message ="There was an error in processing the request payload, a url and format key is required for successful processing")
             return JsonResponse(json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)), status=200)
 
-        url_validator = URLValidator(verify_exists=False)
+        url_validator = URLValidator()
         try:
-            url_validator(geo_zone_source.url)
+            url_validator(geo_zone_url_details.https_source.url)
         except ValidationError as ve:
             ga_import_response = GeoAwarenessTestStatus(result = 'Unsupported', message ="There was an error in the url provided")
             return JsonResponse(json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)), status=200)
 
         geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
         result = 'Activating'
-        test_status_storage = GeoAwarenessTestStatus(result = result)
+        ga_import_response = GeoAwarenessTestStatus(result = result, message="")
         #TODO: Send the URL as a background job
 
-        r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
+        r.set(geoawareness_test_data_store, json.dumps(asdict(ga_import_response)))
 
         r.expire(name = geoawareness_test_data_store, time = 3000)
 
@@ -237,7 +236,7 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         if r.exists(geoawareness_test_data_store):
             test_data_status = r.get(geoawareness_test_data_store)
             test_status = json.loads(test_data_status)
-            ga_test_status = GeoAwarenessTestStatus(result=test_status['result']) 
+            ga_test_status = GeoAwarenessTestStatus(result=test_status['result'], message="") 
             return JsonResponse(json.loads(json.dumps(ga_test_status, cls=EnhancedJSONEncoder)), status=200)
         else: 
             return JsonResponse({}, status=404)
@@ -247,7 +246,7 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         r = get_redis()  
         if r.exists(geoawareness_test_data_store):
             # TODO: delete the test
-            deletion_status = GeoAwarenessTestStatus(result='Deactivating')
+            deletion_status = GeoAwarenessTestStatus(result='Deactivating', message="Test data has been scheduled to be deleted")
             r.set(geoawareness_test_data_store, json.dumps(asdict(deletion_status)))
 
             return JsonResponse(json.loads(json.dumps(deletion_status, cls=EnhancedJSONEncoder)), status=200)
@@ -261,8 +260,11 @@ class GeoZoneCheck(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
 
         geo_zone_checks = ImplicitDict.parse(request.data, GeoZoneCheckRequestBody)
+        for filter_set in geo_zone_checks.checks.filterSets:
+            print(json.dumps(filter_set))
+
 
         # TODO: Do the checks with existing Geozones. 
-
-        geo_zone_response = GeoZoneChecksResponse(applicableGeozone = ['Error'])
+        geo_zone_check_result = GeoZoneCheckResult(geozone = 'Error')
+        geo_zone_response = GeoZoneChecksResponse(applicableGeozone =geo_zone_check_result)
         return JsonResponse(json.loads(json.dumps(geo_zone_response, cls=EnhancedJSONEncoder)), status=200)
