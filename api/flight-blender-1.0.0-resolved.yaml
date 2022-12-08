@@ -2109,13 +2109,16 @@ components:
             type: number
             format: float
             example:  -7.079881271685565
+            description: Longitude in Decimal Degrees
           altitude_mm:
             type: number
             format: float
+            description: Meters represented in WGS1984 Datum
           lat_dd:
             type: number
             format: float
             example: 52.816644178938816
+            description: Latitude in Decimal Degrees
           timestamp:
             type: integer
             format: int64
@@ -2162,7 +2165,8 @@ components:
               * `11` - Network Remote-ID
 
           metadata:
-            type: object
+            type: object  
+            description: An arbitrary JSON that can be submitted into Blender
 
     GetDisplayDataResponse:
       description: Response to a request for current data that would be visualized by a Display Application.
