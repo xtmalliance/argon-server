@@ -16,7 +16,7 @@ from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
 from decimal import Decimal
-from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource, GeoZoneCheckRequestBody, GeoZoneChecksResponse, GeoZoneCheckResult, HTTPSSource
+from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource, GeoZoneCheckRequestBody, GeoZoneChecksResponse, GeoZoneCheckResult, GeoZoneFilterPosition
 from django.http import JsonResponse
 import logging
 from auth_helper.common import get_redis
@@ -145,8 +145,6 @@ class GeoFenceList(mixins.ListModelMixin,
     serializer_class = GeoFenceSerializer
 
     def get_relevant_geo_fence(self,start_date, end_date,  view_port:List[float]):               
-
-
         present = arrow.now()
         if start_date and end_date:
             s_date = arrow.get(start_date, "YYYY-MM-DD")
@@ -245,10 +243,9 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
         r = get_redis()  
         if r.exists(geoawareness_test_data_store):
-            # TODO: delete the test
+            # TODO: delete the test and dataset
             deletion_status = GeoAwarenessTestStatus(result='Deactivating', message="Test data has been scheduled to be deleted")
             r.set(geoawareness_test_data_store, json.dumps(asdict(deletion_status)))
-
             return JsonResponse(json.loads(json.dumps(deletion_status, cls=EnhancedJSONEncoder)), status=200)
 
         else:
@@ -259,12 +256,40 @@ class GeoZoneCheck(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
 
-        geo_zone_checks = ImplicitDict.parse(request.data, GeoZoneCheckRequestBody)
+        geo_zone_checks = ImplicitDict.parse(request.data, GeoZoneCheckRequestBody) 
+        geo_zones_of_interest = False
         for filter_set in geo_zone_checks.checks.filterSets:
             print(json.dumps(filter_set))
 
+            if 'position' in filter_set:
+                filter_position = ImplicitDict.parse(filter_set['position'], GeoZoneFilterPosition)
+                all_geo_fence 
+                my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory() 
+                my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
+                all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_port)
 
-        # TODO: Do the checks with existing Geozones. 
-        geo_zone_check_result = GeoZoneCheckResult(geozone = 'Error')
+                my_rtree_helper.clear_rtree_index() 
+
+
+                
+            if 'after' in filter_set:
+                after_query = arrow.get(filter_set['after'])
+                geo_zones_exist = GeoFence.objects.filter(start_datetime__gte =  after_query ).exists()
+                if geo_zones_exist:
+                    geo_zones_of_interest = True
+            if 'before' in filter_set:
+                before_query = arrow.get(filter_set['before'])
+                geo_zones_exist = GeoFence.objects.filter(before_datetime__lte =  before_query ).exists()
+                if geo_zones_exist:
+                    geo_zones_of_interest = True
+            if 'ed269' in filter_set: 
+                pass
+        
+        if geo_zones_of_interest: 
+            geo_zone_check_result = GeoZoneCheckResult(geozone='Present')
+        else: 
+            geo_zone_check_result = GeoZoneCheckResult(geozone='Absent')
+            
+
         geo_zone_response = GeoZoneChecksResponse(applicableGeozone =geo_zone_check_result)
         return JsonResponse(json.loads(json.dumps(geo_zone_response, cls=EnhancedJSONEncoder)), status=200)
