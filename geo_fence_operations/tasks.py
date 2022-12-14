@@ -55,28 +55,23 @@ def download_geozone_source(geo_zone_url:str, geozone_source_id:str):
         try:
             geo_zone_data = geo_zone_request.json()
             geo_zone_str = json.dumps(geo_zone_data)
-            write_geo_zone.delay(geo_zone = geo_zone_str)
+            write_geo_zone.delay(geo_zone = geo_zone_str, test_harness_datasource = '1')
         except Exception as e: 
             test_status = 'Error'
             test_status_storage = GeoAwarenessTestStatus(result=test_status)
-
     else:
         test_status = 'Unsupported'
         test_status_storage = GeoAwarenessTestStatus(result=test_status)
-        if r.exists(geoawareness_test_data_store):
-            
+        if r.exists(geoawareness_test_data_store):    
             r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
         
-        
-
-
-
 
 
 @app.task(name="write_geo_zone")
-def write_geo_zone(geo_zone): 
+def write_geo_zone(geo_zone: str, test_harness_datasource:str = '0'): 
 
     geo_zone = json.loads(geo_zone)
+    test_harness_datasource = int(test_harness_datasource)
     processed_geo_zone_features: List[GeoZoneFeature] = []
     
     for _geo_zone_feature in geo_zone['features']:
@@ -139,12 +134,11 @@ def write_geo_zone(geo_zone):
         logging.debug(bounds)
         geo_zone = GeoZone(title= geo_zone['title'], description = geo_zone['description'],  features = geo_zone_feature)
         name = geo_zone_feature.name 
-        # print(json.dumps(geo_zone_feature))
         start_time = arrow.now()
         end_time = start_time.shift(years =1)
         upper_limit = geo_zone_feature['upperLimit'] if 'upperLimit' in geo_zone_feature else 300
         lower_limit = geo_zone_feature['lowerLimit'] if 'lowerLimit' in geo_zone_feature else 10
-        geo_f = GeoFence(geozone = json.dumps(geo_zone_feature),raw_geo_fence= json.dumps(fc), start_datetime = start_time.isoformat(), end_datetime = end_time.isoformat(), upper_limit=upper_limit, lower_limit=lower_limit, bounds= bounds_str, name= name)
+        geo_f = GeoFence(geozone = json.dumps(geo_zone_feature),raw_geo_fence= json.dumps(fc), start_datetime = start_time.isoformat(), end_datetime = end_time.isoformat(), upper_limit=upper_limit, lower_limit=lower_limit, bounds= bounds_str, name= name, is_test_dataset = test_harness_datasource)
         geo_f.save()
 
         logging.info("Saved Geofence to database ..")

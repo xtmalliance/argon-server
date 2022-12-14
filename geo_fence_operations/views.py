@@ -7,10 +7,10 @@ import arrow
 from typing import List
 from . import rtree_geo_fence_helper
 from rest_framework.decorators import api_view
-from shapely.geometry import shape
+from shapely.geometry import shape, Point
 from .models import GeoFence
 from django.http import HttpResponse
-from .tasks import write_geo_fence, write_geo_zone
+from .tasks import write_geo_fence, write_geo_zone, download_geozone_source
 from shapely.ops import unary_union
 from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
@@ -19,6 +19,8 @@ from decimal import Decimal
 from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestStatus, GeoZoneHttpsSource, GeoZoneCheckRequestBody, GeoZoneChecksResponse, GeoZoneCheckResult, GeoZoneFilterPosition
 from django.http import JsonResponse
 import logging
+import pyproj
+from buffer_helper import toFromUTM, convert_shapely_to_geojson
 from auth_helper.common import get_redis
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
@@ -131,7 +133,7 @@ def set_geozone(request):
 class GeoFenceDetail(mixins.RetrieveModelMixin, 
                     generics.GenericAPIView):
 
-    queryset = GeoFence.objects.all()
+    queryset = GeoFence.objects.filter(is_test_dataset = False)
     serializer_class = GeoFenceSerializer
 
     def get(self, request, *args, **kwargs):
@@ -141,7 +143,7 @@ class GeoFenceDetail(mixins.RetrieveModelMixin,
 class GeoFenceList(mixins.ListModelMixin,  
     generics.GenericAPIView):
 
-    queryset = GeoFence.objects.all()
+    queryset = GeoFence.objects.filter(is_test_dataset = False)
     serializer_class = GeoFenceSerializer
 
     def get_relevant_geo_fence(self,start_date, end_date,  view_port:List[float]):               
@@ -218,10 +220,9 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
         result = 'Activating'
         ga_import_response = GeoAwarenessTestStatus(result = result, message="")
-        #TODO: Send the URL as a background job
+        download_geozone_source.delay(geo_zone_url = geo_zone_url_details.https_source.url,geozone_source_id = geozone_source_id)
 
         r.set(geoawareness_test_data_store, json.dumps(asdict(ga_import_response)))
-
         r.expire(name = geoawareness_test_data_store, time = 3000)
 
         return JsonResponse(json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)), status=200)
@@ -244,6 +245,9 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         r = get_redis()  
         if r.exists(geoawareness_test_data_store):
             # TODO: delete the test and dataset
+            all_test_geozones = GeoFence.objects.filter(is_test_dataset = 1)
+            for geozone in all_test_geozones.all(): 
+                geozone.delete()
             deletion_status = GeoAwarenessTestStatus(result='Deactivating', message="Test data has been scheduled to be deleted")
             r.set(geoawareness_test_data_store, json.dumps(asdict(deletion_status)))
             return JsonResponse(json.loads(json.dumps(deletion_status, cls=EnhancedJSONEncoder)), status=200)
@@ -256,6 +260,13 @@ class GeoZoneCheck(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
 
+        proj = pyproj.Proj(
+            proj="utm",
+            zone='54N', # UTM Zone for Switzerland
+            ellps="WGS84",
+            datum="WGS84"
+        )
+
         geo_zone_checks = ImplicitDict.parse(request.data, GeoZoneCheckRequestBody) 
         geo_zones_of_interest = False
         for filter_set in geo_zone_checks.checks.filterSets:
@@ -263,14 +274,20 @@ class GeoZoneCheck(generics.GenericAPIView):
 
             if 'position' in filter_set:
                 filter_position = ImplicitDict.parse(filter_set['position'], GeoZoneFilterPosition)
-                all_geo_fence 
+                relevant_geo_fences = GeoFence.objects.filter(is_test_dataset = 1)
                 my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory() 
-                my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
+                # Buffer the point to get a small view port / bounds 
+                init_point = Point(filter_position)
+                init_shape_utm = toFromUTM(init_point, proj)
+                buffer_shape_utm = init_shape_utm.buffer(1)
+                buffer_shape_lonlat = toFromUTM(buffer_shape_utm, proj, inv=True)
+                view_port = buffer_shape_lonlat.bounds
+
+                my_rtree_helper.generate_geo_fence_index(all_fences = relevant_geo_fences)
                 all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_port)
-
                 my_rtree_helper.clear_rtree_index() 
-
-
+                if all_relevant_fences:
+                    geo_zones_of_interest = True
                 
             if 'after' in filter_set:
                 after_query = arrow.get(filter_set['after'])
