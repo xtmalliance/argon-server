@@ -1,19 +1,8 @@
 # Code reference: https://gis.stackexchange.com/a/327046
 # Source: https://gist.github.com/harshithjv/bcd3fef5661ce0a2ec20224e8e4ac415
 import json
-
-import pyproj
 import shapely.geometry as shp_geo
 from shapely.geometry import Polygon as ShpPolygon
-
-
-PROJECTION_IN = pyproj.Proj(
-    proj="utm",
-    zone='54N', # UTM Zone for India
-    ellps="WGS84",
-    datum="WGS84"
-)
-
 
 def toFromUTM(shp, proj, inv=False):
     """

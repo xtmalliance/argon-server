@@ -20,7 +20,7 @@ from .data_definitions import GeoAwarenessTestHarnessStatus, GeoAwarenessTestSta
 from django.http import JsonResponse
 import logging
 import pyproj
-from buffer_helper import toFromUTM, convert_shapely_to_geojson
+from .buffer_helper import toFromUTM
 from auth_helper.common import get_redis
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
@@ -262,7 +262,7 @@ class GeoZoneCheck(generics.GenericAPIView):
 
         proj = pyproj.Proj(
             proj="utm",
-            zone='54N', # UTM Zone for Switzerland
+            zone='54N',
             ellps="WGS84",
             datum="WGS84"
         )
