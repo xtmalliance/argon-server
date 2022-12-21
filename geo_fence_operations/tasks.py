@@ -8,6 +8,7 @@ from dataclasses import asdict
 from shapely.geometry import shape, Point, mapping
 from functools import partial
 import pyproj
+from requests.exceptions import ConnectionError
 import requests
 from auth_helper.common import get_redis
 from shapely.ops import transform
@@ -49,22 +50,28 @@ def write_geo_fence(geo_fence):
 def download_geozone_source(geo_zone_url:str, geozone_source_id:str):    
     r = get_redis()  
     geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
-    geo_zone_request = requests.get(geo_zone_url)
-    
-    if geo_zone_request.status_code == 200:
-        try:
-            geo_zone_data = geo_zone_request.json()
-            geo_zone_str = json.dumps(geo_zone_data)
-            write_geo_zone.delay(geo_zone = geo_zone_str, test_harness_datasource = '1')
-        except Exception as e: 
-            test_status = 'Error'
-            test_status_storage = GeoAwarenessTestStatus(result=test_status)
+    try:
+        geo_zone_request = requests.get(geo_zone_url)
+    except ConnectionError as ce:
+        logging.error('Error in downloading data from Geofence url')
+        logging.error(ce)        
+        test_status_storage = GeoAwarenessTestStatus(result="Error", message="Error in downloading data")
     else:
-        test_status = 'Unsupported'
-        test_status_storage = GeoAwarenessTestStatus(result=test_status)
-        if r.exists(geoawareness_test_data_store):    
-            r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
-        
+
+        if geo_zone_request.status_code == 200:
+            try:
+                geo_zone_data = geo_zone_request.json()
+                geo_zone_str = json.dumps(geo_zone_data)
+                write_geo_zone.delay(geo_zone = geo_zone_str, test_harness_datasource = '1')
+                test_status_storage = GeoAwarenessTestStatus(result='Ready', message="")
+            except Exception as e:          
+                test_status_storage = GeoAwarenessTestStatus(result='Error', message = "The URL could be ")
+        else:
+            test_status_storage = GeoAwarenessTestStatus(result='Unsupported', message = "")
+
+    if r.exists(geoawareness_test_data_store):    
+        r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
+    
 
 
 @app.task(name="write_geo_zone")

@@ -218,8 +218,8 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
             return JsonResponse(json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)), status=200)
 
         geoawareness_test_data_store = 'geoawarenes_test.' + str(geozone_source_id)
-        result = 'Activating'
-        ga_import_response = GeoAwarenessTestStatus(result = result, message="")
+        
+        ga_import_response = GeoAwarenessTestStatus(result = 'Activating', message="")
         download_geozone_source.delay(geo_zone_url = geo_zone_url_details.https_source.url,geozone_source_id = geozone_source_id)
 
         r.set(geoawareness_test_data_store, json.dumps(asdict(ga_import_response)))
@@ -270,7 +270,6 @@ class GeoZoneCheck(generics.GenericAPIView):
         geo_zone_checks = ImplicitDict.parse(request.data, GeoZoneCheckRequestBody) 
         geo_zones_of_interest = False
         for filter_set in geo_zone_checks.checks.filterSets:
-            print(json.dumps(filter_set))
 
             if 'position' in filter_set:
                 filter_position = ImplicitDict.parse(filter_set['position'], GeoZoneFilterPosition)
