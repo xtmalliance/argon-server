@@ -23,14 +23,9 @@ To visualize flight tracking data you can use a complementary appplication like 
 ![OpenskiesStack](images/openskies-stack.png)
 
 ## Get started in 10 mins
-In this article you will understand how to setup and deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software. 
+Follow our 5-step process to deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software. 
 
-### Setting up authorization server 
-
-### Creating a .env file 
-
-### Running Flight Blender
-
+Read
 
 ## Installation
 
