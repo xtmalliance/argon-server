@@ -42,46 +42,6 @@ def write_incoming_air_traffic_data(observation):
 
 #     logger.info("Hello")
     
-# This method submits flight information to Spotlight
-@app.task(name='submit_flights_to_spotlight')
-def submit_flights_to_spotlight():
-    # get existing consumer group
-    my_cg_ops = flight_stream_helper.StreamHelperOps()
-    push_cg = my_cg_ops.get_push_cg()
-    messages = push_cg.read()
-    pending_messages = []
-    
-    my_credentials = flight_stream_helper.PassportCredentialsGetter()
-    credentials = my_credentials.get_cached_credentials()
-    
-    if 'error' in credentials: 
-        logging.error('Error in getting credentials %s' % credentials)
-    else:
-        for message in messages:             
-            pending_messages.append({'timestamp': message.timestamp,'seq': message.sequence, 'msg_data':message.data, 'address':message.data['icao_address']})
-        
-        # sort by date
-        pending_messages.sort(key=lambda item:item['timestamp'], reverse=True)
-
-        # Keep only the latest message
-        distinct_messages = {i['address']:i for i in reversed(pending_messages)}.values()
-
-        logging.info(len(distinct_messages))
-        FLIGHT_SPOTLIGHT_URL = os.getenv('FLIGHT_SPOTLIGHT_URL', 'http://localhost:5000')
-        
-        securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
-
-        headers = {"Authorization": "Bearer " + credentials['access_token']}
-        for message in distinct_messages:
-            
-            unix_time = int(message['timestamp'].timestamp())
-            # TODO Convert to a SingleAirtrafficObservation object
-            payload = {"icao_address" : message['address'],"traffic_source" :message['msg_data']['traffic_source'], "source_type" : message['msg_data']['source_type'], "lat_dd" : message['msg_data']['lat_dd'], "lon_dd" : message['msg_data']['lon_dd'], "time_stamp" : unix_time,"altitude_mm" : message['msg_data']['altitude_mm'], "metadata": message['msg_data']['metadata']}
-            
-            response = requests.post(securl, data= payload, headers=headers)
-            
-            logging.info(response.status_code)
-
 @app.task(name='start_openskies_stream')
 def start_openskies_stream(view_port:str):   
     view_port = json.loads(view_port)
