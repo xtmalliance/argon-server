@@ -1,4 +1,3 @@
-import uuid
 from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
@@ -6,7 +5,6 @@ from auth_helper.common import get_redis
 from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
 import time
 import arrow
-import math
 import json
 from arrow.parser import ParserError     
 from typing import List
@@ -28,6 +26,21 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
     myDSSSubscriber = dss_rid_helper.RemoteIDOperations()
     subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = request_uuid,subscription_time_delta=subscription_time_delta)
     logger.success("Subscription creation status: %s" % subscription_created['created'])
+
+@app.task(name="run_ussp_polling_for_rid")
+def run_ussp_polling_for_rid():
+    """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
+    logging.debug("Starting USSP polling.. ")
+    # Define start and end time 
+    now = arrow.now()
+    three_minutes_from_now = now.shift(seconds = 180)
+    while arrow.now() < three_minutes_from_now:
+    # while the end time is not achieved 
+        poll_uss_for_flights_async.delay()
+        time.sleep(3)
+        
+    logging.debug("Finishing USSP polling..")
+
 
 @app.task(name='poll_uss_for_flights_async')
 def poll_uss_for_flights_async():

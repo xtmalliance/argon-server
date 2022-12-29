@@ -60,11 +60,11 @@ def start_openskies_stream(view_port:str):
     securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
     headers = {"Authorization": "Bearer " + credentials['access_token']}
     now = arrow.now()
-    one_minute_from_now = now.shift(seconds = 45)
+    two_minutes_from_now = now.shift(seconds = 120)
 
     logger.info("Querying OpenSkies Network for one minute.. ")
 
-    while arrow.now() < one_minute_from_now:
+    while arrow.now() < two_minutes_from_now:
         url_data='https://opensky-network.org/api/states/all?'+'lamin='+str(lat_min)+'&lomin='+str(lng_min)+'&lamax='+str(lat_max)+'&lomax='+str(lng_max)
         openskies_username = env.get('OPENSKY_NETWORK_USERNAME')
         openskies_password = env.get('OPENSKY_NETWORK_PASSWORD')

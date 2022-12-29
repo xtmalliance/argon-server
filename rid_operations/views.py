@@ -6,6 +6,7 @@ from . import view_port_ops
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
+
 from . import dss_rid_helper
 from datetime import timedelta
 import uuid
@@ -19,7 +20,7 @@ from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
-from .tasks import stream_rid_test_data
+from .tasks import stream_rid_test_data, run_ussp_polling_for_rid
 import time
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -112,8 +113,9 @@ def create_dss_subscription(request, *args, **kwargs):
     
     if subscription_r.created:
         m = CreateSubscriptionResponse(message= "DSS Subscription created",id=request_id, dss_subscription_response= subscription_r)
-
-        status = 201
+        status = 201        
+        run_ussp_polling_for_rid.delay()
+        
     else:
         m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= asdict(subscription_r))
         m = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
@@ -143,6 +145,7 @@ def get_rid_data(request, subscription_id):
         flights_dict = r.get(stored_subscription_details)
         logger.info("Sleeping 2 seconds..")
         time.sleep(2)
+        run_ussp_polling_for_rid.delay()
 
 
     if bool(flights_dict):
@@ -248,6 +251,7 @@ def get_display_data(request):
                 
             logger.info("Sleeping 2 seconds..")
             time.sleep(2)
+            run_ussp_polling_for_rid.delay()
 
             logger.debug(subscription_response)
 
@@ -325,9 +329,6 @@ def create_test(request, test_id):
         msg_dict = asdict(msg)
         return JsonResponse(msg_dict['message'], status=msg_dict['status'])
     
-        
-
-
 
     r = get_redis()
 

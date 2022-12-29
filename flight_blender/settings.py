@@ -144,13 +144,8 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 CELERY_RESULT_BACKEND = BROKER_URL
-CELERYBEAT_SCHEDULE = {
 
-    'poll-flights':{
-        'task': 'poll_uss_for_flights_async',        
-        'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=4)))        
-    }
-}
+
 # DataFlair #Logging Information
 LOGGING = {
     'version': 1,
