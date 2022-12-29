@@ -22,19 +22,19 @@ class StreamHelperOps():
         self.db = get_walrus_database()
         self.stream_keys = ['all_observations']      
 
-    def create_push_cg(self):
-        self.get_push_cg(create=True)
+    # def create_push_cg(self):
+    #     self.get_push_cg(create=True)
 
 
-    def get_push_cg(self,create=False):
-        cg = self.db.time_series('cg-push', self.stream_keys)
-        if create:
-            for stream in self.stream_keys:
-                self.db.xadd(stream, {'data': ''})
-            cg.create()
-            cg.set_id('$')
+    # def get_push_cg(self,create=False):
+    #     cg = self.db.time_series('cg-push', self.stream_keys)
+    #     if create:
+    #         for stream in self.stream_keys:
+    #             self.db.xadd(stream, {'data': ''})
+    #         cg.create()
+    #         cg.set_id('$')
 
-        return cg
+    #     return cg
 
     def create_pull_cg(self):
         self.get_pull_cg(create=True)

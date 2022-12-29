@@ -25,7 +25,7 @@ def write_incoming_air_traffic_data(observation):
     logging.debug("Writing observation..")
     
     my_stream_ops = flight_stream_helper.StreamHelperOps()   
-    cg = my_stream_ops.get_push_cg()     
+    cg = my_stream_ops.get_pull_cg()     
     msg_id = cg.all_observations.add(obs)      
     cg.all_observations.trim(1000)
     return msg_id

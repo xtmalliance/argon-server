@@ -114,7 +114,7 @@ def create_dss_subscription(request, *args, **kwargs):
     if subscription_r.created:
         m = CreateSubscriptionResponse(message= "DSS Subscription created",id=request_id, dss_subscription_response= subscription_r)
         status = 201        
-        run_ussp_polling_for_rid.delay()
+        # run_ussp_polling_for_rid.delay()
         
     else:
         m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= asdict(subscription_r))
@@ -145,7 +145,7 @@ def get_rid_data(request, subscription_id):
         flights_dict = r.get(stored_subscription_details)
         logger.info("Sleeping 2 seconds..")
         time.sleep(2)
-        run_ussp_polling_for_rid.delay()
+        # run_ussp_polling_for_rid.delay()
 
 
     if bool(flights_dict):
@@ -249,9 +249,9 @@ def get_display_data(request):
             logger.info("Creating Subscription..")
             subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
                 
+            # run_ussp_polling_for_rid.delay()
             logger.info("Sleeping 2 seconds..")
             time.sleep(2)
-            run_ussp_polling_for_rid.delay()
 
             logger.debug(subscription_response)
 
