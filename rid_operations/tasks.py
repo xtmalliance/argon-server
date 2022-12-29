@@ -33,12 +33,12 @@ def run_ussp_polling_for_rid():
     logging.debug("Starting USSP polling.. ")
     # Define start and end time 
     now = arrow.now()
-    three_minutes_from_now = now.shift(seconds = 180)
-    while arrow.now() < three_minutes_from_now:
+    two_minutes_from_now = now.shift(seconds = 120)
+    while arrow.now() < two_minutes_from_now:
     # while the end time is not achieved 
-        poll_uss_for_flights_async.delay()
+        two_minutes_from_now.delay()
         time.sleep(3)
-        
+
     logging.debug("Finishing USSP polling..")
 
 
