@@ -32,12 +32,25 @@ def run_ussp_polling_for_rid():
     """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
     logging.debug("Starting USSP polling.. ")
     # Define start and end time 
-    now = arrow.now()
-    two_minutes_from_now = now.shift(seconds = 120)
-    while arrow.now() < two_minutes_from_now:
-    # while the end time is not achieved 
-        two_minutes_from_now.delay()
-        time.sleep(3)
+
+    async_polling_lock = 'async_polling_lock'  # This 
+    r = get_redis()
+
+    if r.exists(async_polling_lock):
+        logging.info("Polling is ongoing, not setting additional polling tasks..")
+    else:         
+        logging.info("Setting Polling Lock..")
+        r.set(async_polling_lock,1)
+        now = arrow.now()
+        two_minutes_from_now = now.shift(seconds = 120)
+        while arrow.now() < two_minutes_from_now:
+        # while the end time is not achieved 
+            poll_uss_for_flights_async.delay()
+            time.sleep(3)
+        
+        logging.info("Releasing Lock..")
+        r.delete(async_polling_lock)
+
 
     logging.debug("Finishing USSP polling..")
 
