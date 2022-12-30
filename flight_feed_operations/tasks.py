@@ -30,18 +30,6 @@ def write_incoming_air_traffic_data(observation):
     cg.all_observations.trim(1000)
     return msg_id
 
-
-# @celery.task()
-# def print_hello():
-#     dir(app)
-    
-#     with app.app_context():
-#         cg = app.get_push_cg() 
-
-#     logger = print_hello.get_logger()
-
-#     logger.info("Hello")
-    
 @app.task(name='start_openskies_stream')
 def start_openskies_stream(view_port:str):   
     view_port = json.loads(view_port)
@@ -54,16 +42,13 @@ def start_openskies_stream(view_port:str):
 
     heartbeat = env.get('HEARTBEAT_RATE_SECS', 2)
     heartbeat = int(heartbeat)
-    my_credentials = flight_stream_helper.PassportCredentialsGetter()
-    credentials = my_credentials.get_cached_credentials()
-    FLIGHT_SPOTLIGHT_URL = os.getenv('FLIGHT_SPOTLIGHT_URL', 'http://localhost:5000')
-    securl = FLIGHT_SPOTLIGHT_URL + '/set_air_traffic'
-    headers = {"Authorization": "Bearer " + credentials['access_token']}
     now = arrow.now()
     two_minutes_from_now = now.shift(seconds = 120)
 
     logger.info("Querying OpenSkies Network for one minute.. ")
 
+    my_stream_ops = flight_stream_helper.StreamHelperOps()   
+    cg = my_stream_ops.get_pull_cg() 
     while arrow.now() < two_minutes_from_now:
         url_data='https://opensky-network.org/api/states/all?'+'lamin='+str(lat_min)+'&lomin='+str(lng_min)+'&lamax='+str(lat_max)+'&lomax='+str(lng_max)
         openskies_username = env.get('OPENSKY_NETWORK_USERNAME')
@@ -87,15 +72,9 @@ def start_openskies_stream(view_port:str):
                 for index, row in flight_df.iterrows():
                     metadata = {'velocity':row['velocity']}
                     
-                    all_observations.append({"icao_address" : row['icao24'],"traffic_source" :2, "source_type" : 1, "lat_dd" : row['lat'], "lon_dd" : row['long'], "time_stamp" :  row['time_position'],"altitude_mm" :  row['baro_altitude'], 'metadata':metadata})    
-
-                payload = {"observations":all_observations}    
-
-                try:
-                    response = requests.post(securl, json = payload, headers = headers)        
-                except Exception as e:
-                    logger.error("Error in posting Openskies Network data to Flight Spotlight")
-                    logger.error(e)
-                else:
-                    response.json()                
+                    obs = {"icao_address" : row['icao24'],"traffic_source" :2, "source_type" : 1, "lat_dd" : row['lat'], "lon_dd" : row['long'], "time_stamp" :  row['time_position'],"altitude_mm" :  row['baro_altitude'], 'metadata':metadata}
+                        
+                    msg_id = cg.all_observations.add(obs)      
+                    cg.all_observations.trim(1000)   
+    
         time.sleep(heartbeat)
