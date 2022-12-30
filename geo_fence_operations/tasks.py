@@ -1,6 +1,5 @@
 from flight_blender.celery import app
 import logging
-from . import geo_fence_rw_helper
 import json
 from typing import List
 from .data_definitions import ImplicitDict, ZoneAuthority, HorizontalProjection, ED269Geometry, GeoZoneFeature, GeoZone
