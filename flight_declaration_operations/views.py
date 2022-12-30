@@ -1,6 +1,4 @@
 # Create your views here.
-import re
-from django.shortcuts import render
 from auth_helper.utils import requires_scopes
 # Create your views here.
 import json
@@ -86,7 +84,7 @@ def set_flight_declaration(request):
     default_state = 1 # Default state is Acccepted
 
     flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
-    # task = write_flight_declaration.delay(json.dumps(flight_declaration_data))  # Send a job to spotlight
+
 
     my_operational_intent_converter = OperationalIntentsConverter()
     operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
