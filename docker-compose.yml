@@ -46,6 +46,7 @@ services:
     depends_on:
       - redis
   
+  
 volumes:
   app:
   db_data:

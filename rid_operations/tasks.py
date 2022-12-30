@@ -16,7 +16,8 @@ from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from shapely.geometry import Point, MultiPoint, box
 from .rid_utils import RIDVertex, RIDVolume3D, RIDVolume4D
 from itertools import cycle, islice
-import os
+from datetime import timedelta
+
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -34,16 +35,26 @@ def run_ussp_polling_for_rid():
     """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
     logging.debug("Starting USSP polling.. ")
     # Define start and end time 
-    now = arrow.now()
-    three_minutes_from_now = now.shift(seconds = 180)
-    while arrow.now() < three_minutes_from_now:
-    # while the end time is not achieved 
-        poll_uss_for_flights_async.delay()
-        time.sleep(3)
+
+    async_polling_lock = 'async_polling_lock'  # This 
+    r = get_redis()
+
+    if r.exists(async_polling_lock):
+        logger.info("Polling is ongoing, not setting additional polling tasks..")
+    else:         
+        logger.info("Setting Polling Lock..")
+        
+        r.set(async_polling_lock,'1')
+        r.expire(async_polling_lock, timedelta(minutes=5))       
+
+        for k in range(120):        
+            poll_uss_for_flights_async.apply_async(expires = 2)
+            time.sleep(2)
+    
+        r.delete(async_polling_lock)
         
     logging.debug("Finishing USSP polling..")
-
-
+    
 
 
 @app.task(name='poll_uss_for_flights_async')
