@@ -29,49 +29,21 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
     logger.success("Subscription creation status: %s" % subscription_created['created'])
 
 
-# @app.task(name="run_ussp_polling_for_rid")
-# def run_ussp_polling_for_rid():
-#     """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
-#     logging.debug("Starting USSP polling.. ")
-#     # Define start and end time 
-#     now = arrow.now()
-#     three_minutes_from_now = now.shift(seconds = 180)
-#     while arrow.now() < three_minutes_from_now:
-#     # while the end time is not achieved 
-#         poll_uss_for_flights_async.delay()
-#         time.sleep(3)
+@app.task(name="run_ussp_polling_for_rid")
+def run_ussp_polling_for_rid():
+    """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
+    logging.debug("Starting USSP polling.. ")
+    # Define start and end time 
+    now = arrow.now()
+    three_minutes_from_now = now.shift(seconds = 180)
+    while arrow.now() < three_minutes_from_now:
+    # while the end time is not achieved 
+        poll_uss_for_flights_async.delay()
+        time.sleep(3)
         
-#     logging.debug("Finishing USSP polling..")
+    logging.debug("Finishing USSP polling..")
 
 
-
-# @app.task(name="run_ussp_polling_for_rid")
-# def run_ussp_polling_for_rid():
-#     """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
-#     logger.debug("Starting USSP polling.. ")
-#     # Define start and end time 
-
-#     async_polling_lock = 'async_polling_lock'  # This 
-#     r = get_redis()
-
-#     if r.exists(async_polling_lock):
-#         logger.info("Polling is ongoing, not setting additional polling tasks..")
-#     else:         
-#         logger.info("Setting Polling Lock..")
-#         r.set(async_polling_lock,1)
-#         now = arrow.now()
-#         three_minutes_from_now = now.shift(seconds = 180)
-#         while arrow.now() < three_minutes_from_now:
-#         # while the end time is not achieved 
-#             print('here %s'  % arrow.now().isoformat())
-#             poll_uss_for_flights_async.delay()
-#             time.sleep(2)
-        
-#         logger.info("Releasing Lock..")
-#         r.delete(async_polling_lock)
-
-
-#     logger.debug("Finishing USSP polling..")
 
 
 @app.task(name='poll_uss_for_flights_async')

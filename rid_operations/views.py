@@ -71,6 +71,12 @@ class SubscriptionHelper():
         subscription_r = myDSSubscriber.create_dss_subscription(vertex_list=vertex_list, view=view, request_uuid=request_id, subscription_time_delta = subscription_time_delta)      
         subscription_response = self.my_rid_output_helper.make_json_compatible(subscription_r)
         return subscription_response
+    
+    def start_ussp_polling(self):
+        """
+        This method starts the polling of USSP once a subscription has been created
+        """
+        pass
 
 
 @api_view(['PUT'])
@@ -245,11 +251,10 @@ def get_display_data(request):
         # create a subscription
         my_subscription_helper = SubscriptionHelper()
         subscription_exists = my_subscription_helper.check_subscription_exists(view)        
-        if not subscription_exists:
+        if not subscription_exists:            
             logger.info("Creating Subscription..")
             subscription_response = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view= view)
-                
-            # run_ussp_polling_for_rid.delay()
+            run_ussp_polling_for_rid.delay()
             logger.info("Sleeping 2 seconds..")
             time.sleep(2)
 
