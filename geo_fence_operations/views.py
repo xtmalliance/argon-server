@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view
 from shapely.geometry import shape
 from .models import GeoFence
 from django.http import HttpResponse
-from .tasks import write_geo_fence, write_geo_zone
+from .tasks import write_geo_zone
 from shapely.ops import unary_union
 from rest_framework import mixins, generics
 from .serializers import GeoFenceSerializer
@@ -75,9 +75,6 @@ def set_geo_fence(request):
     raw_geo_fence = json.dumps(geo_json_fc)
     geo_f = GeoFence(raw_geo_fence = raw_geo_fence,start_datetime = start_time, end_datetime = end_time, upper_limit= upper_limit, lower_limit=lower_limit, bounds= bounds, name= name)
     geo_f.save()
-
-    write_geo_fence.delay(geo_fence = raw_geo_fence)
-    
 
     op = json.dumps ({"message":"Geofence Declaration submitted", 'id':str(geo_f.id)})
     return HttpResponse(op, status=200)
