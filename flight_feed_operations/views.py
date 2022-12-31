@@ -80,6 +80,7 @@ def get_air_traffic(request):
 
     # get the view bounding box
     # get the existing subscription id , if no subscription exists, then reject
+    
     try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
@@ -139,20 +140,25 @@ def start_opensky_feed(request):
 
     # Check view port
     # see if it is valid
+    
+
     try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
     except Exception as ke:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+        
         return JsonResponse(json.loads(json.dumps(incorrect_parameters)), status=400, content_type='application/json')
     
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
     
     if view_port_valid:
         start_openskies_stream.delay(view_port = json.dumps(view_port))
+        
         return JsonResponse({"message":"Openskies Newtork stream started"},  status=200, content_type='application/json')
     else:
         view_port_error = {"message": "An incorrect view port bbox was provided"}
+        
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
 
 

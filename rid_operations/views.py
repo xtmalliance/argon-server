@@ -93,7 +93,7 @@ def create_dss_subscription(request, *args, **kwargs):
         incorrect_parameters = {"message": "A view bounding box is necessary with four values: lat1,lng1,lat2,lng2."}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
-    view_port_valid = view_port_ops.check_view_port(view_port=view_port)
+    view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
 
     if not view_port_valid:
         incorrect_parameters = {"message": "A view bounding box is necessary with four values: lat1,lng1,lat2,lng2."}
@@ -127,6 +127,7 @@ def create_dss_subscription(request, *args, **kwargs):
         m = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         status = 400
     msg = my_rid_output_helper.make_json_compatible(m)
+    print(msg)
     return HttpResponse(json.dumps(msg), status=status, content_type='application/json')
 
 

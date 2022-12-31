@@ -1,6 +1,7 @@
 import os, json
 import logging
 from .data_definitions import SingleAirtrafficObservation
+from dataclasses import asdict
 import requests
 import time
 import arrow
@@ -43,12 +44,11 @@ def start_openskies_stream(view_port:str):
     heartbeat = env.get('HEARTBEAT_RATE_SECS', 2)
     heartbeat = int(heartbeat)
     now = arrow.now()
-    two_minutes_from_now = now.shift(seconds = 120)
+    two_minutes_from_now = now.shift(seconds = 60)
 
     logger.info("Querying OpenSkies Network for one minute.. ")
 
-    my_stream_ops = flight_stream_helper.StreamHelperOps()   
-    cg = my_stream_ops.get_pull_cg() 
+
     while arrow.now() < two_minutes_from_now:
         url_data='https://opensky-network.org/api/states/all?'+'lamin='+str(lat_min)+'&lomin='+str(lng_min)+'&lamax='+str(lat_max)+'&lomax='+str(lng_max)
         openskies_username = env.get('OPENSKY_NETWORK_USERNAME')
@@ -72,9 +72,16 @@ def start_openskies_stream(view_port:str):
                 for index, row in flight_df.iterrows():
                     metadata = {'velocity':row['velocity']}
                     
-                    obs = {"icao_address" : row['icao24'],"traffic_source" :2, "source_type" : 1, "lat_dd" : row['lat'], "lon_dd" : row['long'], "time_stamp" :  row['time_position'],"altitude_mm" :  row['baro_altitude'], 'metadata':metadata}
-                        
-                    msg_id = cg.all_observations.add(obs)      
-                    cg.all_observations.trim(1000)   
+                    lat_dd =  row['lat']
+                    lon_dd = row['long']
+                    altitude_mm =  row['baro_altitude']
+                    traffic_source = 2
+                    source_type = 1 
+                    icao_address = row['icao24']                
+
+                    so = SingleAirtrafficObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(metadata))    
+
+
+                    msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))
     
         time.sleep(heartbeat)
