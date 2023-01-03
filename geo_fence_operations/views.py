@@ -43,7 +43,7 @@ def set_geo_fence(request):
         shp_features.append(shape(feature['geometry']))
     combined_features = unary_union(shp_features)
     bnd_tuple = combined_features.bounds
-    bounds = ''.join(['{:.7f}'.format(x) for x in bnd_tuple])
+    bounds = ','.join(['{:.7f}'.format(x) for x in bnd_tuple])
     try:
         s_time = geo_json_fc[0]['properties']["start_time"]
     except KeyError as ke: 
@@ -144,8 +144,9 @@ class GeoFenceList(mixins.ListModelMixin,
             s_date = present.shift(days=-1)
             e_date = present.shift(days=1)
 
-        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = s_date.isoformat(), end_datetime__gte = e_date.isoformat())
+        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__gte = s_date.isoformat(), end_datetime__lte = e_date.isoformat())
         logging.info("Found %s geofences" % len(all_fences_within_timelimits))
+        
         if view_port:
             
             my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  

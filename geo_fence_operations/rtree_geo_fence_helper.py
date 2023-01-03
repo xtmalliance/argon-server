@@ -36,7 +36,8 @@ class GeoFenceRTreeIndexFactory():
         for fence_idx, fence in enumerate(all_fences):                                 
             fence_idx_str = str(fence.id)
             fence_id = int(hashlib.sha256(fence_idx_str.encode('utf-8')).hexdigest(), 16) % 10**8
-            view = [float(i) for i in fence.bounds.split(",")]                       
+            fence_bounds = fence.bounds
+            view = [float(i) for i in fence_bounds.split(",")]                       
 
             self.delete_from_index(enumerated_id= fence_id,view = view)
 
