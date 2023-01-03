@@ -5,7 +5,7 @@ from os.path import dirname, abspath
 from dotenv import load_dotenv, find_dotenv
 from os import environ as env
 from common import get_redis
-import os
+import os, sys
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
@@ -79,7 +79,6 @@ class BlenderUploader():
                 time_stamp = current_reading['timestamp']
                 altitude_mm = current_reading['altitude_mm']                
                 metadata = current_reading['metadata']
-
                 # print(timestamp)
                 headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ self.credentials['access_token']}
                 
@@ -97,10 +96,11 @@ class BlenderUploader():
 
 
 if __name__ == '__main__':
-    
-
     my_credentials = PassportCredentialsGetter()
     credentials = my_credentials.get_cached_credentials()
+    if 'error' in credentials: 
+    
+        sys.exit("Error in getting credentials.")
     parent_dir = dirname(abspath(__file__))  #<-- absolute dir the raw input file  is in
     rel_path = "air_traffic_samples/micro_flight_data_single.json"
     abs_file_path = os.path.join(parent_dir, rel_path)
