@@ -290,16 +290,44 @@ class GeoZoneCheck(generics.GenericAPIView):
                 
             if 'after' in filter_set:
                 after_query = arrow.get(filter_set['after'])
-                geo_zones_exist = GeoFence.objects.filter(start_datetime__gte =  after_query ).exists()
+                geo_zones_exist = GeoFence.objects.filter(start_datetime__gte = after_query, is_test_dataset = 1).exists()
                 if geo_zones_exist:
                     geo_zones_of_interest = True
             if 'before' in filter_set:
                 before_query = arrow.get(filter_set['before'])
-                geo_zones_exist = GeoFence.objects.filter(before_datetime__lte =  before_query ).exists()
+                geo_zones_exist = GeoFence.objects.filter(before_datetime__lte = before_query, is_test_dataset = 1).exists()
                 if geo_zones_exist:
                     geo_zones_of_interest = True
             if 'ed269' in filter_set: 
-                pass
+                ed269_filter_set = filter_set['ed269']
+                if "uSpaceClass" in ed269_filter_set:
+                    uSpace_class_to_query = ed269_filter_set['uSpaceClass']
+                    # Iterate over Geofences to see if there is a uSpace class 
+                    geo_zones_exist = False
+                    all_geo_zones = GeoFence.objects.filter(is_test_dataset = 1)
+                    for current_geo_zone in all_geo_zones:
+                        current_geo_zone_uSpace_class = current_geo_zone['uSpaceClass']
+                        if uSpace_class_to_query == current_geo_zone_uSpace_class:
+                            geo_zones_exist = True
+                            break
+                        
+                    if geo_zones_exist:
+                        geo_zones_of_interest = True
+
+
+                if "acceptableRestrictions" in ed269_filter_set:
+                    acceptable_restrictions = ed269_filter_set['acceptableRestrictions']
+                    geo_zones_exist = False
+                    all_geo_zones = GeoFence.objects.filter(is_test_dataset = 1)
+                    for current_geo_zone in all_geo_zones:
+                        current_geo_zone_restriction = current_geo_zone['restriction']
+                        if current_geo_zone_restriction in acceptable_restrictions:
+                            geo_zones_exist = True
+                            break
+                        
+                    if geo_zones_exist:
+                        geo_zones_of_interest = True
+                
         
         if geo_zones_of_interest: 
             geo_zone_check_result = GeoZoneCheckResult(geozone='Present')
