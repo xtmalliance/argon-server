@@ -11,7 +11,7 @@ class OperationalIntentsConverter():
     ''' A class to covert a operational Intnet  in to GeoJSON '''
     def __init__(self):
         self.geo_json = {"type":"FeatureCollection","features":[]}
-        self.utm_zone = '54N'
+        self.utm_zone = '54N' # Zone for Switzerland
         self.all_features = []
         
     def utm_converter(self, shapely_shape: shapely.geometry, inverse:bool=False) -> shapely.geometry.shape:

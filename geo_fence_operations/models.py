@@ -23,6 +23,8 @@ class GeoFence(models.Model):
     name = models.CharField(max_length = 50)
     bounds = models.CharField(max_length = 140)
 
+    is_test_dataset = models.BooleanField(default = False, help_text="Specify if this is a test dataset that is used in the USS Qualifier tests")
+
     start_datetime = models.DateTimeField(default=datetime.now)
     end_datetime = models.DateTimeField(default=datetime.now)
 
