@@ -1348,7 +1348,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
-        - geo-fence
+        - geozone
 
   /geo_fence_ops/geo_fence:
     get:
@@ -2251,12 +2251,17 @@ components:
           lon_dd:
             type: number
             format: float
+            example:  -7.079881271685565
+            description: Longitude in Decimal Degrees
           altitude_mm:
             type: number
             format: float
+            description: Meters represented in WGS1984 Datum
           lat_dd:
             type: number
             format: float
+            example: 52.816644178938816
+            description: Latitude in Decimal Degrees
           timestamp:
             type: integer
             format: int64
@@ -2264,11 +2269,47 @@ components:
             type: string
             maxLength: 24
           source_type:
+            enum:
+            - 0
+            - 1
             type: integer
+            description: >-
+              The type of observation data that is provided:
+              * `0` - True
+              * `1` - Fused
           traffic_source:
+            enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+            - 9
+            - 10
+            - 11
             type: integer
+            description: >-
+              The source of the observation: 
+              * `0` = 1090ES
+              * `1` - UAT
+              * `2` - Multi-radar (MRT)
+              * `3` - MLAT
+              * `4` - SSR
+              * `5` - PSR
+              * `6` - Mode-S
+              * `7` - MRT
+              * `8` - SSR + PSR Fused
+              * `9` - ADS-B
+              * `10` - FLARM
+              * `11` - Network Remote-ID
+
           metadata:
-            type: object
+            type: object  
+            description: An arbitrary JSON that can be submitted into Blender
 
     GetDisplayDataResponse:
       description: Response to a request for current data that would be visualized by a Display Application.

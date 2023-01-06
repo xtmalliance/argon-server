@@ -1,6 +1,5 @@
 from flight_blender.celery import app
 import logging
-from . import geo_fence_rw_helper
 import json
 from typing import List
 from .data_definitions import ImplicitDict, ZoneAuthority, HorizontalProjection, ED269Geometry, GeoZoneFeature, GeoZone, GeoAwarenessTestStatus
@@ -29,7 +28,6 @@ def geodesic_point_buffer(lat, lon, km):
         proj_wgs84)
     buf = Point(0, 0).buffer(km * 1000)  # distance in metres
     return transform(project, buf)
-
 
 @app.task(name="write_geo_fence")
 def write_geo_fence(geo_fence): 

@@ -8,6 +8,6 @@ class Command(BaseCommand):
         my_stream_ops = flight_stream_helper.StreamHelperOps()
         
         my_stream_ops.create_pull_cg()     
-        my_stream_ops.create_push_cg()     
+        # my_stream_ops.create_push_cg()     
 
 

@@ -1,4 +1,3 @@
-import uuid
 from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
@@ -6,7 +5,6 @@ from auth_helper.common import get_redis
 from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
 import time
 import arrow
-import math
 import json
 from arrow.parser import ParserError     
 from typing import List
@@ -18,6 +16,8 @@ from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from shapely.geometry import Point, MultiPoint, box
 from .rid_utils import RIDVertex, RIDVolume3D, RIDVolume4D
 from itertools import cycle, islice
+from datetime import timedelta
+
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -29,13 +29,41 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
     subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = request_uuid,subscription_time_delta=subscription_time_delta)
     logger.success("Subscription creation status: %s" % subscription_created['created'])
 
+
+@app.task(name="run_ussp_polling_for_rid")
+def run_ussp_polling_for_rid():
+    """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
+    logging.debug("Starting USSP polling.. ")
+    # Define start and end time 
+
+    async_polling_lock = 'async_polling_lock'  # This 
+    r = get_redis()
+
+    if r.exists(async_polling_lock):
+        logger.info("Polling is ongoing, not setting additional polling tasks..")
+    else:         
+        logger.info("Setting Polling Lock..")
+        
+        r.set(async_polling_lock,'1')
+        r.expire(async_polling_lock, timedelta(minutes=5))       
+
+        for k in range(120):        
+            poll_uss_for_flights_async.apply_async(expires = 2)
+            time.sleep(2)
+    
+        r.delete(async_polling_lock)
+        
+    logging.debug("Finishing USSP polling..")
+    
+
+
 @app.task(name='poll_uss_for_flights_async')
 def poll_uss_for_flights_async():
     myDSSSubscriber = dss_rid_helper.RemoteIDOperations()
 
     stream_ops = flight_stream_helper.StreamHelperOps()
-    push_cg = stream_ops.get_push_cg()
-    all_observations = push_cg.all_observations
+    pull_cg = stream_ops.get_pull_cg()
+    all_observations = pull_cg.all_observations
 
     # TODO: Get existing flight details from subscription
     r = get_redis()
