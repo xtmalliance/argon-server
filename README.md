@@ -2,9 +2,9 @@
 
 # Flight Blender
 
-Flight Blender enables you to be compliant with latest regulations on UTM / U-Space in the EU. It gives you:
+Flight Blender is a backen / data-processing engine that to stand up standards compliant UTM services and be latest regulations on UTM / U-Space in the EU. Specifically, it gives you:
 
-- an open source Remote ID "display provider" compatible with ASTM Remote ID standard
+- an open source Remote ID "service provider" compatible with ASTM Remote ID standard
 - an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation for flight authorisation
 - ability to consume geo-fences per the ED-269 standard
 - a flight traffic feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data.
@@ -21,6 +21,11 @@ There are different modules that enable this:
 To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
+
+## Get started in 10 mins
+Follow our 5-step process to deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software. 
+
+Read
 
 ## Installation
 
