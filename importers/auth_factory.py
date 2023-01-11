@@ -11,7 +11,6 @@ if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 
-
 class PassportSpotlightCredentialsGetter():
     def __init__(self):
         pass
@@ -48,7 +47,7 @@ class PassportSpotlightCredentialsGetter():
         
     def get_write_credentials(self, audience:str, scopes:List[str]):        
         payload = {"grant_type":"client_credentials","client_id": env.get('SPOTLIGHT_WRITE_CLIENT_ID'),"client_secret": env.get('SPOTLIGHT_WRITE_CLIENT_SECRET'),"audience": audience,"scope": scopes}        
-        url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
+        url = env.get('PASSPORT_URL') + env.get('PASSPORT_TOKEN_URL')
         
         token_data = requests.post(url, data = payload)
         t_data = token_data.json()
@@ -98,7 +97,7 @@ class PassportCredentialsGetter():
         
     def get_write_credentials(self, audience:str, scopes:List[str]):        
         payload = {"grant_type":"client_credentials","client_id": env.get('BLENDER_WRITE_CLIENT_ID'),"client_secret": env.get('BLENDER_WRITE_CLIENT_SECRET'),"audience": audience,"scope": scopes}        
-        url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
+        url = env.get('PASSPORT_URL') + env.get('PASSPORT_TOKEN_URL')
        
         token_data = requests.post(url, data = payload)
         t_data = token_data.json()

@@ -16,22 +16,17 @@ There are different modules that enable this:
 - _Geofence_: A Geofence can be submitted into Flight Blender and consequently transmitted to Spotlight
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this support both the ASTM USS <-> USS API and can also be used as a standalone component, for supported DSS APIs see below
 
+## Get started in 15 mins
+Follow our 5-step process to deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software. 
+
+Read the ⏲️ [15-minute quickstart](deployment_support/README.md) now! 
+
 ## Openskies stack
 
 To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
 
-## Get started in 10 mins
-Follow our 5-step process to deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software. 
-
-Read
-
-## Installation
-
-Docker and Docker Compose files are available for this software. You can first clone this repository using `git clone https://www.github.com/openskies-sh/flight-blender.git` and then go to the directory and use `docker-compose up` command.
-
-This will open up port 8080 and you can post air-traffic data to `http://localhost:8080/set_air_traffic` and then start the processing.
 
 ## Technical details
 

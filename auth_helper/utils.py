@@ -37,7 +37,7 @@ def requires_scopes(required_scopes):
                 response.status_code = 401
                 return response
             
-            API_IDENTIFIER = env.get('PASSPORT_AUDIENCE')
+            API_IDENTIFIER = env.get('PASSPORT_AUDIENCE','testflight.flightblender.com')
             try:
                 unverified_token_headers = jwt.get_unverified_header(token)            
             except jwt.exceptions.DecodeError as de: 
