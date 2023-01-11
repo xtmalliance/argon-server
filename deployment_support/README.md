@@ -11,7 +11,7 @@ You can join the OpenUTM Discord channel via a request the [Google Form](https:/
 
 ## Introduction and objective
 
-This quick start is for local development / testing only, for a more detailed "Production" instance see the currently under development (oauth_infrastructure)[oauth_infrastructure.md] document. The main difference between local development and production is that for production you will need a full fledged OAUTH server like [Flight Passport](https://github.com/openskies-sh/flight_passport) or others. For this quickstart we will use the simple authentication / token generation mechanism that requires not additional server setup. Specifically we will: 
+This quick start is for local development / testing only, for a more detailed "Production" instance see the currently under development [Production Deployment](oauth_infrastructure.md) document. The main difference between local development and production is that for production you will need a full fledged OAUTH server like [Flight Passport](https://github.com/openskies-sh/flight_passport) or others. For this quickstart we will use the simple authentication / token generation mechanism that requires not additional server setup. Specifically we will: 
 
 1. Create a .env file 
 2. Use Docker compose to run Flight Blender
