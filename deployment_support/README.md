@@ -16,7 +16,6 @@ For this quick start we will use the [sample .env](../.env.sample) file. You can
 
 | Variable Key | Data Type | Description |
 |--------------|--------------|:-----:|
-
 | SECRET_KEY | string |This is used in Django, it is recommended that you use a long SECRET Key as string here |
 | IS_DEBUG |integer | Set this as 0 if you are using it locally |
 | ALLOWED_HOSTS | string | This is used in Django, it is recommended that if you are not using IS_DEBUG above, then this needs to be set as a the domain name, if you are using IS_DEBUG above, then the system automatically allows all hosts|
