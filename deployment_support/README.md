@@ -1,4 +1,4 @@
-# ⌚ 15-min Quickstart 
+# ⌚ 20-min Quickstart 
 In this article you will understand how to deploy the Flight Blender backend / data processsing engine. If you need a front end / display you will need to install Flight Spotlight (which communicates with Blender via the API) and finally for production we also recommend that you use Flight Passport.
 
 ## Introduction and objective
