@@ -1,7 +1,7 @@
-# Introduction and objective
+# ⌚ 15-min Quickstart 
 In this article you will understand how to deploy the Flight Blender backend / data processsing engine. If you need a front end / display you will need to install Flight Spotlight (which communicates with Blender via the API) and finally for production we also recommend that you use Flight Passport.
 
-## 15-min Quickstart 
+## Introduction and objective
 
 In this document, we will setup, this is for local development / testing only, for a more detailed "Production" instance see (oauth_infrastructure)[oauth_infrastructure.md] document, you will need a full fledged OAUTH server like [Flight Passport](https://github.com/openskies-sh/flight_passport), for this quickstart we will use the simple authentication / token generation mechanism that requires not additional server setup. Specifically we will: 
 
