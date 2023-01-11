@@ -6,6 +6,7 @@ This guide is mainly for technical engineers within organizations who are intere
 
 ## Need support?
 ![OpenUTM](../images/openutm-logo.png)
+
 You can join the OpenUTM Discord channel via a request the [Google Form](https://forms.gle/c2UCPTZqxDbXvHcw8)
 
 ## Introduction and objective
