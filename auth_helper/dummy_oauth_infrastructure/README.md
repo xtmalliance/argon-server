@@ -1,0 +1,3 @@
+## Dummy OAUTH Infrastructure
+
+To enable local development, we use a Dummy OAUTH server that produces valid ASTM standards compliant JWT tokens without a server, this is meant for local development only and for production a "real" OAUTH server like [Flight Passport](https://www.github.com/openskies-sh/flight_passport) or others is recommended. This code is from the [InterUSS DSS](https://github.com/interuss/dss/tree/master/cmds/dummy-oauth) repository. 

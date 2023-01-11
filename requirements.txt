@@ -12,6 +12,7 @@ Shapely==1.8.1
 python-jose==3.3.0
 cryptography==38.0.3
 pyjwt==2.4.0
+jwcrypto==1.4.2
 geojson==2.5.0
 arrow==1.2.2
 tldextract==3.2.1

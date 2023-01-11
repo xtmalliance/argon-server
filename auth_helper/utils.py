@@ -114,9 +114,9 @@ def requires_scopes(required_scopes):
 
             else:                
                 # This is for testing DSS locally
-                token_details = jwt.decode(token, audience = "local.test",algorithms=['RS256'], options={"verify_signature": False})        
+                token_details = jwt.decode(token,algorithms=['RS256'], options={"verify_signature": False})        
 
-                if 'iss' in token_details.keys() and token_details['iss'] == 'dummy':          
+                if 'iss' in token_details.keys() and token_details['iss'] in  ['dummy','NoAuth']:          
                     return f(*args, **kwargs)
                 else:
                     response = JsonResponse({'detail': 'Invalid token provided'})

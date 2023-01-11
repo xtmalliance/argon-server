@@ -7,11 +7,24 @@ In this article you will understand how to deploy the OpenUTM system and the ass
 ## Overview
 ![openutm-flow](images/openutm-data-flow.png)
 
+## Quickstart 
+
+In this document, we will setup 
+- Flight Blender via Docker and then 
+- use the importers to submit some flight information 
+- and finally query the flight data using the API via a tool like Postman. 
+
+Flight Blender follows the AST
+
+
+
+## Detailed Instructions
+
 ### Setting up authorization server 
-The OpenUTM system is a standards compliant system and requires a OAUTH server for managing Identity and Authorization, the ASTM standard requires that JWT tokens be used to access UTM services, JWT tokens can be issued by any server, we recommend using Flight Passport since it gives full authorization capabilites. 
+The OpenUTM system is a standards compliant system and requires a OAUTH server for managing Identity and Authorization, the ASTM standard requires that JWT tokens be used to access UTM services, JWT tokens can be issued by any server, we recommend using Flight Passport since it gives full authorization capabilites.
 
 ### Creating a .env file 
-When you deploy Blender you will need a environment file. The envinroment file can be requested via [our contact form](https://www.openskies.sh/#contact).
+When you deploy Blender you will need a environment file. The environment file can be requested via [our contact form](https://www.openskies.sh/#contact).
 
 The section below deatils the environment file variables and a short comment on where they are used. 
 
