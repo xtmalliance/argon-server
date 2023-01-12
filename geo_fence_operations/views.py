@@ -153,7 +153,7 @@ class GeoFenceList(mixins.ListModelMixin,
             s_date = present.shift(days=-1)
             e_date = present.shift(days=1)
 
-        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__gte = s_date.isoformat(), end_datetime__lte = e_date.isoformat())
+        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = s_date.isoformat(), end_datetime__gte = e_date.isoformat())
         logging.info("Found %s geofences" % len(all_fences_within_timelimits))
         
         if view_port:
