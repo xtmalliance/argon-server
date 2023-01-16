@@ -20,7 +20,7 @@ This quick start is for local development / testing only, for a more detailed "P
 
 ### 1. Create .env File
 
-For this quick start we will use the [sample .env](../.env.sample) file. You can copy the file to create a new .env file, we will go over the details .env file below. 
+For this quick start we will use the [sample .env](.env.local) file. You can copy the file to create a new .env file, we will go over the details .env file below. 
 
 | Variable Key | Data Type | Description |
 |--------------|--------------|:-----:|
