@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from email import message
 from uuid import uuid4
 import enum
 import arrow
 from typing import List, Literal, Optional, Union
 from shapely.geometry import Polygon
+
+
 class StringBasedDateTime(str):
   """String that only allows values which describe a datetime."""
   def __new__(cls, value):
@@ -221,16 +222,33 @@ class OperationalIntentReferenceDSSResponse:
     subscription_id: str
 
 @dataclass
+class PartialOperationalIntentReferenceDetails:
+    id: str
+    manager: str
+    uss_availability: str
+    version: int
+    state: Literal[OperationalIntentState.Accepted,OperationalIntentState.Activated,OperationalIntentState.Nonconforming,OperationalIntentState.Contingent]
+    ovn: uuid4 
+    time_start: Time
+    time_end: Time
+    uss_base_url: str
+    subscription_id: str
+
+@dataclass
 class OperationalIntentSubmissionSuccess: 
     subscribers: List[str]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
-
 
 @dataclass
 class OperationalIntentUSSDetails:
     volumes: List[Volume4D]
     priority: int
     off_nominal_volumes: Optional[List[Volume4D]]
+
+@dataclass
+class ConvertedOperationalIntentReference:
+    reference:PartialOperationalIntentReferenceDetails
+    details: OperationalIntentUSSDetails
 
 @dataclass
 class OperationalIntentDetailsUSSResponse:

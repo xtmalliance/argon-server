@@ -18,6 +18,8 @@ from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalS
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
 from .pagination import StandardResultsSetPagination
+from scd_operations.opint_helper import DSSOperationalIntentsCreator
+from scd_operations.scd_data_definitions import ConvertedOperationalIntentReference
 import logging
 logger = logging.getLogger('django')
 
@@ -87,13 +89,15 @@ def set_flight_declaration(request):
 
 
     my_operational_intent_converter = OperationalIntentsConverter()
-    operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
+    op_int_ref_r = my_operational_intent_converter.create_operational_intent_ref(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
+    op_int_ref_details = my_operational_intent_converter.create_operational_intent_ref_details(start_datetime = start_datetime, end_datetime = end_datetime)    
+    op_int_ref = ConvertedOperationalIntentReference(reference =op_int_ref_r , details =op_int_ref_details)
     bounds = my_operational_intent_converter.get_geo_json_bounds()    
     logging.info("Checking intersections with Geofences..")
     view_box = [float(i) for i in bounds.split(',')]
 
     fence_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime).exists()
-    
+    all_relevant_fences = []
     if fence_within_timelimits:
         all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime)
         my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
@@ -108,9 +112,22 @@ def set_flight_declaration(request):
         if all_relevant_fences: 
             is_approved = 0
 
-    fo = FlightDeclaration(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
+    fo = FlightDeclaration(operational_intent = json.dumps(asdict(op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
+    fo.save()    
+    if not all_relevant_fences: 
+        pass
+        # TODO: Create operational intent in the DSS for the start and end time specified
+        # my_dss_opint_creator = DSSOperationalIntentsCreator(flight_declaration_id = str(fo.id))
+        # opint_submission_result = my_dss_opint_creator.submit_flight_declaration_to_dss()
+        # if opint_submission_result.status_code == 500:
+        #     logger.error("Error in submitting Flight Declaration to the DSS %s" % opint_submission_result.status)
+        # elif opint_submission_result.status_code in [200, 201]:
+        #     logger.success("Successfully submitted Flight Declaration to the DSS %s" % opint_submission_result.status)
 
-    fo.save()
+        # logger.info("Details of the submission status %s" % opint_submission_result.message)
+
+
+
     op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':is_approved})
     return HttpResponse(op, status=200, content_type= 'application/json')
     

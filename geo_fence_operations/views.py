@@ -26,7 +26,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from dataclasses import asdict, is_dataclass
 from .common import validate_geo_zone
-from .geofence_typing import ImplicitDict
+
 logger = logging.getLogger('django')
 
 

@@ -6,7 +6,7 @@ from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,SCDTestStatusResponse, CapabilitiesResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage, ClearAreaResponse, SuccessfulOperationalIntentFlightIDStorage
+from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,SCDTestStatusResponse, CapabilitiesResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage,  ClearAreaResponse, SuccessfulOperationalIntentFlightIDStorage
 from . import dss_scd_helper
 from rid_operations import rtree_helper
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
@@ -104,8 +104,6 @@ def SCDAuthTest(request, flight_id):
 
         scd_test_data = request.data
         r = get_redis()
-        my_rtree_helper = rtree_helper.RTreeIndexFactory(index_name=INDEX_NAME)
-        my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
         try:
             flight_authorization_data = scd_test_data['flight_authorisation']
             f_a = FlightAuthorizationDataPayload(uas_serial_number = flight_authorization_data['uas_serial_number'],operation_category = flight_authorization_data['operation_category'], operation_mode = flight_authorization_data['operation_mode'], uas_class = flight_authorization_data['uas_class'], identification_technologies = flight_authorization_data['identification_technologies'],connectivity_methods = flight_authorization_data['connectivity_methods'],  endurance_minutes = flight_authorization_data['endurance_minutes'], emergency_procedure_url = flight_authorization_data['emergency_procedure_url'],operator_id = flight_authorization_data['operator_id'])
@@ -114,11 +112,15 @@ def SCDAuthTest(request, flight_id):
                         
         now = arrow.now()
 
+        my_rtree_helper = rtree_helper.RTreeIndexFactory(index_name=INDEX_NAME)
+        my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
+
         one_minute_from_now = now.shift(minutes=1)
         one_minute_from_now_str = one_minute_from_now.isoformat()
         two_minutes_from_now = now.shift(minutes=2)
         two_minutes_from_now_str = two_minutes_from_now.isoformat()
         opint_subscription_end_time = timedelta(seconds=60)
+        # TODO use ImplicitDict for this
         try:
             operational_intent = scd_test_data['operational_intent']
             operational_intent_volumes = operational_intent['volumes']
@@ -148,11 +150,9 @@ def SCDAuthTest(request, flight_id):
 
                 time_start = Time(format = volume['time_start']['format'], value = volume['time_start']['value'])
                 time_end = Time(format =volume['time_end']['format'] , value = volume['time_end']['value'])
-
                 
                 volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
                 all_volumes.append(volume4D)
-                
             
             operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])   
             # convert operational intent to GeoJSON and get bounds
@@ -179,33 +179,7 @@ def SCDAuthTest(request, flight_id):
         if not is_reg_number_valid:            
             injection_response = asdict(rejected_test_injection_response)
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-
-        # flight authorisation data is correct, can submit the operational intent to the DSS
-        # all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
-        self_deconflicted = False if operational_intent['priority'] == 0 else True
-        
-        # if all_existing_op_ints_in_area and self_deconflicted == False:
-        #     # there are existing op_ints in the area. 
-        #     deconflicted_status = []
-        #     for existing_op_int in all_existing_op_ints_in_area:     
-        #         # check if start time or end time is between the existing bounds
-        #         is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=arrow.get(time_start.value).datetime)
-        #         is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=two_minutes_from_now.datetime)
-
-        #         timeline_status = [is_end_within, is_end_within]
-        
-        #         if all(timeline_status):      
-        #             deconflicted_status.append(True)
-        #         else:
-        #             deconflicted_status.append(False)
-            
-        #     self_deconflicted = all(deconflicted_status)
-        # else:
-        #     # No existing op ints we can plan it.             
-        #     self_deconflicted = True
-        
-        my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')            
-        # if self_deconflicted: 
+       
         
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
         op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
