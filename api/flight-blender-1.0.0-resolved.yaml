@@ -1348,7 +1348,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
-        - geozone
+        - geozone-qualifier
 
   /geo_fence_ops/geo_fence:
     get:
@@ -1487,7 +1487,7 @@ paths:
       summary: Status of the USS automated testing interface
       description: Get the status of the USS automated testing interface.
       tags:
-        - geozone
+        - geozone-qualifier
 
 
   /geo_fence_ops/geo_awareness/geozone_sources/{geozone_source_id}:
@@ -1524,7 +1524,7 @@ paths:
       summary: Import and activate a Geozone source
       description: Instructs the USS to import and activate the Geozone data from this source.
       tags:
-        - geozone
+        - geozone-qualifier
 
 
     get:
@@ -1549,7 +1549,7 @@ paths:
       summary: Status of a Geozone source
       description: Get the status of the Geozone source and its data.
       tags:
-        - geozone
+        - geozone-qualifier
 
 
     delete:
@@ -1574,7 +1574,7 @@ paths:
       description: Instructs the USS to deactivate the Geozone source and its data.
 
       tags:
-        - geozone
+        - geozone-qualifier
 
   /geo_fence_ops/geo_awareness/geozones/check:
     post:
@@ -1603,7 +1603,7 @@ paths:
       description: Check if one or multiple Geozones are applicable at the position of interest for the specified period of time and operational conditions.
 
       tags:
-        - geozone
+        - geozone-qualifier
 
 
 
@@ -4442,5 +4442,5 @@ tags:
     description: Using tools like Flight Spotlight (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system. These endpoints define how flight declarations / operational intents can be created.
   - name: geo-fence
     description: You can submit geo-fences as GeoJSON into Flight Blender, Blender will convert the GeoJSON to a ED-269 Geofence in the background, use these operations into Flight Blender.
-  - name: geozone
+  - name: geozone-qualifier
     description: The InterUSS monitoring test suite has developed a series of tests to check compliance for ED-269 geofences as part of the EU U-Space regulations, these endpoints interact with the qualifier test suite.
