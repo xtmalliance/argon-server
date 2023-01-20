@@ -4,18 +4,7 @@ import enum
 import arrow
 from typing import List, Literal, Optional, Union
 from shapely.geometry import Polygon
-
-
-class StringBasedDateTime(str):
-  """String that only allows values which describe a datetime."""
-  def __new__(cls, value):
-    if isinstance(value, str):
-      t = arrow.get(value).datetime
-    else:
-      t = value
-    str_value = str.__new__(cls, arrow.get(t).to('UTC').format('YYYY-MM-DDTHH:mm:ss.SSSSSS') + 'Z')
-    str_value.datetime = t
-    return str_value
+from implicitdict import StringBasedDateTime
 
 @dataclass
 class LatLngPoint:

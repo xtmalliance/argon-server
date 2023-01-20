@@ -3,17 +3,7 @@ import uuid
 from dataclasses import dataclass, field, asdict
 import arrow
 from scd_operations.scd_data_definitions import Volume4D
-
-class StringBasedDateTime(str):
-  """String that only allows values which describe a datetime."""
-  def __new__(cls, value):
-    if isinstance(value, str):
-      t = arrow.get(value).datetime
-    else:
-      t = value
-    str_value = str.__new__(cls, arrow.get(t).to('UTC').format('YYYY-MM-DDTHH:mm:ss.SSSSSS') + 'Z')
-    str_value.datetime = t
-    return str_value
+from implicitdict import StringBasedDateTime
 
 
 class Position(NamedTuple):
