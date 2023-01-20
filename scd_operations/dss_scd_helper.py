@@ -316,7 +316,11 @@ class SCDOperations():
         
         return all_opints_to_check
 
-    def create_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]):        
+    def notify_peer_uss_of_changed_operational_intent(self, ):
+        """ This method notifies a peer when a flight goes off nominal """
+        raise NotImplementedError
+
+    def create_and_submit_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]) -> OperationalIntentSubmissionStatus:        
         auth_token = self.get_auth_token()
         # A token from authority was received, we can now submit the operational intent
         new_entity_id = str(uuid.uuid4())

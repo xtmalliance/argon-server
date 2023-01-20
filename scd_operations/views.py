@@ -182,10 +182,10 @@ def SCDAuthTest(request, flight_id):
        
         
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
-        op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
+        op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = test_injection_data.operational_intent_data.state, volumes = test_injection_data.operational_intent_data.volumes, off_nominal_volumes = test_injection_data.operational_intent_data.off_nominal_volumes, priority = test_injection_data.operational_intent_data.priority)
         if op_int_submission.status == "success":                
             view_r_bounds = ",".join(map(str,view_rect_bounds))
-            operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= operational_intent_data)
+            operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= test_injection_data.operational_intent_data)
             # Store flight ID 
             flight_opint = 'flight_opint.' + str(flight_id)
             r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))

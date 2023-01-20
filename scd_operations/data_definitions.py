@@ -73,7 +73,6 @@ class OperationalIntentReference(ImplicitDict):
     subscription_id: str
 
 
-
 class OperationalIntentDetails(ImplicitDict):
     volumes: List[Volume4D]
     off_nominal_volumes: List[Volume4D]

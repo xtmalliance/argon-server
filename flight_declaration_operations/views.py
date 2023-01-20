@@ -18,8 +18,6 @@ from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalS
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
 from .pagination import StandardResultsSetPagination
-from scd_operations.opint_helper import DSSOperationalIntentsCreator
-from scd_operations.scd_data_definitions import ConvertedOperationalIntentReference
 import logging
 logger = logging.getLogger('django')
 
@@ -89,9 +87,9 @@ def set_flight_declaration(request):
 
 
     my_operational_intent_converter = OperationalIntentsConverter()
-    op_int_ref_r = my_operational_intent_converter.create_operational_intent_ref(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
-    op_int_ref_details = my_operational_intent_converter.create_operational_intent_ref_details(start_datetime = start_datetime, end_datetime = end_datetime)    
-    op_int_ref = ConvertedOperationalIntentReference(reference =op_int_ref_r , details =op_int_ref_details)
+        
+    parital_op_int_ref = my_operational_intent_converter.create_partial_operational_intent_ref(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime, priority=0)    
+    
     bounds = my_operational_intent_converter.get_geo_json_bounds()    
     logging.info("Checking intersections with Geofences..")
     view_box = [float(i) for i in bounds.split(',')]
@@ -112,8 +110,8 @@ def set_flight_declaration(request):
         if all_relevant_fences: 
             is_approved = 0
 
-    fo = FlightDeclaration(operational_intent = json.dumps(asdict(op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
-    fo.save()    
+    fo = FlightDeclaration(operational_intent = json.dumps(asdict(parital_op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
+    fo.save()
     if not all_relevant_fences: 
         pass
         # TODO: Create operational intent in the DSS for the start and end time specified

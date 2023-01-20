@@ -57,7 +57,7 @@ class DSSOperationalIntentsCreator():
         
         my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')            
         if self_deconflicted:                         
-            op_int_submission = my_scd_dss_helper.create_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
+            op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
 
         else: 
             logger.info("Flight not deconflicted, there are other flights in the area")            

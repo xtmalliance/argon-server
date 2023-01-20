@@ -1,4 +1,4 @@
-from scd_operations.scd_data_definitions import Altitude, Volume3D, Volume4D, LatLngPoint, Time, OperationalIntentUSSDetails, OperationalIntentReferenceDSSResponse
+from scd_operations.scd_data_definitions import Altitude, Volume3D, Volume4D, LatLngPoint, Time, OperationalIntentUSSDetails, PartialCreateOperationalIntentReference
 from scd_operations.scd_data_definitions import Polygon as Plgn
 import shapely.geometry
 from shapely.geometry import shape, Point, Polygon
@@ -44,15 +44,13 @@ class OperationalIntentsConverter():
             geo_json_features = self._convert_operational_intent_to_geojson_feature(volume)
             self.geo_json['features'] += geo_json_features
 
-    def create_operational_intent_ref(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime:str) -> OperationalIntentUSSDetails:
+
+    def create_partial_operational_intent_ref(self, start_datetime: str, end_datetime:str, geo_json_fc: FeatureCollection, priority:int ,state:str ="Accepted") -> PartialCreateOperationalIntentReference:        
         all_v4d = self.convert_geo_json_to_volume4D(geo_json_fc = geo_json_fc, start_datetime = start_datetime, end_datetime = end_datetime)
         
-        op_int_ref_details = OperationalIntentUSSDetails(volumes = all_v4d, off_nominal_volumes =[], priority =0)
+        op_int_volumes = OperationalIntentUSSDetails(volumes = all_v4d, off_nominal_volumes =[], priority =0)
 
-        return op_int_ref_details
-
-    def create_operational_intent_ref_details(self, start_datetime: str, end_datetime:str, state:str ="Accepted", uss_base_url:str = env.get("BLENDER_FQDN","http://localhost:8000/")) -> OperationalIntentReferenceDSSResponse:        
-        op_int_r = OperationalIntentReferenceDSSResponse(uss_base_url = uss_base_url, time_start= start_datetime, time_end = end_datetime, state = state)       
+        op_int_r = PartialCreateOperationalIntentReference(volumes = op_int_volumes,  state = state,priority =priority, off_nominal_volumes= [] )       
 
 
         return op_int_r
