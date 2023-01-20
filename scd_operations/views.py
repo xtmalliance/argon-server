@@ -69,8 +69,8 @@ def SCDClearAreaRequest(request):
     
     if all_existing_op_ints_in_area:
         for flight_details in all_existing_op_ints_in_area:            
-            flight_id =  flight_details['flight_id']
-            op_int_details_key = 'flight_opint.'+ flight_id
+            operation_id =  flight_details['operation_id']
+            op_int_details_key = 'flight_opint.'+ operation_id
             
             op_int_details = r.get(op_int_details_key)
             
@@ -94,8 +94,9 @@ def SCDClearAreaRequest(request):
 
 @api_view(['PUT','DELETE'])
 @requires_scopes(['utm.inject_test_data'])
-def SCDAuthTest(request, flight_id):
+def SCDAuthTest(request, operation_id):
     
+    r = get_redis()
     if request.method == "PUT":
         failed_test_injection_response = TestInjectionResult(result = "Failed", notes="Processing of operational intent has failed",operational_intent_id ="")        
         rejected_test_injection_response = TestInjectionResult(result = "Rejected", notes="An existing operational intent already exists and conflicts in space and time",operational_intent_id="")
@@ -103,7 +104,6 @@ def SCDAuthTest(request, flight_id):
         conflict_with_flight_test_injection_response = TestInjectionResult(result = "ConflictWithFlight", notes="Processing of operational intent has failed, flight not deconflicted",operational_intent_id ="")        
 
         scd_test_data = request.data
-        r = get_redis()
         try:
             flight_authorization_data = scd_test_data['flight_authorisation']
             f_a = FlightAuthorizationDataPayload(uas_serial_number = flight_authorization_data['uas_serial_number'],operation_category = flight_authorization_data['operation_category'], operation_mode = flight_authorization_data['operation_mode'], uas_class = flight_authorization_data['uas_class'], identification_technologies = flight_authorization_data['identification_technologies'],connectivity_methods = flight_authorization_data['connectivity_methods'],  endurance_minutes = flight_authorization_data['endurance_minutes'], emergency_procedure_url = flight_authorization_data['emergency_procedure_url'],operator_id = flight_authorization_data['operator_id'])
@@ -187,12 +187,12 @@ def SCDAuthTest(request, flight_id):
             view_r_bounds = ",".join(map(str,view_rect_bounds))
             operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= test_injection_data.operational_intent_data)
             # Store flight ID 
-            flight_opint = 'flight_opint.' + str(flight_id)
+            flight_opint = 'flight_opint.' + str(operation_id)
             r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
             r.expire(name = flight_opint, time = opint_subscription_end_time)
 
             # Store the details of the operational intent reference
-            flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(flight_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
+            flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
             
             opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
             r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
@@ -219,9 +219,8 @@ def SCDAuthTest(request, flight_id):
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)
 
     elif request.method == "DELETE":        
-        
-        r = get_redis()    
-        op_int_details_key = 'flight_opint.'+ str(flight_id)
+          
+        op_int_details_key = 'flight_opint.'+ str(operation_id)
         op_int_detail_raw = r.get(op_int_details_key)   
         
         if op_int_detail_raw:                
@@ -237,7 +236,7 @@ def SCDAuthTest(request, flight_id):
 
             delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system.")
         else:
-            delete_flight_response = DeleteFlightResponse(result="Failed", notes="The flight was not found in the USS, please check your flight ID %s" % flight_id)
+            delete_flight_response = DeleteFlightResponse(result="Failed", notes="The flight was not found in the USS, please check your flight ID %s" % operation_id)
 
 
         return Response(json.loads(json.dumps(delete_flight_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)

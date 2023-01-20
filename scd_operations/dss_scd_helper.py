@@ -316,8 +316,12 @@ class SCDOperations():
         
         return all_opints_to_check
 
-    def notify_peer_uss_of_changed_operational_intent(self, ):
+    def notify_peer_uss_of_changed_operational_intent(self,operation_id):
         """ This method notifies a peer when a flight goes off nominal """
+        raise NotImplementedError
+
+    def update_specified_operational_intent_referecnce(self, operation_id):
+        """ This method updates a operational intent mainly changing the flight state """
         raise NotImplementedError
 
     def create_and_submit_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]) -> OperationalIntentSubmissionStatus:        

@@ -303,7 +303,7 @@ class OperationalIntentReferenceDSSDetails:
 
 @dataclass
 class SuccessfulOperationalIntentFlightIDStorage:
-    flight_id:str
+    operation_id:str
     operational_intent_id:str
 
 @dataclass
