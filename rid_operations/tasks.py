@@ -27,7 +27,7 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
     subscription_time_delta = 30
     myDSSSubscriber = dss_rid_helper.RemoteIDOperations()
     subscription_created = myDSSSubscriber.create_dss_subscription(vertex_list = vertex_list, view_port = view, request_uuid = request_uuid,subscription_time_delta=subscription_time_delta)
-    logger.success("Subscription creation status: %s" % subscription_created['created'])
+    logger.info("Subscription creation status: %s" % subscription_created['created'])
 
 
 @app.task(name="run_ussp_polling_for_rid")

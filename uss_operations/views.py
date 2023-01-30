@@ -42,6 +42,13 @@ def USSUpdateOpIntDetails(request):
     updated_success = UpdateOperationalIntent(message="New or updated full operational intent information received successfully ")
     return JsonResponse(json.loads(json.dumps(updated_success, cls=EnhancedJSONEncoder)), status=204)
 
+@api_view(['GET'])
+@requires_scopes(['utm.strategic_coordination'])
+def USSOffNominalPositionDetails(request, entity_id):
+    # r = get_redis()    
+    raise NotImplementedError
+
+    
 
 @api_view(['GET'])
 @requires_scopes(['utm.strategic_coordination'])

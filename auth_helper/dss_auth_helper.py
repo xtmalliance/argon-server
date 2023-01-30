@@ -61,7 +61,7 @@ class AuthorityCredentialsGetter():
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
         
-        token_data = requests.post(url, params = payload)
+        token_data = requests.get(url, params = payload)
         t_data = token_data.json()     
         return t_data
 
@@ -76,7 +76,8 @@ class AuthorityCredentialsGetter():
             payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'utm.strategic_coordination'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
-        
-        token_data = requests.post(url, params = payload)
+
+        token_data = requests.get(url, params = payload)        
         t_data = token_data.json()     
+        
         return t_data

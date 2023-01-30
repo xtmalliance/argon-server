@@ -17,6 +17,8 @@ from rest_framework import mixins, generics
 from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
+from scd_operations.opint_helper import DSSOperationalIntentsCreator
+from .tasks import submit_flight_declaration_to_dss
 from .pagination import StandardResultsSetPagination
 import logging
 logger = logging.getLogger('django')
@@ -87,16 +89,19 @@ def set_flight_declaration(request):
 
 
     my_operational_intent_converter = OperationalIntentsConverter()
-    operational_intent = my_operational_intent_converter.convert_geo_json_to_operational_intent(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime)
+        
+    parital_op_int_ref = my_operational_intent_converter.create_partial_operational_intent_ref(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime, priority=0)    
+    
     bounds = my_operational_intent_converter.get_geo_json_bounds()    
     logging.info("Checking intersections with Geofences..")
     view_box = [float(i) for i in bounds.split(',')]
 
     fence_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime).exists()
-    
+    all_relevant_fences = []
     if fence_within_timelimits:
         all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime)
-        my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
+        INDEX_NAME = 'geofence_idx'
+        my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(index_name= INDEX_NAME)  
         my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
         all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_box)
         relevant_id_set = []
@@ -108,9 +113,15 @@ def set_flight_declaration(request):
         if all_relevant_fences: 
             is_approved = 0
 
-    fo = FlightDeclaration(operational_intent = json.dumps(asdict(operational_intent)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
-
+    fo = FlightDeclaration(operational_intent = json.dumps(asdict(parital_op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
     fo.save()
+    
+    if not all_relevant_fences:     
+        # Async submic flight declaration to DSS
+        submit_flight_declaration_to_dss.delay(flight_declaration_id =  str(fo.id))   
+        
+
+
     op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':is_approved})
     return HttpResponse(op, status=200, content_type= 'application/json')
     
@@ -170,7 +181,8 @@ class FlightDeclarationList(mixins.ListModelMixin,
         
         logging.info("Found %s flight declarations" % len(all_fd_within_timelimits))
         if view_port:            
-            my_rtree_helper = FlightDeclarationRTreeIndexFactory()  
+            INDEX_NAME = 'opint_idx'
+            my_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name = INDEX_NAME)  
             my_rtree_helper.generate_flight_declaration_index(all_flight_declarations = all_fd_within_timelimits)
 
             all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_port)

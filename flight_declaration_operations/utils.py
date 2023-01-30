@@ -1,4 +1,4 @@
-from scd_operations.scd_data_definitions import Altitude, Volume3D, Volume4D, LatLngPoint,OperationalIntentReference, Time
+from scd_operations.scd_data_definitions import Altitude, Volume3D, Volume4D, LatLngPoint, Time, OperationalIntentUSSDetails, PartialCreateOperationalIntentReference
 from scd_operations.scd_data_definitions import Polygon as Plgn
 import shapely.geometry
 from shapely.geometry import shape, Point, Polygon
@@ -6,6 +6,13 @@ from pyproj import Proj
 from typing import List
 from geojson import FeatureCollection
 from shapely.ops import unary_union
+
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
 
 class OperationalIntentsConverter():
     ''' A class to covert a operational Intnet  in to GeoJSON '''
@@ -38,7 +45,15 @@ class OperationalIntentsConverter():
             self.geo_json['features'] += geo_json_features
 
 
-    def convert_geo_json_to_operational_intent(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime:str) -> Volume4D:
+    def create_partial_operational_intent_ref(self, start_datetime: str, end_datetime:str, geo_json_fc: FeatureCollection, priority:int ,state:str ="Accepted") -> PartialCreateOperationalIntentReference:        
+        all_v4d = self.convert_geo_json_to_volume4D(geo_json_fc = geo_json_fc, start_datetime = start_datetime, end_datetime = end_datetime)
+
+        op_int_r = PartialCreateOperationalIntentReference(volumes = all_v4d,  state = state,priority =priority, off_nominal_volumes= [] )       
+
+
+        return op_int_r
+
+    def convert_geo_json_to_volume4D(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime:str) -> List[Volume4D]:
         all_v4d = []
         # all_shapes = []
         all_features = geo_json_fc['features']
@@ -69,9 +84,9 @@ class OperationalIntentsConverter():
             volume4D = Volume4D(volume = volume3D, time_start=Time(format="RFC3339",value=start_datetime), time_end=Time(format="RFC3339", value=end_datetime))
             all_v4d.append(volume4D)
         
-        o_i = OperationalIntentReference(extents= all_v4d,key= [], state ='Accepted',uss_base_url="https://flightblender.com")
+        
 
-        return o_i
+        return all_v4d
     
 
     def get_geo_json_bounds(self) -> str:
