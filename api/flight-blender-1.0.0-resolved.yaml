@@ -1851,12 +1851,15 @@ components:
             
         state:
           enum:
+          - 0 
           - 1
           - 2
           - 3
           - 4
-          description: >           
+          - 5
+          description: >
             The state of the operation
+             * `0` - Not submitted to the DSS
              * `1` - Accepted
              * `2` - Activated
              * `3` - Nonconforming

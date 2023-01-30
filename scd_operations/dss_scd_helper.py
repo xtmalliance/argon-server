@@ -137,8 +137,9 @@ class SCDOperations():
         try:
             auth_token = my_authorization_helper.get_cached_credentials(audience= audience, token_type='scd')
         except Exception as e:
-            logger.error("Error in getting Authority Access Token %s " % e)           
-            auth_token['error'] = "Error in getting access token {error}".format(error = e)
+            logger.error("Error in getting Authority Access Token %s " % e)     
+            logger.error("Auth server error {error}".format(error = e))      
+            auth_token['error'] = "Error in getting access token"
         else:
             error = auth_token.get("error", None)     
             if error:        
@@ -193,16 +194,16 @@ class SCDOperations():
         all_uss_operational_intent_details = []
         for volume in volumes: 
             operational_intent_references = []
-            area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)
+            area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)            
             logging.info("Querying DSS for operational intents in the area..")
-            try:
+            try:            
                 operational_intent_ref_response = requests.post(query_op_int_url, json =json.loads(json.dumps(asdict(area_of_interest))) , headers=headers)
             except Exception as re:
                 logger.error("Error in getting operational intent for the volume %s " % re)            
-            else:                    
+            else:
                 dss_operational_intent_references = operational_intent_ref_response.json()
             
-            operational_intent_references = dss_operational_intent_references['operational_intent_references']
+                operational_intent_references = dss_operational_intent_references['operational_intent_references']
 
             if operational_intent_references:
                 logger.info("{num_intents} existing operational intent references found in the area".format(num_intents = len(operational_intent_references)))
@@ -326,21 +327,23 @@ class SCDOperations():
 
     def create_and_submit_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]) -> OperationalIntentSubmissionStatus:        
         auth_token = self.get_auth_token()
+        
         # A token from authority was received, we can now submit the operational intent
         new_entity_id = str(uuid.uuid4())
-        new_operational_intent_ref_creation_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + new_entity_id
+        new_operational_intent_ref_creation_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + new_entity_id        
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
         management_key = str(uuid.uuid4())      
         airspace_keys =[]  
         blender_base_url = env.get("BLENDER_FQDN", 0) 
         implicit_subscription_parameters = ImplicitSubscriptionParameters(uss_base_url=blender_base_url)
         operational_intent_reference = OperationalIntentReference(extents = volumes, key =airspace_keys, state = state, uss_base_url = blender_base_url, new_subscription = implicit_subscription_parameters)
-        d_r = OperationalIntentSubmissionStatus(status = "not started", status_code = 503, message = "Service is not available / connection not established", dss_response ={}, operational_intent_id = new_entity_id)
+        d_r = OperationalIntentSubmissionStatus(status = "not started", status_code = 503, message = "Service is not available / connection not established", dss_response ={}, operational_intent_id = new_entity_id)        
         # Query other USSes for operational intent 
         # Check if there are conflicts (or not)
         logging.info("Checking flight deconfliction status")
         # Get all operational intents in the area
-        all_existing_operational_intent_details =  self.get_latest_airspace_volumes(volumes =volumes)
+        all_existing_operational_intent_details =  self.get_latest_airspace_volumes(volumes =volumes) 
+        
         if all_existing_operational_intent_details:
             logging.info("Checking deconfliction status with {num_existing_op_ints} operational intent details".format(num_existing_op_ints = len(all_existing_operational_intent_details)))            
             my_ind_volumes_converter = VolumesConverter()
@@ -361,9 +364,8 @@ class SCDOperations():
         operational_intent_reference.keys = airspace_keys
         logging.info("Deconfliction status: %s" % deconflicted)
         logging.info("Flight deconfliction status checked")
-        
         opint_creation_payload = json.loads(json.dumps(asdict(operational_intent_reference)))   
-        
+        dss_response = {}
         if deconflicted:
             try:
                 dss_r = requests.put(new_operational_intent_ref_creation_url, json = opint_creation_payload , headers=headers)
@@ -371,6 +373,7 @@ class SCDOperations():
                 logger.error("Error in putting operational intent in the DSS %s " % re)            
                 d_r = OperationalIntentSubmissionStatus(status = "failure", status_code = 500, message = re, dss_response={}, operational_intent_id = new_entity_id)
                 dss_r_status_code = d_r.status_code
+                dss_response = {"error": re}
             else:                    
                 dss_response = dss_r.json()
                 dss_r_status_code = dss_r.status_code

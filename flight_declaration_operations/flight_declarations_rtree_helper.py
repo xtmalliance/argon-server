@@ -8,9 +8,9 @@ from rtree import index
 from .models import FlightDeclaration
 
 class FlightDeclarationRTreeIndexFactory():
-    def __init__(self):
-        self.idx = index.Index()
+    def __init__(self, index_name:str):
         self.r = get_redis()
+        self.idx = index.Index(index_name)
 
     def add_box_to_index(self,id:int,  flight_declaration_id:str, view:List[float], start_date:str, end_date:str):        
         metadata = {"start_date":start_date, "end_date":end_date, "flight_declaration_id":flight_declaration_id }

@@ -1,7 +1,6 @@
 from typing import List, NamedTuple, Optional
 import uuid
 from dataclasses import dataclass, field, asdict
-import arrow
 from scd_operations.scd_data_definitions import Volume4D
 from implicitdict import StringBasedDateTime
 

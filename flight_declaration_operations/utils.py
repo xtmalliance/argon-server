@@ -47,10 +47,8 @@ class OperationalIntentsConverter():
 
     def create_partial_operational_intent_ref(self, start_datetime: str, end_datetime:str, geo_json_fc: FeatureCollection, priority:int ,state:str ="Accepted") -> PartialCreateOperationalIntentReference:        
         all_v4d = self.convert_geo_json_to_volume4D(geo_json_fc = geo_json_fc, start_datetime = start_datetime, end_datetime = end_datetime)
-        
-        op_int_volumes = OperationalIntentUSSDetails(volumes = all_v4d, off_nominal_volumes =[], priority =0)
 
-        op_int_r = PartialCreateOperationalIntentReference(volumes = op_int_volumes,  state = state,priority =priority, off_nominal_volumes= [] )       
+        op_int_r = PartialCreateOperationalIntentReference(volumes = all_v4d,  state = state,priority =priority, off_nominal_volumes= [] )       
 
 
         return op_int_r

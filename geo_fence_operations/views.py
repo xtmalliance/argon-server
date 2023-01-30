@@ -157,8 +157,8 @@ class GeoFenceList(mixins.ListModelMixin,
         logging.info("Found %s geofences" % len(all_fences_within_timelimits))
         
         if view_port:
-            
-            my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory()  
+            INDEX_NAME = 'geofence_idx'
+            my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(index_name = INDEX_NAME)  
             my_rtree_helper.generate_geo_fence_index(all_fences = all_fences_within_timelimits)
             all_relevant_fences = my_rtree_helper.check_box_intersection(view_box = view_port)
             relevant_id_set = []
@@ -272,7 +272,8 @@ class GeoZoneCheck(generics.GenericAPIView):
             if 'position' in filter_set:
                 filter_position = ImplicitDict.parse(filter_set['position'], GeoZoneFilterPosition)
                 relevant_geo_fences = GeoFence.objects.filter(is_test_dataset = 1)
-                my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory() 
+                INDEX_NAME = 'geofence_idx'
+                my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(index_name= INDEX_NAME) 
                 # Buffer the point to get a small view port / bounds 
                 init_point = Point(filter_position)
                 init_shape_utm = toFromUTM(init_point, proj)

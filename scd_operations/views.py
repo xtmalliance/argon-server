@@ -182,41 +182,50 @@ def SCDAuthTest(request, operation_id):
        
         
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
-        op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = test_injection_data.operational_intent_data.state, volumes = test_injection_data.operational_intent_data.volumes, off_nominal_volumes = test_injection_data.operational_intent_data.off_nominal_volumes, priority = test_injection_data.operational_intent_data.priority)
-        if op_int_submission.status == "success":                
-            view_r_bounds = ",".join(map(str,view_rect_bounds))
-            operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= test_injection_data.operational_intent_data)
-            # Store flight ID 
-            flight_opint = 'flight_opint.' + str(operation_id)
-            r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
-            r.expire(name = flight_opint, time = opint_subscription_end_time)
-
-            # Store the details of the operational intent reference
-            flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
+    
+        auth_token = my_scd_dss_helper.get_auth_token()
+        if 'error' in auth_token:
+            logging.error("Error in retrieving auth_token, check if the auth server is running properly, error details below")
+            logging.error(auth_token['error'])    
+            failed_test_injection_response.notes  
+            return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)      
             
-            opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
-            r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
-            r.expire(name = opint_flightref, time = opint_subscription_end_time)
-            
-            planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
-        elif op_int_submission.status=='conflict_with_flight':
-            conflict_with_flight_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
-            return Response(json.loads(json.dumps(conflict_with_flight_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         else: 
-            failed_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
-            return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-        # else:
-        #     tmp_operational_intent_id = str(uuid.uuid4())
-        #     rejected_test_injection_response.operational_intent_id = tmp_operational_intent_id
-        #     return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-        
-        try: 
-            injection_response = asdict(planned_test_injection_response)  
-                 
-            return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-        except KeyError as ke:            
-            injection_response = asdict(failed_test_injection_response)            
-            return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)
+            op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = test_injection_data.operational_intent_data.state, volumes = test_injection_data.operational_intent_data.volumes, off_nominal_volumes = test_injection_data.operational_intent_data.off_nominal_volumes, priority = test_injection_data.operational_intent_data.priority)
+            if op_int_submission.status == "success":                
+                view_r_bounds = ",".join(map(str,view_rect_bounds))
+                operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= test_injection_data.operational_intent_data)
+                # Store flight ID 
+                flight_opint = 'flight_opint.' + str(operation_id)
+                r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
+                r.expire(name = flight_opint, time = opint_subscription_end_time)
+
+                # Store the details of the operational intent reference
+                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
+                
+                opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
+                r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
+                r.expire(name = opint_flightref, time = opint_subscription_end_time)
+                
+                planned_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+            elif op_int_submission.status=='conflict_with_flight':
+                conflict_with_flight_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+                return Response(json.loads(json.dumps(conflict_with_flight_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+            else: 
+                failed_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
+                return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+            # else:
+            #     tmp_operational_intent_id = str(uuid.uuid4())
+            #     rejected_test_injection_response.operational_intent_id = tmp_operational_intent_id
+            #     return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+            
+            try: 
+                injection_response = asdict(planned_test_injection_response)  
+                    
+                return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+            except KeyError as ke:            
+                injection_response = asdict(failed_test_injection_response)            
+                return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)
 
     elif request.method == "DELETE":        
           
