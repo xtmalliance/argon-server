@@ -48,8 +48,14 @@ def requires_scopes(required_scopes):
             
 
             if 'kid' in unverified_token_headers:                   
-                PASSPORT_URL = '{}/.well-known/jwks.json'.format(env.get('PASSPORT_URL','http://local.test:9000'))     
-                jwks_data = s.get(PASSPORT_URL).json()                 
+                PASSPORT_URL = '{}/.well-known/jwks.json'.format(env.get('PASSPORT_URL','http://local.test:9000'))    
+                try: 
+                    jwks_data = s.get(PASSPORT_URL).json()                 
+                except requests.exceptions.RequestException as err:   
+                    response = JsonResponse({'detail': 'Public Key Server to validate the token could not be reached'})
+                    response.status_code = 400
+                    return response
+
                 jwks = jwks_data
                 public_keys = {}                
                 for jwk in jwks['keys']:

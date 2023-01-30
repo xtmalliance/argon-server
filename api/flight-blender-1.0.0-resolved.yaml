@@ -1807,6 +1807,7 @@ components:
           description: Is the operation approved for flight?
           type: string
           format: boolean          
+          example: 1
         start_datetime:
           description: The start for the query
           type: string
@@ -1838,16 +1839,8 @@ components:
               items:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
         operational_intent:
-          description: The operational intent for this flight declaration as a GeoJSON FeatureCollection, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
-          type: object
-          properties: 
-            type:
-              type: string
-              example: "FeatureCollection"
-            features:
-              type: array
-              items:
-                $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+          description: The operational intent for this flight declaration, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
+          $ref: '#/components/schemas/OperationalIntentDetails'
             
         state:
           enum:

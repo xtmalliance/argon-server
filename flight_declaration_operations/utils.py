@@ -38,9 +38,8 @@ class OperationalIntentsConverter():
 
         return shapely.geometry.shape({'type': point_or_polygon, 'coordinates': tuple(new_coordinates)})
 
-    def convert_operational_intent_to_geo_json(self,extents: List[Volume4D]):
-        for extent in extents:
-            volume = extent['volume']            
+    def convert_operational_intent_to_geo_json(self,volumes: List[Volume4D]):
+        for volume in volumes:
             geo_json_features = self._convert_operational_intent_to_geojson_feature(volume)
             self.geo_json['features'] += geo_json_features
 
@@ -100,22 +99,28 @@ class OperationalIntentsConverter():
     def _convert_operational_intent_to_geojson_feature(self, volume: Volume4D):
         
         geo_json_features = []
-        
-        if ('outline_polygon' in volume.keys()):
-            outline_polygon = volume['outline_polygon']
+        v = volume['volume']
+        print(v)
+        time_start = volume['time_start']
+        time_end = volume['time_end']
+        if ('outline_polygon'in v and v['outline_polygon'] is not None):
+            outline_polygon = v['outline_polygon']
             point_list = []
+            
             for vertex in outline_polygon['vertices']:
                 p = Point(vertex['lng'], vertex['lat'])
                 point_list.append(p)
             outline_polygon = Polygon([[p.x, p.y] for p in point_list])
             self.all_features.append(outline_polygon)
-
-            outline_p = shapely.geometry.mapping(outline_polygon)
-            polygon_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_p}
+            
+            oriented = shapely.geometry.polygon.orient(outline_polygon)
+            outline_p = shapely.geometry.mapping(oriented)
+            
+            polygon_feature = {'type': 'Feature', 'properties': {'time_start':time_start, 'time_end':time_end}, 'geometry': outline_p}
             geo_json_features.append(polygon_feature)
 
-        if ('outline_circle' in volume.keys() and volume['outline_circle'] is not None):
-            outline_circle = volume['outline_circle']
+        if ('outline_circle' in v and v['outline_circle'] is not None):
+            outline_circle = v['outline_circle']
             circle_radius = outline_circle['radius']['value']
             center_point = Point(outline_circle['center']['lng'],outline_circle['center']['lat'])
             utm_center = self.utm_converter(shapely_shape = center_point)
@@ -125,7 +130,7 @@ class OperationalIntentsConverter():
             
             outline_c = shapely.geometry.mapping(converted_circle)
 
-            circle_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_c}
+            circle_feature = {'type': 'Feature','properties': {'time_start':time_start, 'time_end':time_end}, 'geometry': outline_c}
             
             geo_json_features.append(circle_feature)
         
