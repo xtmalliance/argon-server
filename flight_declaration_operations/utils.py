@@ -100,7 +100,6 @@ class OperationalIntentsConverter():
         
         geo_json_features = []
         v = volume['volume']
-        print(v)
         time_start = volume['time_start']
         time_end = volume['time_end']
         if ('outline_polygon'in v and v['outline_polygon'] is not None):
