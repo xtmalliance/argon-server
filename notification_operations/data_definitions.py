@@ -11,6 +11,6 @@ class NotificationLevel(Enum):
 
 @dataclass
 class FlightDeclarationUpdateMessage:
-    ''' This oject will '''
+    ''' This oject will hold messages that will go to the operational Notifications '''
     body: str
     level: Literal[NotificationLevel.CRITICAL, NotificationLevel.ERROR, NotificationLevel.WARNING, NotificationLevel.INFO, NotificationLevel.DEBUG]

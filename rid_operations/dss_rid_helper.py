@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 import uuid
 from auth_helper import dss_auth_helper
 import json
-import redis
 from auth_helper.common import get_redis
 import requests
 import hashlib
@@ -18,7 +17,7 @@ from dotenv import load_dotenv, find_dotenv
 from dataclasses import asdict
 from datetime import timedelta
 from .rid_utils import SubscriberToNotify, SubscriptionState, Volume4D, ISACreationRequest, ISACreationResponse, IdentificationServiceArea
-from typing import Dict, Any, Iterable, List
+from typing import List
 logger = logging.getLogger('django')
 load_dotenv(find_dotenv())
  
