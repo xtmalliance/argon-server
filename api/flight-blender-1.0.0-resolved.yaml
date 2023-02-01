@@ -3,7 +3,7 @@ openapi: '3.0.0'
 info:
   title: 'Flight Blender API specification'
   description: |-
-    All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations, enable ASTM specified network Remote-ID and U-Space Flight Authorisation. 
+    All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations, enable ASTM specified network Remote-ID and U-Space Flight Authorisation (also know as Strategic Deconfliction). 
 
     Unless otherwise specified, fields specified in a message but not declared in the API shall be ignored.
   version: '1.0.0'
@@ -1024,7 +1024,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
-        - flight-declaration
+        - flight-declarations
 
   /flight_declaration_ops/flight_declaration/{flight_declaration_id}:
     get:
@@ -1074,7 +1074,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
-        - flight-declaration
+        - flight-declarations
 
   /flight_declaration_ops/flight_declaration_review/{flight_declaration_id}:
     put:
@@ -1133,7 +1133,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
-        - flight-declaration
+        - flight-declarations
 
   /flight_declaration_ops/flight_declaration_state/{flight_declaration_id}:
     put:
@@ -1191,7 +1191,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
-        - flight-declaration
+        - flight-declarations
 
 
   /flight_declaration_ops/set_flight_declaration:
@@ -1246,7 +1246,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
-        - flight-declaration
+        - flight-declarations
 
   /geo_fence_ops/set_geo_fence:
     put:
@@ -1348,7 +1348,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
 
       tags:
-        - geozone
+        - geozone-qualifier
 
   /geo_fence_ops/geo_fence:
     get:
@@ -1487,7 +1487,7 @@ paths:
       summary: Status of the USS automated testing interface
       description: Get the status of the USS automated testing interface.
       tags:
-        - geo-fence
+        - geozone-qualifier
 
 
   /geo_fence_ops/geo_awareness/geozone_sources/{geozone_source_id}:
@@ -1524,7 +1524,7 @@ paths:
       summary: Import and activate a Geozone source
       description: Instructs the USS to import and activate the Geozone data from this source.
       tags:
-        - geo-fence
+        - geozone-qualifier
 
 
     get:
@@ -1549,7 +1549,7 @@ paths:
       summary: Status of a Geozone source
       description: Get the status of the Geozone source and its data.
       tags:
-        - geo-fence
+        - geozone-qualifier
 
 
     delete:
@@ -1574,7 +1574,7 @@ paths:
       description: Instructs the USS to deactivate the Geozone source and its data.
 
       tags:
-        - geo-fence
+        - geozone-qualifier
 
   /geo_fence_ops/geo_awareness/geozones/check:
     post:
@@ -1603,7 +1603,7 @@ paths:
       description: Check if one or multiple Geozones are applicable at the position of interest for the specified period of time and operational conditions.
 
       tags:
-        - geo-fence
+        - geozone-qualifier
 
 
 
@@ -1807,6 +1807,7 @@ components:
           description: Is the operation approved for flight?
           type: string
           format: boolean          
+          example: 1
         start_datetime:
           description: The start for the query
           type: string
@@ -1838,25 +1839,20 @@ components:
               items:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
         operational_intent:
-          description: The operational intent for this flight declaration as a GeoJSON FeatureCollection, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
-          type: object
-          properties: 
-            type:
-              type: string
-              example: "FeatureCollection"
-            features:
-              type: array
-              items:
-                $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+          description: The operational intent for this flight declaration, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
+          $ref: '#/components/schemas/OperationalIntentDetails'
             
         state:
           enum:
+          - 0 
           - 1
           - 2
           - 3
           - 4
-          description: >           
+          - 5
+          description: >
             The state of the operation
+             * `0` - Not submitted to the DSS
              * `1` - Accepted
              * `2` - Activated
              * `3` - Nonconforming
@@ -4429,16 +4425,18 @@ components:
 
 tags:
   - name: uss
-    description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions, operational intents to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data and querying operational intents
-  - name: scd-qualifier
-    description: Flight Blender allows connections and interactions with the USSP software testing framework for Remote ID and Stratedic deconfliction. These endpoints implement the stratetgic deconflication test framework API.
-  - name: rid
-    description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for remote-ID data
+    description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions, operational intents to the DSS for ASTM Compliant Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data and querying operational intents
   - name: rid-qualifier
     description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these enpoints implement the Observation API as described by the test suite.
+  - name: scd-qualifier
+    description: Flight Blender allows connections and interactions with the USSP software testing framework (via InterUSS) for Remote ID and Strategic deconfliction. These endpoints implement the stratetgic deconflication test framework APIs.
+  - name: rid
+    description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data.
   - name: air-traffic
-    description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be intergrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display. Use these endpoints to submit air-traffic data.
-  - name: flight-declaration
-    description: Using tools like Flight Launchpad (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system.
+    description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be intergrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display and or other API endpoints. Use these endpoints to submit / query air-traffic data.
+  - name: flight-declarations
+    description: Using tools like Flight Spotlight (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system. These endpoints define how flight declarations / operational intents can be created.
   - name: geo-fence
-    description: You can submit geo-fences compliant with the ED-269 standard, use these operations into Flight Blender.
+    description: You can submit geo-fences as GeoJSON into Flight Blender, Blender will convert the GeoJSON to a ED-269 Geofence in the background, use these operations into Flight Blender.
+  - name: geozone-qualifier
+    description: The InterUSS monitoring test suite has developed a series of tests to check compliance for ED-269 geofences as part of the EU U-Space regulations, these endpoints interact with the qualifier test suite.

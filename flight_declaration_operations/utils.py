@@ -1,4 +1,4 @@
-from scd_operations.scd_data_definitions import Altitude, Volume3D, Volume4D, LatLngPoint,OperationalIntentReference, Time
+from scd_operations.scd_data_definitions import Altitude, Volume3D, Volume4D, LatLngPoint, Time, OperationalIntentUSSDetails, PartialCreateOperationalIntentReference
 from scd_operations.scd_data_definitions import Polygon as Plgn
 import shapely.geometry
 from shapely.geometry import shape, Point, Polygon
@@ -6,6 +6,13 @@ from pyproj import Proj
 from typing import List
 from geojson import FeatureCollection
 from shapely.ops import unary_union
+
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
 
 class OperationalIntentsConverter():
     ''' A class to covert a operational Intnet  in to GeoJSON '''
@@ -31,14 +38,21 @@ class OperationalIntentsConverter():
 
         return shapely.geometry.shape({'type': point_or_polygon, 'coordinates': tuple(new_coordinates)})
 
-    def convert_operational_intent_to_geo_json(self,extents: List[Volume4D]):
-        for extent in extents:
-            volume = extent['volume']            
+    def convert_operational_intent_to_geo_json(self,volumes: List[Volume4D]):
+        for volume in volumes:
             geo_json_features = self._convert_operational_intent_to_geojson_feature(volume)
             self.geo_json['features'] += geo_json_features
 
 
-    def convert_geo_json_to_operational_intent(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime:str) -> Volume4D:
+    def create_partial_operational_intent_ref(self, start_datetime: str, end_datetime:str, geo_json_fc: FeatureCollection, priority:int ,state:str ="Accepted") -> PartialCreateOperationalIntentReference:        
+        all_v4d = self.convert_geo_json_to_volume4D(geo_json_fc = geo_json_fc, start_datetime = start_datetime, end_datetime = end_datetime)
+
+        op_int_r = PartialCreateOperationalIntentReference(volumes = all_v4d,  state = state,priority =priority, off_nominal_volumes= [] )       
+
+
+        return op_int_r
+
+    def convert_geo_json_to_volume4D(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime:str) -> List[Volume4D]:
         all_v4d = []
         # all_shapes = []
         all_features = geo_json_fc['features']
@@ -69,9 +83,9 @@ class OperationalIntentsConverter():
             volume4D = Volume4D(volume = volume3D, time_start=Time(format="RFC3339",value=start_datetime), time_end=Time(format="RFC3339", value=end_datetime))
             all_v4d.append(volume4D)
         
-        o_i = OperationalIntentReference(extents= all_v4d,key= [], state ='Accepted',uss_base_url="https://flightblender.com")
+        
 
-        return o_i
+        return all_v4d
     
 
     def get_geo_json_bounds(self) -> str:
@@ -85,22 +99,27 @@ class OperationalIntentsConverter():
     def _convert_operational_intent_to_geojson_feature(self, volume: Volume4D):
         
         geo_json_features = []
-        
-        if ('outline_polygon' in volume.keys()):
-            outline_polygon = volume['outline_polygon']
+        v = volume['volume']
+        time_start = volume['time_start']
+        time_end = volume['time_end']
+        if ('outline_polygon'in v and v['outline_polygon'] is not None):
+            outline_polygon = v['outline_polygon']
             point_list = []
+            
             for vertex in outline_polygon['vertices']:
                 p = Point(vertex['lng'], vertex['lat'])
                 point_list.append(p)
             outline_polygon = Polygon([[p.x, p.y] for p in point_list])
             self.all_features.append(outline_polygon)
-
-            outline_p = shapely.geometry.mapping(outline_polygon)
-            polygon_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_p}
+            
+            oriented = shapely.geometry.polygon.orient(outline_polygon)
+            outline_p = shapely.geometry.mapping(oriented)
+            
+            polygon_feature = {'type': 'Feature', 'properties': {'time_start':time_start, 'time_end':time_end}, 'geometry': outline_p}
             geo_json_features.append(polygon_feature)
 
-        if ('outline_circle' in volume.keys() and volume['outline_circle'] is not None):
-            outline_circle = volume['outline_circle']
+        if ('outline_circle' in v and v['outline_circle'] is not None):
+            outline_circle = v['outline_circle']
             circle_radius = outline_circle['radius']['value']
             center_point = Point(outline_circle['center']['lng'],outline_circle['center']['lat'])
             utm_center = self.utm_converter(shapely_shape = center_point)
@@ -110,7 +129,7 @@ class OperationalIntentsConverter():
             
             outline_c = shapely.geometry.mapping(converted_circle)
 
-            circle_feature = {'type': 'Feature', 'properties': {}, 'geometry': outline_c}
+            circle_feature = {'type': 'Feature','properties': {'time_start':time_start, 'time_end':time_end}, 'geometry': outline_c}
             
             geo_json_features.append(circle_feature)
         

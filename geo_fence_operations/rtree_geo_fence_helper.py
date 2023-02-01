@@ -7,8 +7,8 @@ from django.db.models import QuerySet
 from .models import GeoFence
 
 class GeoFenceRTreeIndexFactory():
-    def __init__(self):
-        self.idx = index.Index()
+    def __init__(self, index_name:str):
+        self.idx = index.Index(index_name)
         self.r = get_redis()
 
     def add_box_to_index(self,id:int,  geo_fence_id:str, view:List[float], start_date:str, end_date:str):        

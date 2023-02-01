@@ -20,10 +20,10 @@ class OperationalIntentsIndexFactory():
     def delete_from_index(self,enumerated_id:int, view:List[float]):                
         self.idx.delete(id = enumerated_id, coordinates= (view[0], view[1], view[2], view[3]))
 
-    def generate_operational_intents_index(self) -> None:
+    def generate_operational_intents_index(self, pattern:str = None) -> None:
         """This method generates a rTree index of currently active operational indexes """      
-        
-        all_op_ints = self.r.keys(pattern='flight_opint.*')
+        pattern = pattern if pattern else 'flight_opint.*'
+        all_op_ints = self.r.keys(pattern=pattern)
         for flight_idx, flight_id in enumerate(all_op_ints):
                                  
             flight_id_str = flight_id.split('.')[1]        
@@ -37,10 +37,11 @@ class OperationalIntentsIndexFactory():
             view = [float(i) for i in split_view]            
             self.add_box_to_index(enumerated_id= enumerated_flight_id, flight_id = flight_id_str, view = view, start_time=start_time, end_time= end_time)
 
-    def clear_rtree_index(self):
+    def clear_rtree_index(self, pattern:str):
         """Method to delete all boxes from the index"""
+        pattern = pattern if pattern else 'flight_opint.*'
 
-        all_op_ints = self.r.keys(pattern='flight_opint.*')
+        all_op_ints = self.r.keys(pattern=pattern)
         for flight_idx, flight_id in enumerate(all_op_ints):   
             flight_id_str = flight_id.split('.')[1]        
             

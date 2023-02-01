@@ -7,7 +7,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
 import argparse
-import sys
+
 from typing import List
 
 from auth_helper.dummy_oauth_infrastructure.dummy_oauth import NoAuth
@@ -25,10 +25,20 @@ def parse_args(argv: List[str]):
 
 
 def get_access_token(scopes: str, audience: str):
+  
   adapter = NoAuth()
   return adapter.issue_token(audience, scopes.split(' '))
 
 
 if __name__ == '__main__':
   args = parse_args(sys.argv[1:])
+
+  if args.scopes is None:
+    print ("Scopes has not been set please set it as a command argument e.g. --scopes 'blender.read blender.write'")
+    sys.exit()
+
+  if args.audience is None:
+    print ("audience has not been has been set set it as command argument e.g. --audience 'alpha.flightblender.com'")
+    sys.exit()
+
   print(get_access_token(args.scopes, args.audience))
