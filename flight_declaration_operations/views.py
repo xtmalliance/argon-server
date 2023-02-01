@@ -18,8 +18,13 @@ from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalS
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
 from scd_operations.opint_helper import DSSOperationalIntentsCreator
-from .tasks import submit_flight_declaration_to_dss
+from .tasks import submit_flight_declaration_to_dss, send_operational_update_message
 from .pagination import StandardResultsSetPagination
+
+from notification_operations.notification_helper import NotificationFactory
+from notification_operations.data_definitions import FlightDeclarationUpdateMessage
+from os import environ as env
+
 import logging
 logger = logging.getLogger('django')
 
@@ -115,14 +120,17 @@ def set_flight_declaration(request):
 
     fo = FlightDeclaration(operational_intent = json.dumps(asdict(parital_op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
     fo.save()
-    
+
+    flight_declaration_id = str(fo.id)    
+    amqp_connection_url = env.get('AMQP_URL', 0)
+    if amqp_connection_url:        
+        send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = "Flight Declaration created..", level = 'info')
+
     if not all_relevant_fences:     
         # Async submic flight declaration to DSS
-        submit_flight_declaration_to_dss.delay(flight_declaration_id =  str(fo.id))   
-        
-
-
-    op = json.dumps({"message":"Submitted Flight Declaration", 'id':str(fo.id), 'is_approved':is_approved})
+        submit_flight_declaration_to_dss.delay(flight_declaration_id = flight_declaration_id)   
+    
+    op = json.dumps({"message":"Submitted Flight Declaration", 'id':flight_declaration_id, 'is_approved':is_approved})    
     return HttpResponse(op, status=200, content_type= 'application/json')
     
 @method_decorator(requires_scopes(['blender.write']), name='dispatch')
