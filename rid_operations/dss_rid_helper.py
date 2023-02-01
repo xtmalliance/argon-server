@@ -29,7 +29,7 @@ if ENV_FILE:
 class RemoteIDOperations():
 
     def __init__(self):
-        self.dss_base_url = env.get('DSS_BASE_URL')        
+        self.dss_base_url = env.get('DSS_BASE_URL', 0)
         self.r = get_redis()
 
 
