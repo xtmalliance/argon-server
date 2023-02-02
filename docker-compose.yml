@@ -9,6 +9,19 @@ services:
       - ./config/redis.conf:/redis.conf
     container_name: "redis"
 
+  rabbitmq3:
+      container_name: "rabbitmq"
+      image: rabbitmq:3.8-management-alpine
+      environment:
+          - RABBITMQ_DEFAULT_USER=myuser
+          - RABBITMQ_DEFAULT_PASS=mypassword
+      volumes:
+        - rabbitmq:/var/lib/rabbitmq    # use a volume to store the data
+      ports:
+          # AMQP protocol port
+          - '5672:5672'
+          # HTTP management UI
+          - '15672:15672'
   db:
     image: postgres
     ports:
@@ -50,4 +63,4 @@ services:
 volumes:
   app:
   db_data:
-  
+  rabbitmq:
