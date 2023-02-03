@@ -118,6 +118,24 @@ def set_flight_declaration(request):
         if all_relevant_fences: 
             is_approved = 0
 
+    all_relevant_declarations = []
+    existing_declaration_within_timelimits = FlightDeclaration.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime).exists()
+    if existing_declaration_within_timelimits:
+        all_declarations_within_timelimits = FlightDeclaration.objects.filter(start_datetime__lte = start_datetime, end_datetime__gte = end_datetime)
+        INDEX_NAME = 'flight_declaration_idx'
+        my_fd_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name= INDEX_NAME)  
+        my_fd_rtree_helper.generate_flight_declaration_index(all_flight_declarations = existing_declaration_within_timelimits)
+        all_relevant_declarations = my_rtree_helper.check_box_intersection(view_box = view_box)
+        relevant_id_set = []
+        for i in all_relevant_declarations:
+            relevant_id_set.append(i['flight_declaration_id'])
+
+        my_fd_rtree_helper.clear_rtree_index()
+        logging.info("Flight Declaration intersections checked, found {num_intersections} declarations" %{"all_relevant_declarations": len(relevant_id_set)})
+        if all_relevant_declarations: 
+            is_approved = 0
+
+
     fo = FlightDeclaration(operational_intent = json.dumps(asdict(parital_op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)
     fo.save()
 
