@@ -35,13 +35,13 @@ def submit_flight_declaration_to_dss(flight_declaration_id:str):
 
 
 @app.task(name="send_operational_update_message")
-def send_operational_update_message(flight_declraraton_id:str, message_text:str , level:str = 'info'):
+def send_operational_update_message(flight_declaration_id:str, message_text:str , level:str = 'info'):
 
     update_message = FlightDeclarationUpdateMessage(body=message_text, level=level)
     amqp_connection_url = env.get('AMQP_URL', 0)
     if amqp_connection_url:
-        my_notification_helper = NotificationFactory(flight_declaration_id = flight_declraraton_id, amqp_connection_url=amqp_connection_url)
-        my_notification_helper.declare_queue(queue_name=flight_declraraton_id)
+        my_notification_helper = NotificationFactory(flight_declaration_id = flight_declaration_id, amqp_connection_url=amqp_connection_url)
+        my_notification_helper.declare_queue(queue_name=flight_declaration_id)
         my_notification_helper.send_message(message_details= update_message)
         logger.info("Submitted Flight Declaration Notification")
     else: 

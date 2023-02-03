@@ -31,7 +31,7 @@ class FlightDeclaration(models.Model):
         ordering = ['-created_at']
         
     def __unicode__(self):
-       return self.name + ' ' + self.flight_plan.name
+       return self.originating_party + ' ' + str(self.id)
 
     def __str__(self):
-        return self.name + ' ' + self.flight_plan.name
+        return self.originating_party + ' ' + str(self.id)

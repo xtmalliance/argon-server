@@ -126,8 +126,7 @@ def create_dss_subscription(request, *args, **kwargs):
         m = CreateSubscriptionResponse(message= "Error in creating DSS Subscription, please check the log or contact your administrator.",id=request_id, dss_subscription_response= asdict(subscription_r))
         m = {"message": "Error in creating DSS Subscription, please check the log or contact your administrator.", 'id': request_id}
         status = 400
-    msg = my_rid_output_helper.make_json_compatible(m)
-    print(msg)
+    msg = my_rid_output_helper.make_json_compatible(m)    
     return HttpResponse(json.dumps(msg), status=status, content_type='application/json')
 
 

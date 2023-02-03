@@ -714,7 +714,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration/f63be948-6e3a-4951-8d7a-20089a10d763",
+							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration/5216e3f3-6916-4a27-a57e-7690c94e2e6b",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -724,7 +724,7 @@
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration",
-								"f63be948-6e3a-4951-8d7a-20089a10d763"
+								"5216e3f3-6916-4a27-a57e-7690c94e2e6b"
 							],
 							"query": [
 								{
@@ -740,36 +740,26 @@
 				},
 				{
 					"name": "Submit Flight Declaration",
-					"protocolProfileBehavior": {
-						"disabledSystemHeaders": {
-							"content-type": true
-						}
-					},
 					"request": {
 						"auth": {
 							"type": "oauth2",
 							"oauth2": [
 								{
 									"key": "accessTokenUrl",
-									"value": "http://local.test:9000/oauth/token/",
+									"value": "{{passport_oauth_token_url}}",
 									"type": "string"
-								},
-								{
-									"key": "tokenName",
-									"value": "Blender RW",
-									"type": "string"
-								},
-								{
-									"key": "audience",
-									"value": {
-										"2cfccc06-7a63-4b07-9f3b-29137911aa03": "{{flight_blender_audience}}"
-									},
-									"type": "any"
 								},
 								{
 									"key": "scope",
 									"value": "{{flight_blender_scopes}}",
 									"type": "string"
+								},
+								{
+									"key": "audience",
+									"value": {
+										"56d75814-297b-4a52-b60d-94e1b4f0aee6": "{{flight_blender_audience}}"
+									},
+									"type": "any"
 								},
 								{
 									"key": "clientSecret",
@@ -779,6 +769,11 @@
 								{
 									"key": "clientId",
 									"value": "{{client_id}}",
+									"type": "string"
+								},
+								{
+									"key": "tokenType",
+									"value": "",
 									"type": "string"
 								},
 								{
@@ -802,16 +797,6 @@
 									"type": "string"
 								},
 								{
-									"key": "accessToken",
-									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
-									"type": "string"
-								},
-								{
-									"key": "tokenType",
-									"value": "Bearer",
-									"type": "string"
-								},
-								{
 									"key": "addTokenTo",
 									"value": "header",
 									"type": "string"
@@ -819,16 +804,10 @@
 							]
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"submitted_by\": \"hb@hb.com\",\r\n    \"type_of_operation\": 1,\r\n    \"originating_party\": \"Aerobridge Drones\",\r\n    \"start_datetime\":\"2022-06-03T20:18:31.316537Z\",\r\n    \"end_datetime\":\"2022-06-03T20:18:41.316537Z\",\r\n    \"flight_declaration_geo_json\": {\r\n        \"type\": \"FeatureCollection\",\r\n        \"features\": [\r\n            {\r\n                \"type\": \"Feature\",\r\n                \"properties\": {\r\n                    \"min_altitude\": {\r\n                        \"meters\": 123,\r\n                        \"datum\": \"agl\"\r\n                    },\r\n                    \"max_altitude\": {\r\n                        \"meters\": 123,\r\n                        \"datum\": \"agl\"\r\n                    }\r\n                },\r\n                \"geometry\": {\r\n                    \"type\": \"LineString\",\r\n                    \"coordinates\": [\r\n                        [\r\n                            30.064666271209717,\r\n                            -1.9302887960726984\r\n                        ],\r\n                        [\r\n                            30.06672620773315,\r\n                            -1.9284015913823835\r\n                        ],\r\n                        [\r\n                            30.070245265960693,\r\n                            -1.9277367801405985\r\n                        ]\r\n                    ]\r\n                }\r\n            }\r\n        ]\r\n    }\r\n}",
+							"raw": "{\r\n    \"exchange_type\": \"flight_declaration\",\r\n    \"flight_id\": \"5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n    \"plan_id\": \"a5b5484c-a23c-4e83-8bb8-a6a5c294e45b\",\r\n    \"flight_state\": 2,\r\n    \"flight_approved\": 0,\r\n    \"sequence_number\": 0,\r\n    \"start_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n    \"end_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n    \"version\": \"1.0.0\",\r\n    \"purpose\": \"Delivery\",\r\n    \"expect_telemetry\": true,\r\n    \"originating_party\": \"Medicine Delivery Company\",\r\n    \"contact_url\": \"https://utm.originatingparty.com/contact?5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n    \"type_of_operation\": 0,\r\n    \"vehicle_id\": \"157de9bb-6b49-496b-bf3f-0b768ce6a3b6\",\r\n    \"operator_id\": \"4a725cb5-02d2-4f78-888f-b93088d324be\",\r\n    \"flight_declaration_geo_json\": {\r\n        \"type\": \"FeatureCollection\",\r\n        \"features\": [\r\n            {\r\n                \"type\": \"Feature\",\r\n                \"properties\": {\r\n                    \"id\": \"0\",\r\n                    \"start_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n                    \"end_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n                    \"max_altitude\": {\r\n                        \"meters\": 152.4,\r\n                        \"datum\": \"agl\"\r\n                    },\r\n                    \"min_altitude\": {\r\n                        \"meters\": 102.4,\r\n                        \"datum\": \"agl\"\r\n                    }\r\n                },\r\n                \"geometry\": {\r\n                    \"coordinates\": [\r\n                        [\r\n                            15.776083042366338,\r\n                            1.18379149158649\r\n                        ],\r\n                        [\r\n                            15.799823306116707,\r\n                            1.2159036290562142\r\n                        ],\r\n                        [\r\n                            15.812391681043636,\r\n                            1.2675614791659342\r\n                        ],\r\n                        [\r\n                            15.822167083764754,\r\n                            1.3024648511225934\r\n                        ],\r\n                        [\r\n                            15.82635654207283,\r\n                            1.3220105290909174\r\n                        ]\r\n                    ],\r\n                    \"type\": \"LineString\"\r\n                }\r\n            }\r\n        ]\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -846,13 +825,6 @@
 							"path": [
 								"flight_declaration_ops",
 								"set_flight_declaration"
-							],
-							"query": [
-								{
-									"key": "",
-									"value": "",
-									"disabled": true
-								}
 							]
 						},
 						"description": "This request submits a Geofence to Flight Blender"
@@ -2313,6 +2285,11 @@
 									"type": "oauth2",
 									"oauth2": [
 										{
+											"key": "tokenName",
+											"value": "Blender RW",
+											"type": "string"
+										},
+										{
 											"key": "accessTokenUrl",
 											"value": "{{passport_oauth_token_url}}",
 											"type": "string"
@@ -2895,6 +2872,11 @@
 									"type": "oauth2",
 									"oauth2": [
 										{
+											"key": "accessTokenUrl",
+											"value": "http://local.test:9000/oauth/token/",
+											"type": "string"
+										},
+										{
 											"key": "scope",
 											"value": "{{flight_blender_scopes}}",
 											"type": "string"
@@ -2949,11 +2931,6 @@
 										{
 											"key": "client_authentication",
 											"value": "header",
-											"type": "string"
-										},
-										{
-											"key": "accessTokenUrl",
-											"value": "https://id.openskies.sh/oauth/token/",
 											"type": "string"
 										},
 										{

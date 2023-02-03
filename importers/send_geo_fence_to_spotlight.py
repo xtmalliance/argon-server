@@ -12,7 +12,6 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
-
 class PassportCredentialsGetter():
     def __init__(self):
         pass
@@ -46,13 +45,9 @@ class PassportCredentialsGetter():
         payload = {"grant_type":"client_credentials","client_id": env.get('SPOTLIGHT_WRITE_CLIENT_ID'),"client_secret": env.get('SPOTLIGHT_WRITE_CLIENT_SECRET'),"audience": env.get('SPOTLIGHT_AUDIENCE'),"scope": env.get('SPOTLIGHT_GEO_FENCE_SCOPE')}            
         url = env.get('PASSPORT_URL') +env.get('PASSPORT_TOKEN_URL')
         
-        token_data = requests.post(url, data = payload)
-       
-        t_data = token_data.json()
-        
+        token_data = requests.post(url, data = payload)       
+        t_data = token_data.json()        
         return t_data
-
-
 
 
 class FlightSpotlightUploader():

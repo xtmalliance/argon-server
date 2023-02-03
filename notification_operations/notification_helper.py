@@ -30,17 +30,17 @@ class NotificationFactory():
     def send_message(self, message_details:FlightDeclarationUpdateMessage):
         msg_details = json.dumps(asdict(message_details))
         self.channel.basic_publish(exchange=self.exchange, routing_key=self.flight_declaration_id, body=msg_details)
-        print(f"Sent message. Exchange: {self.exchange}, Routing Key: {self.flight_declaration_id}, Body: {msg_details}")
+        logger.info(f"Sent message. Exchange: {self.exchange}, Routing Key: {self.flight_declaration_id}, Body: {msg_details}")
 
     def declare_queue(self, queue_name:str):
-        print(f"Trying to declare queue ({queue_name})...")
+        logger.info(f"Trying to declare queue ({queue_name})...")
         self.channel.queue_declare(queue=queue_name)
         self.channel.queue_bind(exchange=self.exchange, queue=queue_name, routing_key=self.flight_declaration_id)
-        print(f"Trying to bind queue ({self.exchange}) with routing key ({self.flight_declaration_id})...")
+        logger.info(f"Trying to bind queue ({self.exchange}) with routing key ({self.flight_declaration_id})...")
 
         
     def declare_exchange(self, exchange_name:str):
-        print(f"Trying to declare exchange ({exchange_name})...")
+        logger.info(f"Trying to declare exchange ({exchange_name})...")
         self.channel.exchange_declare(exchange=exchange_name)
         
     def close(self):
@@ -60,7 +60,7 @@ class InitialNotificationFactory():
         self.exchange_name = exchange_name 
         
     def declare_exchange(self):
-        print(f"Trying to declare exchange ({self.exchange_name})...")
+        logger.info(f"Trying to declare exchange ({self.exchange_name})...")
         self.channel.exchange_declare(exchange=self.exchange_name, durable= True)
         
     def close(self):
