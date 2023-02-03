@@ -20,7 +20,7 @@ This quick start is for local development / testing only, for a more detailed "P
 
 ### 1. Create .env File
 
-For this quick start we will use the [sample .env](https://github.com/openskies-sh/flight-blender/blob/master/deployment_support/.env.local) file. You can copy the file to create a new .env file, we will go over the details .env file below. 
+For this quick start we will use the [sample .env](https://github.com/openskies-sh/flight-blender/blob/master/deployment_support/.env.local) file. You can copy the file to create a new .env file, we will go over the details of the file below. 
 
 | Variable Key | Data Type | Description |
 |--------------|--------------|:-----:|
@@ -43,7 +43,6 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | POSTGRES_HOST | string| You can name a appropriate name, see the sample file |
 | PGDATA | string | This is where the data is stored, you can use `/var/lib/postgresql/data/pgdata` here |
 
-
 ### 2. Use Docker Compose to stand up Flight Blender 
 Once you have created and saved the .env file you can then use the [docker-compose.yaml](../docker-compose.yml) file to start the instance. Just run `docker compose up` and a running instance of Flight Blender will be available. 
 
@@ -51,7 +50,9 @@ Once you have created and saved the .env file you can then use the [docker-compo
 You can run Blender by running `docker compose up` and then go to `http://localhost:8000`, you should see the Blender Logo and a link to the API and Ping documentation. Congratulations 🎉 we now have a running version of the system!
 
 ### 3. Upload some flight information
-Next we can now upload flight data. Blender has a extensive API and you can review it, any data uploaded or downloaded is done via the API. The [importers](../importers/) directory has a set of scripts that help you with uploading data / flight tracks. We will use the [import_flight_json_blender_local.py](../importers/import_flight_json_blender_local.py) script here, you can see the rest of the scripts there to understand how it works. You will have to setup a environment like Anaconda or similar software package and install dependencies via something like `pip install -r requirements.txt` then you can run the import script via `python import_flight_json_blender_local.py` this will send some observations to the `/set_air_traffic` POST endpoint. This script will send a observation and then wait for 10 seconds and send another one. All of this requires Python.
+Next we can now upload flight data. Blender has a extensive API and you can review it, any data uploaded or downloaded is done via the API. The [importers](../importers/) directory has a set of scripts that help you with uploading data / flight tracks. For this quickstart, we will use the [import_flight_json_blender_local.py](../importers/import_flight_json_blender_local.py) script here, you can see the rest of the scripts there to understand how it works. 
+
+You will have to setup a environment like Anaconda or similar software package and install dependencies via something like `pip install -r requirements.txt` then you can run the import script via `python import_flight_json_blender_local.py` this will send some observations to the `/set_air_traffic` POST endpoint. This script will send a observation and then wait for 10 seconds and send another one. All of this requires Python.
 
 ### 4. Use Postman to query the API
 While the script is running you can install Postman and which should help us query ther API. You can import the [Postman Collection](../api/flight_blender_api.postman_collection.json) prior. You will also need a "NoAuth" Bearer JWT token that you can generate by using the [get_access_token.py](../importers/get_access_token.py) script. You should have a scope of `blender.read` and a audience of `testflight.flightblender.com`. We will use this token to go to the Postman collection > Flight Feed Operations > Get airtraffic observations. You should be able to see output of the flight feed as a response!
