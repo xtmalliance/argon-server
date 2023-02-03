@@ -32,6 +32,7 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | REDI_PASSWORD | string | In production the Redis instance is password protected, set the password here, see redis.conf for more information |
 | REDIS_BROKER_URL | string | Blender has background jobs controlled via Redies, you can setup the Broker URL here |
 | HEARTBEAT_RATE_SECS |integer | Generally set it to 1 or 2 seconds, this is used when querying data externally to other USSPs |
+| AMQP_URL |string | A full connection url to a AMQP server, when this is set, messages related to your operations are sent to it, your clients can subscribe to them. |
 | DSS_SELF_AUDIENCE |string | This is the domain name of the lender instance you can set it as localhost or development / testing |
 | AUTH_DSS_CLIENT_ID | string | (optional) Sometimes authorities will provide special tokens for accessing the DSS, if you are using it locally via `/build/dev/run_locally.sh` via the InterUSS /DSS repository, you can just use a random long string |
 | AUTH_DSS_CLIENT_SECRET | string | (optional) Similar to above sometimes authorities provide  |
