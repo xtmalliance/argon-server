@@ -1,5 +1,5 @@
 version: "3"
-services:  
+services:
   redis:
     command: [ "redis-server", "/redis.conf" ]
     image: "redis:latest"
@@ -26,31 +26,31 @@ services:
     image: postgres
     ports:
       - "5432:5432"
-    restart: unless-stopped        
+    restart: unless-stopped
     volumes:
       - db_data:/var/lib/postgresql/data
     env_file:
       - ".env"
 
-  web:    
+  web:
     env_file:
-      - ".env"      
-    build: . 
+      - ".env"
+    build: .
     image: openskiessh/flight-blender
     command: ./entrypoint.sh
     ports:
         - "8000:8000"
     depends_on:
-      - redis    
+      - redis
       - db
     volumes:
       - .:/app
-      
+
   celery:
     container_name: flight-blender-worker
     image: openskiessh/flight-blender
     build:
-      context: "."        
+      context: "."
     env_file:
       - ".env"
     command: celery --app=flight_blender worker --loglevel=info
@@ -58,8 +58,7 @@ services:
       - .:/app
     depends_on:
       - redis
-  
-  
+
 volumes:
   app:
   db_data:

@@ -17,11 +17,11 @@ There are different modules that enable this:
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this support both the ASTM USS <-> USS API and can also be used as a standalone component, for supported DSS APIs see below
 
 ## ▶️ Get started in 20 mins
-Follow our 5-step process to deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software. 
+Follow our 5-step process to deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software.
 
-Read the ⏲️ [20-minute quickstart](deployment_support/README.md) now! 
+Read the ⏲️ [20-minute quickstart](deployment_support/README.md) now!
 
-## Join the OpenUTM community 
+## Join the OpenUTM community
 
 Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
 
