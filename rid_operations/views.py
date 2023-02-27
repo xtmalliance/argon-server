@@ -6,7 +6,6 @@ from . import view_port_ops
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
-
 from . import dss_rid_helper
 from datetime import timedelta
 import uuid
