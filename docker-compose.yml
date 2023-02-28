@@ -1,5 +1,5 @@
 version: "3"
-services:
+services:  
   redis:
     command: [ "redis-server", "/redis.conf" ]
     image: "redis:latest"
@@ -9,48 +9,35 @@ services:
       - ./config/redis.conf:/redis.conf
     container_name: "redis"
 
-  rabbitmq3:
-      container_name: "rabbitmq"
-      image: rabbitmq:3.8-management-alpine
-      environment:
-          - RABBITMQ_DEFAULT_USER=myuser
-          - RABBITMQ_DEFAULT_PASS=mypassword
-      volumes:
-        - rabbitmq:/var/lib/rabbitmq    # use a volume to store the data
-      ports:
-          # AMQP protocol port
-          - '5672:5672'
-          # HTTP management UI
-          - '15672:15672'
   db:
     image: postgres
     ports:
       - "5432:5432"
-    restart: unless-stopped
+    restart: unless-stopped        
     volumes:
       - db_data:/var/lib/postgresql/data
     env_file:
       - ".env"
 
-  web:
+  web:    
     env_file:
-      - ".env"
-    build: .
+      - ".env"      
+    build: . 
     image: openskiessh/flight-blender
     command: ./entrypoint.sh
     ports:
         - "8000:8000"
     depends_on:
       - redis
-      - db
+      - db      
     volumes:
       - .:/app
-
+      
   celery:
     container_name: flight-blender-worker
     image: openskiessh/flight-blender
     build:
-      context: "."
+      context: "."        
     env_file:
       - ".env"
     command: celery --app=flight_blender worker --loglevel=info
@@ -58,7 +45,8 @@ services:
       - .:/app
     depends_on:
       - redis
-
+  
+  
 volumes:
   app:
   db_data:
