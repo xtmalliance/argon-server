@@ -151,6 +151,10 @@ def set_flight_declaration(request):
     if  all_relevant_fences and all_relevant_declarations:     
         # Async submic flight declaration to DSS
         logger.info("Self deconfliction failed, this declaration cannot be sent to the DSS system..")
+        if amqp_connection_url:        
+            self_deconfliction_failed_msg = "Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operationd declared".format(operation_id = flight_declaration_id)
+            send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = self_deconfliction_failed_msg, level = 'error')
+
     else:
         logger.info("Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided..")
         submit_flight_declaration_to_dss.delay(flight_declaration_id = flight_declaration_id)   

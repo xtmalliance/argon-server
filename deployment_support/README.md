@@ -9,7 +9,7 @@ This guide is mainly for technical engineers within organizations who are intere
 
 Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
 
-## Introduction and objective
+## Introduction and objectives
 
 This quick start is for local development / testing only, for a more detailed "Production" instance see the currently under development [Production Deployment](oauth_infrastructure.md) document. The main difference between local development and production is that for production you will need a full fledged OAUTH server like [Flight Passport](https://github.com/openskies-sh/flight_passport) or others. For this quickstart we will use the simple authentication / token generation mechanism that requires not additional server setup. In this quickstart, we will: 
 
@@ -56,3 +56,12 @@ You will have to setup a environment like Anaconda or similar software package a
 
 ### 4. Use Postman to query the API
 While the script is running you can install Postman and which should help us query ther API. You can import the [Postman Collection](../api/flight_blender_api.postman_collection.json) prior. You will also need a "NoAuth" Bearer JWT token that you can generate by using the [get_access_token.py](../importers/get_access_token.py) script. You should have a scope of `blender.read` and a audience of `testflight.flightblender.com`. We will use this token to go to the Postman collection > Flight Feed Operations > Get airtraffic observations. You should be able to see output of the flight feed as a response!
+
+
+## Frequently asked Questions (FAQs)
+
+**Q: Docker compose errors out because of Postgres not launching**
+A: Check existing Postgres port and / or shut down Postgres if you have it, Flight Blender Docker uses the default SQL ports. 
+
+**Q: Where do I point my tools for Remote ID / Strategic Deconfliction APIs ?**
+A: Check the [API Specification](http://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/openskies-sh/flight-blender/master/api/flight-blender-1.0.0-resolved.yaml) to see the appropriate endpoints and / or download the [Postman Collection](../api/flight_blender_api.postman_collection.json) to see the endpoints. 

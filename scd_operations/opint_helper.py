@@ -19,7 +19,7 @@ class DSSOperationalIntentsCreator():
     def __init__(self, flight_declaration_id: str):
         self.flight_declaration_id = flight_declaration_id
 
-    def validate_flight_declaration_details(self) -> bool: 
+    def validate_flight_declaration_start_end_time(self) -> bool: 
         flight_declaration = FlightDeclaration.objects.get(id = self. flight_declaration_id)
         # check that flight declaration start and end time is in the next two hours
         now = arrow.now()
@@ -30,6 +30,7 @@ class DSSOperationalIntentsCreator():
 
         start_time_ok =  (op_start_time <= two_hours_from_now and op_start_time >= now)
         end_time_ok = (op_end_time <= two_hours_from_now and op_end_time >= now)
+        
         start_end_time_oks  = [start_time_ok, end_time_ok]
         if False in start_end_time_oks:
             return False
