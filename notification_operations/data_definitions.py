@@ -14,3 +14,4 @@ class FlightDeclarationUpdateMessage:
     ''' This oject will hold messages that will go to the operational Notifications '''
     body: str
     level: Literal[NotificationLevel.CRITICAL, NotificationLevel.ERROR, NotificationLevel.WARNING, NotificationLevel.INFO, NotificationLevel.DEBUG]
+    timestamp: str
