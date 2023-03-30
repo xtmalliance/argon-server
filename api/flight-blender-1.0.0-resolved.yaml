@@ -110,8 +110,7 @@ paths:
       tags:
         - rid
 
-  /rid/uss/identification_service_areas/{id}:
-    summary: Notifications of change to Identification Service Areas.
+  /rid/uss/identification_service_areas/{id}:    
     post:
       requestBody:
         content:
@@ -119,6 +118,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PutIdentificationServiceAreaNotificationParameters'
         required: true
+      
+      summary: Notifications of change to Identification Service Areas.
       tags:
       - rid
       operationId: postIdentificationServiceArea
@@ -157,8 +158,7 @@ paths:
             a previously-received notification and the Entity is different.
       security:
       - AuthFromAuthorizationAuthority:
-        - dss.write.identification_service_areas
-      summary: /uss/identification_service_areas/{id}
+        - dss.write.identification_service_areas      
       description: 'Hosted by a remote ID display provider using Subscriptions: publish
         new full information of an Identification Service Area to the host of this
         endpoint (usually because of instructions from the DSS triggered by a subscription).'
@@ -206,8 +206,6 @@ paths:
           description: |-
             * One or more parameters were missing or invalid.
             * The Identification Service Area information could not be parsed, or contains illegal data.
-     
-
 
   /rid/get_rid_data/{subscription_id}:
     get:
@@ -311,6 +309,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - rid-qualifier
+        
   /rid/tests/{test_id}:
     parameters:
       -
@@ -814,7 +813,7 @@ paths:
         - AuthFromPassport: [blender.write]
       description:
         "Submit air traffic data into Blender, after submission, Flight Blender will \
-        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple observations can be submitted at a given time"
+        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple observations can be submitted at a given time. No Network Remote ID data should be uploaded from this endpoint."
       requestBody:
         required: true
         content:
@@ -927,7 +926,7 @@ paths:
       security:
         - AuthFromPassport: [blender.read]
       description:
-        "Get all air traffic observations within Flight Blender for a view port. No Network Remote ID data is provided from this endpoint."
+        "Get all air traffic observations within Flight Blender for a view port. No Network Remote ID data will be provided from this endpoint."
       responses:
         '200':
           description: 'Airtraffic data retrieved'
@@ -2230,7 +2229,6 @@ components:
           flight_details: 
             type: object
             $ref: '#/components/schemas/RIDFlightDetails'
-                
 
     ArrayOfObservations:
       type: array
