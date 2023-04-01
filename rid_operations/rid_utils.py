@@ -3,7 +3,8 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from scd_operations.scd_data_definitions import Volume4D
 from implicitdict import StringBasedDateTime
-
+import enum
+from typing import List, Literal
 
 class Position(NamedTuple):
     ''' A class to hold most recent position for remote id data '''
@@ -95,6 +96,17 @@ class CreateSubscriptionResponse(NamedTuple):
     message: str
     id: uuid.uuid4
     dss_subscription_response: Optional[SubscriptionResponse]
+
+
+class RIDCapabilitiesResponseEnum(str, enum.Enum):
+    ''' A enum to hold USS capabilites operation '''
+    ASTMRID2019 = 'ASTMRID2019'
+    ASTMRID2022 = 'ASTMRID2022'
+    
+
+@dataclass
+class RIDCapabilitiesResponse:
+  capabilities: List[Literal[RIDCapabilitiesResponseEnum.ASTMRID2019,RIDCapabilitiesResponseEnum.ASTMRID2022]]
 
 @dataclass
 class RIDAircraftPosition:

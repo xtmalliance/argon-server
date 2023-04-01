@@ -56,6 +56,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
+  /rid/capabilities:
+    get:
+      security:
+      - Authority:
+          - blender.read
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RIDCapabilitiesResponse'
+          description: >-
+            The capabilities as far as support of ASTM RID standard for Network Remote ID data exchange is concerned. 
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+      summary: RID capabilities 
+      description: Retrieve the capabilities of the USS
+      tags:
+        - rid
 
   /rid/create_dss_subscription:
     put:
@@ -678,6 +699,7 @@ paths:
     get:
       tags:
       - rid
+      summary: Get RID flight details
       operationId: searchFlights
       responses:
         200:
@@ -724,8 +746,7 @@ paths:
           description: The requested view rectangle was too large.
       security:
       - AuthFromAuthorizationAuthority:
-        - dss.read.identification_service_areas
-      summary: /uss/flights
+        - dss.read.identification_service_areas      
       description: Retrieve basic flight information from a remote ID service provider
         to meet remote ID requirements.  This endpoint will be polled by remote ID
         display providers to display basic aircraft activity near a user in real time.  All
@@ -1645,6 +1666,29 @@ components:
 
         Clients shall provide these access tokens in an `Authorization` header in the form `Bearer <token>` in accordance with RFC 6750.
   schemas:
+  
+    RIDCapability:
+      type: string
+      description: >-
+        Capability of a USS.
+
+          `ASTMRID2019`: USS supports Remote ID as defined in ASTM Remote ID standard that was released in 2019.
+
+          `ASTMRID2022`: USS supports Remote ID as defined in ASTM Remote ID standard that was released in 2022.
+
+      enum:
+      - ASTMRID2019
+      - ASTMRID2022
+    RIDCapabilitiesResponse:
+      type: object
+      properties:
+        capabilities:
+          type: array
+          description: Set of capabilities supported by this USS.
+          items:
+            $ref: '#/components/schemas/RIDCapability'
+          default: []
+
     ApproveRejectDeclaration:
       description: A flight declaration approved / created
       type: object
