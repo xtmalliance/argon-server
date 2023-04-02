@@ -11,8 +11,8 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails
-from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDOperatorDetails
+from uss_operations.uss_data_definitions import OperatorDetailsSuccessResponse, FlightDetailsNotFoundMessage
 import shapely.geometry
 import hashlib
 from flight_feed_operations import flight_stream_helper
@@ -208,8 +208,8 @@ def get_flight_data(request, flight_id):
     if r.exists(flight_details_storage):
         flight_details = r.get(flight_details_storage)
         location = LatLngPoint(lat= flight_detail['location']['lat'], lng = flight_detail['location']['lng'])
-        flight_detail = RIDFlightDetails(id = flight_details['id'], operator_id=flight_detail['operator_id'], operator_location=location, operator_description = flight_details['operator_description'], auth_data={}, serial_number=flight_detail['serial_number'], registration_number = flight_detail['registration_number'])
-        flight_details_full = FlightDetailsSuccessResponse(details = flight_detail)
+        flight_detail = RIDOperatorDetails(id = flight_details['id'], operator_id=flight_detail['operator_id'], operator_location=location, operator_description = flight_details['operator_description'], auth_data={}, serial_number=flight_detail['serial_number'], registration_number = flight_detail['registration_number'])
+        flight_details_full = OperatorDetailsSuccessResponse(details = flight_detail)
         return JsonResponse(json.loads(json.dumps(asdict(flight_details_full))), status=200, mimetype='application/json')
     else:
         fd = FlightDetailsNotFoundMessage(message="The requested flight could not be found")

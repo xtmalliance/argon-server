@@ -2228,7 +2228,7 @@ components:
               $ref: '#/components/schemas/RIDAircraftState'
           flight_details: 
             type: object
-            $ref: '#/components/schemas/RIDFlightDetails'
+            $ref: '#/components/schemas/RIDOperatorDetails'
 
     ArrayOfObservations:
       type: array
@@ -2426,9 +2426,9 @@ components:
       type: object
       properties:
         details:
-          $ref: '#/components/schemas/RIDFlightDetails'
+          $ref: '#/components/schemas/RIDOperatorDetails'
 
-    RIDFlightDetails:
+    RIDOperatorDetails:
       description:
         Details about a flight reported by a remote ID service provider.  At
         least one of the registration or serial fields must be filled if required
@@ -4186,8 +4186,8 @@ components:
         details:
           description: >-
             The details of the flight.
-            Follows the RIDFlightDetails schema from the ASTM remote ID standard.
-          $ref: '#/components/schemas/RIDFlightDetails'
+            Follows the RIDOperatorDetails schema from the ASTM remote ID standard.
+          $ref: '#/components/schemas/RIDOperatorDetails'
 
 
     GeoAwarenessStatusResponse:

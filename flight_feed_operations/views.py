@@ -138,10 +138,6 @@ def get_air_traffic(request):
 def start_opensky_feed(request):
     # This method takes in a view port as a lat1,lon1,lat2,lon2 co-ordinate system and for 60 seconds starts the stream of data from the OpenSky Network. 
 
-    # Check view port
-    # see if it is valid
-    
-
     try:
         view = request.query_params['view']
         view_port = [float(i) for i in view.split(",")]
@@ -161,11 +157,18 @@ def start_opensky_feed(request):
         
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
 
+@api_view(['PUT'])
+@requires_scopes(['blender.write'])
+def set_signed_telemetry(request):   
 
+    # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securly send signed telemetry information into Blender
+    
+    raise NotImplementedError
+    
 @api_view(['PUT'])
 @requires_scopes(['blender.write'])
 def set_telemetry(request):
-    ''' A RIDFlightDetails object is posted here'''
+    ''' A RIDOperatorDetails object is posted here'''
     # This endpoints receives data from GCS and / or flights and processes remote ID data. 
     # TODO: Use dacite to parse incoming json into a dataclass
     raw_data = request.data

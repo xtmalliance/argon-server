@@ -2,7 +2,7 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 from auth_helper.common import get_redis
-from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDFlightDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
+from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDOperatorDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
 import time
 import arrow
 import json
@@ -128,7 +128,7 @@ def stream_rid_test_data(requested_flights):
             else:
                 auth_data = AuthData(format="",data="")
 
-            flight_detail = RIDFlightDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location, aircraft_type ="NotDeclared",operator_id= fd['operator_id'], auth_data=auth_data)
+            flight_detail = RIDOperatorDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location, aircraft_type ="NotDeclared",operator_id= fd['operator_id'], auth_data=auth_data)
             pfd = RIDTestDetailsResponse(effective_after=provided_flight_detail['effective_after'], details = flight_detail)
             all_flight_details.append(pfd)
 

@@ -8,13 +8,12 @@ from dotenv import load_dotenv, find_dotenv
 from uuid import UUID
 from django.http import JsonResponse
 from django.utils.datastructures import MultiValueDictKeyError
-from .uss_data_definitions import OperationalIntentNotFoundResponse, OperationalIntentDetails, UpdateOperationalIntent, GenericErrorResponseMessage, SummaryFlightsOnly,FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
+from .uss_data_definitions import OperationalIntentNotFoundResponse, OperationalIntentDetails, UpdateOperationalIntent, GenericErrorResponseMessage, SummaryFlightsOnly,OperatorDetailsSuccessResponse, FlightDetailsNotFoundMessage
 from scd_operations.scd_data_definitions import OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, OperationalIntentReferenceDSSResponse, Time
-from rid_operations.rid_utils import RIDAuthData, RIDAircraftPosition, RIDHeight, RIDAircraftState, RIDFlightDetails, RIDFlightResponse, LatLngPoint, RIDFlightDetails, TelemetryFlightDetails
+from rid_operations.rid_utils import RIDAuthData, RIDAircraftPosition, RIDHeight, RIDAircraftState, RIDOperatorDetails, RIDFlightResponse, LatLngPoint, RIDOperatorDetails, TelemetryFlightDetails
 import arrow
 import json 
 import logging 
-import redis
 from auth_helper.common import get_redis
 from flight_feed_operations import flight_stream_helper
 from shapely.geometry import Point
@@ -197,7 +196,7 @@ def get_uss_flights(request):
                     current_state = RIDAircraftState(timestamp=telemetry_data_dict['timestamp'], timestamp_accuracy=telemetry_data_dict['timestamp_accuracy'], operational_status=telemetry_data_dict['operational_status'], position=position, track=telemetry_data_dict['track'], speed=telemetry_data_dict['speed'], speed_accuracy=telemetry_data_dict['speed_accuracy'], vertical_speed=telemetry_data_dict['vertical_speed'], height=height)
                     
 
-                    operator_details = RIDFlightDetails(id = details_response_dict['id'],operator_location = LatLngPoint(lat=details_response_dict['operator_location']['lat'], lng = details_response_dict['operator_location']['lng']), operator_id = details_response_dict['operator_id'],operation_description =details_response_dict['operation_description'], serial_number = details_response_dict['serial_number'], registration_number = details_response_dict['registration_number'], auth_data =RIDAuthData(format =details_response_dict['auth_data']['format'] , data= details_response_dict['auth_data']['data']),aircraft_type = details_response_dict['aircraft_type'] )
+                    operator_details = RIDOperatorDetails(id = details_response_dict['id'],operator_location = LatLngPoint(lat=details_response_dict['operator_location']['lat'], lng = details_response_dict['operator_location']['lng']), operator_id = details_response_dict['operator_id'],operation_description =details_response_dict['operation_description'], serial_number = details_response_dict['serial_number'], registration_number = details_response_dict['registration_number'], auth_data =RIDAuthData(format =details_response_dict['auth_data']['format'] , data= details_response_dict['auth_data']['data']),aircraft_type = details_response_dict['aircraft_type'] )
                     
                     current_flight = TelemetryFlightDetails(operator_details= operator_details, id=details_response_dict['id'], aircraft_type="NotDeclared", current_state = current_state , simulated = True, recent_positions=[])
 
@@ -225,8 +224,8 @@ def get_uss_flight_details(request, flight_id):
     if r.exists(flight_details_storage):
         flight_details = r.get(flight_details_storage)
         location = LatLngPoint(lat= flight_detail['location']['lat'], lng = flight_detail['location']['lng'])
-        flight_detail = RIDFlightDetails(id = flight_details['id'], operator_id=flight_detail['operator_id'], operator_location=location, operator_description = flight_details['operator_description'], auth_data={}, serial_number=flight_detail['serial_number'], registration_number = flight_detail['registration_number'])
-        flight_details_full = FlightDetailsSuccessResponse(details = flight_detail)
+        flight_detail = RIDOperatorDetails(id = flight_details['id'], operator_id=flight_detail['operator_id'], operator_location=location, operator_description = flight_details['operator_description'], auth_data={}, serial_number=flight_detail['serial_number'], registration_number = flight_detail['registration_number'])
+        flight_details_full = OperatorDetailsSuccessResponse(details = flight_detail)
         return JsonResponse(json.loads(json.dumps(asdict(flight_details_full))), status=200)
     else:
         fd = FlightDetailsNotFoundMessage(message="The requested flight could not be found")
