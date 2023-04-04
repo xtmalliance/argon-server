@@ -3,16 +3,16 @@ services:
   redis:
     command: [ "redis-server", "/redis.conf" ]
     image: "redis:latest"
-    ports:
-        - "6379:6379"
+    expose:
+        - "6379"
     volumes:
       - ./config/redis.conf:/redis.conf
     container_name: "redis"
 
   db:
     image: postgres
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     restart: unless-stopped        
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -26,7 +26,7 @@ services:
     image: openskiessh/flight-blender
     command: ./entrypoint.sh
     ports:
-        - "8000:8000"
+        - "8001:8000"
     depends_on:
       - redis
       - db      
@@ -51,3 +51,4 @@ volumes:
   app:
   db_data:
   rabbitmq:
+
