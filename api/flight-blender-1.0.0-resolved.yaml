@@ -180,7 +180,7 @@ paths:
         - AuthFromPassport: [blender.write]
       description:
         "Submit data that is compliant with ASTM RemoteID from the vehicle into Blender, after submission, Flight Blender will \
-        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple flight statescan be submitted at a given time"
+        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple flight states can be submitted at a given time"
       requestBody:
         required: true
         content:

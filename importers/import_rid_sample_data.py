@@ -7,21 +7,7 @@ from dataclasses import dataclass, asdict
 from typing import Optional
 from auth_factory import PassportCredentialsGetter, NoAuthCredentialsGetter
 
-
-@dataclass
-class LatLngPoint:
-  lat: float
-  lng: float
-
-@dataclass
-class RIDOperatorDetails():
-  id: str
-  operator_location: LatLngPoint
-  operator_id: Optional[str]
-  operation_description: Optional[str]
-  serial_number: Optional[str]
-  registration_number: Optional[str]
-  aircraft_type:str = 'Helicopter'
+from rid_definitions import LatLngPoint, RIDOperatorDetails
 
 class BlenderUploader():
     

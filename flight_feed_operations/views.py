@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from .tasks import write_incoming_air_traffic_data, start_openskies_stream
 from .data_definitions import SingleObservationMetadata, SingleAirtrafficObservation, FlightObservationsProcessingResponse
 from dataclasses import asdict
+from dacite import from_dict
 from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
@@ -16,6 +17,8 @@ import arrow
 from rid_operations.tasks import stream_rid_data
 from . import flight_stream_helper
 logger = logging.getLogger('django')
+from http_message_signatures import HTTPMessageVerifier, algorithms
+from .data_definitions import SignedTelemetryRequest
 
 class HomeView(TemplateView):
     template_name = 'homebase/home.html'
@@ -158,11 +161,20 @@ def start_opensky_feed(request):
         return JsonResponse(json.loads(json.dumps(view_port_error)), status=400, content_type='application/json')
 
 @api_view(['PUT'])
-@requires_scopes(['blender.write'])
 def set_signed_telemetry(request):   
-
-    # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securly send signed telemetry information into Blender
+    # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securly send signed telemetry information into Blender, since the messages are signed, we turn off any auth requirements for tokens and validate against allowed public keys in Blender.
     
+    raw_data = request.data
+    # TODO: Implement the signature verifier based on the public key url
+    # verifier = HTTPMessageVerifier(signature_algorithm=algorithms.HMAC_SHA256, key_resolver=MyHTTPSignatureKeyResolver())
+    # verifier.verify(request)
+
+    signed_telemetry_request = from_dict(
+            data_class = SignedTelemetryRequest,
+            data = raw_data)
+
+    
+
     raise NotImplementedError
     
 @api_view(['PUT'])
