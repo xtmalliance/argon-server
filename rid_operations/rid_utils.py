@@ -268,7 +268,7 @@ class AuthData:
   data: str
 
 @dataclass
-class SingleObeservationMetadata:
+class SingleObservationMetadata:
   details_response: RIDTestDetailsResponse
   telemetry: RIDAircraftState
 

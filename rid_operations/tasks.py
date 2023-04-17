@@ -2,7 +2,7 @@ from flight_blender.celery import app
 import logging
 from . import dss_rid_helper
 from auth_helper.common import get_redis
-from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDOperatorDetails, LatLngPoint, RIDHeight, AuthData,SingleObeservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
+from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDOperatorDetails, LatLngPoint, RIDHeight, AuthData,SingleObservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
 import time
 import arrow
 import json
@@ -84,7 +84,25 @@ def poll_uss_for_flights_async():
 def stream_rid_data(rid_data):
     rid_data = json.loads(rid_data)
     for r_data in rid_data:
-        observation_metadata = SingleObeservationMetadata(telemetry= r_data, details_response=r_data)                
+        observation_metadata = SingleObservationMetadata(telemetry= r_data, details_response=r_data)                
+        flight_details_id = r_data['id']
+        lat_dd = r_data['current_state']['position']['lat']
+        lon_dd = r_data['current_state']['position']['lng']                    
+        altitude_mm = r_data['current_state']['position']['alt']
+        traffic_source = 11 # Per the Air-traffic data protocol a source type of 11 means that the data is associated with RID observations
+        source_type = 0
+        icao_address = flight_details_id
+
+        so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
+        msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+        logger.debug("Submitted observation..")                    
+        logger.debug("...")
+
+@app.task(name='stream_rid_data')
+def stream_rid_data_v22(rid_data):
+    rid_data = json.loads(rid_data)
+    for r_data in rid_data:
+        observation_metadata = SingleObservationMetadata(telemetry= r_data, details_response=r_data)                
         flight_details_id = r_data['id']
         lat_dd = r_data['current_state']['position']['lat']
         lon_dd = r_data['current_state']['position']['lng']                    
@@ -238,7 +256,7 @@ def stream_rid_test_data(requested_flights):
             c_o = json.loads(closest_observation)
             single_telemetry_data = c_o['flight_state']
             single_details_response = c_o['details_response']                       
-            observation_metadata = SingleObeservationMetadata(telemetry = single_telemetry_data, details_response = single_details_response)
+            observation_metadata = SingleObservationMetadata(telemetry = single_telemetry_data, details_response = single_details_response)
             flight_details_id = single_details_response['details']['id']
             lat_dd = single_telemetry_data['position']['lat']
             lon_dd = single_telemetry_data['position']['lng']                    

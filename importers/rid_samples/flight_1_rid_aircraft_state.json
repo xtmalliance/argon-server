@@ -2,7 +2,10 @@
     "reference_time": "2022-07-18T14:22:51.541652+00:00",
     "current_states": [
         {
-            "timestamp": "2022-07-18T14:22:52.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:52.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9754225199202,
@@ -23,7 +26,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:53.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:53.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97537839156561,
@@ -44,7 +50,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:54.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:54.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97533460388938,
@@ -65,7 +74,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:55.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:55.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97529157858963,
@@ -86,7 +98,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:56.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:56.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97524973002137,
@@ -107,7 +122,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:57.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:57.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975209461206134,
@@ -128,7 +146,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:58.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:58.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97517115995081,
@@ -149,7 +170,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:59.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:59.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97513519511295,
@@ -170,7 +194,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:00.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:00.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97510191304869,
@@ -191,7 +218,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:01.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:01.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9750716342773,
@@ -212,7 +242,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:02.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:02.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97504465039461,
@@ -233,7 +266,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:03.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:03.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97502122126502,
@@ -254,7 +290,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:04.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:04.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97500157251901,
@@ -275,7 +314,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:05.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:05.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.974985893380456,
@@ -296,7 +338,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:06.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:06.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.974974334844354,
@@ -317,7 +362,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:07.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:07.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97496700822293,
@@ -338,7 +386,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:08.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:08.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97496398407367,
@@ -359,7 +410,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:09.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:09.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97496529151983,
@@ -380,7 +434,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:10.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:10.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.974970917970175,
@@ -401,7 +458,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:11.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:11.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97498080924005,
@@ -422,7 +482,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:12.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:12.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97499487007325,
@@ -443,7 +506,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:13.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:13.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97501296505933,
@@ -464,7 +530,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:14.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:14.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9750349199375,
@@ -485,7 +554,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:15.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:15.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975060523274735,
@@ -506,7 +578,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:16.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:16.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975089528501826,
@@ -527,7 +602,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:17.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:17.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975121656287804,
@@ -548,7 +626,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:18.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:18.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9751565972298,
@@ -569,7 +650,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:19.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:19.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97519401483258,
@@ -590,7 +674,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:20.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:20.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975233548749024,
@@ -611,7 +698,10 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:21.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:21.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975274818250206,
@@ -644,7 +734,6 @@
             "operator_id": "OP-0xn81lwa",
             "registration_number": "CHE9t1sq8bqa023t"
         },
-        "aircraft_type": "Helicopter",
-        "operator_name": "Thomas-Roberts"
+        "aircraft_type": "Helicopter"
     }
 }

@@ -116,7 +116,7 @@ class UAType(Enum):
 @dataclass
 class Time:
     value: str
-    format: Format
+    format: str = 'RFC3339'
 
 class Units(Enum):
     M = 'M'
@@ -159,7 +159,7 @@ class Altitude:
 @dataclass
 class OperatingArea:
     aircraft_count: Optional[int] = None
-    volumes: Optional[List[OperatingArea]] = []
+    volumes: Optional[List[OperatingArea]] = list
 
 @dataclass
 class Polygon:
@@ -223,11 +223,11 @@ class GetFlightDetailsResponse:
 
 @dataclass
 class RIDAircraftPosition:
-    lat: Optional[Latitude] = None
-    lng: Optional[Longitude] = None
-    accuracy_h: Optional[HorizontalAccuracy] = None
-    accuracy_v: Optional[VerticalAccuracy] = None
-    height: Optional[RIDHeight] = None
+    lat: Latitude 
+    lng: Longitude
+    accuracy_h: HorizontalAccuracy
+    accuracy_v: VerticalAccuracy
+    height: Optional[RIDHeight] 
     alt: Optional[float] = -1000
     pressure_altitude: Optional[float] = -1000
     extrapolated: Optional[bool] = False
@@ -271,10 +271,10 @@ class Subscription:
     id: SubscriptionUUID
     uss_base_url: SubscriptionUSSBaseURL
     owner: str
-    time_end: Optional[Time] = None
-    time_start: Optional[Time] = None
     version: Version
-    notification_index: Optional[SubscriptionNotificationIndex] = 0
+    time_end: Optional[Time]
+    time_start: Optional[Time] [SubscriptionNotificationIndex] = 0
+    notification_index: Optional[int] = 0
 
 @dataclass
 class IdentificationServiceArea:
@@ -289,9 +289,9 @@ class IdentificationServiceArea:
 class RIDAircraftState:
     timestamp: Time
     timestamp_accuracy: float
-    operational_status: Optional[RIDOperationalStatus] = 'Undeclared'
     position: RIDAircraftPosition
     speed_accuracy: SpeedAccuracy
+    operational_status: Optional[RIDOperationalStatus] = 'Undeclared'
     speed: Optional[float] = 255
     track: Optional[float] = 361
     vertical_speed: Optional[float] = 63
@@ -302,5 +302,21 @@ class SignedTelemetryObservation:
     flight_details: RIDFlightDetails
 
 @dataclass
+class SignedUnSignedTelemetryObservations:
+    current_states: List[RIDAircraftState]
+    flight_details: RIDFlightDetails
+
+@dataclass
 class SignedTelemetryRequest:
     observations: List[SignedTelemetryObservation]
+    
+@dataclass
+class SubmittedTelemetryFlightDetails:
+  id: str
+  aircraft_type: str
+  current_state: RIDAircraftState
+  simulated: bool
+  recent_positions: List[RIDRecentAircraftPosition]
+  operator_details: RIDFlightDetails
+  
+  
