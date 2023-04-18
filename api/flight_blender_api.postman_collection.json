@@ -260,7 +260,7 @@
 							"raw": "{\"is_approved\":1, \"approved_by\":\"hh@auth.com\"}"
 						},
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration_review/2d346ebe-8ec4-47ad-b3cf-df5cf9909795",
+							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration_review/18108acd-2f7d-4375-8096-dd1a95589f9f",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -270,7 +270,7 @@
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration_review",
-								"2d346ebe-8ec4-47ad-b3cf-df5cf9909795"
+								"18108acd-2f7d-4375-8096-dd1a95589f9f"
 							],
 							"query": [
 								{
@@ -807,7 +807,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"exchange_type\": \"flight_declaration\",\r\n    \"flight_id\": \"5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n    \"plan_id\": \"a5b5484c-a23c-4e83-8bb8-a6a5c294e45b\",\r\n    \"flight_state\": 2,\r\n    \"flight_approved\": 0,\r\n    \"sequence_number\": 0,\r\n    \"start_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n    \"end_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n    \"version\": \"1.0.0\",\r\n    \"purpose\": \"Delivery\",\r\n    \"expect_telemetry\": true,\r\n    \"originating_party\": \"Medicine Delivery Company\",\r\n    \"contact_url\": \"https://utm.originatingparty.com/contact?5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n    \"type_of_operation\": 0,\r\n    \"vehicle_id\": \"157de9bb-6b49-496b-bf3f-0b768ce6a3b6\",\r\n    \"operator_id\": \"4a725cb5-02d2-4f78-888f-b93088d324be\",\r\n    \"flight_declaration_geo_json\": {\r\n        \"type\": \"FeatureCollection\",\r\n        \"features\": [\r\n            {\r\n                \"type\": \"Feature\",\r\n                \"properties\": {\r\n                    \"id\": \"0\",\r\n                    \"start_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n                    \"end_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n                    \"max_altitude\": {\r\n                        \"meters\": 152.4,\r\n                        \"datum\": \"agl\"\r\n                    },\r\n                    \"min_altitude\": {\r\n                        \"meters\": 102.4,\r\n                        \"datum\": \"agl\"\r\n                    }\r\n                },\r\n                \"geometry\": {\r\n                    \"coordinates\": [\r\n                        [\r\n                            15.776083042366338,\r\n                            1.18379149158649\r\n                        ],\r\n                        [\r\n                            15.799823306116707,\r\n                            1.2159036290562142\r\n                        ],\r\n                        [\r\n                            15.812391681043636,\r\n                            1.2675614791659342\r\n                        ],\r\n                        [\r\n                            15.822167083764754,\r\n                            1.3024648511225934\r\n                        ],\r\n                        [\r\n                            15.82635654207283,\r\n                            1.3220105290909174\r\n                        ]\r\n                    ],\r\n                    \"type\": \"LineString\"\r\n                }\r\n            }\r\n        ]\r\n    }\r\n}",
+							"raw": "{\r\n    \"exchange_type\": \"flight_declaration\",\r\n    \"flight_id\": \"5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n    \"plan_id\": \"a5b5484c-a23c-4e83-8bb8-a6a5c294e45b\",\r\n    \"flight_state\": 2,\r\n    \"flight_approved\": 0,\r\n    \"sequence_number\": 0,\r\n    \"start_datetime\": \"2023-03-06T11:29:08.842Z\",\r\n    \"end_datetime\": \"2023-03-06T11:39:08.842Z\",\r\n    \"version\": \"1.0.0\",\r\n    \"purpose\": \"Delivery\",\r\n    \"expect_telemetry\": true,\r\n    \"originating_party\": \"Medicine Delivery Company\",\r\n    \"contact_url\": \"https://utm.originatingparty.com/contact?5a7f3377-b991-4cc8-af2d-379d57f786d1\",\r\n    \"type_of_operation\": 0,\r\n    \"vehicle_id\": \"157de9bb-6b49-496b-bf3f-0b768ce6a3b6\",\r\n    \"operator_id\": \"4a725cb5-02d2-4f78-888f-b93088d324be\",\r\n    \"flight_declaration_geo_json\": {\r\n        \"type\": \"FeatureCollection\",\r\n        \"features\": [\r\n            {\r\n                \"type\": \"Feature\",\r\n                \"properties\": {\r\n                    \"id\": \"0\",\r\n                    \"start_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n                    \"end_datetime\": \"2023-02-03T16:29:08.842Z\",\r\n                    \"max_altitude\": {\r\n                        \"meters\": 152.4,\r\n                        \"datum\": \"agl\"\r\n                    },\r\n                    \"min_altitude\": {\r\n                        \"meters\": 102.4,\r\n                        \"datum\": \"agl\"\r\n                    }\r\n                },\r\n                \"geometry\": {\r\n                    \"coordinates\": [\r\n                        [\r\n                            15.776083042366338,\r\n                            1.18379149158649\r\n                        ],\r\n                        [\r\n                            15.799823306116707,\r\n                            1.2159036290562142\r\n                        ],\r\n                        [\r\n                            15.812391681043636,\r\n                            1.2675614791659342\r\n                        ],\r\n                        [\r\n                            15.822167083764754,\r\n                            1.3024648511225934\r\n                        ],\r\n                        [\r\n                            15.82635654207283,\r\n                            1.3220105290909174\r\n                        ]\r\n                    ],\r\n                    \"type\": \"LineString\"\r\n                }\r\n            }\r\n        ]\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -836,6 +836,95 @@
 		{
 			"name": "Flight Feed operations",
 			"item": [
+				{
+					"name": "Public Keys",
+					"item": [
+						{
+							"name": "Get All stored Public Keys",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0ZmxpZ2h0LmZsaWdodGJsZW5kZXIuY29tIiwiY2xpZW50X2lkIjoidXNzX25vYXV0aCIsImV4cCI6MTY4MTgzMTQwOSwiaXNzIjoiTm9BdXRoIiwianRpIjoiYWRiZjQ1ODQtM2Q1My00NjMwLWJiMjgtZTdmNGFlODhhZGM1IiwibmJmIjoxNjgxODI3ODA4LCJzY29wZSI6ImJsZW5kZXIucmVhZCBibGVuZGVyLndyaXRlIiwic3ViIjoidXNzX25vYXV0aCJ9.K2ELMdcE5FpeCHLxnK92S_hyGSv8sgLtSoNriSN9QGL3_bIyo7m33BIaK1kdZOyS4yaN25oGXHOq4m6vKH8yCoEbdzFHb_3WVLTAVC6ZV25hp0PX3saUzxq7CdZmwEZwGDmy_rcSyBuHlsiuSkg3lLLStpZEFHo9dBuzDgBUI6s",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://local.test:8000/flight_stream/public_keys",
+									"protocol": "http",
+									"host": [
+										"local",
+										"test"
+									],
+									"port": "8000",
+									"path": [
+										"flight_stream",
+										"public_keys"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add a new Public key",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0ZmxpZ2h0LmZsaWdodGJsZW5kZXIuY29tIiwiY2xpZW50X2lkIjoidXNzX25vYXV0aCIsImV4cCI6MTY4MTgzMTQwOSwiaXNzIjoiTm9BdXRoIiwianRpIjoiYWRiZjQ1ODQtM2Q1My00NjMwLWJiMjgtZTdmNGFlODhhZGM1IiwibmJmIjoxNjgxODI3ODA4LCJzY29wZSI6ImJsZW5kZXIucmVhZCBibGVuZGVyLndyaXRlIiwic3ViIjoidXNzX25vYXV0aCJ9.K2ELMdcE5FpeCHLxnK92S_hyGSv8sgLtSoNriSN9QGL3_bIyo7m33BIaK1kdZOyS4yaN25oGXHOq4m6vKH8yCoEbdzFHb_3WVLTAVC6ZV25hp0PX3saUzxq7CdZmwEZwGDmy_rcSyBuHlsiuSkg3lLLStpZEFHo9dBuzDgBUI6s",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"key_id\": \"A74pTx9H07LwY2hakeWOKFNe3mh8Z66wfQgAHr0NN-A\",\r\n    \"url\": \"http://id.openskies.sh/.well-known/jwks.json\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://local.test:8000/flight_stream/public_keys/",
+									"protocol": "http",
+									"host": [
+										"local",
+										"test"
+									],
+									"port": "8000",
+									"path": [
+										"flight_stream",
+										"public_keys",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "Submit Flight Data",
 					"protocolProfileBehavior": {
@@ -935,7 +1024,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://local.test:8000/set_air_traffic",
+							"raw": "http://local.test:8000/flight_stream/set_air_traffic",
 							"protocol": "http",
 							"host": [
 								"local",
@@ -943,6 +1032,7 @@
 							],
 							"port": "8000",
 							"path": [
+								"flight_stream",
 								"set_air_traffic"
 							],
 							"query": [
@@ -2244,7 +2334,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"observations\": [\r\n        {\r\n            \"current_states\": [\r\n                {\r\n                    \"timestamp\": \"2022-07-18T14:22:52.541652+00:00\",\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\": {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": 620,\r\n                        \"accuracy_h\": \"HAUnkown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\": {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ],\r\n            \"flight_details\": {\r\n                \"rid_details\": {\r\n                    \"id\": \"1\",\r\n                    \"serial_number\": \"f9edf164-1c8f-45d7-9854-bc0ffa33573d\",\r\n                    \"operation_description\": \"Delivery operation, see more details at https://deliveryops.com/operation\",\r\n                    \"operator_location\": {\r\n                        \"lat\": 46.97615311620088,\r\n                        \"lng\": 7.476099729537965\r\n                    },\r\n                    \"operator_id\": \"OP-0xn81lwa\",\r\n                    \"registration_number\": \"CHE9t1sq8bqa023t\"\r\n                },\r\n                \"aircraft_type\": \"Helicopter\",\r\n                \"operator_name\": \"Thomas-Roberts\"\r\n            }\r\n        }\r\n    ]\r\n}"
+									"raw": "{\r\n    \"observations\": [\r\n        {\r\n            \"current_states\": [\r\n                {\r\n                    \"timestamp\": {\r\n                        \"value\": \"2022-07-18T14:23:21.541652+00:00\",\r\n                        \"format\": \"RFC3339\"\r\n                    },\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\": {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": {\r\n                            \"reference\": \"GroundLevel\",\r\n                            \"distance\": 620\r\n                        },\r\n                        \"accuracy_h\": \"HAUnknown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\": {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0.0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ],\r\n            \"flight_details\": {\r\n                \"rid_details\": {\r\n                    \"id\": \"1\",\r\n                    \"eu_classification\": {\r\n                        \"category\": \"EUCategoryUndefined\",\r\n                        \"class\": \"EUClassUndefined\"\r\n                    },\r\n                    \"operator_id\": \"OP-0xn81lwa\",\r\n                    \"uas_id\": {\r\n                        \"serial_number\": \"f9edf164-1c8f-45d7-9854-bc0ffa33573d\",\r\n                        \"registration_id\": \"CHE9t1sq8bqa023t\",\r\n                        \"utm_id\": \"07a06bba-5092-48e4-8253-7a523f885bfe\"\r\n                    },\r\n                    \"operation_description\": \"Delivery operation, see more details at https://deliveryops.com/operation\",\r\n                    \"operator_location\": {\r\n                        \"position\": {\r\n                            \"lat\": 46.97615311620088,\r\n                            \"lng\": 7.476099729537965\r\n                        }\r\n                    }\r\n                },\r\n                \"aircraft_type\": \"Helicopter\"\r\n            }\r\n        }\r\n    ]\r\n}"
 								},
 								"url": {
 									"raw": "http://local.test:8000/flight_stream/set_telemetry",
@@ -2264,6 +2354,37 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "Get RID Capabilities",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsb2NhbC50ZXN0IiwiZXhwIjoxNjQ2MjI1MDA2LCJpc3MiOiJkdW1teSIsInNjb3BlIjoidXRtLmluamVjdF90ZXN0X2RhdGEiLCJzdWIiOiJ1c3MxIn0.QBdU8W-9f0Jl5_OMZW2TIjRu_DuByP5iQX68NRVqdsDZIPazBY43ppELgybtRUoz_E8ML3c7TRkPRTc6rCNbYaZ31gxFbodIG0DNlJ8z2wZtOSGvh319s8oYlhexE5ofZjRDxT_B0yjD5gL8n0ASpVsbdk_Q4V3ClF7VU7tYGzQ",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://local.test:8000/rid/capabilities",
+							"protocol": "http",
+							"host": [
+								"local",
+								"test"
+							],
+							"port": "8000",
+							"path": [
+								"rid",
+								"capabilities"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},

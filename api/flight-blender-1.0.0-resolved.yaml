@@ -1024,7 +1024,141 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - flight-declarations
-
+  /flight_stream/public_keys/:
+    get:
+      operationId: listSignedTelmetryPublicKeys
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          description: ''
+      tags:
+      - flight-stream
+    post:
+      operationId: createSignedTelmetryPublicKey
+      description: ''
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          description: ''
+      tags:
+      - flight-stream
+  /flight_stream/public_keys/{id}/:
+    get:
+      operationId: retrieveSignedTelmetryPublicKey
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this signed telmetry public key.
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          description: ''
+      tags:
+      - flight-stream
+    put:
+      operationId: updateSignedTelmetryPublicKey
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this signed telmetry public key.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          description: ''
+      tags:
+      - flight-stream
+    patch:
+      operationId: partialUpdateSignedTelmetryPublicKey
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this signed telmetry public key.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignedTelmetryPublicKey'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedTelmetryPublicKey'
+          description: ''
+      tags:
+      - flight-stream
+    delete:
+      operationId: destroySignedTelmetryPublicKey
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: A UUID string identifying this signed telmetry public key.
+        schema:
+          type: string
+      responses:
+        '204':
+          description: ''
+      tags:
+      - flight-stream
   /flight_declaration_ops/flight_declaration/{flight_declaration_id}:
     get:
       summary: 'Get the details of a single flight declaration'
@@ -1788,6 +1922,29 @@ components:
       items:
         $ref: '#/components/schemas/FlightDeclarationDetail'
 
+    SignedTelmetryPublicKey:
+      type: object
+      properties:
+        key_id:
+          type: string
+          description: Specify the Key ID
+        url:
+          type: string
+          format: uri
+          description: Enter the JWK / JWKS URL of the public key
+          maxLength: 200
+          pattern: "^(?:[a-z0-9.+-]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:(?:0|25[0-5]|2[0-4][0-9]|1[0-9]?[0-9]?|[1-9][0-9]?)(?:\\\
+            .(?:0|25[0-5]|2[0-4][0-9]|1[0-9]?[0-9]?|[1-9][0-9]?)){3}|\\[[0-9a-f:.]+\\\
+            ]|([a-z\xA1-\uFFFF0-9](?:[a-z\xA1-\uFFFF0-9-]{0,61}[a-z\xA1-\uFFFF0-9])?(?:\\\
+            .(?!-)[a-z\xA1-\uFFFF0-9-]{1,63}(?<!-))*\\.(?!-)(?:[a-z\xA1-\uFFFF-]{2,63}|xn--[a-z0-9]{1,59})(?<!-)\\\
+            .?|localhost))(?::[0-9]{1,5})?(?:[/?#][^\\s]*)?\\z"
+        is_active:
+          type: boolean
+          description: Specify if the key is active, only active keys will be validated
+            against in the signed telemetry feeds
+      required:
+      - key_id
+      - url
     FlightDeclarationDetail:
       type: object
       properties:

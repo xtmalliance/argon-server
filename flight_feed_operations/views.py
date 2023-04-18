@@ -19,6 +19,10 @@ logger = logging.getLogger('django')
 from .data_definitions import MessageVerificationFailedResponse
 from .pki_helper import MessageVerifier
 from .rid_telemetry_helper import BlenderTelemetryValidator, NestedDict
+from django.utils.decorators import method_decorator
+from .models import SignedTelmetryPublicKey
+from .serializers import SignedTelmetryPublicKeySerializer
+from rest_framework import generics
 
 class HomeView(TemplateView):
     template_name = 'homebase/home.html'
@@ -163,8 +167,8 @@ def start_opensky_feed(request):
 def set_signed_telemetry(request):   
     # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securly send signed telemetry information into Blender, since the messages are signed, we turn off any auth requirements for tokens and validate against allowed public keys in Blender.
     
-    my_message_veifier = MessageVerifier()
-    verified = my_message_veifier.verify_message(request)
+    my_message_verifier = MessageVerifier()
+    verified = my_message_verifier.verify_message(request)
     if not verified:
         message_verification_failed_response = MessageVerificationFailedResponse(message= "Could not verify against public keys setup in Flight Blender")
         return JsonResponse(asdict(message_verification_failed_response), status=400, content_type='application/json')
@@ -263,3 +267,14 @@ def set_telemetry(request):
     return JsonResponse(submission_success, status=201, content_type='application/json')
 
         
+        
+@method_decorator(requires_scopes(['geo-awareness.test']), name='dispatch')
+class SignedTelmetryPublicKeyList(generics.ListCreateAPIView):
+    queryset = SignedTelmetryPublicKey.objects.all()
+    serializer_class = SignedTelmetryPublicKeySerializer
+
+
+@method_decorator(requires_scopes(['geo-awareness.test']), name='dispatch')
+class SignedTelmetryPublicKeyDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = SignedTelmetryPublicKey.objects.all()
+    serializer_class = SignedTelmetryPublicKeySerializer

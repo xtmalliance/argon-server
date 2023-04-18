@@ -8,19 +8,19 @@ class LatLngPoint:
   lat: float
   lng: float
 
-class Reference1(Enum):
+class Reference1(str, Enum):
     W84 = 'W84'
 
-class Units(Enum):
+class Units(str, Enum):
     M = 'M'
 
-class Category(Enum):
+class Category(str, Enum):
     EUCategoryUndefined = 'EUCategoryUndefined'
     Open = 'Open'
     Specific = 'Specific'
     Certified = 'Certified'
 
-class Class(Enum):
+class Class(str, Enum):
     EUClassUndefined = 'EUClassUndefined'
     Class0 = 'Class0'
     Class1 = 'Class1'
@@ -68,7 +68,7 @@ class UAClassificationEU:
 
 
 @dataclass
-class RIDFlightDetails:
+class RIDOperatorDetails:
     id: str
     eu_classification: Optional[UAClassificationEU] = None
     uas_id: Optional[UASID] = None
