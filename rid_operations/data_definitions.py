@@ -26,14 +26,14 @@ USSBaseURL = str
 SubscriptionUSSBaseURL = USSBaseURL
 FlightsUSSBaseURL = USSBaseURL
 
-class Format(Enum):
+class Format(str, Enum):
     RFC3339 = 'RFC3339'
 
 class Reference(Enum):
     TakeoffLocation = 'TakeoffLocation'
     GroundLevel = 'GroundLevel'
 
-class SpeedAccuracy(Enum):
+class SpeedAccuracy(str, Enum):
     SAUnknown = 'SAUnknown'
     SA10mpsPlus = 'SA10mpsPlus'
     SA10mps = 'SA10mps'
@@ -41,7 +41,7 @@ class SpeedAccuracy(Enum):
     SA1mps = 'SA1mps'
     SA03mps = 'SA03mps'
 
-class HorizontalAccuracy(Enum):
+class HorizontalAccuracy(str, Enum):
     HAUnknown = 'HAUnknown'
     HA10NMPlus = 'HA10NMPlus'
     HA10NM = 'HA10NM'
@@ -57,7 +57,7 @@ class HorizontalAccuracy(Enum):
     HA3m = 'HA3m'
     HA1m = 'HA1m'
 
-class VerticalAccuracy(Enum):
+class VerticalAccuracy(str, Enum):
     VAUnknown = 'VAUnknown'
     VA150mPlus = 'VA150mPlus'
     VA150m = 'VA150m'
@@ -67,25 +67,25 @@ class VerticalAccuracy(Enum):
     VA3m = 'VA3m'
     VA1m = 'VA1m'
 
-class RIDOperationalStatus(Enum):
+class RIDOperationalStatus(str, Enum):
     Undeclared = 'Undeclared'
     Ground = 'Ground'
     Airborne = 'Airborne'
     Emergency = 'Emergency'
     RemoteIDSystemFailure = 'RemoteIDSystemFailure'
 
-class AltitudeType(Enum):
+class AltitudeType(str, Enum):
     Takeoff = 'Takeoff'
     Dynamic = 'Dynamic'
     Fixed = 'Fixed'
 
-class Category(Enum):
+class Category(str, Enum):
     EUCategoryUndefined = 'EUCategoryUndefined'
     Open = 'Open'
     Specific = 'Specific'
     Certified = 'Certified'
 
-class Class(Enum):
+class Class(str, Enum):
     EUClassUndefined = 'EUClassUndefined'
     Class0 = 'Class0'
     Class1 = 'Class1'
@@ -95,7 +95,7 @@ class Class(Enum):
     Class5 = 'Class5'
     Class6 = 'Class6'
 
-class UAType(Enum):
+class UAType(str, Enum):
     NotDeclared = 'NotDeclared'
     Aeroplane = 'Aeroplane'
     Helicopter = 'Helicopter'
@@ -113,13 +113,13 @@ class UAType(Enum):
     GroundObstacle = 'GroundObstacle'
     Other = 'Other'
 
+class Units(str, Enum):
+    M = 'M'
+
 @dataclass
 class Time:
     value: str
     format: str = 'RFC3339'
-
-class Units(Enum):
-    M = 'M'
 
 @dataclass
 class Radius:
@@ -297,8 +297,8 @@ class RIDAircraftState:
     vertical_speed: Optional[float] = 63
 
 @dataclass
-class SignedTelemetryObservation:
-    current_states: RIDAircraftState
+class SignedUnsignedTelemetryObservation:
+    current_state: RIDAircraftState
     flight_details: RIDFlightDetails
 
 @dataclass
@@ -308,7 +308,7 @@ class SignedUnSignedTelemetryObservations:
 
 @dataclass
 class SignedTelemetryRequest:
-    observations: List[SignedTelemetryObservation]
+    observations: List[SignedUnsignedTelemetryObservation]
     
 @dataclass
 class SubmittedTelemetryFlightDetails:

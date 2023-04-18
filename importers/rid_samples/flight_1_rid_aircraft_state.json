@@ -725,14 +725,23 @@
     "flight_details": {
         "rid_details": {
             "id": "1",
-            "serial_number": "f9edf164-1c8f-45d7-9854-bc0ffa33573d",
-            "operation_description": "Delivery operation, see more details at https://deliveryops.com/operation",
-            "operator_location": {
-                "lat": 46.97615311620088,
-                "lng": 7.476099729537965
+            "eu_classification": {
+                "category": "EUCategoryUndefined",
+                "class": "EUClassUndefined"
             },
             "operator_id": "OP-0xn81lwa",
-            "registration_number": "CHE9t1sq8bqa023t"
+            "uas_id": {
+                "serial_number": "f9edf164-1c8f-45d7-9854-bc0ffa33573d",
+                "registration_id": "CHE9t1sq8bqa023t",
+                "utm_id": "07a06bba-5092-48e4-8253-7a523f885bfe"
+            },
+            "operation_description": "Delivery operation, see more details at https://deliveryops.com/operation",
+            "operator_location": {
+                "position": {
+                    "lat": 46.97615311620088,
+                    "lng": 7.476099729537965
+                }
+            }
         },
         "aircraft_type": "Helicopter"
     }

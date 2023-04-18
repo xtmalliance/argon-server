@@ -5,20 +5,20 @@ from django.http import JsonResponse
 from auth_helper.utils import requires_scopes
 from rest_framework.decorators import api_view
 from .tasks import write_incoming_air_traffic_data, start_openskies_stream
-from .data_definitions import SingleObservationMetadata, SingleAirtrafficObservation, FlightObservationsProcessingResponse
+from .data_definitions import SingleAirtrafficObservation, FlightObservationsProcessingResponse
 from dataclasses import asdict
-from dacite import from_dict
+
 from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
 from rid_operations import view_port_ops
-from rid_operations.tasks import stream_rid_data
+from rid_operations.tasks import stream_rid_data, stream_rid_data_v22
 from rid_operations.data_definitions import SignedTelemetryRequest, RIDAircraftState, SignedUnSignedTelemetryObservations, RIDFlightDetails
 from . import flight_stream_helper
 logger = logging.getLogger('django')
 from .data_definitions import MessageVerificationFailedResponse
 from .pki_helper import MessageVerifier
-from .rid_telemetry_helper import BlenderTelemetryValidator
+from .rid_telemetry_helper import BlenderTelemetryValidator, NestedDict
 
 class HomeView(TemplateView):
     template_name = 'homebase/home.html'
@@ -68,7 +68,6 @@ def set_air_traffic(request):
         if 'metadata' in observation.keys():
             metadata = observation['metadata']
             
-        # single_observation = {'lat_dd': lat_dd,'lon_dd':lon_dd,'altitude_mm':altitude_mm, 'traffic_source':traffic_source, 'source_type':source_type, 'icao_address':icao_address , 'metadata' : json.dumps(metadata)}
         so = SingleAirtrafficObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(metadata))
         
         msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
@@ -172,7 +171,17 @@ def set_signed_telemetry(request):
     else:
         raw_data = request.data
         my_telemetry_validator = BlenderTelemetryValidator()
-        observations_exist = my_telemetry_validator.validate_observations_exist(raw_request_data= raw_data)
+        observations_exist = my_telemetry_validator.validate_observation_key_exists(raw_request_data= raw_data)
+        if not observations_exist:
+            incorrect_parameters = {"message": "A flight observation object with current state and flight details is necessary"}
+            return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
+        # Get a list of flight data
+
+        raw_data = request.data
+
+        my_telemetry_validator = BlenderTelemetryValidator()
+
+        observations_exist = my_telemetry_validator.validate_observation_key_exists(raw_request_data= raw_data)
         if not observations_exist:
             incorrect_parameters = {"message": "A flight observation object with current state and flight details is necessary"}
             return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
@@ -182,28 +191,31 @@ def set_signed_telemetry(request):
         
         unsigned_telemetry_observations: List[SignedUnSignedTelemetryObservations] = []
         for flight in rid_observations: 
-            flight_details_current_states_exist = my_telemetry_validator.validate_observations_exist(flight= flight)
+            flight_details_current_states_exist = my_telemetry_validator.validate_flight_details_current_states_exist(flight= flight)
             if not flight_details_current_states_exist:
                 incorrect_parameters = {"message": "A flights object with current states, flight details is necessary"}
                 return JsonResponse(incorrect_parameters, status=400, content_type='application/json')                  
 
             current_states = flight['current_states']
             flight_details = flight['flight_details']
-            all_states: List[RIDAircraftState] = my_telemetry_validator.parse_validate_current_states(current_states = current_states)
-            # try:
-            #     pass
-            # except KeyError as ke: 
-            #     incorrect_parameters = {"message": "A states object with a fullly valid current states is necessary, the following key is missing %s" % ke}
-            #     return JsonResponse(incorrect_parameters, status=400, content_type='application/json')        
-            rid_flight_details = flight_details['rid_details']
-            f_details: RIDFlightDetails = my_telemetry_validator.parse_validate_rid_details(rid_flight_details = rid_flight_details)
+            try:
+                all_states: List[RIDAircraftState] = my_telemetry_validator.parse_validate_current_states(current_states = current_states)
+                rid_flight_details = flight_details['rid_details']
+                f_details: RIDFlightDetails = my_telemetry_validator.parse_validate_rid_details(rid_flight_details = rid_flight_details)
+                    
+            except KeyError as ke: 
+                incorrect_parameters = {"message": "A states object with a fully valid current states is necessary, the parsing the following key encountered errors %s" % ke}
+                return JsonResponse(incorrect_parameters, status=400, content_type='application/json')        
+
             single_observation_set = SignedUnSignedTelemetryObservations(current_states = all_states, flight_details = f_details)
-            unsigned_telemetry_observations.append(single_observation_set)
-        
-        # stream_rid_data.delay(rid_data= json.dumps(unsigned_telemetry_observations))
+
+            unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
+
+            stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
         submission_success = {"message": "Telemetry data succesfully submitted"}
         return JsonResponse(submission_success, status=201, content_type='application/json')
 
+            
             
         
 @api_view(['PUT'])
@@ -216,7 +228,7 @@ def set_telemetry(request):
 
     my_telemetry_validator = BlenderTelemetryValidator()
 
-    observations_exist = my_telemetry_validator.validate_observations_exist(raw_request_data= raw_data)
+    observations_exist = my_telemetry_validator.validate_observation_key_exists(raw_request_data= raw_data)
     if not observations_exist:
         incorrect_parameters = {"message": "A flight observation object with current state and flight details is necessary"}
         return JsonResponse(incorrect_parameters, status=400, content_type='application/json')
@@ -226,30 +238,27 @@ def set_telemetry(request):
     
     unsigned_telemetry_observations: List[SignedUnSignedTelemetryObservations] = []
     for flight in rid_observations: 
-        flight_details_current_states_exist = my_telemetry_validator.validate_observations_exist(flight= flight)
+        flight_details_current_states_exist = my_telemetry_validator.validate_flight_details_current_states_exist(flight= flight)
         if not flight_details_current_states_exist:
             incorrect_parameters = {"message": "A flights object with current states, flight details is necessary"}
             return JsonResponse(incorrect_parameters, status=400, content_type='application/json')                  
 
-
         current_states = flight['current_states']
         flight_details = flight['flight_details']
-
-        all_states: List[RIDAircraftState] = my_telemetry_validator.parse_validate_current_states(current_states = current_states)
-        # try:
-        #     pass
-        # except KeyError as ke: 
-        #     incorrect_parameters = {"message": "A states object with a fullly valid current states is necessary, the following key is missing %s" % ke}
-        #     return JsonResponse(incorrect_parameters, status=400, content_type='application/json')        
-        rid_flight_details = flight_details['rid_details']
-        f_details: RIDFlightDetails = my_telemetry_validator.parse_validate_rid_details(rid_flight_details = rid_flight_details)
+        try:
+            all_states: List[RIDAircraftState] = my_telemetry_validator.parse_validate_current_states(current_states = current_states)
+            rid_flight_details = flight_details['rid_details']
+            f_details: RIDFlightDetails = my_telemetry_validator.parse_validate_rid_details(rid_flight_details = rid_flight_details)
+                
+        except KeyError as ke: 
+            incorrect_parameters = {"message": "A states object with a fully valid current states is necessary, the parsing the following key encountered errors %s" % ke}
+            return JsonResponse(incorrect_parameters, status=400, content_type='application/json')        
 
         single_observation_set = SignedUnSignedTelemetryObservations(current_states = all_states, flight_details = f_details)
 
-        unsigned_telemetry_observations.append(single_observation_set)
+        unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
 
-    
-    # stream_rid_data.delay(rid_data= json.dumps(unsigned_telemetry_observations))
+        stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
     submission_success = {"message": "Telemetry data succesfully submitted"}
     return JsonResponse(submission_success, status=201, content_type='application/json')
 

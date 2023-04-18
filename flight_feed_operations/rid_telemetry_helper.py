@@ -2,6 +2,17 @@
 from typing import List
 from dacite import from_dict
 from rid_operations.data_definitions import SubmittedTelemetryFlightDetails, SignedTelemetryRequest, RIDFlightDetails, RIDAircraftState, SignedUnSignedTelemetryObservations, Time, RIDOperationalStatus, RIDAircraftPosition, HorizontalAccuracy, VerticalAccuracy,RIDHeight, SpeedAccuracy, UAClassificationEU, UASID, OperatorLocation, LatLngPoint
+from enum import Enum
+
+
+class NestedDict(dict):
+    def convert_value(self,obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        return obj
+
+    def __init__(self, data):
+        super().__init__(self.convert_value(x) for x in data if x[1] is not None)
 
 def generate_rid_telemetry_objects(signed_telemetry_request: SignedTelemetryRequest) -> List[SubmittedTelemetryFlightDetails]:
     all_rid_data = []
@@ -30,7 +41,7 @@ def generate_unsigned_rid_telemetry_objects(telemetry_request: List[SignedUnSign
 
 class BlenderTelemetryValidator():
 
-    def parse_validate_current_parse_validate_current_statestates(self, current_states) ->List[RIDAircraftState]:
+    def parse_validate_current_states(self, current_states) ->List[RIDAircraftState]:
         all_states = []        
 
         for state in current_states:          
@@ -43,23 +54,22 @@ class BlenderTelemetryValidator():
             accuracy_v = VerticalAccuracy(value=_state_position['accuracy_v'])
             height = RIDHeight(reference= state['height']['reference'], distance = state['height']['distance'])
 
-            position = RIDAircraftPosition(lat = _state_position['lat'], lng = _state_position['lng'], accuracy_h = accuracy_h, accuracy_v = accuracy_v, extrapolated = _state_position['extraplated'])
+            position = RIDAircraftPosition(lat = _state_position['lat'], lng = _state_position['lng'], accuracy_h = accuracy_h, accuracy_v = accuracy_v, extrapolated = _state_position['extrapolated'],height=height)
             speed_accuracy = SpeedAccuracy('SA3mps')
 
 
-            s = RIDAircraftState(timestamp = timestamp, operational_status = operational_status, position = position, height=height, track = state['track'], speed = state['speed'], timestamp_accuracy = state['timestamp_accuracy'], speed_accuracy = speed_accuracy, vertical_speed = state['vertical_speed'])
+            s = RIDAircraftState(timestamp = timestamp, operational_status = operational_status, position = position,  track = state['track'], speed = state['speed'], timestamp_accuracy = state['timestamp_accuracy'], speed_accuracy = speed_accuracy, vertical_speed = state['vertical_speed'])
 
             all_states.append(s)
-
         return all_states
 
     def parse_validate_rid_details(self, rid_flight_details)->RIDFlightDetails: 
-        eu_classification = UAClassificationEU(rid_flight_details['eu_classification'])
+        eu_classification = UAClassificationEU(category = rid_flight_details['eu_classification']['category'], class_ =  rid_flight_details['eu_classification']['class'])
         uas_id = UASID(serial_number=rid_flight_details['uas_id']['serial_number'] ,registration_id = rid_flight_details['uas_id']['registration_id'], utm_id = rid_flight_details['uas_id']['utm_id'] )
-        operator_position = OperatorLocation(position = LatLngPoint(lat = rid_flight_details['operator_location']['lat'], lng =  rid_flight_details['operator_location']['lng']))
+        operator_position = OperatorLocation(position = LatLngPoint(lat = rid_flight_details['operator_location']['position']['lat'], lng =  rid_flight_details['operator_location']['position']['lng']))
         operator_location = OperatorLocation(position = operator_position)
 
-        f_details = RIDFlightDetails(id = rid_flight_details['id'], eu_classification = eu_classification, uas_id = uas_id, operator_location = operator_location, operator_id =rid_flight_details['operator_id'], operation_description =rid_flight_details['operator_description'] )
+        f_details = RIDFlightDetails(id = rid_flight_details['id'], eu_classification = eu_classification, uas_id = uas_id, operator_location = operator_location, operator_id =rid_flight_details['operator_id'], operation_description =rid_flight_details['operation_description'] )
     
         return f_details
 
@@ -73,7 +83,7 @@ class BlenderTelemetryValidator():
 
 
         
-    def validate_observations_exist(self, raw_request_data) -> bool:
+    def validate_observation_key_exists(self, raw_request_data) -> bool:
         try:
             assert 'observations' in raw_request_data
         except AssertionError as ae: 

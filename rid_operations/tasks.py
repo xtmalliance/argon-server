@@ -3,6 +3,8 @@ import logging
 from . import dss_rid_helper
 from auth_helper.common import get_redis
 from .rid_utils import RIDAircraftPosition, RIDAircraftState, RIDTestInjection,RIDTestDetailsResponse, RIDOperatorDetails, LatLngPoint, RIDHeight, AuthData,SingleObservationMetadata,RIDFootprint, RIDTestInjectionProcessing, RIDTestDataStorage, FullRequestedFlightDetails
+from rid_operations.data_definitions import SignedUnsignedTelemetryObservation
+
 import time
 import arrow
 import json
@@ -17,6 +19,7 @@ from shapely.geometry import Point, MultiPoint, box
 from .rid_utils import RIDVertex, RIDVolume3D, RIDVolume4D
 from itertools import cycle, islice
 from datetime import timedelta
+from dacite import from_dict
 
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
@@ -98,23 +101,30 @@ def stream_rid_data(rid_data):
         logger.debug("Submitted observation..")                    
         logger.debug("...")
 
-@app.task(name='stream_rid_data')
-def stream_rid_data_v22(rid_data):
-    rid_data = json.loads(rid_data)
-    for r_data in rid_data:
-        observation_metadata = SingleObservationMetadata(telemetry= r_data, details_response=r_data)                
-        flight_details_id = r_data['id']
-        lat_dd = r_data['current_state']['position']['lat']
-        lon_dd = r_data['current_state']['position']['lng']                    
-        altitude_mm = r_data['current_state']['position']['alt']
-        traffic_source = 11 # Per the Air-traffic data protocol a source type of 11 means that the data is associated with RID observations
-        source_type = 0
-        icao_address = flight_details_id
+@app.task(name='stream_rid_data_v22')
+def stream_rid_data_v22(rid_telemetry_observations):
 
-        so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_metadata)))                    
-        msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
-        logger.debug("Submitted observation..")                    
-        logger.debug("...")
+    telemetry_observations = json.loads(rid_telemetry_observations)
+
+    for observation in telemetry_observations: 
+        flight_details = observation['flight_details']
+        current_states = observation['current_states']
+
+        for current_state in current_states:
+            observation_and_metadata = SignedUnsignedTelemetryObservation(current_state= current_state, flight_details=flight_details) 
+                        
+            flight_details_id = flight_details['id']
+            lat_dd = current_state['position']['lat']
+            lon_dd = current_state['position']['lng']                    
+            altitude_mm = current_state['position']['alt']
+            traffic_source = 11 # Per the Air-traffic data protocol a source type of 11 means that the data is associated with RID observations
+            source_type = 0
+            icao_address = flight_details_id
+
+            so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_and_metadata)))                    
+            msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+            logger.debug("Submitted observation..")                    
+            logger.debug("...")
 
 
 @app.task(name='stream_rid_test_data')
