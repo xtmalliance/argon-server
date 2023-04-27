@@ -241,12 +241,12 @@ class RIDRecentAircraftPosition:
   time:str
   position:Position
 
-@dataclass
-class RIDOperatorDetails():
-  operator_id: Optional[str]
-  operation_description: Optional[str]
-  serial_number: Optional[str]
-  registration_number: Optional[str]
+# @dataclass
+# class RIDOperatorDetails():
+#   operator_id: Optional[str]
+#   operation_description: Optional[str]
+#   serial_number: Optional[str]
+#   registration_number: Optional[str]
 
 @dataclass
 class TelemetryFlightDetails:
@@ -276,7 +276,3 @@ class SingleObservationMetadata:
 class RIDTime:
   value:str
   format: str
-
-
-# @dataclass
-# class SignedTelemetryObject:

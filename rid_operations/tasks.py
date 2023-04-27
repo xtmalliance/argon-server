@@ -150,20 +150,22 @@ def stream_rid_test_data(requested_flights):
         provided_telemetries = requested_flight['telemetry']
         provided_flight_details = requested_flight['details_responses']
 
+
         for provided_flight_detail in provided_flight_details: 
             fd = provided_flight_detail['details']
+            requested_flight_detail_id = fd['id']
             
             op_location = LatLngPoint(lat = fd['operator_location']['lat'], lng= fd['operator_location']['lng'])
             if 'auth_data' in fd.keys():
                 auth_data = AuthData(format=fd['auth_data']['format'],data=fd['auth_data']['data'])
             else:
-                auth_data = AuthData(format="",data="")
-
-            flight_detail = RIDOperatorDetails(id=fd['id'], operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location, aircraft_type ="NotDeclared",operator_id= fd['operator_id'], auth_data=auth_data)
+                auth_data = AuthData(format=0,data="")
+                
+            flight_detail = RIDOperatorDetails(id=requested_flight_detail_id, operation_description=fd['operation_description'], serial_number= fd['serial_number'], registration_number=fd['registration_number'],operator_location=op_location, aircraft_type ="NotDeclared",operator_id= fd['operator_id'], auth_data=auth_data)
             pfd = RIDTestDetailsResponse(effective_after=provided_flight_detail['effective_after'], details = flight_detail)
             all_flight_details.append(pfd)
 
-            flight_details_storage = 'flight_details:' + fd['id']
+            flight_details_storage = 'flight_details:' + requested_flight_detail_id
             r.set(flight_details_storage, json.dumps(asdict(flight_detail)))
             # expire in 5
             r.expire(flight_details_storage, time=3000)
@@ -177,8 +179,12 @@ def stream_rid_test_data(requested_flights):
             llp = LatLngPoint(lat = pos['lat'], lng = pos['lng'])
             all_positions.append(llp)
             position = RIDAircraftPosition(lat=pos['lat'], lng=pos['lng'],alt=pos['alt'],accuracy_h=pos['accuracy_h'], accuracy_v=pos['accuracy_v'], extrapolated=extrapolated,pressure_altitude=pressure_altitude)
+
+            if 'height' in provided_telemetry.keys():            
+                height = RIDHeight(distance=provided_telemetry['height']['distance'], reference=provided_telemetry['height']['reference'])
+            else: 
+                height = None
             
-            height = RIDHeight(distance=provided_telemetry['height']['distance'], reference=provided_telemetry['height']['reference'])
             try: 
                 formatted_timestamp = arrow.get(provided_telemetry['timestamp'])
                 
@@ -352,7 +358,7 @@ def stream_rid_test_data_v22(requested_flights):
             try: 
                 formatted_timestamp = arrow.get(provided_telemetry['timestamp'])
                 
-            except ParserError as pe: 
+            except arrow.parser.ParserError as pe: 
                 logging.info("Error in parsing telemetry timestamp")
             else:                
                 t = my_telemetry_validator.parse_validate_current_state(current_state=provided_telemetry)

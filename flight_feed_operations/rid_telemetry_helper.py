@@ -74,8 +74,20 @@ class BlenderTelemetryValidator():
         return all_states
 
     def parse_validate_rid_details(self, rid_flight_details)->RIDFlightDetails: 
-        eu_classification = UAClassificationEU(category = rid_flight_details['eu_classification']['category'], class_ =  rid_flight_details['eu_classification']['class'])
-        uas_id = UASID(serial_number=rid_flight_details['uas_id']['serial_number'] ,registration_id = rid_flight_details['uas_id']['registration_id'], utm_id = rid_flight_details['uas_id']['utm_id'] )
+
+        if 'eu_classification' in rid_flight_details.keys():
+            eu_classification_details = rid_flight_details['eu_classification']
+            eu_classification = UAClassificationEU(category = eu_classification_details['category'], class_ =  eu_classification_details['class'])
+        else:  
+            eu_classification = UAClassificationEU(category = "", class_ ="")
+        if 'uas_id' in rid_flight_details.keys():
+            uas_id_details = rid_flight_details['uas_id']
+            uas_id = UASID(serial_number=uas_id_details['serial_number'] ,
+            registration_id = uas_id_details['registration_id'], utm_id = uas_id_details['utm_id'] )
+        else: 
+            uas_id = UASID(serial_number="",
+            registration_id = "", utm_id ="")
+
         operator_position = OperatorLocation(position = LatLngPoint(lat = rid_flight_details['operator_location']['position']['lat'], lng =  rid_flight_details['operator_location']['position']['lng']))
         operator_location = OperatorLocation(position = operator_position)
 

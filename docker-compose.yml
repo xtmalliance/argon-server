@@ -50,4 +50,3 @@ services:
 volumes:
   app:
   db_data:
-  rabbitmq:
