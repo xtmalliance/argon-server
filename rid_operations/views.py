@@ -11,8 +11,9 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDOperatorDetails
-from uss_operations.uss_data_definitions import OperatorDetailsSuccessResponse, FlightDetailsNotFoundMessage
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails, RIDCapabilitiesResponse
+from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
+
 import shapely.geometry
 import hashlib
 from flight_feed_operations import flight_stream_helper
@@ -76,6 +77,12 @@ class SubscriptionHelper():
         This method starts the polling of USSP once a subscription has been created
         """
         pass
+
+@api_view(['GET'])
+@requires_scopes(['blender.read'])
+def get_rid_capabilities(request):
+    status = RIDCapabilitiesResponse(capabilities =["ASTMRID2022"])
+    return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
 
 
 @api_view(['PUT'])

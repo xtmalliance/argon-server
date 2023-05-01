@@ -33,3 +33,14 @@ class FlightDeclarationRequest:
 class Altitude:
     meters: int
     datum: str
+
+
+    
+@dataclass
+class FlightDeclarationCreateResponse:
+    """ Hold data for success response """
+    id:str
+    message: str
+    is_approved: int
+    state: int
+    

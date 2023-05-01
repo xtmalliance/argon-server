@@ -31,5 +31,6 @@ urlpatterns = [
     path('display_data/<uuid:flight_id>', rid_views.get_flight_data),
     # RID Qualifier data: Injection views 
     path('tests/<uuid:test_id>', rid_views.create_test),
-    path('tests/<uuid:test_id>/<str:version>', rid_views.delete_test)
+    path('tests/<uuid:test_id>/<str:version>', rid_views.delete_test),
+    path('capabilities', rid_views.get_rid_capabilities),    
 ]

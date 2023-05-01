@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 from datetime import datetime, timedelta
-
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv, find_dotenv
@@ -96,6 +96,18 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, "flight_blender.sqlite3")
       }
 }
+DATABASES = {}
+USING_DOCKER_COMPOSE = os.environ.get("USING_DOCKER_COMPOSE",0)
+if USING_DOCKER_COMPOSE: 
+    DATABASES = {
+        "default": {
+            "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
+            "NAME": os.environ.get("DB_DATABASE", os.path.join(BASE_DIR, "flight_blender.sqlite3"))            
+        }
+    }
+else: 
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
