@@ -725,7 +725,7 @@ paths:
       security:
       - AuthFromAuthorizationAuthority:
         - dss.read.identification_service_areas
-      summary: /uss/flights
+      summary: Get RID flight details
       description: Retrieve basic flight information from a remote ID service provider
         to meet remote ID requirements.  This endpoint will be polled by remote ID
         display providers to display basic aircraft activity near a user in real time.  All
@@ -1026,8 +1026,8 @@ paths:
         - flight-declarations
   /flight_stream/public_keys/:
     get:
-      operationId: listSignedTelmetryPublicKeys
-      description: ''
+      operationId: Get all Public Keys
+      description: 'List Authorized Public keys'
       parameters: []
       responses:
         '200':
@@ -1039,10 +1039,10 @@ paths:
                   $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - flight-stream
+      - signed-rid
     post:
-      operationId: createSignedTelmetryPublicKey
-      description: ''
+      operationId: Create a new all Public Key
+      description: 'Create a new Authorized Public key'
       parameters: []
       requestBody:
         content:
@@ -1063,11 +1063,11 @@ paths:
                 $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - flight-stream
+      - signed-rid
   /flight_stream/public_keys/{id}/:
     get:
-      operationId: retrieveSignedTelmetryPublicKey
-      description: ''
+      operationId: Get a single key
+      description: 'Get a single Authorized Public key'
       parameters:
       - name: id
         in: path
@@ -1083,10 +1083,10 @@ paths:
                 $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - flight-stream
+      - signed-rid
     put:
-      operationId: updateSignedTelmetryPublicKey
-      description: ''
+      operationId: Update public key details
+      description: 'Update the Public Key URL for a key'
       parameters:
       - name: id
         in: path
@@ -1113,40 +1113,10 @@ paths:
                 $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - flight-stream
-    patch:
-      operationId: partialUpdateSignedTelmetryPublicKey
-      description: ''
-      parameters:
-      - name: id
-        in: path
-        required: true
-        description: A UUID string identifying this signed telmetry public key.
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SignedTelmetryPublicKey'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SignedTelmetryPublicKey'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SignedTelmetryPublicKey'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SignedTelmetryPublicKey'
-          description: ''
-      tags:
-      - flight-stream
+      - signed-rid
     delete:
-      operationId: destroySignedTelmetryPublicKey
-      description: ''
+      operationId: Remove Public Key
+      description: 'Remove details of a public key in Blender'
       parameters:
       - name: id
         in: path
@@ -1158,7 +1128,7 @@ paths:
         '204':
           description: ''
       tags:
-      - flight-stream
+      - signed-rid
   /flight_declaration_ops/flight_declaration/{flight_declaration_id}:
     get:
       summary: 'Get the details of a single flight declaration'
