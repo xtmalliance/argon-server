@@ -33,3 +33,14 @@ class FlightDeclarationRequest:
 class Altitude:
     meters: int
     datum: str
+
+
+    
+@dataclass
+class FlightDeclarationCreateRespone:
+    """Class for keeping track of an operational intent test injections"""
+    id:str
+    message: str
+    is_approved: int
+    state: int
+    

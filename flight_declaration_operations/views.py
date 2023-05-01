@@ -12,7 +12,7 @@ from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
 from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from shapely.geometry import shape
-from .data_definitions import FlightDeclarationRequest, Altitude
+from .data_definitions import FlightDeclarationRequest, Altitude, FlightDeclarationCreateRespone
 from rest_framework import mixins, generics
 from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
 from django.utils.decorators import method_decorator
@@ -158,8 +158,10 @@ def set_flight_declaration(request):
     else:
         logger.info("Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided..")
         submit_flight_declaration_to_dss.delay(flight_declaration_id = flight_declaration_id)   
-    
-    op = json.dumps({"message":"Submitted Flight Declaration", 'id':flight_declaration_id, 'is_approved':is_approved})    
+        
+    creation_response = FlightDeclarationCreateRespone(id= flight_declaration_id, message = "Submitted Flight Declaration", is_approved = is_approved, state = default_state)
+
+    op = json.dumps(asdict(creation_response))
     return HttpResponse(op, status=200, content_type= 'application/json')
     
 @method_decorator(requires_scopes(['blender.write']), name='dispatch')
