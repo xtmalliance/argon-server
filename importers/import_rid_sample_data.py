@@ -7,7 +7,7 @@ from dataclasses import dataclass, asdict
 from typing import Optional
 from auth_factory import PassportCredentialsGetter, NoAuthCredentialsGetter
 
-from rid_definitions import LatLngPoint, RIDFlightDetails, UASID, OperatorLocation
+from rid_definitions import LatLngPoint, RIDOperatorDetails, UASID, OperatorLocation
 
 class BlenderUploader():
     
@@ -27,7 +27,7 @@ class BlenderUploader():
         uas_id = UASID(registration_id = 'CHE-5bisi9bpsiesw',  serial_number='d29dbf50-f411-4488-a6f1-cf2ae4d4237a',utm_id= '07a06bba-5092-48e4-8253-7a523f885bfe')
       
         operator_location = OperatorLocation(position = LatLngPoint(lat = 46.97615311620088,lng = 7.476099729537965))
-        rid_operator_details = RIDFlightDetails(
+        rid_operator_details = RIDOperatorDetails(
             id="382b3308-fa11-4629-a966-84bb96d3b4db",
             uas_id = uas_id,
             operation_description="Medicine Delivery",

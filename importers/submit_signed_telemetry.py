@@ -31,7 +31,7 @@ test_shared_secret = base64.b64decode(
 #         return self.keys[key_id]
 
 class MyHTTPSignatureKeyResolver(HTTPSignatureKeyResolver):
-    known_pem_keys = {"test-rsa-key"}
+    known_pem_keys = {"test-key-rsa-pss"}
 
     def resolve_public_key(self, key_id: str):
 
@@ -57,14 +57,14 @@ class BlenderUploader():
         rid_operator_details  = rid_json['flight_details']
 
         uas_id = rid_definitions.UASID(registration_id = 'CHE-5bisi9bpsiesw',  serial_number='d29dbf50-f411-4488-a6f1-cf2ae4d4237a',utm_id= '07a06bba-5092-48e4-8253-7a523f885bfe')
-        
+        eu_classification = rid_definitions.UAClassificationEU(category='Open', class_ = "Class0")
     
         rid_operator_details = rid_definitions.RIDOperatorDetails(
             id="382b3308-fa11-4629-a966-84bb96d3b4db",
             uas_id = uas_id,
             operation_description="Medicine Delivery",
             operator_id='CHE-076dh0dq',
-            eu_classification = 'Class0',            
+            eu_classification = eu_classification,            
             operator_location=  rid_definitions.LatLngPoint(lat = 46.97615311620088,lng = 7.476099729537965)
         )
 
@@ -80,16 +80,17 @@ class BlenderUploader():
                 signed_r = requests.Request(method= 'PUT', url='http://localhost:8000/flight_stream/set_signed_telemetry', json=payload, headers= headers)
                 signed_r = signed_r.prepare()
                 signed_r.headers["Content-Digest"] = str(http_sfv.Dictionary({"sha-256": hashlib.sha256(signed_r.body).digest()}))
-
+                
                 signer = HTTPMessageSigner(signature_algorithm=algorithms.RSA_PSS_SHA512, key_resolver=MyHTTPSignatureKeyResolver())
                 
-                signer.sign(signed_r, created=now, key_id="test-rsa-key", label="sig-b23",covered_component_ids=("@method", "@target-uri", "@authority", "content-digest"))
+                signer.sign(signed_r, created=now, label = "sig-b21", key_id="test-key-rsa-pss",covered_component_ids=(), nonce="b3k2pp5k7z-50gnwp.yemd", include_alg=False)
                 
                 response = s.send(signed_r)
                         
                 
             except Exception as e:                
                 print(e)
+                break
             else:
                 if response.status_code == 201:
                     print("Sleeping 3 seconds..")

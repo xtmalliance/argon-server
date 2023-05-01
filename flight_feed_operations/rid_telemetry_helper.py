@@ -76,8 +76,8 @@ class BlenderTelemetryValidator():
     def parse_validate_rid_details(self, rid_flight_details)->RIDFlightDetails: 
 
         if 'eu_classification' in rid_flight_details.keys():
-            eu_classification_details = rid_flight_details['eu_classification']
-            eu_classification = UAClassificationEU(category = eu_classification_details['category'], class_ =  eu_classification_details['class'])
+            eu_classification_details = rid_flight_details['eu_classification']            
+            eu_classification = UAClassificationEU(category = eu_classification_details['category'], class_ =  eu_classification_details['class_'])
         else:  
             eu_classification = UAClassificationEU(category = "", class_ ="")
         if 'uas_id' in rid_flight_details.keys():
@@ -87,14 +87,20 @@ class BlenderTelemetryValidator():
         else: 
             uas_id = UASID(serial_number="",
             registration_id = "", utm_id ="")
-
-        operator_position = OperatorLocation(position = LatLngPoint(lat = rid_flight_details['operator_location']['position']['lat'], lng =  rid_flight_details['operator_location']['position']['lng']))
-        operator_location = OperatorLocation(position = operator_position)
-
-        if 'auth_data' in rid_flight_details.keys():
-            auth_data = RIDAuthData(format=rid_flight_details['auth_data']['format'],data=rid_flight_details['auth_data']['data'])
+        if 'operator_location' in rid_flight_details.keys():
+            
+            if 'position' in rid_flight_details['operator_location']:
+                o_location_position = rid_flight_details['operator_location']['position']
+                operator_position = LatLngPoint(lat = o_location_position['lat'], lng =  o_location_position['lng'])
+                operator_location = OperatorLocation(position = operator_position)
+            else: 
+                operator_location = OperatorLocation(position=LatLngPoint(lat ="", lng= ""))
         else:
+            operator_location = OperatorLocation(position=LatLngPoint(lat ="", lng= ""))        
+        if 'auth_data' in rid_flight_details.keys():
             auth_data = RIDAuthData(format="",data="")
+            if rid_flight_details['auth_data'] is not None: 
+                auth_data = RIDAuthData(format=rid_flight_details['auth_data']['format'],data=rid_flight_details['auth_data']['data'])            
 
         f_details = RIDFlightDetails(id = rid_flight_details['id'], eu_classification = eu_classification, uas_id = uas_id, operator_location = operator_location, operator_id =rid_flight_details['operator_id'], operation_description =rid_flight_details['operation_description'] , auth_data = auth_data)
     

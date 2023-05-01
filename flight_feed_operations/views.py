@@ -168,7 +168,9 @@ def set_signed_telemetry(request):
     # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securly send signed telemetry information into Blender, since the messages are signed, we turn off any auth requirements for tokens and validate against allowed public keys in Blender.
     
     my_message_verifier = MessageVerifier()
+    
     verified = my_message_verifier.verify_message(request)
+    
     if not verified:
         message_verification_failed_response = MessageVerificationFailedResponse(message= "Could not verify against public keys setup in Flight Blender")
         return JsonResponse(asdict(message_verification_failed_response), status=400, content_type='application/json')
