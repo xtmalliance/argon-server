@@ -1236,10 +1236,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FlightDeclarationCreated'
-              example:
-                id: 842bde46-6559-49af-8272-3da722a48a7d
-                message: 'Submitted Flight declaration'
-                is_approved: 0
+                
         '400':
           description: Bad request submitted
           content:
@@ -1713,15 +1710,17 @@ components:
             - 1
             - 2
             - 3
-            - 4 
+            - 4
+            - 5 
             type: integer
             description: >
-              Set the new state of the operation
-                - `0` - Accepted
-                - `1` - Activated
-                - `2` - Contingent
-                - `3` - Nonconforming
-                - `4` - Completed          
+              The state of the operation
+              * `0` - Processing
+              * `1` - Accepted
+              * `2` - Activated
+              * `3` - Nonconforming
+              * `4` - Contingent
+              * `5` - Ended    
 
     RemoteIDDataProcessed:
       description: Remote ID data processed successfully
@@ -1730,7 +1729,6 @@ components:
         message:
           type: string
           example: 'RemoteID data succesfully submitted'
-
 
     FlightDeclarationCreated:
       description: A flight declaration has been created
@@ -1746,6 +1744,25 @@ components:
         is_approved:
           type: boolean
           example: 1
+        state:
+          enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4 
+          - 5
+          type: integer
+          example: 0
+          description: >
+            The state of the operation
+            * `0` - Processing
+            * `1` - Accepted
+            * `2` - Activated
+            * `3` - Nonconforming
+            * `4` - Contingent
+            * `5` - Ended
+
 
     SubscriptionCreated:
       description: A subscription in the DSS for the area has been created
@@ -1895,7 +1912,7 @@ components:
           - 5
           description: >
             The state of the operation
-             * `0` - Not submitted to the DSS
+             * `0` - Processing
              * `1` - Accepted
              * `2` - Activated
              * `3` - Nonconforming
