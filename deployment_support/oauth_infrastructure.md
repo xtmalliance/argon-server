@@ -14,8 +14,7 @@ In this document, we will setup
 - use the importers to submit some flight information 
 - and finally query the flight data using the API via a tool like Postman. 
 
-Flight Blender follows the ASTM standads for access 
-
+Flight Blender follows the ASTM standads for access and authorization.
 
 
 ## Detailed Instructions
@@ -92,6 +91,9 @@ The section below deatils the environment file variables and a short comment on 
 | HEARTBEAT_RATE_SECS | This is the refresh rate of the system, normally set to 1 or 2 seconds |
 | OPENSKY_NETWORK_USERNAME | Get a Username from https://opensky-network.org/ |
 | OPENSKY_NETWORK_PASSWORD | - |
+
+USING_DOCKER_COMPOSE| Set this variable to use Docker Compose |
+DATABASE_URL| Set the URL of the Database so Docker compose can pick up the db, by default SQLite is the database. e.g. psql://mydatabaseuser:mypasswordd@myproject_db:5432/myproject_db |
 
 ### Running Flight Blender
 You can run Blender by running `docker compose up` and then go to `http://localhost:8000`
