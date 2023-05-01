@@ -37,8 +37,8 @@ class Altitude:
 
     
 @dataclass
-class FlightDeclarationCreateRespone:
-    """Class for keeping track of an operational intent test injections"""
+class FlightDeclarationCreateResponse:
+    """ Hold data for success response """
     id:str
     message: str
     is_approved: int
