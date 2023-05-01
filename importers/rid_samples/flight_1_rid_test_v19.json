@@ -1,0 +1,1436 @@
+{
+    "requested_flights": [
+        {
+            "injection_id": "37444135-cbcd-4740-ad2f-7836ecc7fbdc",
+            "telemetry": [
+                {
+                    "timestamp": "2023-04-27T18:29:03.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57800055297378,
+                        "lat": 37.1971014791759,
+                        "alt": 529.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 159.51125664957357,
+                    "speed": 5.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:04.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57798081614081,
+                        "lat": 37.197059404721635,
+                        "alt": 529.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 187.53036139123958,
+                    "speed": 5.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:05.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57798798375362,
+                        "lat": 37.197016214133484,
+                        "alt": 533.0545270483289,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 194.5261642814109,
+                    "speed": 5.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:06.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57800212690604,
+                        "lat": 37.196972734164305,
+                        "alt": 536.1838415040592,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 202.4636259562144,
+                    "speed": 5.51,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:07.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57802342452034,
+                        "lat": 37.196931703788785,
+                        "alt": 538.3685731559408,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 212.1727669406048,
+                    "speed": 7.03,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:08.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57805344862881,
+                        "lat": 37.19689368575391,
+                        "alt": 539.6353512255297,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 212.90818194322654,
+                    "speed": 8.05,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:09.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57808720822365,
+                        "lat": 37.19685213076737,
+                        "alt": 540.8337883074673,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 209.13772408939977,
+                    "speed": 9.69,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:10.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57811722777369,
+                        "lat": 37.19680923519623,
+                        "alt": 542.1773706764765,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 195.54646280572686,
+                    "speed": 11.77,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:11.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5781323958596,
+                        "lat": 37.1967658046547,
+                        "alt": 544.0970895321556,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 188.14994511685757,
+                    "speed": 14.15,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:12.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57814392771789,
+                        "lat": 37.19670166260832,
+                        "alt": 547.0482021175304,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 170.39243975044528,
+                    "speed": 16.51,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:13.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57812974002694,
+                        "lat": 37.19663489860375,
+                        "alt": 550.7342150392185,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 151.10658639520244,
+                    "speed": 18.13,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:14.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57808680009781,
+                        "lat": 37.19657292090538,
+                        "alt": 554.8154905063192,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 128.39154780432534,
+                    "speed": 20.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:15.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57801685035301,
+                        "lat": 37.19652877181478,
+                        "alt": 558.805087364873,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 113.09163065582739,
+                    "speed": 21.49,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:16.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57795541973255,
+                        "lat": 37.19650790849303,
+                        "alt": 561.5483557032137,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 96.54361092296632,
+                    "speed": 22.35,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:17.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57786343304842,
+                        "lat": 37.19649950359759,
+                        "alt": 564.92599940135,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 87.90306866942416,
+                    "speed": 23.13,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:18.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57777966065294,
+                        "lat": 37.1965019468875,
+                        "alt": 567.7606776243514,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 73.68472007446229,
+                    "speed": 24.11,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:19.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57771293899224,
+                        "lat": 37.19651750378168,
+                        "alt": 569.7882612011854,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 66.78843846385746,
+                    "speed": 24.29,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:20.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57763747114771,
+                        "lat": 37.19654328332236,
+                        "alt": 572.0484245967452,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 65.65676353639532,
+                    "speed": 24.65,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:21.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57754402039026,
+                        "lat": 37.19657696153136,
+                        "alt": 575.0584257133132,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 50.76300355550665,
+                    "speed": 24.77,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:22.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57747951786358,
+                        "lat": 37.19661892142205,
+                        "alt": 577.0733203226322,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 54.84984080934719,
+                    "speed": 25.03,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:23.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57741240795438,
+                        "lat": 37.19665656163997,
+                        "alt": 579.5147872053689,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 48.62248912044006,
+                    "speed": 25.39,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:24.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57733805633134,
+                        "lat": 37.19670873467051,
+                        "alt": 582.4948479718222,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 53.61464057227221,
+                    "speed": 26.15,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:25.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57728782013758,
+                        "lat": 37.1967382213372,
+                        "alt": 584.854514074972,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 54.32339882419354,
+                    "speed": 27.41,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:26.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57722590371309,
+                        "lat": 37.19677363092791,
+                        "alt": 588.146024645754,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 60.48113791590151,
+                    "speed": 28.52,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:27.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57715384893825,
+                        "lat": 37.19680612894521,
+                        "alt": 592.6012140666618,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 63.69349720291451,
+                    "speed": 29.47,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:28.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57705935794317,
+                        "lat": 37.19684333921531,
+                        "alt": 599.6316426153995,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 63.80828916970804,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:29.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57697733713522,
+                        "lat": 37.19687547603477,
+                        "alt": 607.3147263398948,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 59.67135920125374,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:30.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57689218727917,
+                        "lat": 37.19691515641433,
+                        "alt": 617.6165428199539,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 54.44513575217587,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:31.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5768113755809,
+                        "lat": 37.1969611651317,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 51.06335890112053,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:32.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57672754086077,
+                        "lat": 37.19701511985383,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 59.39441289984969,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:33.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57664246609896,
+                        "lat": 37.19705520615887,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 63.81644394659393,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:34.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57655392485897,
+                        "lat": 37.19708988530244,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 64.17035435273665,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:35.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57645875475153,
+                        "lat": 37.19712658106612,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 63.35142001960439,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:36.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57637059695035,
+                        "lat": 37.19716182061966,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 63.345810605846715,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:37.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57627609999774,
+                        "lat": 37.1971996033648,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 60.81374810096275,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:38.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57619606993768,
+                        "lat": 37.19723521126495,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 64.19524932831449,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:39.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57610733442567,
+                        "lat": 37.19726938807241,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 67.25482996558769,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:40.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57600319582565,
+                        "lat": 37.19730416478304,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 63.92033090048734,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:41.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57593362783513,
+                        "lat": 37.19733128797339,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 75.35518923462224,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:42.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57586417772457,
+                        "lat": 37.19734574427401,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 75.30092093874995,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:43.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5757947630964,
+                        "lat": 37.197360249150194,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 86.37767744822666,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:44.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57571905420066,
+                        "lat": 37.19736406691424,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 89.02620592452445,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:45.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57561146439458,
+                        "lat": 37.19736552363385,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 97.30194146356743,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:46.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57557039842979,
+                        "lat": 37.19736133206649,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 92.11542659251155,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:47.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5755074502042,
+                        "lat": 37.1973594799225,
+                        "alt": 630.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 97.54754335087839,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:48.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57541659119126,
+                        "lat": 37.19734989051443,
+                        "alt": 625.71611578771,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 96.80042275344604,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:49.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57531025161447,
+                        "lat": 37.19733978931831,
+                        "alt": 617.5158198651854,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 106.48692292463197,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:50.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57523862724926,
+                        "lat": 37.19732290358091,
+                        "alt": 612.9465263611199,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 106.87640625787095,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:51.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57516711123088,
+                        "lat": 37.19730562136304,
+                        "alt": 609.0172320037261,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 114.38261641232161,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:52.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5750990109287,
+                        "lat": 37.19728103413704,
+                        "alt": 605.6339010997059,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 107.1631577358677,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:53.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57502782892647,
+                        "lat": 37.19726352227142,
+                        "alt": 602.6175593343094,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 127.47550008733124,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:54.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5749695654127,
+                        "lat": 37.19722794184786,
+                        "alt": 600.0799026694835,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 134.63035645367455,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:55.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5749147583816,
+                        "lat": 37.19718484445996,
+                        "alt": 597.6999117312389,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 143.6945913737481,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:56.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5748755608438,
+                        "lat": 37.19714234764194,
+                        "alt": 595.8733123345019,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 161.74903310257983,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:57.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57485510309948,
+                        "lat": 37.19709293181062,
+                        "alt": 594.4369128835206,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 166.3955885967718,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:58.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57483793488441,
+                        "lat": 37.19703642304626,
+                        "alt": 592.8923135222726,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 181.0341977878279,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:29:59.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57483908697587,
+                        "lat": 37.19698558634741,
+                        "alt": 591.8319641561949,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 178.5304163266748,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:00.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57483728812755,
+                        "lat": 37.19692973339532,
+                        "alt": 590.4641469211432,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 188.90122072282446,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:01.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57485455008515,
+                        "lat": 37.19684193878193,
+                        "alt": 588.4580220343946,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 191.9900309575551,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:02.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57487120275944,
+                        "lat": 37.19677947910903,
+                        "alt": 586.792702051085,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 193.7495748306719,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:03.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57488435582773,
+                        "lat": 37.1967366609142,
+                        "alt": 585.4735070486427,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.81568246795806,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:04.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57491003378395,
+                        "lat": 37.19667663144652,
+                        "alt": 583.3790822039026,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 193.08934005135157,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:05.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57494278450783,
+                        "lat": 37.19656443073654,
+                        "alt": 576.9718090785566,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 195.5405740424164,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:06.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57496533956328,
+                        "lat": 37.196499823486214,
+                        "alt": 571.8065381280159,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.73048010098321,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:07.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57500341110034,
+                        "lat": 37.19641038509319,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 196.18380816247202,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:08.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57503208199415,
+                        "lat": 37.19633169287626,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.88108949570758,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:09.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57506357384375,
+                        "lat": 37.19625834616446,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.9731278285538,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:10.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57509814989831,
+                        "lat": 37.19617823663271,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.94793051842518,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:11.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57512633842927,
+                        "lat": 37.19611283286848,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 205.8343626744972,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:12.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57516026828239,
+                        "lat": 37.1960570099554,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 203.5390791579554,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:13.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57520653329098,
+                        "lat": 37.19597241202344,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 203.9627287986336,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:14.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57524951446408,
+                        "lat": 37.19589537944923,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 204.52965017612317,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:15.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57528931623939,
+                        "lat": 37.19582590556047,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 202.64096338148576,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:16.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57531684937715,
+                        "lat": 37.19577332379192,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 206.94451748214084,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:17.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57534726543213,
+                        "lat": 37.1957256591955,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.82992225185683,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:18.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57536561632516,
+                        "lat": 37.19568279370441,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.80305629702698,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:19.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57539913348404,
+                        "lat": 37.19560438129218,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 201.75913046928244,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:20.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57543238446472,
+                        "lat": 37.1955380233246,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 198.77751930704386,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:21.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57545959404297,
+                        "lat": 37.19547427420357,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 194.40565074068334,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:22.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57547477263343,
+                        "lat": 37.19542720346918,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 194.9881414673906,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:23.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57549292244842,
+                        "lat": 37.19537320294821,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 195.01366914241984,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:24.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.57551105097416,
+                        "lat": 37.1953193618027,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 202.76220841723665,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                },
+                {
+                    "timestamp": "2023-04-27T18:30:25.300752Z",
+                    "operational_status": "Airborne",
+                    "position": {
+                        "lng": -80.5755380908282,
+                        "lat": 37.19526802810682,
+                        "alt": 570.0,
+                        "accuracy_h": "HAUnknown",
+                        "accuracy_v": "VAUnknown",
+                        "extrapolated": false
+                    },
+                    "track": 195.468056046508,
+                    "speed": 30.0,
+                    "timestamp_accuracy": 1.0,
+                    "speed_accuracy": "SA3mps",
+                    "vertical_speed": 0.0
+                }
+            ],
+            "details_responses": [
+                {
+                    "effective_after": "2023-04-27T18:29:02.300752Z",
+                    "details": {
+                        "id": "d50598bc-638a-4f52-bf3f-dd85595fb52e",
+                        "serial_number": "EXAMPLE_SERIAL2",
+                        "operation_description": "U-turn south of takeoff",
+                        "operator_location": {
+                            "lat": 37.19732333569079,
+                            "lng": -80.57819770820173
+                        },
+                        "operator_id": "EXAMPLE_OPERATOR2",
+                        "registration_number": "EXAMPLE_REGISTRATION2"
+                    }
+                }
+            ]
+        }
+    ]
+}

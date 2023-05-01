@@ -134,7 +134,7 @@ class RIDAuthData:
   data: str
 
 @dataclass
-class RIDFlightDetails:
+class RIDOperatorDetails:
   id: str
   operator_id: Optional[str]
   operator_location: Optional[LatLngPoint]
@@ -165,7 +165,7 @@ class FlightState:
 @dataclass
 class RIDTestDetailsResponse: 
     effective_after: str
-    details: RIDFlightDetails
+    details: RIDOperatorDetails
 
 @dataclass
 class RIDTestInjection: 
@@ -253,12 +253,12 @@ class RIDRecentAircraftPosition:
   time:str
   position:Position
 
-@dataclass
-class RIDOperatorDetails():
-  operator_id: Optional[str]
-  operation_description: Optional[str]
-  serial_number: Optional[str]
-  registration_number: Optional[str]
+# @dataclass
+# class RIDOperatorDetails():
+#   operator_id: Optional[str]
+#   operation_description: Optional[str]
+#   serial_number: Optional[str]
+#   registration_number: Optional[str]
 
 @dataclass
 class TelemetryFlightDetails:
@@ -267,7 +267,7 @@ class TelemetryFlightDetails:
   current_state: RIDAircraftState
   simulated: bool
   recent_positions: List[RIDRecentAircraftPosition]
-  operator_details: RIDFlightDetails
+  operator_details: RIDOperatorDetails
 
 @dataclass
 class RIDFlightResponse:
@@ -280,7 +280,7 @@ class AuthData:
   data: str
 
 @dataclass
-class SingleObeservationMetadata:
+class SingleObservationMetadata:
   details_response: RIDTestDetailsResponse
   telemetry: RIDAircraftState
 
