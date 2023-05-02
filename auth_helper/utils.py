@@ -1,5 +1,3 @@
-
-
 from django.http import JsonResponse
 from functools import wraps
 from django.contrib.auth import authenticate

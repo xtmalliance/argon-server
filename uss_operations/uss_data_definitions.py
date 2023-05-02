@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from scd_operations.scd_data_definitions import OperationalIntentDetailsUSSResponse
-from rid_operations.rid_utils import RIDFlightDetails
+from rid_operations.rid_utils import RIDOperatorDetails
 @dataclass
 class OperationalIntentNotFoundResponse:
     message:str
@@ -28,5 +28,5 @@ class FlightDetailsNotFoundMessage:
   message:str
 
 @dataclass
-class FlightDetailsSuccessResponse: 
-  details:RIDFlightDetails
+class OperatorDetailsSuccessResponse: 
+  details:RIDOperatorDetails

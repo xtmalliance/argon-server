@@ -7,21 +7,7 @@ from dataclasses import dataclass, asdict
 from typing import Optional
 from auth_factory import PassportCredentialsGetter, NoAuthCredentialsGetter
 
-
-@dataclass
-class LatLngPoint:
-  lat: float
-  lng: float
-
-@dataclass
-class RIDOperatorDetails():
-  id: str
-  operator_location: LatLngPoint
-  operator_id: Optional[str]
-  operation_description: Optional[str]
-  serial_number: Optional[str]
-  registration_number: Optional[str]
-  aircraft_type:str = 'Helicopter'
+from rid_definitions import LatLngPoint, RIDOperatorDetails, UASID, OperatorLocation
 
 class BlenderUploader():
     
@@ -38,13 +24,16 @@ class BlenderUploader():
         states = rid_json['current_states']
         rid_operator_details  = rid_json['flight_details']
         
+        uas_id = UASID(registration_id = 'CHE-5bisi9bpsiesw',  serial_number='d29dbf50-f411-4488-a6f1-cf2ae4d4237a',utm_id= '07a06bba-5092-48e4-8253-7a523f885bfe')
+      
+        operator_location = OperatorLocation(position = LatLngPoint(lat = 46.97615311620088,lng = 7.476099729537965))
         rid_operator_details = RIDOperatorDetails(
             id="382b3308-fa11-4629-a966-84bb96d3b4db",
-            serial_number='d29dbf50-f411-4488-a6f1-cf2ae4d4237a',
+            uas_id = uas_id,
             operation_description="Medicine Delivery",
             operator_id='CHE-076dh0dq',
-            registration_number='CHE-5bisi9bpsiesw',            
-            operator_location=  LatLngPoint(lat = 46.97615311620088,lng = 7.476099729537965)
+            eu_classification = 'Class0',            
+            operator_location=  operator_location
         )
 
         for state in states: 

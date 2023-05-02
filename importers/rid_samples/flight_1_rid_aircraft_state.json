@@ -2,13 +2,16 @@
     "reference_time": "2022-07-18T14:22:51.541652+00:00",
     "current_states": [
         {
-            "timestamp": "2022-07-18T14:22:52.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:52.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9754225199202,
                 "lng": 7.475076017275803,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -23,13 +26,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:53.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:53.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97537839156561,
                 "lng": 7.475074106522959,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -44,13 +50,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:54.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:54.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97533460388938,
                 "lng": 7.475065885577716,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -65,13 +74,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:55.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:55.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97529157858963,
                 "lng": 7.4750514336274,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -86,13 +98,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:56.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:56.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97524973002137,
                 "lng": 7.475030889866306,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -107,13 +122,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:57.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:57.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975209461206134,
                 "lng": 7.475004452154652,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -128,13 +146,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:58.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:58.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97517115995081,
                 "lng": 7.474972375112586,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -149,13 +170,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:22:59.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:22:59.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97513519511295,
                 "lng": 7.474934967667648,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -170,13 +194,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:00.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:00.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97510191304869,
                 "lng": 7.47489259007933,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -191,13 +218,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:01.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:01.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9750716342773,
                 "lng": 7.474845650469361,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -212,13 +242,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:02.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:02.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97504465039461,
                 "lng": 7.474794600891187,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -233,13 +266,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:03.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:03.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97502122126502,
                 "lng": 7.474739932976472,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -254,13 +290,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:04.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:04.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97500157251901,
                 "lng": 7.474682173200564,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -275,13 +314,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:05.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:05.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.974985893380456,
                 "lng": 7.4746218778124875,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -296,13 +338,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:06.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:06.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.974974334844354,
                 "lng": 7.474559627478333,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -317,13 +362,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:07.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:07.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97496700822293,
                 "lng": 7.474496021689548,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -338,13 +386,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:08.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:08.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97496398407367,
                 "lng": 7.474431672990031,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -359,13 +410,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:09.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:09.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97496529151983,
                 "lng": 7.474367201077551,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -380,13 +434,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:10.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:10.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.974970917970175,
                 "lng": 7.474303226836321,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -401,13 +458,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:11.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:11.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97498080924005,
                 "lng": 7.474240366358126,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -422,13 +482,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:12.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:12.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97499487007325,
                 "lng": 7.47417922500962,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -443,13 +506,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:13.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:13.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97501296505933,
                 "lng": 7.474120391602846,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -464,13 +530,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:14.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:14.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9750349199375,
                 "lng": 7.47406443272514,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -485,13 +554,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:15.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:15.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975060523274735,
                 "lng": 7.47401188728299,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -506,13 +578,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:16.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:16.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975089528501826,
                 "lng": 7.473963261312384,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -527,13 +602,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:17.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:17.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975121656287804,
                 "lng": 7.47391902310561,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -548,13 +626,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:18.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:18.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.9751565972298,
                 "lng": 7.473879598701442,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -569,13 +650,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:19.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:19.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.97519401483258,
                 "lng": 7.4738453677821175,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -590,13 +674,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:20.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:20.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975233548749024,
                 "lng": 7.473816660016666,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -611,13 +698,16 @@
             "vertical_speed": 0.0
         },
         {
-            "timestamp": "2022-07-18T14:23:21.541652+00:00",
+            "timestamp": {
+                "value": "2022-07-18T14:23:21.541652+00:00",
+                "format": "RFC3339"
+            },
             "operational_status": "Airborne",
             "position": {
                 "lat": 46.975274818250206,
                 "lng": 7.473793751885744,
                 "alt": 620.0,
-                "accuracy_h": "HAUnkown",
+                "accuracy_h": "HAUnknown",
                 "accuracy_v": "VAUnknown",
                 "extrapolated": false
             },
@@ -635,16 +725,24 @@
     "flight_details": {
         "rid_details": {
             "id": "1",
-            "serial_number": "f9edf164-1c8f-45d7-9854-bc0ffa33573d",
-            "operation_description": "Delivery operation, see more details at https://deliveryops.com/operation",
-            "operator_location": {
-                "lat": 46.97615311620088,
-                "lng": 7.476099729537965
+            "eu_classification": {
+                "category": "EUCategoryUndefined",
+                "class": "EUClassUndefined"
             },
             "operator_id": "OP-0xn81lwa",
-            "registration_number": "CHE9t1sq8bqa023t"
+            "uas_id": {
+                "serial_number": "f9edf164-1c8f-45d7-9854-bc0ffa33573d",
+                "registration_id": "CHE9t1sq8bqa023t",
+                "utm_id": "07a06bba-5092-48e4-8253-7a523f885bfe"
+            },
+            "operation_description": "Delivery operation, see more details at https://deliveryops.com/operation",
+            "operator_location": {
+                "position": {
+                    "lat": 46.97615311620088,
+                    "lng": 7.476099729537965
+                }
+            }
         },
-        "aircraft_type": "Helicopter",
-        "operator_name": "Thomas-Roberts"
+        "aircraft_type": "Helicopter"
     }
 }
