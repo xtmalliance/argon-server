@@ -693,9 +693,12 @@ paths:
 
   /v1/uss/flights:
     summary: Basic operation details to meet remote ID requirements.
-    description: This endpoint may be polled by remote ID display providers to display
-      basic aircraft activity near a user in real time.
-      
+    
+    description: Retrieve basic flight information from a remote ID service provider
+        to meet remote ID requirements.  This endpoint will be polled by remote ID
+        display providers to display basic aircraft activity near a user in real time.  All
+        flights that have any recent positions (past [NetUasInAreaWindow] seconds)
+        inside the requested view must be returned.
     get:
       tags:
       - rid
@@ -748,13 +751,7 @@ paths:
       - AuthFromAuthorizationAuthority:
 
         - dss.read.identification_service_areas
-      summary: Get RID flight details
-
-      description: Retrieve basic flight information from a remote ID service provider
-        to meet remote ID requirements.  This endpoint will be polled by remote ID
-        display providers to display basic aircraft activity near a user in real time.  All
-        flights that have any recent positions (past [NetUasInAreaWindow] seconds)
-        inside the requested view must be returned.
+     
       parameters:
       - name: view
         description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed
