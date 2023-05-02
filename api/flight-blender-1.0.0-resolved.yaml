@@ -228,6 +228,41 @@ paths:
             * One or more parameters were missing or invalid.
             * The Identification Service Area information could not be parsed, or contains illegal data.
 
+  /flight_stream/set_signed_telemetry:
+    put: 
+      tags:
+      - signed-rid
+      summary: 'Add Signed Remote-ID observation(s)'
+      security: []
+      description:
+        "Submit data that is compliant with ASTM RemoteID from the vehicle into Blender, after submission, Flight Blender will \
+        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple flight states can be submitted at a given time. This endpoint does not require a token but the requests need to be signed else they will be rejected. "
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                observations:
+                  $ref: '#/components/schemas/FlightRIDData'
+
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoteIDDataProcessed'
+          description: Remote ID data successfully submitted and processed.
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: |-
+            * One or more parameters were missing or invalid.
+            * The Identification Service Area information could not be parsed, or contains illegal data.
+
   /rid/get_rid_data/{subscription_id}:
     get:
       summary: 'Get flight data compliant with network remote id given a subscription id'
