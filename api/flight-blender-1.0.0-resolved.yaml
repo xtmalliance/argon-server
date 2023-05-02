@@ -16,7 +16,7 @@ security:
       - 'blender.read'
   - AuthFromAuthorizationAuthority:
     - dss.read.identification_service_areas 
-    - dss.write.identification_service_areas s
+    - dss.write.identification_service_areas
 paths:
   /ping:
     get:
@@ -59,7 +59,7 @@ paths:
   /rid/capabilities:
     get:
       security:
-      - Authority:
+      - AuthFromPassport:
           - blender.read
       responses:
         '200':
@@ -284,7 +284,7 @@ paths:
     get:
       parameters:
         - name: view_port
-          in: path
+          in: query
           description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
           schema:
             type: string
@@ -333,8 +333,7 @@ paths:
         
   /rid/tests/{test_id}:
     parameters:
-      -
-        examples:
+      - examples:
           default:
             value: '2979bd18-7f06-441c-bda6-e82c841c35d6'
         name: test_id
@@ -342,7 +341,7 @@ paths:
           The ID of the test.
         schema:
           type: string
-        in: query
+        in: path
         required: true
     put:
       tags:
@@ -362,7 +361,7 @@ paths:
           description: Requested test was created successfully.
         '409':
           description: Test already exists.
-      operationId: createTest
+      operationId: CreateTest
       summary: Create test
       description: >-
         Request the creation of one or more logical flights based on injection of the provided test data.
@@ -370,12 +369,11 @@ paths:
         The host Service Provider's test data injector should modify as few fields as practical, and change modified fields as little as practical.
         The `injection_id` fields may not be modified.
       security:
-        - TestAuth:
+        - AuthFromAuthorizationAuthority:
             - rid.inject_test_data
   /rid/tests/{test_id}/{version}:
     parameters:
-      -
-        examples:
+      - examples:
           default:
             value: '2979bd18-7f06-441c-bda6-e82c841c35d6'
         name: test_id
@@ -383,15 +381,14 @@ paths:
           The ID of the test.
         schema:
           type: string
-        in: query
+        in: path
         required: true
-      -
-        name: version
+      - name: version
         description: >-
           Current version of the test.
         schema:
           type: string
-        in: query
+        in: path
         required: true
     delete:
       tags:
@@ -403,11 +400,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeleteTestResponse'
           description: Requested test was deleted successfully.
-      operationId: deleteTest
+      operationId: DeleteTest
       summary: Delete test
       description: Remove all injected test data associated with this test from the host Service Provider's system under test.
       security:
-        - TestAuth:
+        - AuthFromAuthorizationAuthority:
             - rid.inject_test_data
   /rid/display_data/{flight_id}:
     summary: A remote ID flight reported by a remote ID service provider.
@@ -471,7 +468,7 @@ paths:
   /scd/v1/clear_area_requests:
     post:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - utm.inject_test_data
 
       requestBody:
@@ -493,7 +490,7 @@ paths:
           description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
 
       summary: Clear area
-      operationId: clearArea
+      operationId: ClearArea
       description: >-
         This endpoint requests that the USS cancel and remove all flights in the specified area and is used in the SCD Qualifier tool.
       tags:
@@ -501,7 +498,7 @@ paths:
   /scd/v1/status:
     get:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - utm.inject_test_data
       responses:
         '200':
@@ -525,7 +522,7 @@ paths:
   /scd/v1/capabilities:
     get:
       security:
-      - Authority:
+      - AuthFromAuthorizationAuthority:
           - utm.inject_test_data
       responses:
         '200':
@@ -577,7 +574,7 @@ paths:
 
     put:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - utm.inject_test_data
 
       requestBody:
@@ -606,7 +603,7 @@ paths:
 
     delete:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - utm.inject_test_data
 
       responses:
@@ -622,7 +619,7 @@ paths:
           description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
 
       summary: Delete flight
-      operationId: deleteFlight
+      operationId: DeleteFlight
       description: >-
         This endpoint simulates the operator intention to cancel or end a flight operation.
 
@@ -642,7 +639,7 @@ paths:
       tags:        
         - uss
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - utm.strategic_coordination
       summary: Retrieve the specified operational intent details
       description: >-
@@ -703,7 +700,7 @@ paths:
       tags:
       - rid
       summary: Get RID flight details
-      operationId: searchFlights
+      operationId: GetRIDFlights
       responses:
         200:
           content:
@@ -881,7 +878,7 @@ paths:
     get:
       parameters:
         - name: view_port
-          in: path
+          in: query
           description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
           schema:
             type: string
@@ -935,7 +932,7 @@ paths:
     get:
       parameters:
         - name: view
-          in: path
+          in: query
           description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
           schema:
             type: string
@@ -1047,7 +1044,10 @@ paths:
         - flight-declarations
   /flight_stream/public_keys/:
     get:
-      operationId: Get all Public Keys
+      operationId: Get all Public Keys      
+      security:
+        - AuthFromPassport: [blender.read]
+
       description: 'List Authorized Public keys'
       parameters: []
       responses:
@@ -1063,6 +1063,8 @@ paths:
       - signed-rid
     post:
       operationId: Create a new all Public Key
+      security:
+        - AuthFromPassport: [ blender.write]
       description: 'Create a new Authorized Public key'
       parameters: []
       requestBody:
@@ -1088,6 +1090,8 @@ paths:
   /flight_stream/public_keys/{id}/:
     get:
       operationId: Get a single key
+      security:
+        - AuthFromPassport: [blender.read]
       description: 'Get a single Authorized Public key'
       parameters:
       - name: id
@@ -1108,6 +1112,8 @@ paths:
     put:
       operationId: Update public key details
       description: 'Update the Public Key URL for a key'
+      security:
+        - AuthFromPassport: [ blender.write]
       parameters:
       - name: id
         in: path
@@ -1138,6 +1144,8 @@ paths:
     delete:
       operationId: Remove Public Key
       description: 'Remove details of a public key in Blender'
+      security:
+        - AuthFromPassport: [blender.write]
       parameters:
       - name: id
         in: path
@@ -1589,7 +1597,7 @@ paths:
     get:
       operationId: GetStatus
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - geo-awareness.test
       responses:
         '200':
@@ -1622,7 +1630,7 @@ paths:
 
     put:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - geo-awareness.test
       requestBody:
         content:
@@ -1650,7 +1658,7 @@ paths:
 
     get:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - geo-awareness.test
       responses:
         '200':
@@ -1675,7 +1683,7 @@ paths:
 
     delete:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - geo-awareness.test
       responses:
         '200':
@@ -1700,7 +1708,7 @@ paths:
   /geo_fence_ops/geo_awareness/geozones/check:
     post:
       security:
-        - Authority:
+        - AuthFromAuthorizationAuthority:
             - geo-awareness.test
       requestBody:
         content:
@@ -2168,9 +2176,9 @@ components:
       description:
         Degrees of longitude east of the Prime Meridian, with reference
         to the WGS84 ellipsoid.
-      maximum: -180
+      maximum: 180
       exclusiveMaximum: false
-      minimum: 180
+      minimum: -180
       exclusiveMinimum: false
       type: number
       example: -118.456
@@ -2499,9 +2507,9 @@ components:
       properties:
         flights:
           description: Current information for set of discovered flights whose precise locations are known.
-
           type: array
-          $ref: '#/components/schemas/Flight'
+          items:
+            $ref: '#/components/schemas/Flight'
 
         clusters:
           description: >-
