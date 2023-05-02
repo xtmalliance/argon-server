@@ -752,24 +752,24 @@ paths:
         display providers to display basic aircraft activity near a user in real time.  All
         flights that have any recent positions (past [NetUasInAreaWindow] seconds)
         inside the requested view must be returned.
-    parameters:
-    - name: view
-      description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed
-        a diagonal length specified in the standard.  The view is the smallest box
-        bounded by the provided corner points.'
-      schema:
-        type: string
-        example: 29.97816,31.13296,29.98025,31.13535
-      in: query
-      required: true
-    - name: include_recent_positions
-      description: |-
-        If specified as true, include recent positions.  Otherwise, do not include recent positions.
+      parameters:
+      - name: view
+        description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed
+          a diagonal length specified in the standard.  The view is the smallest box
+          bounded by the provided corner points.'
+        schema:
+          type: string
+          example: 29.97816,31.13296,29.98025,31.13535
+        in: query
+        required: true
+      - name: include_recent_positions
+        description: |-
+          If specified as true, include recent positions.  Otherwise, do not include recent positions.
 
-        A display provider's first poll of this endpoint for a particular view will usually request recent positions while follow-up polls for that same view will usually not need to request recent positions.
-      schema:
-        type: boolean
-      in: query
+          A display provider's first poll of this endpoint for a particular view will usually request recent positions while follow-up polls for that same view will usually not need to request recent positions.
+        schema:
+          type: boolean
+        in: query
 
 
   /v1/uss/flights/{id}/details:
