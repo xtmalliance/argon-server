@@ -11,8 +11,8 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint,RIDFlightDetails, RIDCapabilitiesResponse
-from uss_operations.uss_data_definitions import FlightDetailsSuccessResponse, FlightDetailsNotFoundMessage
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint, RIDCapabilitiesResponse
+from uss_operations.uss_data_definitions import FlightDetailsNotFoundMessage
 
 import shapely.geometry
 import hashlib
