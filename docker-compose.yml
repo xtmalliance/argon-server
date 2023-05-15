@@ -1,52 +1,82 @@
 version: "3"
-services:  
+services:
   redis:
-    command: [ "redis-server", "/redis.conf" ]
+    command: ["redis-server", "/redis.conf"]
     image: "redis:latest"
-    expose:
-        - "6379"
+    ports:
+      - "6379:6379"
     volumes:
       - ./config/redis.conf:/redis.conf
     container_name: "redis"
 
+  rabbitmq3:
+    container_name: "rabbitmq"
+    image: rabbitmq:3.8-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq # use a volume to store the data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:15672"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      # AMQP protocol port
+      - "5672:5672"
+      # HTTP management UI
+      - "15672:15672"
+
   db:
     image: postgres
-    expose:
-      - "5432"
-    restart: unless-stopped        
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
     volumes:
       - db_data:/var/lib/postgresql/data
     env_file:
       - ".env"
 
-  web:    
+  web:
     env_file:
-      - ".env"      
-    build: . 
+      - ".env"
+    build: .
     image: openskiessh/flight-blender
     command: ./entrypoint.sh
+    restart: on-failure
     ports:
-        - "8000:8000"
+      - "8000:8000"
     depends_on:
-      - redis
-      - db      
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      rabbitmq3:
+        condition: service_healthy
+    links:
+      - rabbitmq3
     volumes:
       - .:/app
-      
+
   celery:
     container_name: flight-blender-worker
     image: openskiessh/flight-blender
+    restart: on-failure
     build:
-      context: "."        
+      context: "."
     env_file:
       - ".env"
     command: celery --app=flight_blender worker --loglevel=info
     volumes:
       - .:/app
     depends_on:
-      - redis
-  
-  
+      redis:
+        condition: service_started
+      rabbitmq3:
+        condition: service_healthy
+
 volumes:
   app:
   db_data:
+  rabbitmq:
