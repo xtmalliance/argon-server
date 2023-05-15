@@ -141,3 +141,6 @@ celerybeat-schedule.db
 # Ignore rtree indexes
 *.dat
 *.idx
+
+#vscode
+.vscode/*
