@@ -2033,6 +2033,9 @@ components:
           description: Email address of person submitting this declaration
           type: string
           format: email  
+        aircraft_id:
+          description: Id of the aircraft 
+          type: string          
         is_approved:
           description: Is the operation approved for flight?
           type: string
@@ -2044,6 +2047,10 @@ components:
           format: date-time
         end_datetime:
           description: The enddate for the query
+          type: string
+          format: date-time
+        latest_telemetry_datetime:
+          description: The the date time of the latest telemetry observation was sent
           type: string
           format: date-time
         flight_declaration_geojson:
@@ -2070,8 +2077,7 @@ components:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
         operational_intent:
           description: The operational intent for this flight declaration, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
-          $ref: '#/components/schemas/OperationalIntentDetails'
-            
+          $ref: '#/components/schemas/OperationalIntentDetails'            
         state:
           enum:
           - 0 
