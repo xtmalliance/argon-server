@@ -1,9 +1,13 @@
 ## This file checks the conformance of a operation per the AMC stated in the EU Conformance monitoring service 
 import logging
 import arrow
+from typing import List
+from shapely.geometry import Point, contains_xy
 from dotenv import load_dotenv, find_dotenv
 from common.database_operations import BlenderDatabaseReader
 from operator_conformance_notifications import OperationConformanceNotification
+from scd_operations.data_definitions import Point, LatLngPoint, Polygon, Volume4D
+from dacite import from_dict
 logger = logging.getLogger('django')
 load_dotenv(find_dotenv())
  
@@ -20,7 +24,7 @@ def is_time_between(begin_time, end_time, check_time=None):
 
 class BlenderConformanceOps():
         
-    def is_operation_conformant_via_telemetry(self, flight_declaration_id:str, aircraft_id:str) -> bool:
+    def is_operation_conformant_via_telemetry(self, flight_declaration_id:str, aircraft_id:str, telemetry_location: LatLngPoint) -> bool:
         """ This method performs the conformance sequence per AMC1 Article 13(1) as specified in the EU AMC / GM on U-Space regulation. Specifically, it checks this once a telemetry has been sent: 
          - C1 Check if flight authorization is granted
          - C2 Match telmetry from aircraft with the flight authorization
@@ -79,6 +83,39 @@ class BlenderConformanceOps():
             return False  
         
         # C6 check : Check if the aircraft is within the 4D volume 
+
+        # Construct the boundary of the current operation by getting the operational intent
+               
+        # TODO: Cache this so that it need not be done everytime
+        operational_intent = flight_declaration.operational_intent
+        all_volumes = operational_intent['volumes']
+
+        rid_location = Point(telemetry_location.lng, telemetry_location.lat)
+        all_v4ds: List[Volume4D] = []
+        for v in all_volumes:
+            v4d = from_dict(data_class=Volume4D, data=v)
+            all_v4ds.append(v4d)        
+
+            aircraft_bounds_conformant = contains_xy()
+
+        try: 
+            assert aircraft_altitude_conformant
+        except AssertionError as ae:             
+            aircraft_altitude_nonconformant_msg = "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the start / end time for an operation.".format(flight_declaration_id = flight_declaration_id)
+            
+            logging.error(aircraft_altitude_nonconformant_msg)
+            my_operation_notification.send_conformance_status_notification(message = aircraft_altitude_nonconformant_msg, level='error')
+            return False  
+          
+
+        try: 
+            assert aircraft_bounds_conformant
+        except AssertionError as ae:             
+            aircraft_bounds_nonconformant_msg = "The telemetry locatoin provided for operation {flight_declaration_id}, is not within the declared bounds for an operation.".format(flight_declaration_id = flight_declaration_id)
+            
+            logging.error(aircraft_bounds_nonconformant_msg)
+            my_operation_notification.send_conformance_status_notification(message = aircraft_bounds_nonconformant_msg, level='error')
+            return False  
 
 
         # C7 check Check if aircraft is not breaching any active Geofences
