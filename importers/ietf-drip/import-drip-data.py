@@ -38,6 +38,20 @@ class DRIP_UAS_Data(ctypes.Structure):
         ("OperatorAltitudeBaro", ctypes.c_double),
     ]
 
+class DRIP_Message_encoded(ctypes.Structure):
+    _fields_ = [
+        ("rawData", ctypes.c_uint8 * DRIP_MESSAGE_SIZE),
+    ]
+
+class DRIP_MessagePack_encoded(ctypes.Structure):
+    _fields_ = [
+        ('ProtoVersion', ctypes.c_uint8, 4),
+        ('MessageType', ctypes.c_uint8, 4),
+        ("SingleMessageSize", ctypes.c_uint8),
+        ("MsgPackSize", ctypes.c_uint8),
+        ("Messages", DRIP_Message_encoded * DRIP_PACK_MAX_MESSAGES),
+    ]
+
 if __name__ == '__main__':
 
     with open('data/rid-test-vectors', 'rb') as f:
