@@ -124,6 +124,72 @@ def decode_system(uas_data, raw_data):
 
     return DRIP_SUCCESS
 
+def decode_drone_id(uas_data, raw_data):
+    if not uas_data or not raw_data:
+        return DRIP_FAIL
+
+    message_size = len(raw_data)
+
+    if DRIP_MESSAGE_SIZE <= message_size:
+        msg_type = raw_data[0] & 0x0F
+        message_type_bytes = struct.pack('B', raw_data[0])
+        print(message_type_bytes.hex() + ':' +  str(msg_type))
+
+        if msg_type == DRIP_MESSAGE_BASIC_ID:
+            print("DRIP_MESSAGE_BASIC_ID")
+            # Decode basic ID message
+            decode_basic_id(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+
+        elif msg_type == DRIP_MESSAGE_LOCATION:
+            print("DRIP_MESSAGE_LOCATION")
+            # Decode location message
+            decode_location(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+
+        elif msg_type == DRIP_MESSAGE_AUTH:
+            print("DRIP_MESSAGE_AUTH")
+            # Decode authentication message
+            decode_authentication(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+
+        elif msg_type == DRIP_MESSAGE_SELF_ID:
+            print("DRIP_MESSAGE_SELF_ID")
+            # Decode self ID message
+            decode_self_id(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+
+        elif msg_type == DRIP_MESSAGE_SYSTEM:
+            print("DRIP_MESSAGE_SYSTEM")
+            # Decode system message
+            decode_system(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+
+        else:
+            return DRIP_FAIL
+
+    return DRIP_SUCCESS
+
+def decode_message_pack(uas_data, pack):
+    if not uas_data or not pack or pack.MessageType != DRIP_MESSAGETYPE_PACKED:
+        message_type_bytes = struct.pack('B', pack.MessageType)
+        print(message_type_bytes)
+        return DRIP_FAIL
+
+    if pack.SingleMessageSize != DRIP_MESSAGE_SIZE:
+        return DRIP_FAIL
+
+
+    for i in range(pack.MsgPackSize):
+        print("Raw Data:", ' '.join([hex(byte) for byte in pack.Messages[i].rawData[:DRIP_MESSAGE_SIZE]]))
+        decode_drone_id(uas_data, pack.Messages[i].rawData)
+
+    return DRIP_SUCCESS
+
+def decodeMessagePack(data):
+    uasData = DRIP_UAS_Data()
+    pack = DRIP_MessagePack_encoded()
+    ctypes.memmove(ctypes.addressof(pack), data, ctypes.sizeof(pack))
+    ret = decode_message_pack(uasData, pack)
+    print('status:' + str(ret))
+
+    return uasData
+
 if __name__ == '__main__':
 
     with open('data/rid-test-vectors', 'rb') as f:
