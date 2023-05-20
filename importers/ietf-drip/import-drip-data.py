@@ -52,6 +52,78 @@ class DRIP_MessagePack_encoded(ctypes.Structure):
         ("Messages", DRIP_Message_encoded * DRIP_PACK_MAX_MESSAGES),
     ]
 
+def decode_basic_id(uas_data, raw_data):
+    if not uas_data or not raw_data:
+        return DRIP_FAIL
+
+    if len(raw_data) != DRIP_MESSAGE_SIZE_BASIC_ID:
+        return DRIP_FAIL
+
+    uas_data.IDType = (raw_data[1] & 0x80) >> 7
+    uas_data.UAType = raw_data[1] & 0x7F
+    uas_data.OperatorLatitude = (raw_data[2] << 25) | (raw_data[3] << 17) | (raw_data[4] << 9) | (raw_data[5] << 1) | (raw_data[6] >> 7)
+    uas_data.OperatorLongitude = ((raw_data[6] & 0x7F) << 26) | (raw_data[7] << 18) | (raw_data[8] << 10) | (raw_data[9] << 2) | (raw_data[10] >> 6)
+
+    return DRIP_SUCCESS
+
+def decode_location(uas_data, raw_data):
+    if not uas_data or not raw_data:
+        return DRIP_FAIL
+
+    if len(raw_data) != DRIP_MESSAGE_SIZE_LOCATION:
+        return DRIP_FAIL
+
+    uas_data.Status = (raw_data[1] & 0x80) >> 7
+    uas_data.Direction = (raw_data[1] & 0x7F) * 3.14159 / 180
+    uas_data.SpeedHorizontal = raw_data[2]
+    uas_data.SpeedVertical = raw_data[3] - 64
+    uas_data.Latitude = ((raw_data[4] & 0x7F) << 24) | (raw_data[5] << 16) | (raw_data[6] << 8) | raw_data[7]
+    uas_data.Longitude = (raw_data[8] << 25) | (raw_data[9] << 17) | (raw_data[10] << 9) | (raw_data[11] << 1) | (raw_data[12] >> 7)
+    uas_data.AltitudeBaro = ((raw_data[12] & 0x7F) << 8) | raw_data[13]
+    uas_data.AltitudeGeo = (raw_data[14] << 8) | raw_data[15]
+
+    return DRIP_SUCCESS
+
+def decode_authentication(uas_data, raw_data):
+    if not uas_data or not raw_data:
+        return DRIP_FAIL
+
+    if len(raw_data) != DRIP_MESSAGE_SIZE_AUTH:
+        return DRIP_FAIL
+
+    uas_data.OperatorAltitudeGeo = (raw_data[1] << 8) | raw_data[2]
+    uas_data.OperatorAltitudeBaro = (raw_data[3] << 8) | raw_data[4]
+
+    return DRIP_SUCCESS
+
+
+def decode_self_id(uas_data, raw_data):
+    if not uas_data or not raw_data:
+        return DRIP_FAIL
+
+    if len(raw_data) != DRIP_MESSAGE_SIZE_SELF_ID:
+        return DRIP_FAIL
+
+    # TODO: Decode self ID message
+
+    return DRIP_SUCCESS
+
+
+def decode_system(uas_data, raw_data):
+    if not uas_data or not raw_data:
+        return DRIP_FAIL
+
+    if len(raw_data) != DRIP_MESSAGE_SIZE_SYSTEM:
+        return DRIP_FAIL
+
+    uas_data.OperatorLocationType = (raw_data[1] & 0x80) >> 7
+    uas_data.AreaCount = raw_data[1] & 0x7F
+    uas_data.AreaRadius = raw_data[2]
+    uas_data.AreaCeiling = raw_data[3]
+    uas_data.AreaFloor = raw_data[4]
+
+    return DRIP_SUCCESS
+
 if __name__ == '__main__':
 
     with open('data/rid-test-vectors', 'rb') as f:
