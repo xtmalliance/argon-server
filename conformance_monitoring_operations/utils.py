@@ -6,7 +6,8 @@ from shapely.geometry import Point, contains_xy
 from dotenv import load_dotenv, find_dotenv
 from common.database_operations import BlenderDatabaseReader
 from operator_conformance_notifications import OperationConformanceNotification
-from scd_operations.data_definitions import Point, LatLngPoint, Polygon, Volume4D
+from scd_operations.scd_data_definitions import Point, LatLngPoint, Polygon, Volume4D
+from conformance_monitoring_operations.data_definitions import PolygonAltitude
 from dacite import from_dict
 logger = logging.getLogger('django')
 load_dotenv(find_dotenv())
@@ -24,7 +25,7 @@ def is_time_between(begin_time, end_time, check_time=None):
 
 class BlenderConformanceOps():
         
-    def is_operation_conformant_via_telemetry(self, flight_declaration_id:str, aircraft_id:str, telemetry_location: LatLngPoint) -> bool:
+    def is_operation_conformant_via_telemetry(self, flight_declaration_id:str, aircraft_id:str, telemetry_location: LatLngPoint,altitude_m_wgs_84:float) -> bool:
         """ This method performs the conformance sequence per AMC1 Article 13(1) as specified in the EU AMC / GM on U-Space regulation. Specifically, it checks this once a telemetry has been sent: 
          - C1 Check if flight authorization is granted
          - C2 Match telmetry from aircraft with the flight authorization
@@ -89,14 +90,37 @@ class BlenderConformanceOps():
         # TODO: Cache this so that it need not be done everytime
         operational_intent = flight_declaration.operational_intent
         all_volumes = operational_intent['volumes']
+        # The provided telemetry location cast as a Shapely Point
 
-        rid_location = Point(telemetry_location.lng, telemetry_location.lat)
-        all_v4ds: List[Volume4D] = []
+        rid_location = Point(telemetry_location.lng, telemetry_location.lat)                
+        all_polygon_altitudes: List[PolygonAltitude] = []
+
         for v in all_volumes:
             v4d = from_dict(data_class=Volume4D, data=v)
-            all_v4ds.append(v4d)        
+            altitude_lower = v4d.altitude_lower.value
+            altitude_upper = v4d.altitude_upper.value
+            outline_polygon = v4d.volume.outline_polygon            
+            point_list = []            
+            for vertex in outline_polygon['vertices']:
+                p = Point(vertex['lng'], vertex['lat'])
+                point_list.append(p)
+            outline_polygon = Polygon([[p.x, p.y] for p in point_list])
+            pa = PolygonAltitude(polygon = outline_polygon, altitude_upper = altitude_upper, altitude_lower = altitude_lower)
+            all_polygon_altitudes.append(pa)        
 
-            aircraft_bounds_conformant = contains_xy()
+        rid_obs_within_all_volumes = []
+        for p in all_polygon_altitudes:            
+            is_within = rid_location.within(p)
+            rid_obs_within_all_volumes.append(is_within)
+            # If the aircraft RID is within the the polygon, check the altitude
+            if is_within: 
+                if altitude_lower <= altitude_m_wgs_84 <= altitude_upper:
+                    aircraft_altitude_conformant = True
+                else: 
+                    aircraft_altitude_conformant = False
+
+        aircraft_bounds_conformant = any(rid_obs_within_all_volumes) 
+
 
         try: 
             assert aircraft_altitude_conformant
@@ -106,7 +130,6 @@ class BlenderConformanceOps():
             logging.error(aircraft_altitude_nonconformant_msg)
             my_operation_notification.send_conformance_status_notification(message = aircraft_altitude_nonconformant_msg, level='error')
             return False  
-          
 
         try: 
             assert aircraft_bounds_conformant
