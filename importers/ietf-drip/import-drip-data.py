@@ -1,6 +1,7 @@
 # import codecs
 import binascii
 import struct
+import ctypes
 
 DRIP_MESSAGE_SIZE = 25
 DRIP_MESSAGE_SIZE_BASIC_ID = 25
@@ -192,7 +193,15 @@ def decodeMessagePack(data):
 
 if __name__ == '__main__':
 
-    with open('data/rid-test-vectors', 'rb') as f:
+    file_path = '/opt/rid-test-vectors'
+
+    with open(file_path) as file:
+        for line in file:
+            dri_bytes = bytes.fromhex(line)
+            print(dri_bytes)
+            msg = decodeMessagePack(dri_bytes)
+
+    '''with open('/opt/rid-test-vectors', 'rb') as f:
         hexdata = f.read(1)
     
     print('{0:08b}'.format(ord(hexdata)))
@@ -207,4 +216,4 @@ if __name__ == '__main__':
     # with open('data/rid-test-vectors', 'rb') as f:
     #     hexdata = f.read().hex()
     
-    # print(bytes.fromhex(hexdata).decode('utf-8'))
+    # print(bytes.fromhex(hexdata).decode('utf-8'))'''
