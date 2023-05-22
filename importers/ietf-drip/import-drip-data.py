@@ -32,7 +32,8 @@ DRIP_FAIL = -1
 DRIP_ALT_DIV = 0.5
 DRIP_ALT_ADDER = 1000
 DRIP_INV_TIMESTAMP = 0xFFFF
-DRIP_DEBUG = True
+DRIP_DEBUG = False
+DRIP_CUSTOM = True
 
 # Define the DRIP_MessageType enum
 class DRIP_MessageType(ctypes.c_int):
@@ -542,14 +543,6 @@ def decode_self_id(uas_data, raw_data):
     if len(raw_data) < DRIP_MESSAGE_SIZE_SELF_ID:
         return DRIP_FAIL
 
-    # Extract self ID data from raw_data and populate uas_data.SelfID
-    self_id_data = DRIP_SelfID_data()
-    ctypes.memmove(ctypes.addressof(self_id_data), raw_data, ctypes.sizeof(self_id_data))
-    uas_data.SelfID = self_id_data
-
-    # Mark self ID data as valid
-    uas_data.SelfIDValid = 1
-
     return DRIP_SUCCESS
 
 
@@ -560,28 +553,12 @@ def decode_system(uas_data, raw_data):
     if len(raw_data) < DRIP_MESSAGE_SIZE_SYSTEM:
         return DRIP_FAIL
 
-    # Extract system data from raw_data and populate uas_data.System
-    system_data = DRIP_System_data()
-    ctypes.memmove(ctypes.addressof(system_data), raw_data, ctypes.sizeof(system_data))
-    uas_data.System = system_data
-
-    # Mark system data as valid
-    uas_data.SystemValid = 1
-
     return DRIP_SUCCESS
 
 
 def decode_operatorid(uas_data, raw_data):
     if not uas_data or not raw_data:
         return DRIP_FAIL
-
-    # Extract operator ID data from raw_data and populate uas_data.OperatorID
-    operator_id_data = DRIP_OperatorID_data()
-    ctypes.memmove(ctypes.addressof(operator_id_data), raw_data, ctypes.sizeof(operator_id_data))
-    uas_data.OperatorID = ctypes.pointer(operator_id_data)
-
-    # Mark operator ID data as valid
-    uas_data.OperatorIDValid = 1
 
     return DRIP_SUCCESS
 
@@ -599,26 +576,31 @@ def decode_drone_id(uas_data, raw_data):
             print("DRIP_MESSAGE_BASIC_ID")
             # Decode basic ID message
             decode_basic_id(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+            print("*********************")
 
         elif msg_type == DRIP_MESSAGE_LOCATION:
             print("DRIP_MESSAGE_LOCATION")
             # Decode location message
             decode_location(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+            print("*********************")
 
         elif msg_type == DRIP_MESSAGE_AUTH:
             print("DRIP_MESSAGE_AUTH")
             # Decode authentication message
             decode_authentication(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+            print("*********************")
 
         elif msg_type == DRIP_MESSAGE_SELF_ID:
             print("DRIP_MESSAGE_SELF_ID")
             # Decode self ID message
             decode_self_id(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+            print("*********************")
 
         elif msg_type == DRIP_MESSAGE_SYSTEM:
             print("DRIP_MESSAGE_SYSTEM")
             # Decode system message
             decode_system(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+            print("*********************")
 
         else:
             return DRIP_FAIL
@@ -711,6 +693,8 @@ if __name__ == '__main__':
     with open(file_path) as file:
         for line in file:
             dri_bytes = bytes.fromhex(line)
-            msg = decodeMessagePack(dri_bytes)
-            #print_uas_data(msg)
+            if DRIP_CUSTOM:
+                msg = decodeMessagePack(dri_bytes[1:])
+            else:
+                msg = decodeMessagePack(dri_bytes)
 
