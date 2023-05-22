@@ -39,8 +39,7 @@ class BlenderConformanceOps():
         my_database_reader = BlenderDatabaseReader()
         now = arrow.now()        
 
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= flight_declaration_id)
-        
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= flight_declaration_id)        
         flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
         # C1 Check 
         try: 
@@ -121,7 +120,6 @@ class BlenderConformanceOps():
 
         aircraft_bounds_conformant = any(rid_obs_within_all_volumes) 
 
-
         try: 
             assert aircraft_altitude_conformant
         except AssertionError as ae:             
@@ -134,7 +132,7 @@ class BlenderConformanceOps():
         try: 
             assert aircraft_bounds_conformant
         except AssertionError as ae:             
-            aircraft_bounds_nonconformant_msg = "The telemetry locatoin provided for operation {flight_declaration_id}, is not within the declared bounds for an operation.".format(flight_declaration_id = flight_declaration_id)
+            aircraft_bounds_nonconformant_msg = "The telemetry location provided for operation {flight_declaration_id}, is not within the declared bounds for an operation.".format(flight_declaration_id = flight_declaration_id)
             
             logging.error(aircraft_bounds_nonconformant_msg)
             my_operation_notification.send_conformance_status_notification(message = aircraft_bounds_nonconformant_msg, level='error')
@@ -146,15 +144,54 @@ class BlenderConformanceOps():
 
         return True
 
-    def check_flight_authorization_conformance(self, operation_id: str) -> bool:  
+    def check_flight_authorization_conformance(self, flight_declaration_id: str) -> bool:  
         """ This method checks the conformance of a flight authorization independent of telemetry observations being sent:            
             C8 Check if telemetry is being sent
-            C9 Has not ended and the time limit of the flight authorization has passed
+            C9 Check operation state that it not ended and the time limit of the flight authorization has passed
         """
 
+        my_database_reader = BlenderDatabaseReader()
+        now = arrow.now()        
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= flight_declaration_id)        
+        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
+        # Flight Operation and Flight Authorization exists, create a notifications helper
+        my_operation_notification = OperationConformanceNotification(flight_declaration_id=flight_declaration_id)
+
+        # C8 Check 
+        operation_start_time = flight_declaration.start_datetime
+        operation_end_time = flight_declaration.end_datetime
+        # The time the most recent telemetry was sent
+        latest_telemetry_datetime = flight_declaration.latest_telemetry_datetime
+
+        # Check the current time is within the start / end date time +/- 15 seconds TODO: trim this window as it is to broad
+        fifteen_seconds_before_now = now.shift(seconds = -15)
+        fifteen_seconds_after_now = now.shift(seconds = 15)
+
+        # Check if the operation us supposed to start 
+        if now >= operation_start_time and now <= operation_end_time:                    
+            # C9 state check             
+            allowed_states = ['Activated', 'Nonconforming', 'Contingent']
+            if flight_declaration.state not in allowed_states:
+                flight_state_not_conformant = "The state for operation {flight_declaration_id}, has not been is not one of 'Activated', 'Nonconforming' or 'Contingent' ".format(flight_declaration_id = flight_declaration_id)
+                
+                logging.error(flight_state_not_conformant)
+                my_operation_notification.send_conformance_status_notification(message = flight_state_not_conformant, level='error')
+
+                return False
+                                
+            # C9 state check 
+
+            # Operation is supposed to start check if telemetry is bieng submitted (within the last minute)
+            if fifteen_seconds_before_now <= latest_telemetry_datetime <= fifteen_seconds_after_now:
+                telemetry_not_being_received_error_msg = "The telemetry for operation {flight_declaration_id}, has not been received ".format(flight_declaration_id = flight_declaration_id)
+                
+                logging.error(telemetry_not_being_received_error_msg)
+                my_operation_notification.send_conformance_status_notification(message = telemetry_not_being_received_error_msg, level='error')
+                return False  
 
 
-        raise NotImplementedError
+
+        return True
 
     
     
