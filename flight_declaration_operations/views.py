@@ -7,13 +7,15 @@ from rest_framework.decorators import api_view
 from typing import List
 from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
+
 from dataclasses import asdict
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
 from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from shapely.geometry import shape
 from .data_definitions import FlightDeclarationRequest, Altitude, FlightDeclarationCreateResponse
-from rest_framework import mixins, generics
+from rest_framework import mixins, generics, status
+from rest_framework.response import Response
 from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
@@ -97,7 +99,6 @@ def set_flight_declaration(request):
     default_state = 1 # Default state is Acccepted
 
     flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
-
 
     my_operational_intent_converter = OperationalIntentsConverter()
         
@@ -186,6 +187,17 @@ class FlightDeclarationStateUpdate(
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
+    # def partial_update(self, request, *args, **kwargs):
+    #     instance = self.queryset.get(pk=kwargs.get('pk'))
+    #     instance.body = request.data.get("body")
+    #     if instance.body:
+    #         instance.visible = True
+    #     instance.save()
+    #     serializer = self.get_serializer(instance=instance, data=request.data, partial=True)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class FlightDeclarationDetail(mixins.RetrieveModelMixin, 
