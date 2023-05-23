@@ -508,6 +508,8 @@ def decode_location(uas_data, raw_data):
     TSAccuracy_bytes = struct.unpack("<B", TSAccuracy_bytes)[0]
     uas_data.Location.TSAccuracy = decodeSpeedAccuracy(TSAccuracy_bytes & 0xF)
 
+    uas_data.LocationValid = 1
+
     # Print decoded fields
     print("Status:", uas_data.Location.Status.value)
     print("HeightType:", uas_data.Location.HeightType.value)
@@ -574,6 +576,7 @@ def decode_system(uas_data, raw_data):
     uas_data.System.OperatorAltitudeGeo = (int.from_bytes(raw_bytes[18:20], byteorder='little') * DRIP_ALT_DIV) - DRIP_ALT_ADDER
     uas_data.System.Timestamp = int.from_bytes(raw_bytes[20:24], byteorder='little')
 
+    uas_data.SystemValid = 1
 
     # Print the decoded values
     print(f"Operator Location Type: {uas_data.System.OperatorLocationType.value}")
@@ -595,6 +598,19 @@ def decode_system(uas_data, raw_data):
 def decode_operatorid(uas_data, raw_data):
     if not uas_data or not raw_data:
         return DRIP_FAIL
+
+    # Convert raw_data to bytes
+    raw_bytes = bytes(raw_data)
+
+    uas_data.OperatorID.OperatorIdType = raw_bytes[1]
+    uas_data.OperatorID.OperatorId = raw_data[2:22]
+
+    # Set BasicID validity
+    uas_data.OperatorID.OperatorIDValid = 1
+
+    # Print the decoded values
+    print("OperatorIdType:", uas_data.OperatorID.OperatorIdType.value)
+    print("OperatorId:", uas_data.OperatorID.OperatorId)
 
     return DRIP_SUCCESS
 
@@ -636,6 +652,12 @@ def decode_drone_id(uas_data, raw_data):
             print("DRIP_MESSAGE_SYSTEM")
             # Decode system message
             decode_system(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
+            print("*********************")
+
+        elif msg_type == DRIP_MESSAGETYPE_OPERATOR_ID:
+            print("DRIP_MESSAGE_OPERATOR_ID")
+            # Decode operator id message
+            decode_operatorid(uas_data, raw_data[:DRIP_MESSAGE_SIZE])
             print("*********************")
 
         else:
