@@ -248,7 +248,8 @@ class DRIP_System_data(Structure):
         ("AreaFloor", c_float),
         ("CategoryEU", c_uint8),
         ("ClassEU", DRIP_category_EU_t),
-        ("OperatorAltitudeGeo", c_float)
+        ("OperatorAltitudeGeo", c_float),
+        ("Timestamp", c_uint16)
     ]
 
 class DRIP_operatorIdType_t(ctypes.c_int):
@@ -552,6 +553,41 @@ def decode_system(uas_data, raw_data):
 
     if len(raw_data) < DRIP_MESSAGE_SIZE_SYSTEM:
         return DRIP_FAIL
+
+    # Convert raw_data to bytes
+    raw_bytes = bytes(raw_data)
+
+    uas_data.System.OperatorLocationType = raw_bytes[1] & 0x03
+    uas_data.System.ClassificationType = (raw_bytes[1] >> 2) & 0x07
+
+    uas_data.System.OperatorLatitude = (int.from_bytes(raw_bytes[2:6], byteorder='little', signed=True))/10000000.0
+    uas_data.System.OperatorLongitude = (int.from_bytes(raw_bytes[6:10], byteorder='little', signed=True))/10000000.0
+
+    uas_data.System.AreaCount = int.from_bytes(raw_bytes[10:12], byteorder='little')
+    uas_data.System.AreaRadius = raw_bytes[12] * 10
+    uas_data.System.AreaCeiling = (int.from_bytes(raw_bytes[13:15], byteorder='little') * DRIP_ALT_DIV) - DRIP_ALT_ADDER
+    uas_data.System.AreaFloor = (int.from_bytes(raw_bytes[15:17], byteorder='little') * DRIP_ALT_DIV) - DRIP_ALT_ADDER
+
+    uas_data.System.ClassEU = raw_bytes[17] & 0x0F
+    uas_data.System.CategoryEU = (raw_bytes[17] >> 4) & 0x0F
+
+    uas_data.System.OperatorAltitudeGeo = (int.from_bytes(raw_bytes[18:20], byteorder='little') * DRIP_ALT_DIV) - DRIP_ALT_ADDER
+    uas_data.System.Timestamp = int.from_bytes(raw_bytes[20:24], byteorder='little')
+
+
+    # Print the decoded values
+    print(f"Operator Location Type: {uas_data.System.OperatorLocationType.value}")
+    print(f"Classification Type: {uas_data.System.ClassificationType.value}")
+    print(f"Operator Latitude: {uas_data.System.OperatorLatitude}")
+    print(f"Operator Longitude: {uas_data.System.OperatorLongitude}")
+    print(f"Area Count: {uas_data.System.AreaCount}")
+    print(f"Area Radius: {uas_data.System.AreaRadius}")
+    print(f"Area Ceiling: {uas_data.System.AreaCeiling}")
+    print(f"Area Floor: {uas_data.System.AreaFloor}")
+    print(f"Class EU: {uas_data.System.ClassEU.value}")
+    print(f"Category EU: {uas_data.System.CategoryEU}")
+    print(f"Operator Altitude Geo: {uas_data.System.OperatorAltitudeGeo}")
+    print(f"Timestamp: {uas_data.System.Timestamp}")
 
     return DRIP_SUCCESS
 
