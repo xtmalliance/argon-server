@@ -11,6 +11,8 @@ DRIP_ID_SIZE = 20
 DRIP_AUTH_MAX_PAGES = 16
 DRIP_AUTH_PAGE_ZERO_DATA_SIZE = 17
 DRIP_AUTH_PAGE_NONZERO_DATA_SIZE = 23
+MAX_AUTH_LENGTH =(DRIP_AUTH_PAGE_ZERO_DATA_SIZE + \
+                         DRIP_AUTH_PAGE_NONZERO_DATA_SIZE * (DRIP_AUTH_MAX_PAGES - 1))
 DRIP_STR_SIZE = 23
 DRIP_MESSAGE_SIZE = 25
 DRIP_MESSAGE_SIZE_BASIC_ID = 25
@@ -180,16 +182,20 @@ class DRIP_Auth_encoded_page_zero(ctypes.Structure):
         ("MessageType", ctypes.c_uint8, 4),
         ("DataPage", ctypes.c_uint8, 4),
         ("AuthType", ctypes.c_uint8, 4),
-        ("LastPageIndex", ctypes.c_uint8),
-        ("Length", ctypes.c_uint8),
-        ("Timestamp", ctypes.c_uint32),
-        ("AuthData", ctypes.c_uint8 * DRIP_AUTH_PAGE_ZERO_DATA_SIZE)
+        ("LastPageIndex", c_uint8),
+        ("Length", c_uint8),
+        ("Timestamp", c_uint32),
+        ("AuthData", c_uint8 * DRIP_AUTH_PAGE_ZERO_DATA_SIZE)
     ]
 
 class DRIP_Auth_encoded_page_non_zero(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
-        # Define the fields for page_non_zero
+        ("ProtoVersion", ctypes.c_uint8, 4),
+        ("MessageType", ctypes.c_uint8, 4),
+        ("DataPage", ctypes.c_uint8, 4),
+        ("AuthType", ctypes.c_uint8, 4),
+        ("AuthData", c_uint8 * DRIP_AUTH_PAGE_NONZERO_DATA_SIZE)
     ]
 
 class DRIP_Auth_encoded(ctypes.Union):
@@ -266,7 +272,7 @@ class DRIP_UAS_Data(Structure):
     _fields_ = [
         ("BasicID", DRIP_BasicID_data),
         ("Location", DRIP_Location_data),
-        ("Auth", DRIP_Auth_data),
+        ("Auth", DRIP_Auth_data * DRIP_AUTH_MAX_PAGES),
         ("SelfID", DRIP_SelfID_data),
         ("System", DRIP_System_data),  # Use DRIP_System_Data structure
         ("OperatorID", c_void_p),
@@ -530,11 +536,74 @@ def decode_location(uas_data, raw_data):
 
     return DRIP_SUCCESS
 
+def intInRange(value, min_value, max_value):
+    """
+    Checks if the given value is within the specified range.
+    Returns True if the value is within the range, False otherwise.
+    """
+    return min_value <= value <= max_value
+
+def printAuthData(uasData, pageNum):
+    authData = uasData.Auth[pageNum].AuthData
+    print("AuthData (hex):", end=" ")
+    for element in authData:
+        print(hex(element), end=" ")
+    print()  # Print a newline at the end
+
+def decodeAuthMessage(uasData, inEncoded, pageNum):
+    if inEncoded.page_zero.DataPage == 0:
+        if inEncoded.page_zero.LastPageIndex >= DRIP_AUTH_MAX_PAGES:
+            return DRIP_FAIL
+
+        # #if (MAX_AUTH_LENGTH < UINT8_MAX)
+        if inEncoded.page_zero.Length > MAX_AUTH_LENGTH:
+            return DRIP_FAIL
+
+        len = DRIP_AUTH_PAGE_ZERO_DATA_SIZE + \
+              inEncoded.page_zero.LastPageIndex * DRIP_AUTH_PAGE_NONZERO_DATA_SIZE
+        if len < inEncoded.page_zero.Length:
+            return DRIP_FAIL
+
+    uasData.Auth.AuthType = inEncoded.page_zero.AuthType
+    uasData.Auth.DataPage = inEncoded.page_zero.DataPage
+
+    if inEncoded.page_zero.DataPage == 0:
+        uasData.Auth.LastPageIndex = inEncoded.page_zero.LastPageIndex
+        uasData.Auth.Length = inEncoded.page_zero.Length
+        uasData.Auth.Timestamp = inEncoded.page_zero.Timestamp
+        ctypes.memmove(ctypes.addressof(uasData.Auth[pageNum].AuthData), inEncoded.page_zero.AuthData, DRIP_AUTH_PAGE_ZERO_DATA_SIZE)
+    else:
+        ctypes.memmove(ctypes.addressof(uasData.Auth[pageNum].AuthData), inEncoded.page_non_zero.AuthData, DRIP_AUTH_PAGE_NONZERO_DATA_SIZE)
+
+    printAuthData(uasData, pageNum)
+    return DRIP_SUCCESS
+
+def getAuthPageNum(inEncoded):
+    if not inEncoded  or \
+            inEncoded.page_zero.MessageType != DRIP_MESSAGE_AUTH or \
+            not intInRange(inEncoded.page_zero.AuthType, 0, 15) or \
+            not intInRange(inEncoded.page_zero.DataPage, 0, DRIP_AUTH_MAX_PAGES - 1):
+        return DRIP_FAIL
+
+    return inEncoded.page_zero.DataPage
+
 def decode_authentication(uas_data, raw_data):
     if not uas_data or not raw_data:
         return DRIP_FAIL
 
     if len(raw_data) < DRIP_MESSAGE_SIZE_AUTH:
+        return DRIP_FAIL
+
+    #DRIP_Auth_encoded *auth = (DRIP_Auth_encoded *) msgData;
+    auth_encoded = DRIP_Auth_encoded()
+    ctypes.memmove(ctypes.addressof(auth_encoded), bytes(raw_data), ctypes.sizeof(auth_encoded))
+
+    page = getAuthPageNum(auth_encoded)
+    print('AuthPage:' + str(page))
+
+    if decodeAuthMessage(uas_data, auth_encoded, page) == DRIP_SUCCESS:
+        uas_data.AuthValid[page] = 1
+    else:
         return DRIP_FAIL
 
     return DRIP_SUCCESS
@@ -753,6 +822,7 @@ if __name__ == '__main__':
             dri_bytes = bytes.fromhex(line)
             if DRIP_CUSTOM:
                 msg = decodeMessagePack(dri_bytes[1:])
+                print("++++++++++++++++++++++++++++++++++++++++")
             else:
                 msg = decodeMessagePack(dri_bytes)
 
