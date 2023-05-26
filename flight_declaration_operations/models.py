@@ -42,7 +42,7 @@ class FlightDeclaration(models.Model):
 class FlightAuthorization(models.Model):   
     """ This object hold the associated """ 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    declaration = models.OneToOneField(FlightDeclaration)
+    declaration = models.OneToOneField(FlightDeclaration, on_delete= models.CASCADE)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
