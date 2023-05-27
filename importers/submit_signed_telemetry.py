@@ -80,11 +80,8 @@ class BlenderUploader():
                 signed_r = requests.Request(method= 'PUT', url='http://localhost:8000/flight_stream/set_signed_telemetry', json=payload, headers= headers)
                 signed_r = signed_r.prepare()
                 signed_r.headers["Content-Digest"] = str(http_sfv.Dictionary({"sha-256": hashlib.sha256(signed_r.body).digest()}))
-                
-                signer = HTTPMessageSigner(signature_algorithm=algorithms.RSA_PSS_SHA512, key_resolver=MyHTTPSignatureKeyResolver())
-                
-                signer.sign(signed_r, created=now, label = "sig-b21", key_id="test-key-rsa-pss",covered_component_ids=(), nonce="b3k2pp5k7z-50gnwp.yemd", include_alg=False)
-                
+                signer = HTTPMessageSigner(signature_algorithm=algorithms.RSA_PSS_SHA512, key_resolver=MyHTTPSignatureKeyResolver())                
+                signer.sign(signed_r, created=now, label = "sig-b21", key_id="test-key-rsa-pss",covered_component_ids=(), nonce="b3k2pp5k7z-50gnwp.yemd", include_alg=False)                
                 response = s.send(signed_r)
                         
                 
