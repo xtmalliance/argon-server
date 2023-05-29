@@ -42,7 +42,7 @@ services:
     env_file:
       - ".env"
     build: .
-    # image: openskiessh/flight-blender
+    image: openskiessh/flight-blender
     command: ./entrypoint.sh
     restart: on-failure
     ports:
@@ -61,7 +61,7 @@ services:
 
   celery:
     container_name: flight-blender-worker
-    image: flight-blender-web
+    image: openskiessh/flight-blender
     restart: on-failure
     build:
       context: "."
