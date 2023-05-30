@@ -67,7 +67,7 @@ services:
       context: "."
     env_file:
       - ".env"
-    command: celery --app=flight_blender worker --loglevel=info
+    command: celery --app=flight_blender worker --loglevel=info --concurrency 2
     volumes:
       - .:/app
     depends_on:
