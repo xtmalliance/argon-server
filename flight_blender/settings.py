@@ -157,6 +157,14 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 CELERY_RESULT_BACKEND = BROKER_URL
 
+CELERYBEAT_SCHEDULE = {
+    'check-flight-conformance': {
+        'task': 'check_flight_conformance',
+        # Every 20 secionds
+        'schedule':  timedelta(seconds=20)
+    }, 
+    
+}
 
 # DataFlair #Logging Information
 LOGGING = {

@@ -26,7 +26,8 @@ def is_time_between(begin_time, end_time, check_time=None):
 class BlenderConformanceOps():
         
     def is_operation_conformant_via_telemetry(self, flight_declaration_id:str, aircraft_id:str, telemetry_location: LatLngPoint,altitude_m_wgs_84:float) -> bool:
-        """ This method performs the conformance sequence per AMC1 Article 13(1) as specified in the EU AMC / GM on U-Space regulation. Specifically, it checks this once a telemetry has been sent: 
+        """ This method performs the conformance sequence per AMC1 Article 13(1) as specified in the EU AMC / GM on U-Space regulation. 
+        This method is called every time a telemetry has been sent into Flight Blender. Specifically, it checks this once a telemetry has been sent: 
          - C1 Check if flight authorization is granted
          - C2 Match telmetry from aircraft with the flight authorization
          - C3 Determine whether the aircraft is subject to an accepted and activated flight authorization
