@@ -28,7 +28,7 @@ def check_flight_conformance():
 
     my_database_reader = BlenderDatabaseReader()
     now = arrow.now().isoformat()
-    relevant_flight_declarations = my_database_reader.get_relevant_flight_declaration_ids(now = now)  
+    relevant_flight_declarations = my_database_reader.get_current_flight_declaration_ids(now = now)  
     
     for relevant_flight_declaration in relevant_flight_declarations:     
         non_telemetry_conformance = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=relevant_flight_declaration)

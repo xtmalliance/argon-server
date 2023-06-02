@@ -3,10 +3,11 @@ from typing import Tuple
 from datetime import datetime
 from uuid import uuid4
 import arrow
+import now
 
 class BlenderDatabaseReader():
     """
-    A class to unify read and write operations to the database. Eventually caching etc. can be added via this file
+    A file to unify read and write operations to the database. Eventually caching etc. can be added via this file
     """
 
     def get_flight_declaration_by_id(self, flight_declaration_id:str) ->Tuple[None, FlightDeclaration]:        
@@ -26,10 +27,24 @@ class BlenderDatabaseReader():
         except FlightAuthorization.DoesNotExist: 
             return None
 
-    def get_relevant_flight_declaration_ids(self, now:str ) ->Tuple[None, uuid4]:  
+    def get_current_flight_declaration_ids(self, now:str ) ->Tuple[None, uuid4]:  
+        ''' This method gets flight operation ids that are active in the system'''
         n = arrow.get(now)
         two_minutes_before_now = n.shift(seconds = -120).isoformat()
         two_minutes_after_now = n.shift(seconds = 120).isoformat()          
         relevant_ids =  FlightDeclaration.objects.filter(start_datetime__lte = two_minutes_before_now, end_datetime__gte = two_minutes_after_now).values_list('id', flat=True)        
         return relevant_ids
 
+
+
+class BlenderDatabaseWriter():    
+
+    def update_telemetry_timestamp(self, flight_declaration_id:str) ->bool:        
+        now = arrow.now().isoformat()
+        try:
+            flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
+            flight_declaration.latest_telemetry_datetime = now
+            flight_declaration.save()
+            return True
+        except FlightDeclaration.DoesNotExist: 
+            return False

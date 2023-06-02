@@ -87,8 +87,7 @@ class BlenderTelemetryValidator():
         else: 
             uas_id = UASID(serial_number="",
             registration_id = "", utm_id ="")
-        if 'operator_location' in rid_flight_details.keys():
-            
+        if 'operator_location' in rid_flight_details.keys():            
             if 'position' in rid_flight_details['operator_location']:
                 o_location_position = rid_flight_details['operator_location']['position']
                 operator_position = LatLngPoint(lat = o_location_position['lat'], lng =  o_location_position['lng'])
