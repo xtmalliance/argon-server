@@ -5,6 +5,7 @@ from flight_blender.celery import app
 from os import environ as env
 from common.database_operations import BlenderDatabaseReader
 import arrow
+from datetime import datetime
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
  
@@ -26,11 +27,10 @@ def check_flight_conformance():
     # Get the 
 
     my_database_reader = BlenderDatabaseReader()
-    now = arrow.now()
-    relevant_flight_declarations = my_database_reader.get_relevant_flight_declaration_ids(datetime = now)   
-
+    now = arrow.now().isoformat()
+    relevant_flight_declarations = my_database_reader.get_relevant_flight_declaration_ids(now = now)  
+    
     for relevant_flight_declaration in relevant_flight_declarations:     
-        my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=relevant_flight_declaration)
+        non_telemetry_conformance = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=relevant_flight_declaration)
+        
 
-
-    raise NotImplementedError

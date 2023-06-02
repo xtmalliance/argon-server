@@ -6,7 +6,6 @@ from notification_operations.notification_helper import NotificationFactory
 from notification_operations.data_definitions import FlightDeclarationUpdateMessage
 from os import environ as env
 import arrow
-
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())

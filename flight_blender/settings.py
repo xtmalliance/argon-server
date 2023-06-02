@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'scd_operations',
     'uss_operations',
     'flight_feed_operations',
+    'conformance_monitoring_operations',
     'rid_operations'
 ]
 

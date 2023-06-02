@@ -2,6 +2,7 @@ from flight_declaration_operations.models import FlightAuthorization, FlightDecl
 from typing import Tuple
 from datetime import datetime
 from uuid import uuid4
+import arrow
 
 class BlenderDatabaseReader():
     """
@@ -18,15 +19,17 @@ class BlenderDatabaseReader():
     def get_flight_authorization_by_flight_declaration(self, flight_declaration_id:str) ->Tuple[None, FlightAuthorization]:        
         try:
             flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
-            flight_authorization = FlightAuthorization.objects.get(flight_declaration = flight_declaration)
+            flight_authorization = FlightAuthorization.objects.get(declaration = flight_declaration)
             return flight_authorization
         except FlightDeclaration.DoesNotExist: 
             return None
         except FlightAuthorization.DoesNotExist: 
             return None
 
-    def get_relevant_flight_declaration_ids(self, now:datetime) ->Tuple[None, uuid4]:        
-        two_minutes_before_now = now.shift(seconds = -120)
-        two_minutes_after_now = now.shift(seconds = 120)
-        return FlightDeclaration.objects.filter(start_datetime__gte = two_minutes_before_now, end_datetime__let = two_minutes_after_now).values_list('id', flat=True)
+    def get_relevant_flight_declaration_ids(self, now:str ) ->Tuple[None, uuid4]:  
+        n = arrow.get(now)
+        two_minutes_before_now = n.shift(seconds = -120).isoformat()
+        two_minutes_after_now = n.shift(seconds = 120).isoformat()          
+        relevant_ids =  FlightDeclaration.objects.filter(start_datetime__lte = two_minutes_before_now, end_datetime__gte = two_minutes_after_now).values_list('id', flat=True)        
+        return relevant_ids
 

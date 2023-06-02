@@ -2,18 +2,17 @@ from django.db import models
 import uuid
 from datetime import datetime
 from django.utils.translation import gettext_lazy as _
+from common.data_definitions import OPERATION_STATES, OPERATION_TYPES
 
 class FlightDeclaration(models.Model):
     ''' A flight operation object for permission '''     
-    OPERATION_STATE = ((0, _('Not Submitted')),(1, _('Accepted')),(2, _('Activated')),(3,_('Nonconforming')),(4,_('Contingent')),(5,_('Ended')),)
-    OPERATION_TYPES = ((1, _('VLOS')),(2, _('BVLOS')),(3,_('CREWED')),)        
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     operational_intent = models.TextField()
     flight_declaration_raw_geojson = models.TextField(null=True, blank=True)
     type_of_operation = models.IntegerField(choices=OPERATION_TYPES, default=1, help_text="At the moment, only VLOS and BVLOS operations are supported, for other types of operations, please issue a pull-request")
     bounds = models.CharField(max_length = 140)
     aircraft_id = models.CharField(max_length=256, default='000', help_text="Specify the ID of the aircraft for this declaration")    
-    state = models.IntegerField(choices=OPERATION_STATE, default=0, help_text="Set the state of operation")
+    state = models.IntegerField(choices=OPERATION_STATES, default=0, help_text="Set the state of operation")
 
     originating_party = models.CharField(max_length=100, help_text="Set the party originating this flight, you can add details e.g. Aerobridge Flight 105", default="Flight Blender Default")
 
