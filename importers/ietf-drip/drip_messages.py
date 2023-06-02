@@ -1,42 +1,133 @@
+"""
+drip_messages.py - DRIP Message Definitions
+
+This module defines the data structures and constants for DRIP (Drone Remote ID Protocol) messages.
+
+Module Contents:
+- DRIP Message Types
+- DRIP Protocol Versions
+- DRIP String Sizes
+- DRIP Data Structures
+
+Usage:
+Import this module to access the DRIP message definitions and use them in your code.
+
+Example:
+import drip_messages as common
+
+# Access the DRIP message types
+message_type = common.DRIP_MessageType.DRIP_MESSAGE_TYPE_SELF_ID
+
+# Access the DRIP protocol versions
+protocol_version = common.DRIP_ProtocolVersion.DRIP_PROTO_VERSION_1
+
+# Access the DRIP string sizes
+string_size = common.DRIP_STR_SIZE
+
+# Access the DRIP data structures
+uas_data = common.UAS_Data()
+uas_data.SelfID.DescType = common.DRIP_DescType.DRIP_DESC_TYPE_STANDARD
+uas_data.SelfID.Desc = "My UAS"
+
+"""
 from ctypes import Structure, c_uint8, c_uint16, c_uint32, c_char, c_float, c_double, c_void_p, sizeof, POINTER
 import struct
 import ctypes
 
-# Define constants
-DRIP_BASIC_ID_MAX_MESSAGES = 2
-DRIP_AUTH_MAX_PAGES = 16
+# Size constants for DRIP messages
 DRIP_ID_SIZE = 20
+"""Size of DRIP ID"""
+
+DRIP_STR_SIZE = 23
+"""Size of DRIP string"""
+
+DRIP_MESSAGE_SIZE = 25
+"""Size of DRIP message"""
+
+DRIP_MESSAGE_SIZE_BASIC_ID = 25
+"""Size of DRIP message for basic ID"""
+
+DRIP_MESSAGE_SIZE_LOCATION = 16
+"""Size of DRIP message for location"""
+
+DRIP_MESSAGE_SIZE_AUTH = 22
+"""Size of DRIP message for authentication"""
+
+DRIP_MESSAGE_SIZE_SELF_ID = 23
+"""Size of DRIP message for self ID"""
+
+DRIP_MESSAGE_SIZE_SYSTEM = 14
+"""Size of DRIP message for system"""
+
+DRIP_MESSAGE_BASIC_ID = 0x0
+"""DRIP message type for basic ID"""
+
+DRIP_MESSAGE_LOCATION = 0x1
+"""DRIP message type for location"""
+
+DRIP_MESSAGE_AUTH = 0x2
+"""DRIP message type for authentication"""
+
+DRIP_MESSAGE_SELF_ID = 0x3
+"""DRIP message type for self ID"""
+
+DRIP_MESSAGE_SYSTEM = 0x4
+"""DRIP message type for system"""
+
+DRIP_MESSAGETYPE_OPERATOR_ID = 0x5
+"""DRIP message type for operator ID"""
+
+DRIP_MESSAGETYPE_PACKED = 0xF
+"""DRIP message type for packed"""
+
+DRIP_MAX_AREA_COUNT = 4
+"""Maximum area count for DRIP"""
+
+DRIP_BASIC_ID_MAX_MESSAGES = 2
+"""Maximum number of basic ID messages"""
+
+DRIP_PACK_MAX_MESSAGES = 9
+"""Maximum number of packed messages"""
+
 DRIP_AUTH_MAX_PAGES = 16
+"""Maximum number of authentication pages"""
+
 DRIP_AUTH_PAGE_ZERO_DATA_SIZE = 17
+"""Size of authentication page zero data"""
+
 DRIP_AUTH_PAGE_NONZERO_DATA_SIZE = 23
+"""Size of authentication page non-zero data"""
+
 MAX_AUTH_LENGTH =(DRIP_AUTH_PAGE_ZERO_DATA_SIZE + \
                          DRIP_AUTH_PAGE_NONZERO_DATA_SIZE * (DRIP_AUTH_MAX_PAGES - 1))
-DRIP_STR_SIZE = 23
-DRIP_MESSAGE_SIZE = 25
-DRIP_MESSAGE_SIZE_BASIC_ID = 25
-DRIP_MESSAGE_SIZE_LOCATION = 16
-DRIP_MESSAGE_SIZE_AUTH = 22
-DRIP_MESSAGE_SIZE_SELF_ID = 23
-DRIP_MESSAGE_SIZE_SYSTEM = 14
-DRIP_MESSAGE_BASIC_ID = 0x0
-DRIP_MESSAGE_LOCATION = 0x1
-DRIP_MESSAGE_AUTH = 0x2
-DRIP_MESSAGE_SELF_ID = 0x3
-DRIP_MESSAGE_SYSTEM = 0x4
-DRIP_MESSAGETYPE_OPERATOR_ID = 0x5
-DRIP_MESSAGETYPE_PACKED = 0xF
-DRIP_MAX_AREA_COUNT = 4
-DRIP_PACK_MAX_MESSAGES = 9
+"""Maximum authentication length"""
+
 DRIP_SUCCESS = 0
+"""DRIP success code"""
+
 DRIP_FAIL = -1
+"""DRIP failure code"""
+
 DRIP_ALT_DIV = 0.5
+"""Altitude division factor for DRIP"""
+
 DRIP_ALT_ADDER = 1000
+"""Altitude adder for DRIP"""
+
 DRIP_INV_TIMESTAMP = 0xFFFF
+"""Invalid timestamp value for DRIP"""
+
 DRIP_ALT_DIV = 10
+"""Updated altitude division factor for DRIP"""
+
 DRIP_ALT_ADDER = 1000
+"""Updated altitude adder for DRIP"""
 
 DRIP_DEBUG = False
+"""Debug flag for DRIP"""
+
 DRIP_CUSTOM = True
+"""Custom flag for DRIP"""
 
 # Define the DRIP_MessageType enum
 class DRIP_MessageType(ctypes.c_int):
@@ -68,8 +159,8 @@ class DRIP_uatype_t(ctypes.c_int):
     DRIP_UATYPE_GROUND_OBSTACLE = 14,
     DRIP_UATYPE_OTHER = 15,
 
+# Define the DRIP ID type struct
 class DRIP_idtype_t(ctypes.c_int):
-# Define the DRIP_BasicID_data struct
     DRIP_IDTYPE_NONE = 0,
     DRIP_IDTYPE_SERIAL_NUMBER = 1,
     DRIP_IDTYPE_CAA_REGISTRATION_ID = 2, # Civil Aviation Authority
@@ -79,6 +170,7 @@ class DRIP_idtype_t(ctypes.c_int):
                                          # 225 - 255 are available for private experimental usage only
     # 5 to 15 reserved
 
+# Define the DRIP_BasicID_data struct
 class DRIP_BasicID_data(Structure):
     _fields_ = [
         ("UAType", DRIP_uatype_t),
@@ -176,6 +268,7 @@ class DRIP_Auth_data(Structure):
         ("AuthData", c_uint8 * (DRIP_AUTH_PAGE_NONZERO_DATA_SIZE + 1))
     ]
 
+# Define the DRIP_Auth_data page0 encoded struct
 class DRIP_Auth_encoded_page_zero(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
@@ -189,6 +282,7 @@ class DRIP_Auth_encoded_page_zero(ctypes.Structure):
         ("AuthData", c_uint8 * DRIP_AUTH_PAGE_ZERO_DATA_SIZE)
     ]
 
+# Define the DRIP_Auth_data non zero page encoded struct
 class DRIP_Auth_encoded_page_non_zero(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
@@ -199,6 +293,7 @@ class DRIP_Auth_encoded_page_non_zero(ctypes.Structure):
         ("AuthData", c_uint8 * DRIP_AUTH_PAGE_NONZERO_DATA_SIZE)
     ]
 
+# Define the DRIP_Auth_data encoded paged struct
 class DRIP_Auth_encoded(ctypes.Union):
     _fields_ = [
         ("page_zero", DRIP_Auth_encoded_page_zero),
@@ -233,8 +328,6 @@ class DRIP_classification_type_t(ctypes.c_int):
     EU = 1
     # 2 to 7 reserved
 
-from ctypes import c_int
-
 class DRIP_category_EU_t(ctypes.c_int):
     DRIP_CATEGORY_EU_UNDECLARED = 0
     DRIP_CATEGORY_EU_OPEN = 1
@@ -259,9 +352,11 @@ class DRIP_System_data(Structure):
         ("Timestamp", c_uint16)
     ]
 
+# Define the DRIP operator ID type struct
 class DRIP_operatorIdType_t(ctypes.c_int):
     DRIP_OPERATOR_ID = 0
 
+# Define the DRIP_OperatorID_data struct
 class DRIP_OperatorID_data(Structure):
     _fields_ = [
         ("OperatorIdType", DRIP_operatorIdType_t),
@@ -285,11 +380,13 @@ class DRIP_UAS_Data(Structure):
         ("OperatorIDValid", c_uint8)
     ]
 
+# Define the DRIP_UAS_Data encoded raw struct
 class DRIP_Message_encoded(ctypes.Structure):
     _fields_ = [
         ("rawData", ctypes.c_uint8 * DRIP_MESSAGE_SIZE),
     ]
 
+# Define the DRIP_UAS_Data message pack encoded struct
 class DRIP_MessagePack_encoded(ctypes.Structure):
     _fields_ = [
         ('ProtoVersion', ctypes.c_uint8, 4),
@@ -298,4 +395,21 @@ class DRIP_MessagePack_encoded(ctypes.Structure):
         ("MsgPackSize", ctypes.c_uint8),
         ("Messages", DRIP_Message_encoded * DRIP_PACK_MAX_MESSAGES),
     ]
+
+# check if value is in INT range
+def intInRange(value, min_value, max_value):
+    """
+    Checks if the given value is within the specified range.
+    Returns True if the value is within the range, False otherwise.
+    """
+    return min_value <= value <= max_value
+
+# Print Auth page data
+def printAuthData(uasData, pageNum):
+    authData = uasData.Auth[pageNum].AuthData
+    print("AuthData (hex):", end=" ")
+    for element in authData:
+        print(hex(element), end=" ")
+    print()  # Print a newline at the end
+
 

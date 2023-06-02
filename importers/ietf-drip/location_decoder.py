@@ -1,3 +1,37 @@
+"""
+This module provides functions to decode the Location message in the DRIP protocol.
+
+The Location message contains geographic location information about unmanned aircraft systems (UAS),
+such as latitude, longitude, and altitude.
+
+This module defines the following classes:
+- LocationDecoder: Class that handles the decoding of Location messages.
+
+It also defines the following constants related to the Location message format:
+- DRIP_LATITUDE_SIZE: Size of the latitude field.
+- DRIP_LONGITUDE_SIZE: Size of the longitude field.
+- DRIP_ALTITUDE_SIZE: Size of the altitude field.
+- DRIP_MESSAGE_SIZE_LOCATION: Size of the Location message.
+
+Usage:
+------
+# Create an instance of LocationDecoder
+decoder = LocationDecoder()
+
+# Decode a Location message
+result = decoder.decode_location(uas_data, raw_data)
+if result == DRIP_SUCCESS:
+    # Location message decoding successful
+    print("Location message decoded successfully")
+else:
+    # Location message decoding failed
+    print("Location message decoding failed")
+
+Note: This module requires the 'drip_messages' module to be imported.
+
+For more information about the DRIP protocol and the Location message format, refer to the ASTM F3411 specification.
+"""
+
 import drip_messages as common
 import ctypes
 import struct

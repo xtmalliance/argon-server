@@ -1,43 +1,42 @@
+"""
+This module provides functions to decode the Authentication message in the DRIP protocol.
+
+The Authentication message contains information related to the authentication of unmanned aircraft systems (UAS)
+and is used for secure communication between UAS and ground control.
+
+This module defines the following classes:
+- AuthDecoder: Class that handles the decoding of Authentication messages.
+
+It also defines the following constants related to the Authentication message format:
+- DRIP_AUTH_DESC_SIZE: Size of the Authentication description field.
+- DRIP_AUTH_PAGE_ZERO_DATA_SIZE: Size of the data in the first page of the Authentication message.
+- DRIP_AUTH_PAGE_NONZERO_DATA_SIZE: Size of the data in each subsequent page of the Authentication message.
+- DRIP_AUTH_MAX_PAGES: Maximum number of pages in the Authentication message.
+- MAX_AUTH_LENGTH: Maximum length of the Authentication message.
+
+Usage:
+------
+# Create an instance of AuthDecoder
+decoder = AuthDecoder()
+
+# Decode an Authentication message
+result = decoder.decode_auth(uas_data, raw_data)
+if result == DRIP_SUCCESS:
+    # Authentication message decoding successful
+    print("Authentication message decoded successfully")
+else:
+    # Authentication message decoding failed
+    print("Authentication message decoding failed")
+
+Note: This module requires the 'drip_messages' module to be imported.
+
+For more information about the DRIP protocol and the Authentication message format, refer to the ASTM F3411 specification.
+"""
+
 from ctypes import Structure, c_uint8, c_uint16, c_uint32, c_char, c_float, c_double, c_void_p, sizeof, POINTER
 import struct
 import ctypes
 import drip_messages as common
-
-class DRIP_AuthPageZero(ctypes.Structure):
-    _fields_ = [
-        ("MessageType", ctypes.c_uint8),
-        ("AuthType", ctypes.c_uint8),
-        ("DataPage", ctypes.c_uint8),
-        ("LastPageIndex", ctypes.c_uint8),
-        ("Length", ctypes.c_uint8),
-        ("Timestamp", ctypes.c_uint32),
-        ("AuthData", ctypes.c_uint8 * common.DRIP_AUTH_PAGE_ZERO_DATA_SIZE)
-    ]
-
-class DRIP_AuthPageNonZero(ctypes.Structure):
-    _fields_ = [
-        ("AuthData", ctypes.c_uint8 * common.DRIP_AUTH_PAGE_NONZERO_DATA_SIZE)
-    ]
-
-class DRIP_Auth_encoded(ctypes.Union):
-    _fields_ = [
-        ("page_zero", DRIP_AuthPageZero),
-        ("page_non_zero", DRIP_AuthPageNonZero)
-    ]
-
-def intInRange(value, min_value, max_value):
-    """
-    Checks if the given value is within the specified range.
-    Returns True if the value is within the range, False otherwise.
-    """
-    return min_value <= value <= max_value
-
-def printAuthData(uasData, pageNum):
-    authData = uasData.Auth[pageNum].AuthData
-    print("AuthData (hex):", end=" ")
-    for element in authData:
-        print(hex(element), end=" ")
-    print()  # Print a newline at the end
 
 class AuthDecoder:
     @staticmethod
@@ -72,15 +71,15 @@ class AuthDecoder:
                 common.DRIP_AUTH_PAGE_NONZERO_DATA_SIZE
             )
 
-        printAuthData(uasData, pageNum)
+        common.printAuthData(uasData, pageNum)
         return common.DRIP_SUCCESS
 
     @staticmethod
     def getAuthPageNum(inEncoded):
         if not inEncoded or \
                 inEncoded.page_zero.MessageType != common.DRIP_MESSAGE_AUTH or \
-                not intInRange(inEncoded.page_zero.AuthType, 0, 15) or \
-                not intInRange(inEncoded.page_zero.DataPage, 0, common.DRIP_AUTH_MAX_PAGES - 1):
+                not common.intInRange(inEncoded.page_zero.AuthType, 0, 15) or \
+                not common.intInRange(inEncoded.page_zero.DataPage, 0, common.DRIP_AUTH_MAX_PAGES - 1):
 
             return common.DRIP_FAIL
 
@@ -93,7 +92,7 @@ class AuthDecoder:
         if len(raw_data) < common.DRIP_MESSAGE_SIZE_AUTH:
             return common.DRIP_FAIL
 
-        auth_encoded = DRIP_Auth_encoded()
+        auth_encoded = common.DRIP_Auth_encoded()
         ctypes.memmove(ctypes.addressof(auth_encoded), bytes(raw_data), ctypes.sizeof(auth_encoded))
 
         page = AuthDecoder.getAuthPageNum(auth_encoded)

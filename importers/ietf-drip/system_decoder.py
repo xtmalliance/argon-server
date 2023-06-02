@@ -1,3 +1,33 @@
+"""
+This module provides functions to decode the System message in the DRIP protocol.
+
+The System message contains information about the DRIP protocol version and message type.
+
+This module defines the following classes:
+- SystemDecoder: Class that handles the decoding of System messages.
+
+It also defines the following constants related to the System message format:
+- DRIP_MESSAGE_SIZE_SYSTEM: Size of the System message.
+
+Usage:
+------
+# Create an instance of SystemDecoder
+decoder = SystemDecoder()
+
+# Decode a System message
+result = decoder.decode_system(uas_data, raw_data)
+if result == DRIP_SUCCESS:
+    # System message decoding successful
+    print("System message decoded successfully")
+else:
+    # System message decoding failed
+    print("System message decoding failed")
+
+Note: This module requires the 'drip_messages' module to be imported.
+
+For more information about the DRIP protocol and the System message format, refer to the ASTM F3411 specification.
+"""
+
 import ctypes
 import drip_messages as common
 

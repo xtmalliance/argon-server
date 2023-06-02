@@ -1,3 +1,31 @@
+"""
+This script imports the DRIP decoder module and perform decoding operations on DRIP messages.
+
+The script provides the following functionalities:
+- Importing the necessary DRIP decoder modules: basic_id_decoder, location_decoder, auth_decoder, operator_id_decoder, self_id_decoder, system_decoder.
+- Decoding DRIP messages using the imported decoder modules.
+- Printing the decoded information from DRIP messages.
+
+Usage:
+------
+1. Ensure that the DRIP decoder modules (basic_id_decoder, location_decoder, auth_decoder, operator_id_decoder, self_id_decoder, system_decoder) are present in the same directory as this script.
+
+2. Prepare a raw file containing DRIP messages, with each message in a separate line.
+
+3. Set the 'file_path' variable to the path of the file containing DRIP messages.
+
+4. Run the script.
+
+Example:
+--------
+
+python3 import-drip-decoder.py '/opt/rid-test-vectors'
+
+Note: This script requires the 'drip_messages' module and the DRIP decoder modules to be present in the same directory.
+
+For more information about the DRIP protocol and the message decoding process, refer to the DRIP specification and the individual decoder modules.
+"""
+
 import drip_messages as common
 from basic_id_decoder import BasicIDDecoder
 from location_decoder import LocationDecoder
