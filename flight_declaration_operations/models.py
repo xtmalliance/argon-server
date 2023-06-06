@@ -42,6 +42,7 @@ class FlightAuthorization(models.Model):
     """ This object hold the associated """ 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     declaration = models.OneToOneField(FlightDeclaration, on_delete= models.CASCADE)
+    dss_operational_intent_id = models.CharField(max_length = 36, blank=True, null= True, help_text="Once the operational intent is shared on the DSS the operational intent is is stored here. By default nothing is stored here.")
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

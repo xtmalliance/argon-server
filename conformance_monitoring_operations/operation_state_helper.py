@@ -69,3 +69,34 @@ class FlightOperationStateMachine(object):
         self.state = state
     def on_event(self, event):
         self.state = self.state.on_event(event)
+
+
+def match_state(status:int):
+    if status == 0:
+        return False
+    elif status == 1:
+        return AcceptedState()
+    elif status == 2:
+        return ActivatedState()
+    elif status == 3:
+        return NonconformingState()
+    elif status == 4:
+        return ContingentState()
+    elif status == 5:
+        return EndedState()
+    else: 
+        return False
+    
+def get_status(state:State):
+    if isinstance(state, AcceptedState):
+        return 1
+    elif isinstance(state, ActivatedState):
+        return 2
+    elif isinstance(state, NonconformingState):
+        return 3
+    elif isinstance(state, ContingentState):
+        return 4
+    elif isinstance(state, EndedState):
+        return 5    
+    else: 
+        return False

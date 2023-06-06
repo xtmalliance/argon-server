@@ -162,11 +162,8 @@ class BlenderConformanceOps():
         if not flight_authorization_exists:
             authorization_not_granted_message = "There is no flight authorization for operation with ID {flight_declaration_id}. Check C10 Failed".format(flight_declaration_id = flight_declaration_id)
             logging.error(authorization_not_granted_message)
-            my_operation_notification.send_conformance_status_notification(message = authorization_not_granted_message, level='error')
-                    
-
+            my_operation_notification.send_conformance_status_notification(message = authorization_not_granted_message, level='error')                   
             # if flight state is accepted, then change it to ended and delete from dss
-
             return False
 
         # The time the most recent telemetry was sent
@@ -180,13 +177,10 @@ class BlenderConformanceOps():
         # allowed_states = ['Activated', 'Nonconforming', 'Contingent']
         allowed_states = [2,3,4]
         if flight_declaration.state not in allowed_states:
-            flight_state_not_conformant = "The state for operation {flight_declaration_id}, has not been is not one of 'Activated', 'Nonconforming' or 'Contingent. Check C9 failed' ".format(flight_declaration_id = flight_declaration_id)
-            
+            flight_state_not_conformant = "The state for operation {flight_declaration_id}, has not been is not one of 'Activated', 'Nonconforming' or 'Contingent. Check C9 failed' ".format(flight_declaration_id = flight_declaration_id)            
             logging.error(flight_state_not_conformant)
             my_operation_notification.send_conformance_status_notification(message = flight_state_not_conformant, level='error')
-
             # set state as ended
-
             return False
                             
         # C8 state check 

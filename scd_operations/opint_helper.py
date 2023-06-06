@@ -6,7 +6,7 @@ import arrow
 import json
 from .data_definitions import FlightDeclarationOperationalIntentStorageDetails
 from .scd_data_definitions import OperationalIntentSubmissionStatus
-
+from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 from dacite import from_dict
 import logging
 logger = logging.getLogger('django')
@@ -20,7 +20,8 @@ class DSSOperationalIntentsCreator():
         self.flight_declaration_id = flight_declaration_id
 
     def validate_flight_declaration_start_end_time(self) -> bool: 
-        flight_declaration = FlightDeclaration.objects.get(id = self. flight_declaration_id)
+        my_database_reader = BlenderDatabaseReader()
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= self.flight_declaration_id)        
         # check that flight declaration start and end time is in the next two hours
         now = arrow.now()
         two_hours_from_now = now.shift(hours = 2)
@@ -42,7 +43,14 @@ class DSSOperationalIntentsCreator():
         # Get the Flight Declaration object
         
         new_entity_id = str(uuid.uuid4())
-        flight_declaration = FlightDeclaration.objects.get(id = self. flight_declaration_id)        
+
+        my_database_reader = BlenderDatabaseReader()
+        my_database_writer = BlenderDatabaseWriter()
+        
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= self.flight_declaration_id)   
+
+        flight_authorization = flight_declaration.get_flight_authorization_by_flight_declaration_obj(flight_declaration = flight_declaration)
+        
         view_rect_bounds = flight_declaration.bounds
         operational_intent  = json.loads(flight_declaration.operational_intent)
 
@@ -80,8 +88,7 @@ class DSSOperationalIntentsCreator():
         
         my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')   
         logger.info("Self deconfliction status %s" % self_deconflicted)        
-        if self_deconflicted: 
-                
+        if self_deconflicted:                 
             auth_token = my_scd_dss_helper.get_auth_token()
             
             if 'error' in auth_token:
@@ -90,6 +97,10 @@ class DSSOperationalIntentsCreator():
                 op_int_submission = OperationalIntentSubmissionStatus(status = "auth_server_error", status_code = 500, message = "Error in getting a token from the Auth server", dss_response={}, operational_intent_id = new_entity_id)
             else:
                 op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = operational_intent_data.state, volumes = operational_intent_data.volumes, off_nominal_volumes = operational_intent_data.off_nominal_volumes, priority = operational_intent_data.priority)
+
+                # Update flight Authorization 
+                if op_int_submission.status_code in [200, 201]:
+                    my_database_writer.update_flight_authorization_op_int(flight_authorization=flight_authorization, dss_operational_intent_id=op_int_submission.operational_intent_id)                    
 
         else: 
             logger.error("Flight not deconflicted, there are other flights in the area")            

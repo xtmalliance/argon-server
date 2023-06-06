@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 from .tasks import write_incoming_air_traffic_data, start_openskies_stream
 from .data_definitions import SingleAirtrafficObservation, FlightObservationsProcessingResponse
 from dataclasses import asdict
-from common import BlenderDatabaseReader
+from common.database_operations import BlenderDatabaseReader
 from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
@@ -221,7 +221,6 @@ def set_signed_telemetry(request):
         submission_success = {"message": "Telemetry data successfully submitted"}
         return JsonResponse(submission_success, status=201, content_type='application/json')
 
-            
             
         
 @api_view(['PUT'])

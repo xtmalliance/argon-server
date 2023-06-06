@@ -3,7 +3,6 @@ from typing import Tuple
 from datetime import datetime
 from uuid import uuid4
 import arrow
-import now
 
 class BlenderDatabaseReader():
     """
@@ -15,6 +14,15 @@ class BlenderDatabaseReader():
             flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
             return flight_declaration
         except FlightDeclaration.DoesNotExist: 
+            return None
+
+    def get_flight_authorization_by_flight_declaration_obj(self, flight_declaration:FlightDeclaration) ->Tuple[None, FlightAuthorization]:        
+        try:
+            flight_authorization = FlightAuthorization.objects.get(declaration = flight_declaration)
+            return flight_authorization
+        except FlightDeclaration.DoesNotExist: 
+            return None
+        except FlightAuthorization.DoesNotExist: 
             return None
 
     def get_flight_authorization_by_flight_declaration(self, flight_declaration_id:str) ->Tuple[None, FlightAuthorization]:        
@@ -36,7 +44,6 @@ class BlenderDatabaseReader():
         return relevant_ids
 
 
-
 class BlenderDatabaseWriter():    
 
     def update_telemetry_timestamp(self, flight_declaration_id:str) ->bool:        
@@ -48,3 +55,12 @@ class BlenderDatabaseWriter():
             return True
         except FlightDeclaration.DoesNotExist: 
             return False
+        
+    def update_flight_authorization_op_int(self, flight_authorization:FlightAuthorization,dss_operational_intent_id) -> bool:
+        try: 
+            flight_authorization.dss_operational_intent_id = dss_operational_intent_id
+            flight_authorization.save()
+            return True
+        except Exception as e: 
+            return False
+
