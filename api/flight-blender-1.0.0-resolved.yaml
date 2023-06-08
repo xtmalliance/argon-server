@@ -1853,19 +1853,13 @@ components:
             format: email
           state:
             enum:
-            - 0
-            - 1
             - 2
-            - 3
             - 4
             - 5 
             type: integer
             description: >
               The state of the operation
-              * `0` - Processing
-              * `1` - Accepted
               * `2` - Activated
-              * `3` - Nonconforming
               * `4` - Contingent
               * `5` - Ended    
 

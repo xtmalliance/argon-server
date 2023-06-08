@@ -188,6 +188,7 @@ class FlightDeclarationStateUpdate(
     serializer_class = FlightDeclarationStateSerializer
 
     def put(self, request, *args, **kwargs):
+        
         return self.update(request, *args, **kwargs)
 
 
