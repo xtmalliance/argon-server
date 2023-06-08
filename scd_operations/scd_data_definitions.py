@@ -304,7 +304,6 @@ class OperationalIntentUpdateSuccessResponse:
     subscribers: List[SubscriberToNotify]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
 
-
 @dataclass
 class OperationalIntentUpdateResponse:
     dss_response: Union[OperationalIntentUpdateSuccessResponse,CommonDSS4xxResponse]
@@ -312,20 +311,13 @@ class OperationalIntentUpdateResponse:
     message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
 
 @dataclass
-class OperationalIntentUpdateRequestwithKey:
+class OperationalIntentUpdateRequest:
     extents: List[Volume4D]
     state: str
     key: List[str]
     uss_base_url:str
     subscription_id: str
 
-@dataclass
-class OperationalIntentUpdateRequestwithoutKey:
-    # A key is not required if the new state is Nonconforming or Contingent
-    extents: List[Volume4D]
-    state: str
-    uss_base_url:str
-    subscription_id: str
 @dataclass
 class DeleteFlightResponse:
     result:  Literal[DeleteFlightStatus.Closed, DeleteFlightStatus.Failed]

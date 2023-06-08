@@ -66,9 +66,9 @@ class BlenderConformanceOps():
             my_operation_notification.send_conformance_status_notification(message = invalid_aircraft_id_msg, level='error')
             return False        
         
-        # C3 + C4 check 
+        # C4 check 
         try: 
-            assert flight_declaration.state in ['Accepted','Activated']
+            assert flight_declaration.state in ['Activated']
         except AssertionError as ae: 
             flight_state_not_correct_msg = "The Operation state for operation {flight_declaration_id}, is not one of 'Accepted' or 'Activated', your authorization is invalid. C3+C4 Check failed.".format(flight_declaration_id = flight_declaration_id)
             logging.error(flight_state_not_correct_msg)
@@ -182,7 +182,7 @@ class BlenderConformanceOps():
             my_operation_notification.send_conformance_status_notification(message = flight_state_not_conformant, level='error')
             # set state as ended
             return False
-                            
+                           
         # C8 state check 
 
         # Operation is supposed to start check if telemetry is bieng submitted (within the last minute)

@@ -18,7 +18,7 @@ logger = logging.getLogger('django')
 
 class Command(BaseCommand):
     
-    help = 'A command to add Climate Action as tags for your project'
+    help = 'End operation and clear dss'
 
     def add_arguments(self, parser):
 

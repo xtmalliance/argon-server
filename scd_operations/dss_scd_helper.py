@@ -12,7 +12,7 @@ from rid_operations import rtree_helper
 from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume3D, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, Circle, Altitude, LatLngPoint, Radius,OpInttoCheckDetails, OperationalIntentUpdateResponse, OperationalIntentUpdateRequestwithKey, OperationalIntentUpdateRequestwithoutKey, SubscriberToNotify, OperationalIntentUpdateSuccessResponse, SubscriptionState
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume3D, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, Circle, Altitude, LatLngPoint, Radius,OpInttoCheckDetails, OperationalIntentUpdateResponse, OperationalIntentUpdateRequest, SubscriberToNotify, OperationalIntentUpdateSuccessResponse, SubscriptionState
 from .scd_data_definitions import Polygon as Plgn
 import tldextract
 from os import environ as env
@@ -330,32 +330,39 @@ class SCDOperations():
         """ This method notifies a peer when a flight goes off nominal """
         raise NotImplementedError
 
-    def update_specified_operational_intent_referecnce(self, operational_intent_id:str, extents:List[Volume4D], state:str, ovn:str, subscription_id:str, key= None) -> Optional[OperationalIntentUpdateResponse]:
+    def update_specified_operational_intent_referecnce(self, operational_intent_id:str, extents:List[Volume4D], new_state:str, ovn:str, subscription_id:str, get_airspace_keys= False) -> Optional[OperationalIntentUpdateResponse]:
         """ This method updates a operational intent from one state to other """
-
         auth_token = self.get_auth_token()
+
+        airspace_keys =[]  
+        operational_intent_update = OperationalIntentUpdateRequest(extents= extents, state= new_state, uss_base_url = blender_base_url,subscription_id=subscription_id, key = airspace_keys)        
+        if get_airspace_keys: # this is a update request for Nonconforming / contingent state so we dont need keys.
+            all_existing_operational_intent_details =  self.get_latest_airspace_volumes(volumes =extents) 
+            
+            if all_existing_operational_intent_details:
+                logging.info("Checking deconfliction status with {num_existing_op_ints} operational intent details".format(num_existing_op_ints = len(all_existing_operational_intent_details)))            
+                for cur_op_int_detail in all_existing_operational_intent_details:
+                    airspace_keys.append(cur_op_int_detail.ovn)
+
+            logging.info("Airspace keys: %s"% airspace_keys)
+            operational_intent_update.keys = airspace_keys
+
+
 
         dss_opint_update_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
         
         blender_base_url = env.get("BLENDER_FQDN", 0) 
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
-        
-        if key:
-            update_payload = OperationalIntentUpdateRequestwithoutKey(extents= extents, state= state, uss_base_url = blender_base_url,subscription_id=subscription_id, key = key)        
-        else:
-            update_payload = OperationalIntentUpdateRequestwithoutKey(extents= extents, state= state, uss_base_url = blender_base_url,subscription_id=subscription_id)        
 
-        dss_r = requests.put(dss_opint_update_url, json =json.loads(json.dumps(asdict(update_payload))), headers=headers)
+        logging.info("Checking flight deconfliction status")
+        
+        dss_r = requests.put(dss_opint_update_url, json =json.loads(json.dumps(asdict(operational_intent_update))), headers=headers)
                             
         dss_response = dss_r.json()
         dss_r_status_code = dss_r.status_code
         
         if dss_r_status_code in [200,201]:
-            #deletion successful
-            d_r =OperationalIntentUpdateSuccessResponse()
-            message = CommonDSS2xxResponse(message="Succesfully updated operational intent in the DSS")
-
-        else: 
+            # Update request was successful            
             subscribers = dss_response['subscribers']
             all_subscribers = []
             for subscriber in subscribers:                
@@ -366,15 +373,23 @@ class SCDOperations():
                     s_state = SubscriptionState(subscription_id= subscription['subscription_id'], notification_index=subscription['notification_index'])
                     all_subscription_states.append(s_state)
                 subscriber_obj = SubscriberToNotify(subscriptions=all_subscribers, uss_base_url=uss_base_url)
+                all_subscribers.append(subscriber_obj)
 
             my_op_int_ref_helper = OperationalIntentReferenceHelper()
             operational_intent_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_references = dss_response['operational_intent_reference'])
 
             d_r = OperationalIntentUpdateSuccessResponse(subscribers=all_subscribers,operational_intent_reference = operational_intent_reference)
             # error in deletion
+        
+        else: 
+            # Update unsuccessful
+            d_r =OperationalIntentUpdateSuccessResponse()
             message = CommonDSS4xxResponse(message="Error in updating operational intent in the DSS")
+            
+        
 
         opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status = dss_r_status_code, message=message)
+
         return opint_update_result
 
 
