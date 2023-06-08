@@ -96,7 +96,7 @@ def set_flight_declaration(request):
         max_altitude = Altitude(meters = props['max_altitude']['meters'], datum =props['max_altitude']['datum'])
     
 
-    default_state = 1 # Default state is Acccepted
+    default_state = 0 # Default state is Acccepted
 
     flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
 
@@ -143,6 +143,9 @@ def set_flight_declaration(request):
 
     fo = FlightDeclaration(operational_intent = json.dumps(asdict(parital_op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)    
     fo.save()
+    fo.add_state_history_entry(new_state=0, original_state = None,notes="Created Declaration")
+
+    # TODO Send it to DSS and update state 
 
     flight_declaration_id = str(fo.id)   
     amqp_connection_url = env.get('AMQP_URL', 0)
@@ -187,17 +190,6 @@ class FlightDeclarationStateUpdate(
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
-    # def partial_update(self, request, *args, **kwargs):
-    #     instance = self.queryset.get(pk=kwargs.get('pk'))
-    #     instance.body = request.data.get("body")
-    #     if instance.body:
-    #         instance.visible = True
-    #     instance.save()
-    #     serializer = self.get_serializer(instance=instance, data=request.data, partial=True)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @method_decorator(requires_scopes(['blender.read']), name='dispatch')
 class FlightDeclarationDetail(mixins.RetrieveModelMixin, 

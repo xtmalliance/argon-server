@@ -1,5 +1,7 @@
 from django.db import models
 import uuid
+import itertools
+from typing import List
 from datetime import datetime
 from django.utils.translation import gettext_lazy as _
 from common.data_definitions import OPERATION_STATES, OPERATION_TYPES
@@ -32,6 +34,42 @@ class FlightDeclaration(models.Model):
     class Meta:
         ordering = ['-created_at']
         
+    def add_state_history_entry(self,original_state:int, new_state: int, notes: str = '',  **kwargs):
+        """Add a history tracking entry for this FlightDeclaration.
+        Args:            
+            user (User): The user performing this action # Not implemented 
+            notes (str, optional): URL associated with this tracking entry. Defaults to ''.
+        """
+
+        original_state = original_state if original_state is not None else 'start' 
+        deltas = {'original_state': str(original_state), 'new_state':str(new_state)}
+        
+        entry = FlightOperationTracking.objects.create(
+            flight_declaration=self,                       
+            notes=notes,
+            deltas=deltas,
+        )
+
+        entry.save()
+
+    def get_state_history(self) -> List[int]:
+        """
+            This method gets the state history of a flight declaration and then parses it to build a transition
+        """
+        all_states = []
+        historic_states = FlightOperationTracking.objects.filter(flight_declaration=self).order_by('created_at')
+        for historic_state in historic_states:
+            delta = historic_state.deltas       
+            original_state = delta['original_state']
+            new_state = delta['new_state']
+            if original_state == 'start':
+                original_state = -1
+            all_states.append(int(original_state))
+            all_states.append(int(new_state))
+        distinct_states = [k for k, g in itertools.groupby(all_states)]
+        return distinct_states
+        
+
     def __unicode__(self):
        return self.originating_party + ' ' + str(self.id)
 
@@ -52,3 +90,31 @@ class FlightAuthorization(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+       
+class FlightOperationTracking(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    """Stock tracking entry - used for tracking history of a particular Flight Declaration. """
+    flight_declaration = models.ForeignKey(
+        FlightDeclaration,
+        on_delete=models.CASCADE,
+        related_name='tracking_info'
+    )
+
+    notes = models.CharField(
+        blank=True, null=True,
+        max_length=512,
+        verbose_name=_('Notes'),
+        help_text=_('Entry notes')
+    )
+
+    deltas = models.JSONField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+       return self.flight_declaration
+
+    def __str__(self):
+        return self.flight_declaration
+        

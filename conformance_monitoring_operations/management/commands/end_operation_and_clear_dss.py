@@ -2,8 +2,8 @@ from django.core.management.base import BaseCommand, CommandError
 from os import environ as env
 from common.database_operations import BlenderDatabaseReader
 import arrow
-from conformance_monitoring_operations.operation_state_helper import AcceptedState, ActivatedState, EndedState, NonconformingState, ContingentState, FlightOperationStateMachine, match_state, get_status
-from uss_operations.uss_flight_operations import DSSFlightOperations
+from common.data_definitions import OPERATION_STATES
+from conformance_checks_handler import FlightOperationConformanceHelper
 from dotenv import load_dotenv, find_dotenv
 import logging
 from scd_operations.dss_scd_helper import SCDOperations
@@ -59,36 +59,22 @@ class Command(BaseCommand):
         if not flight_declaration: 
             raise CommandError("Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id = flight_declaration_id))
 
-        # get current state of the operation
-        current_state_int = flight_declaration.state
-        current_state = match_state(current_state_int)
+        new_state = OPERATION_STATES[5][1]
+        my_conformance_helper = FlightOperationConformanceHelper()
+        transitioned = my_conformance_helper.transition_operation_state(new_state=new_state, event =event)
 
-        my_operation_state_machine =FlightOperationStateMachine(state = current_state)
-        my_operation_state_machine.on_event(event)
-        new_state = get_status(my_operation_state_machine.state)
-        if dry_run: 
-            logging.info("Saving new state")
-        else:
-            # Set state as ended 
-            flight_declaration.state = new_state
-            flight_declaration.save()
-            
+        if transitioned:            
+            my_scd_dss_helper = SCDOperations()
+            flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
+            if not dry_run: 
+                operational_intent_id = flight_authorization.operational_intent_id
+                operation_removal_status = my_scd_dss_helper.delete_operational_intent(operational_intent_id = operational_intent_id)
+                if operation_removal_status.status == 200:
+                    logging.info("Successfully removed operational intent {operational_intent_id} from DSS".format(operational_intent_id = operational_intent_id))
+                else: 
+                    logging.info("Error in deleting operational intent from DSS")
 
-        my_scd_dss_helper = SCDOperations()
-        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
-        if not dry_run: 
-            operational_intent_id = flight_authorization.operational_intent_id
-            operation_removal_status = my_scd_dss_helper.delete_operational_intent(operational_intent_id = operational_intent_id)
-            if operation_removal_status.status == 200:
-                logging.info("Successfully removed operational intent {operational_intent_id} from DSS".format(operational_intent_id = operational_intent_id))
             else: 
-                logging.info("Error in deleting operational intent from DSS")
-
+                logging.info("Submitting {flight_declaration_id} for removal from DSS".format(flight_declaration_id = flight_declaration_id))
         else: 
-            logging.info("Submitting {flight_declaration_id} for removal from DSS".format(flight_declaration_id = flight_declaration_id))
-
-
-
-
-
-
+                logging.info("Error in transitioning {flight_declaration_id} for removal from DSS".format(flight_declaration_id = flight_declaration_id))

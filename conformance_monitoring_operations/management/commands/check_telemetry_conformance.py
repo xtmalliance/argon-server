@@ -41,14 +41,13 @@ class Command(BaseCommand):
             raise CommandError("Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id = flight_declaration_id))
 
         # get current state of the operation
-        current_state_int = flight_declaration.state
-        
+        current_state_int = flight_declaration.state       
 
         ## Conduct checks 
 
         if operation_conformant: 
             return True
         
-        else: # Operaation is not conformant
+        else: # Operation is not conformant
             return False
         
