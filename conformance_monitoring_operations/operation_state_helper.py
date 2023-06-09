@@ -65,7 +65,7 @@ class ContingentState(State):
 # End states.
 
 class FlightOperationStateMachine(object):
-    def __init__(self, state= AcceptedState()):
+    def __init__(self, state:int = 1):
         s = match_state(state)
         self.state = s
     def on_event(self, event):
