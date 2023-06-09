@@ -1,9 +1,12 @@
 from flight_blender.celery import app
 from scd_operations.opint_helper import DSSOperationalIntentsCreator
-from flight_declaration_operations.models import FlightDeclaration
+
 import logging
 from notification_operations.notification_helper import NotificationFactory
 from notification_operations.data_definitions import FlightDeclarationUpdateMessage
+from conformance_monitoring_operations.conformance_checks_handler import FlightOperationConformanceHelper
+from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.data_definitions import OPERATION_STATES 
 from os import environ as env
 import arrow
 logger = logging.getLogger('django')
@@ -35,14 +38,24 @@ def submit_flight_declaration_to_dss(flight_declaration_id:str):
             if amqp_connection_url:        
                 submission_success_msg = "Flight Operation with ID {operation_id} submitted successfully to the DSS".format(operation_id = flight_declaration_id)
                 send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_success_msg, level = 'info')
-            
-            fo = FlightDeclaration.objects.get(id = flight_declaration_id)
-            # Update state of the flight operation            
-            fo.state = 1
+
+            ###### Change via new state check helper            
+            my_database_reader = BlenderDatabaseReader()  
+            my_database_writer = BlenderDatabaseWriter()          
+            fo = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+            original_state = fo.state
+            accepted_state = OPERATION_STATES[1][0]
+            my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=flight_declaration_id)
+            transition_valid = my_conformance_helper.verify_operation_state_transition(original_state = original_state, new_state= accepted_state, event = 'dss_accepts')
+            if transition_valid:
+                my_database_writer.update_flight_operation_state(flight_declaration_id=flight_declaration_id, state=accepted_state)                
+                logger.info("The state change transition to Accepted state from current state Created is valid")
+                fo.add_state_history_entry(new_state=accepted_state, original_state = original_state,notes="Successfully submitted to the DSS")
+
             if amqp_connection_url:        
                 submission_state_updated_msg = "Flight Operation with ID {operation_id} has a updated state: Accepted. ".format(operation_id = flight_declaration_id)
                 send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_state_updated_msg, level = 'info')
-            fo.save()
+
         logger.info("Details of the submission status %s" % opint_submission_result.message)
 
     else:            

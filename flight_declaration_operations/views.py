@@ -145,14 +145,12 @@ def set_flight_declaration(request):
     fo.save()
     fo.add_state_history_entry(new_state=0, original_state = None,notes="Created Declaration")
 
-    # TODO Send it to DSS and update state 
-
     flight_declaration_id = str(fo.id)   
     amqp_connection_url = env.get('AMQP_URL', 0)
     if amqp_connection_url:        
         send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = "Flight Declaration created..", level = 'info')
 
-    if  all_relevant_fences and all_relevant_declarations:     
+    if all_relevant_fences and all_relevant_declarations:     
         # Async submic flight declaration to DSS
         logger.info("Self deconfliction failed, this declaration cannot be sent to the DSS system..")
         if amqp_connection_url:        
@@ -161,6 +159,7 @@ def set_flight_declaration(request):
 
     else:
         logger.info("Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided..")
+        
         submit_flight_declaration_to_dss.delay(flight_declaration_id = flight_declaration_id)   
     creation_response = FlightDeclarationCreateResponse(id= flight_declaration_id, message = "Submitted Flight Declaration", is_approved = is_approved, state = default_state)
     

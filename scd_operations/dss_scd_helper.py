@@ -275,7 +275,7 @@ class SCDOperations():
 
                         op_int_det = operational_intent_details_json['operational_intent']['details']
                         op_int_ref = operational_intent_details_json['operational_intent']['reference']
-                        op_int_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_references =op_int_ref)
+                        op_int_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_reference =op_int_ref)
 
                         all_volumes = op_int_det['volumes']
                         all_v4d = []
@@ -376,7 +376,7 @@ class SCDOperations():
                 all_subscribers.append(subscriber_obj)
 
             my_op_int_ref_helper = OperationalIntentReferenceHelper()
-            operational_intent_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_references = dss_response['operational_intent_reference'])
+            operational_intent_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_reference = dss_response['operational_intent_reference'])
 
             d_r = OperationalIntentUpdateSuccessResponse(subscribers=all_subscribers,operational_intent_reference = operational_intent_reference)
             # error in deletion
@@ -450,7 +450,7 @@ class SCDOperations():
                 subscribers = dss_response['subscribers']
                 o_i_r = dss_response['operational_intent_reference']                    
                 my_op_int_ref_helper = OperationalIntentReferenceHelper()
-                operational_intent_r:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_references =o_i_r)                
+                operational_intent_r:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_reference =o_i_r)                
                 dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference = operational_intent_r, subscribers = subscribers)
                 logger.info("Successfully created operational intent in the DSS")
                 logger.debug("Response details from the DSS %s" % dss_r.text)

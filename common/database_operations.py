@@ -3,6 +3,7 @@ from typing import Tuple
 from datetime import datetime
 from uuid import uuid4
 import arrow
+from django.db.utils import IntegrityError
 
 class BlenderDatabaseReader():
     """
@@ -46,6 +47,19 @@ class BlenderDatabaseReader():
 
 class BlenderDatabaseWriter():    
 
+    def create_flight_authorization(self, flight_declaration_id:str) ->bool:    
+        try:
+            flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
+            flight_authorization = FlightAuthorization(declaration = flight_declaration)
+            flight_authorization.save()
+            return True
+        except FlightDeclaration.DoesNotExist: 
+            return False
+        except IntegrityError as ie:
+            return False
+        
+        
+
     def update_telemetry_timestamp(self, flight_declaration_id:str) ->bool:        
         now = arrow.now().isoformat()
         try:
@@ -63,4 +77,15 @@ class BlenderDatabaseWriter():
             return True
         except Exception as e: 
             return False
+        
+    def update_flight_operation_state(self,flight_declaration_id:str, state:int) -> bool:
+        try: 
+            flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
+            flight_declaration.state = state
+            flight_declaration.save()
+            return True
+        except Exception as e: 
+            return False
+
+
 

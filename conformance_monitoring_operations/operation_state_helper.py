@@ -19,6 +19,13 @@ class State(object):
         return self.__class__.__name__
 
 # Start states
+class NotSubmittedToDss(State):
+    def on_event(self, event):
+        if event == 'dss_accepts':
+            return AcceptedState()
+        return self
+
+# Start states
 class AcceptedState(State):
     def on_event(self, event):
         if event == 'operator_activates':
@@ -74,7 +81,7 @@ class FlightOperationStateMachine(object):
 
 def match_state(status:int):
     if status == 0:
-        return False
+        return NotSubmittedToDss()
     elif status == 1:
         return AcceptedState()
     elif status == 2:
@@ -89,6 +96,8 @@ def match_state(status:int):
         return False
     
 def get_status(state:State):
+    if isinstance(state, NotSubmittedToDss):
+        return 0
     if isinstance(state, AcceptedState):
         return 1
     elif isinstance(state, ActivatedState):

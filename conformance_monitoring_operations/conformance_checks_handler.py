@@ -29,7 +29,7 @@ class FlightOperationConformanceHelper():
         """        
         my_operation_state_machine = FlightOperationStateMachine(state = original_state)
         logging.info("Current Operation State %s" % my_operation_state_machine.state)
-        logging.info(event)
+        
         my_operation_state_machine.on_event(event)
         new_state = get_status(my_operation_state_machine.state)
         if original_state == new_state: 

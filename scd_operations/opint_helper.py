@@ -49,7 +49,7 @@ class DSSOperationalIntentsCreator():
         
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= self.flight_declaration_id)   
 
-        flight_authorization = flight_declaration.get_flight_authorization_by_flight_declaration_obj(flight_declaration = flight_declaration)
+        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration = flight_declaration)
         
         view_rect_bounds = flight_declaration.bounds
         operational_intent  = json.loads(flight_declaration.operational_intent)
