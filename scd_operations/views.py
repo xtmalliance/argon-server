@@ -201,7 +201,7 @@ def SCDAuthTest(request, operation_id):
                 r.expire(name = flight_opint, time = opint_subscription_end_time)
 
                 # Store the details of the operational intent reference
-                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
+                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=op_int_submission.operational_intent_id)
                 
                 opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
                 r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))

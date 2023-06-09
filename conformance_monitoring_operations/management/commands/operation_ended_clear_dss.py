@@ -22,8 +22,8 @@ class Command(BaseCommand):
 
         parser.add_argument(
         "-d",
-        "--flightdeclarationid",
-        dest = "flightdeclarationid",
+        "--flight_declaration_id",
+        dest = "flight_declaration_id",
         metavar = "ID of the flight declaration",
         help='Specify the ID of Flight Declaration')
 

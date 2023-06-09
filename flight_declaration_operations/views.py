@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 from typing import List
 from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
-
+from common.database_operations import BlenderDatabaseWriter
 from dataclasses import asdict
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
@@ -159,7 +159,8 @@ def set_flight_declaration(request):
 
     else:
         logger.info("Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided..")
-        
+        my_database_writer = BlenderDatabaseWriter()
+        my_database_writer.create_flight_authorization(flight_declaration_id=flight_declaration_id)
         submit_flight_declaration_to_dss.delay(flight_declaration_id = flight_declaration_id)   
     creation_response = FlightDeclarationCreateResponse(id= flight_declaration_id, message = "Submitted Flight Declaration", is_approved = is_approved, state = default_state)
     

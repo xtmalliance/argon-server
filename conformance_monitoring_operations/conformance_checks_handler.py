@@ -66,10 +66,8 @@ class FlightOperationConformanceHelper():
                 pass
         
         elif new_state == 2: # handle entry into activated state
-            if original_state == 1 and event == 'operator_initiates_contingent':
-                # Operator activates contingent state from Activated state
-                pass
+            if original_state == 1 and event == 'operator_activates':
+                # Operator activates accepted state to Activated state
+                management.call_command('update_operational_intent_to_activated',flight_declaration_id = self.flight_declaration_id)
+                
 
-            elif original_state == 3 and event in ['timeout','operator_confirms_contingent']:
-                # Operator activates contingent state / timeout from Non-conforming state 
-                pass

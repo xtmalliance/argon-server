@@ -347,8 +347,6 @@ class SCDOperations():
             logging.info("Airspace keys: %s"% airspace_keys)
             operational_intent_update.keys = airspace_keys
 
-
-
         dss_opint_update_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
         
         blender_base_url = env.get("BLENDER_FQDN", 0) 

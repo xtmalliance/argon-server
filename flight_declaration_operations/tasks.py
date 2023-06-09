@@ -1,10 +1,14 @@
 from flight_blender.celery import app
 from scd_operations.opint_helper import DSSOperationalIntentsCreator
-
+from auth_helper.common import get_redis
+import json
+from dataclasses import asdict
 import logging
+from datetime import timedelta
 from notification_operations.notification_helper import NotificationFactory
 from notification_operations.data_definitions import FlightDeclarationUpdateMessage
 from conformance_monitoring_operations.conformance_checks_handler import FlightOperationConformanceHelper
+from scd_operations.scd_data_definitions import OperationalIntentStorage, SuccessfulOperationalIntentFlightIDStorage
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 from common.data_definitions import OPERATION_STATES 
 from os import environ as env
@@ -35,6 +39,9 @@ def submit_flight_declaration_to_dss(flight_declaration_id:str):
 
         elif opint_submission_result.status_code in [200, 201]:
             logger.info("Successfully submitted Flight Declaration to the DSS %s" % opint_submission_result.status)
+
+
+
             if amqp_connection_url:        
                 submission_success_msg = "Flight Operation with ID {operation_id} submitted successfully to the DSS".format(operation_id = flight_declaration_id)
                 send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_success_msg, level = 'info')
@@ -43,6 +50,27 @@ def submit_flight_declaration_to_dss(flight_declaration_id:str):
             my_database_reader = BlenderDatabaseReader()  
             my_database_writer = BlenderDatabaseWriter()          
             fo = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+            fa = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=fo)
+
+            
+            r = get_redis()
+            created_opint = fa.dss_operational_intent_id
+            view_r_bounds = fo.bounds
+            operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=fo.start_datetime.isoformat(), end_time=fo.end_datetime.isoformat(), alt_max=50, alt_min=25, success_response = opint_submission_result.dss_response, operational_intent_details= fo.operational_intent)
+            # Store flight ID 
+            delta = timedelta(seconds =10800)
+            flight_opint = 'flight_opint.' + str(flight_declaration_id)
+            r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
+            r.expire(name = flight_opint, time = delta)
+
+            # Store the details of the operational intent reference
+            flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(operation_id=str(flight_declaration_id), operational_intent_id=created_opint)
+            
+            opint_flightref = 'opint_flightref.' + created_opint                
+            r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
+            r.expire(name = opint_flightref, time = delta)
+            
+                    
             original_state = fo.state
             accepted_state = OPERATION_STATES[1][0]
             my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=flight_declaration_id)
