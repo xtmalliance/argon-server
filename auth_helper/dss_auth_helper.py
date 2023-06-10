@@ -1,5 +1,4 @@
 import json
-import redis
 from .common import get_redis
 import logging
 from datetime import datetime, timedelta
@@ -65,7 +64,7 @@ class AuthorityCredentialsGetter():
         t_data = token_data.json()     
         return t_data
 
-    def get_scd_credentials(self, audience):        
+    def get_scd_credentials(self, audience:str):        
         
         issuer = audience if audience =='localhost' else None
         if audience in ['localhost','host.docker.internal']:

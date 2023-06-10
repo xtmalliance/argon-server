@@ -105,15 +105,15 @@ class Command(BaseCommand):
                     
                 extents = flight_declaration.extent
                 
-                operational_update_response = my_scd_dss_helper.update_specified_operational_intent_referecnce(operational_intent_id = operational_intent_id,extents= extents new_state= new_state, )
+                # operational_update_response = my_scd_dss_helper.update_specified_operational_intent_referecnce(operational_intent_id = reference.id,extents= extents new_state= new_state,ovn= reference.ovn, get_airspace_keys= True )
 
 
 
 
-            if operational_update_response.status == 200:
-                logging.info("Successfully removed operational intent {operational_intent_id} from DSS".format(operational_intent_id = operational_intent_id))
-            else: 
-                logging.info("Error in deleting operational intent from DSS")
+                # if operational_update_response.status == 200:
+                #     logging.info("Successfully removed operational intent {operational_intent_id} from DSS".format(operational_intent_id = operational_intent_id))
+                # else: 
+                #     logging.info("Error in deleting operational intent from DSS")
 
         else: 
                 logging.info("Error in transitioning {flight_declaration_id} for removal from DSS".format(flight_declaration_id = flight_declaration_id))

@@ -263,6 +263,17 @@ class OperationalIntentSubmissionStatus:
     operational_intent_id: uuid4
 
 @dataclass
+class SubscriptionState:
+    subscription_id:str
+    notification_index: int
+
+@dataclass 
+class NotifyPeerUSSPostPayload : 
+    operational_intent_id: uuid4
+    operational_intent: OperationalIntentDetailsUSSResponse
+    subscriptions: List[SubscriptionState]
+
+@dataclass
 class DeleteOperationalIntentConstuctor:
     """This method holds information to send to the DSS to delete a Operational intent """
     entity_id:uuid4
@@ -289,11 +300,6 @@ class DeleteOperationalIntentResponse:
     message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
     
 @dataclass
-class SubscriptionState:
-    subscription_id:str
-    notification_index: int
-
-@dataclass
 class SubscriberToNotify:
     subscriptions: List[SubscriptionState]
     uss_base_url: str
@@ -307,6 +313,11 @@ class OperationalIntentUpdateSuccessResponse:
 @dataclass
 class OperationalIntentUpdateResponse:
     dss_response: Union[OperationalIntentUpdateSuccessResponse,CommonDSS4xxResponse]
+    status: int
+    message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
+
+@dataclass
+class USSNotificationResponse:
     status: int
     message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
 
