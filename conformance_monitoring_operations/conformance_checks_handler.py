@@ -45,12 +45,13 @@ class FlightOperationConformanceHelper():
         '''
         if new_state == 5: #operation has ended
             if event =='operator_confirms_ended':
-                management.call_command('operation_ended_clear_dss',flight_operation_id = self.flight_declaration_id)
+                management.call_command('operation_ended_clear_dss',flight_declaration_id = self.flight_declaration_id, dry_run =0)
 
         elif new_state == 4: # handle entry into contingent state
             if original_state == 2 and event == 'operator_initiates_contingent':
-                # Operator activates contingent state from Activated state
-                pass            
+                # Operator activates contingent state from Activated state                
+                management.call_command('operator_declares_contingency',flight_declaration_id = self.flight_declaration_id, dry_run =0)
+
             elif original_state == 3 and event in ['timeout','operator_confirms_contingent']:
                 # Operator activates contingent state / timeout from Non-conforming state 
                 pass
@@ -67,7 +68,7 @@ class FlightOperationConformanceHelper():
         
         elif new_state == 2: # handle entry into activated state
             if original_state == 1 and event == 'operator_activates':
-                # Operator activates accepted state to Activated state
-                management.call_command('update_operational_intent_to_activated',flight_declaration_id = self.flight_declaration_id)
+                # Operator activates accepted state to Activated state                
+                management.call_command('update_operational_intent_to_activated',flight_declaration_id = self.flight_declaration_id, dry_run =0)
                 
 

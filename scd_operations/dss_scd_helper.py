@@ -161,13 +161,13 @@ class SCDOperations():
         
         return auth_token
 
-    def delete_operational_intent(self, operational_intent_id:uuid.uuid4, ovn:str)-> Optional[DeleteOperationalIntentResponse]:
+    def delete_operational_intent(self, dss_operational_intent_ref_id:str, ovn:str)-> Optional[DeleteOperationalIntentResponse]:
         auth_token = self.get_auth_token()
         
-        dss_opint_delete_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
+        dss_opint_delete_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + dss_operational_intent_ref_id + '/'+ ovn
         
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
-        delete_payload = DeleteOperationalIntentConstuctor(entity_id= operational_intent_id, ovn = ovn)
+        delete_payload = DeleteOperationalIntentConstuctor(entity_id= dss_operational_intent_ref_id, ovn = ovn)
 
         dss_r = requests.delete(dss_opint_delete_url, json =json.loads(json.dumps(asdict(delete_payload))), headers=headers)
         
@@ -175,7 +175,7 @@ class SCDOperations():
         dss_r_status_code = dss_r.status_code
 
         if dss_r_status_code == 200:
-            common_200_response = CommonDSS2xxResponse(message="Successfully deleted operational intent id %s" % operational_intent_id)
+            common_200_response = CommonDSS2xxResponse(message="Successfully deleted operational intent id %s" % dss_operational_intent_ref_id)
             dss_response_formatted = DeleteOperationalIntentResponseSuccess(subscribers= dss_response["subscribers"],operational_intent_reference=dss_response['operational_intent_reference'])
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=dss_response_formatted, status =200, message= common_200_response)
         elif dss_r_status_code == 404:
@@ -348,11 +348,13 @@ class SCDOperations():
 
         return notification_result
 
-    def update_specified_operational_intent_referecnce(self, operational_intent_id:str, extents:List[Volume4D], new_state:str, ovn:str, subscription_id:str, get_airspace_keys= False) -> Optional[OperationalIntentUpdateResponse]:
+    def update_specified_operational_intent_referecnce(self, operational_intent_ref_id:str, extents:List[Volume4D], new_state:str, ovn:str, subscription_id:str, get_airspace_keys= False) -> Optional[OperationalIntentUpdateResponse]:
         """ This method updates a operational intent from one state to other """
         auth_token = self.get_auth_token()
 
+        blender_base_url = env.get("BLENDER_FQDN", 0) 
         airspace_keys =[]  
+        
         operational_intent_update = OperationalIntentUpdateRequest(extents= extents, state= new_state, uss_base_url = blender_base_url,subscription_id=subscription_id, key = airspace_keys)        
         if get_airspace_keys: # this is a update request for Nonconforming / contingent state so we dont need keys.
             all_existing_operational_intent_details =  self.get_latest_airspace_volumes(volumes =extents) 
@@ -364,10 +366,11 @@ class SCDOperations():
 
             logging.info("Airspace keys: %s"% airspace_keys)
             operational_intent_update.keys = airspace_keys
-
-        dss_opint_update_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
         
-        blender_base_url = env.get("BLENDER_FQDN", 0) 
+        
+
+        dss_opint_update_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_ref_id + '/'+ ovn
+        
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
 
         logging.info("Checking flight deconfliction status")
@@ -395,6 +398,9 @@ class SCDOperations():
             operational_intent_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_reference = dss_response['operational_intent_reference'])
 
             d_r = OperationalIntentUpdateSuccessResponse(subscribers=all_subscribers,operational_intent_reference = operational_intent_reference)
+            logging.info("Updated Operational Intent in the DSS Successfully")
+
+            message = CommonDSS4xxResponse(message="Successfully updated operational intent")
             # error in deletion
         
         else: 

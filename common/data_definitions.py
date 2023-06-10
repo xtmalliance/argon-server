@@ -5,4 +5,4 @@ OPERATION_TYPES = ((1, _('VLOS')),(2, _('BVLOS')),(3,_('CREWED')),)
     
 
 # When an operator changes a statem, he / she puts a new state (via the API), this object specifies the event when a operator takes action
-OPERATOR_EVENT_LOOKUP = {5: 'operator_confirms_ended', 2: 'operator_activates',4: 'operator_confirms_contingent' }
+OPERATOR_EVENT_LOOKUP = {5: 'operator_confirms_ended', 2: 'operator_activates',4: 'operator_initiates_contingent' }

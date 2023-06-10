@@ -9,8 +9,7 @@ from auth_helper.common import get_redis
 import json
 from scd_operations.dss_scd_helper import SCDOperations
 from scd_operations.scd_data_definitions import Time, OperationalIntentReferenceDSSResponse, ImplicitSubscriptionParameters
-
-
+from flight_feed_operations import flight_stream_helper
 load_dotenv(find_dotenv())
  
 ENV_FILE = find_dotenv()
@@ -45,31 +44,29 @@ class Command(BaseCommand):
         dry_run = options['dry_run']                 
         dry_run = 1 if dry_run =='1' else 0
 
-        new_state = OPERATION_STATES[2][1]
+        contingent_state = OPERATION_STATES[4][1]
         
+        my_scd_dss_helper = SCDOperations()
+        my_database_reader = BlenderDatabaseReader()
+        now = arrow.now().isoformat()
+
         try:        
             flight_declaration_id = options['flight_declaration_id']
         except Exception as e:
             raise CommandError("Incomplete command, Flight Declaration ID not provided %s"% e)
 
-        # Get the flight declaration
-
-        my_database_reader = BlenderDatabaseReader()
-        now = arrow.now().isoformat()
-
+        
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= flight_declaration_id)
         if not flight_declaration: 
             raise CommandError("Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id = flight_declaration_id))
-
-        my_scd_dss_helper = SCDOperations()
-        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
-    
-        operational_intent_id = flight_authorization.dss_operational_intent_id
+        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=flight_declaration)
+        dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
                 
         r = get_redis()    
         
-        flight_opint = 'flight_opint.'  + str(flight_declaration_id)            
-        
+        flight_opint = 'flight_opint.'  + str(flight_declaration_id)   
+        # Update the volume to create a new volume 
+                
         if r.exists(flight_opint):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
@@ -97,8 +94,7 @@ class Command(BaseCommand):
 
             reference = OperationalIntentReferenceDSSResponse(id=stored_operational_intent_id, manager =stored_manager, uss_availability= stored_uss_availability, version= stored_version, state= stored_state, ovn = stored_ovn, time_start= stored_time_start, time_end = stored_time_end, uss_base_url=stored_uss_base_url, subscription_id=stored_subscription_id)
                 
-            if not dry_run: 
-                
+            if not dry_run:                 
 
                 blender_base_url = env.get("BLENDER_FQDN", 0) 
                 for subscriber in dss_response_subscribers:
@@ -108,15 +104,23 @@ class Command(BaseCommand):
                         for s in subscriptions:
                             subscription_id = s['subscription_id']
                             break
-                # Create a new subscription to the airspace
-                
-                operational_update_response = my_scd_dss_helper.update_specified_operational_intent_referecnce(subscription_id= subscription_id, operational_intent_ref_id = reference.id,extents= stored_volumes, new_state= str(new_state),ovn= reference.ovn, get_airspace_keys= True )
+                # Create a new subscription to the airspace                
+                operational_update_response = my_scd_dss_helper.update_specified_operational_intent_referecnce(subscription_id= subscription_id, operational_intent_ref_id = reference.id,extents= stored_volumes, new_state= str(contingent_state),ovn= reference.ovn, get_airspace_keys= False)
 
-                if operational_update_response.status == 200:
-                    logging.info("Successfully updated operational intent status for {operational_intent_id} on the DSS".format(operational_intent_id = operational_intent_id))
-                else: 
-                    logging.info("Error in updating operational intent on the DSS")
 
-            else: 
-                logging.info("Dry run, not submitting to the DSS")
+                ## Update / expnd volume
+                        
+                stream_ops = flight_stream_helper.StreamHelperOps()
+                push_cg = stream_ops.push_cg()
+                obs_helper = flight_stream_helper.ObservationReadOperations()
+                all_flights_rid_data = obs_helper.get_observations(push_cg)
+                # Get the last observation of the flight 
+                # Update the volume
+
+                ## Send the new volume to DSS
+
+                # Notify others 
+
+
+
 
