@@ -97,8 +97,7 @@ class Command(BaseCommand):
 
             reference = OperationalIntentReferenceDSSResponse(id=stored_operational_intent_id, manager =stored_manager, uss_availability= stored_uss_availability, version= stored_version, state= stored_state, ovn = stored_ovn, time_start= stored_time_start, time_end = stored_time_end, uss_base_url=stored_uss_base_url, subscription_id=stored_subscription_id)
                 
-            if not dry_run: 
-                
+            if not dry_run:                 
 
                 blender_base_url = env.get("BLENDER_FQDN", 0) 
                 for subscriber in dss_response_subscribers:

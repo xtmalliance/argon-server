@@ -224,7 +224,7 @@ class BlenderConformanceOps():
 
         rid_obs_within_all_volumes = []
         for p in all_polygon_altitudes:            
-            is_within = rid_location.within(p)
+            is_within = rid_location.within(p.polygon)
             rid_obs_within_all_volumes.append(is_within)
             # If the aircraft RID is within the the polygon, check the altitude
             if is_within: 

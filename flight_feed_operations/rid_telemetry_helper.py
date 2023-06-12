@@ -77,6 +77,7 @@ class BlenderTelemetryValidator():
 
         if 'eu_classification' in rid_flight_details.keys():
             eu_classification_details = rid_flight_details['eu_classification']            
+            
             eu_classification = UAClassificationEU(category = eu_classification_details['category'], class_ =  eu_classification_details['class_'])
         else:  
             eu_classification = UAClassificationEU(category = "", class_ ="")

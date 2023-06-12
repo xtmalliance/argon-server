@@ -44,7 +44,6 @@ class BlenderDatabaseReader():
         relevant_ids =  FlightDeclaration.objects.filter(start_datetime__lte = two_minutes_before_now, end_datetime__gte = two_minutes_after_now).values_list('id', flat=True)        
         return relevant_ids
 
-
 class BlenderDatabaseWriter():    
 
     def create_flight_authorization(self, flight_declaration_id:str) ->bool:    

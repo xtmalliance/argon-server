@@ -23,6 +23,7 @@ from django.utils.decorators import method_decorator
 from .models import SignedTelmetryPublicKey
 from .serializers import SignedTelmetryPublicKeySerializer
 from rest_framework import generics
+import arrow
 
 class HomeView(TemplateView):
     template_name = 'homebase/home.html'
@@ -208,15 +209,21 @@ def set_signed_telemetry(request):
 
             unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
             operation_id = f_details.id
-            
-            relevant_operation_ids = my_blender_database_reader.get_current_flight_declaration_ids()
+            now = arrow.now().isoformat()
+            relevant_operation_ids = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
             if operation_id in relevant_operation_ids:
-                stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
+                # Get flight state: 
+                flight_operation = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id)
+
+                if flight_operation.state in [2,3,4]: # Activated, Contingent, Non-conforming 
+                    stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
+                else: 
+                    operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submissin will be ignored, please change the state first.".format(operation_id = operation_id)}
+                    return JsonResponse(operation_state_incorrect_msg, status=400, content_type='application/json')     
+
             else: 
                 incorrect_operation_id_msg = {"message": "The operation ID: {operation_id} in the flight details object provided does not match any current operation in Flight Blender".format(operation_id = operation_id)}
                 return JsonResponse(incorrect_operation_id_msg, status=400, content_type='application/json')     
-
-
 
         submission_success = {"message": "Telemetry data successfully submitted"}
         return JsonResponse(submission_success, status=201, content_type='application/json')
@@ -264,11 +271,19 @@ def set_telemetry(request):
 
         unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
         operation_id = f_details.id
-
-        relevant_operation_ids = my_blender_database_reader.get_current_flight_declaration_ids()
+        now = arrow.now().isoformat()
+        relevant_operation_ids = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
         
         if operation_id in relevant_operation_ids:
-            stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
+            # Get flight state: 
+            flight_operation = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id)
+
+            if flight_operation.state in [2,3,4]: # Activated, Contingent, Non-conforming 
+                stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
+            else: 
+                operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submissin will be ignored, please change the state first.".format(operation_id = operation_id)}
+                return JsonResponse(operation_state_incorrect_msg, status=400, content_type='application/json')     
+
         else: 
             incorrect_operation_id_msg = {"message": "The operation ID: {operation_id} in the flight details object provided does not match any current operation in Flight Blender".format(operation_id = operation_id)}
             return JsonResponse(incorrect_operation_id_msg, status=400, content_type='application/json')     

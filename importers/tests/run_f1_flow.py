@@ -1,13 +1,24 @@
-import os
+## A file to import flight data into the Secured Flight Spotlight instance. 
+
+import requests 
+from dotenv import load_dotenv, find_dotenv
 import json
+from os import environ as env
+from auth_factory import NoAuthCredentialsGetter
+import arrow
+import json
+import time
+import os
+from dataclasses import asdict
 from os.path import dirname, abspath
-import  time
 import requests
-from dataclasses import dataclass, asdict
-from typing import Optional
-from auth_factory import PassportCredentialsGetter, NoAuthCredentialsGetter
-from dacite import from_dict
+from auth_factory import NoAuthCredentialsGetter
 from rid_definitions import LatLngPoint, RIDOperatorDetails, UASID, OperatorLocation, UAClassificationEU
+
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
 
 class BlenderUploader():
     
@@ -15,7 +26,34 @@ class BlenderUploader():
     
         self.credentials = credentials
     
-    def upload_to_server(self, filename):
+    def upload_flight_declaration(self, filename):
+        with open(filename, "r") as flight_declaration_file:
+            f_d = flight_declaration_file.read()
+            
+        
+        flight_declaration = json.loads(f_d)
+        now = arrow.now()
+        two_minutes_from_now = now.shift(minutes =2)
+        four_minutes_from_now = now.shift(minutes =4)
+
+        # Update start and end time 
+        flight_declaration['start_datetime']= two_minutes_from_now.isoformat()
+        flight_declaration['end_datetime'] = four_minutes_from_now.isoformat()
+        headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ self.credentials['access_token']}            
+        securl = 'http://localhost:8000/flight_declaration_ops/set_flight_declaration' # set this to self (Post the json to itself)        
+        response = requests.post(securl, json = flight_declaration, headers = headers)        return response.json()
+        
+            
+    def update_operation_state(self,operation_id:str, new_state:int):        
+
+        headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ self.credentials['access_token']}            
+
+        payload = {"state":new_state, "submitted_by":"hh@auth.com"}      
+        securl = 'http://localhost:8000/flight_declaration_ops/flight_declaration_state/{operation_id}'.format(operation_id=operation_id) # set this to self (Post the json to itself)        
+        response = requests.post(securl, json = payload, headers = headers)
+        return response.json()
+        
+    def submit_telemetry(self, filename):
         with open(filename, "r") as rid_json_file:
             rid_json = rid_json_file.read()
             
@@ -53,17 +91,38 @@ class BlenderUploader():
                     time.sleep(3)
                 else: 
                     print(response.json())
+      
 
 
 if __name__ == '__main__':
-    
-
+    # my_credentials = PassportSpotlightCredentialsGetter()
     # my_credentials = PassportCredentialsGetter()
     my_credentials = NoAuthCredentialsGetter()    
     credentials = my_credentials.get_cached_credentials(audience='testflight.flightblender.com', scopes=['blender.write'])
     parent_dir = dirname(abspath(__file__))  #<-- absolute dir the raw input file  is in
     
+    rel_path = 'flight_declarations_samples/flight-1.json'
+    abs_file_path = os.path.join(parent_dir, rel_path)
+    my_uploader = BlenderUploader(credentials=credentials)
+    flight_declaration_success = my_uploader.upload_flight_declaration(filename=abs_file_path)
+    flight_declaration_id = flight_declaration_success['id']
+
+    time.sleep(10)
+    print("Setting state as activted...")
+    # GCS Activates Flights
+    flight_state_activted = my_uploader.update_operation_state(operation_id=flight_declaration_id, new_state=2)
+    print("State set as activated.. ")
+    
+    # submit telemetry
+
     rel_path = "rid_samples/flight_1_rid_aircraft_state.json"
     abs_file_path = os.path.join(parent_dir, rel_path)
     my_uploader = BlenderUploader(credentials=credentials)
-    my_uploader.upload_to_server(filename=abs_file_path)
+    my_uploader.submit_telemetry(filename=abs_file_path)
+
+    print("Setting state as ended..")
+    # GCS Ends Flights
+    flight_state_ended = my_uploader.update_operation_state(operation_id=flight_declaration_id, new_state=5)
+
+
+
