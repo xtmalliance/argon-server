@@ -4,7 +4,7 @@ from .models import FlightDeclaration
 from .utils import OperationalIntentsConverter
 from conformance_monitoring_operations.operation_state_helper import FlightOperationStateMachine, get_status
 from conformance_monitoring_operations.conformance_checks_handler import FlightOperationConformanceHelper
-from common.data_definitions import OPERATOR_EVENT_LOOKUP
+from common.data_definitions import OPERATOR_EVENT_LOOKUP, OPERATION_STATES
 
 class FlightDeclarationSerializer(serializers.ModelSerializer):
     operational_intent = serializers.SerializerMethodField() 
@@ -51,7 +51,7 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
         transition_valid = my_conformance_helper.verify_operation_state_transition(original_state = current_state, new_state= value, event = event)
 
         if not transition_valid:
-            raise serializers.ValidationError("State transition to {new_state} from current state of {current_state} is not allowed per the ASTM standards".format(new_state = value, current_state = current_state))
+            raise serializers.ValidationError("State transition to {new_state} from current state of {current_state} is not allowed per the ASTM standards".format(new_state = OPERATION_STATES[value][1], current_state = OPERATION_STATES[current_state][1]))
         
         return value
     

@@ -41,7 +41,7 @@ class BlenderDatabaseReader():
         n = arrow.get(now)
         two_minutes_before_now = n.shift(seconds = -120).isoformat()
         two_minutes_after_now = n.shift(seconds = 120).isoformat()          
-        relevant_ids =  FlightDeclaration.objects.filter(start_datetime__lte = two_minutes_before_now, end_datetime__gte = two_minutes_after_now).values_list('id', flat=True)        
+        relevant_ids =  FlightDeclaration.objects.filter(start_datetime__gte = two_minutes_before_now).values_list('id', flat=True)        
         return relevant_ids
 
 class BlenderDatabaseWriter():    

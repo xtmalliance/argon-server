@@ -210,7 +210,8 @@ def set_signed_telemetry(request):
             unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
             operation_id = f_details.id
             now = arrow.now().isoformat()
-            relevant_operation_ids = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
+            relevant_operation_ids_qs = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
+            relevant_operation_ids = [str(o) for o in relevant_operation_ids_qs.all()]
             if operation_id in relevant_operation_ids:
                 # Get flight state: 
                 flight_operation = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id)
@@ -272,16 +273,16 @@ def set_telemetry(request):
         unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
         operation_id = f_details.id
         now = arrow.now().isoformat()
-        relevant_operation_ids = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
-        
-        if operation_id in relevant_operation_ids:
+        relevant_operation_ids_qs = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
+        relevant_operation_ids = [str(o) for o in relevant_operation_ids_qs.all()]
+        if operation_id in list(relevant_operation_ids):
             # Get flight state: 
             flight_operation = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id)
 
             if flight_operation.state in [2,3,4]: # Activated, Contingent, Non-conforming 
                 stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
             else: 
-                operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submissin will be ignored, please change the state first.".format(operation_id = operation_id)}
+                operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submission will be ignored, please change the state first.".format(operation_id = operation_id)}
                 return JsonResponse(operation_state_incorrect_msg, status=400, content_type='application/json')     
 
         else: 
