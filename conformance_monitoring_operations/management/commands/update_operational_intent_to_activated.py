@@ -119,3 +119,6 @@ class Command(BaseCommand):
             else: 
                 logging.info("Dry run, not submitting to the DSS")
 
+        else:
+            logging.info("Operational intent with {flight_declaration_id} does not exist...".format(flight_declaration_id=flight_declaration_id))
+

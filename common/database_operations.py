@@ -1,6 +1,5 @@
 from flight_declaration_operations.models import FlightAuthorization, FlightDeclaration
 from typing import Tuple
-from datetime import datetime
 from uuid import uuid4
 import arrow
 from django.db.utils import IntegrityError
@@ -39,10 +38,21 @@ class BlenderDatabaseReader():
     def get_current_flight_declaration_ids(self, now:str ) ->Tuple[None, uuid4]:  
         ''' This method gets flight operation ids that are active in the system'''
         n = arrow.get(now)
+        
         two_minutes_before_now = n.shift(seconds = -120).isoformat()
-        two_minutes_after_now = n.shift(seconds = 120).isoformat()          
-        relevant_ids =  FlightDeclaration.objects.filter(start_datetime__gte = two_minutes_before_now).values_list('id', flat=True)        
+        five_hours_from_now = n.shift(minutes = 300).isoformat()    
+        relevant_ids =  FlightDeclaration.objects.filter(start_datetime__gte = two_minutes_before_now, end_datetime__lte = five_hours_from_now).values_list('id', flat=True)        
         return relevant_ids
+    
+    def get_current_flight_accepted_activated_declaration_ids(self, now:str ) ->Tuple[None, uuid4]:  
+        ''' This method gets flight operation ids that are active in the system'''
+        n = arrow.get(now)
+        
+        two_minutes_before_now = n.shift(seconds = -120).isoformat()
+        five_hours_from_now = n.shift(minutes = 300).isoformat()    
+        relevant_ids =  FlightDeclaration.objects.filter(start_datetime__gte = two_minutes_before_now, end_datetime__lte = five_hours_from_now).filter(state__in = [1,2]).values_list('id', flat=True)        
+        return relevant_ids
+
 
 class BlenderDatabaseWriter():    
 

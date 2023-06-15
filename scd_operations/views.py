@@ -119,7 +119,7 @@ def SCDAuthTest(request, operation_id):
         one_minute_from_now_str = one_minute_from_now.isoformat()
         two_minutes_from_now = now.shift(minutes=2)
         two_minutes_from_now_str = two_minutes_from_now.isoformat()
-        opint_subscription_end_time = timedelta(seconds=60)
+        opint_subscription_end_time = timedelta(seconds=180)
         # TODO use ImplicitDict for this
         try:
             operational_intent = scd_test_data['operational_intent']
