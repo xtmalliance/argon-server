@@ -1,0 +1,748 @@
+{
+    "reference_time": "2022-01-01T00:00:00+00:00",
+    "current_states": [
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:01+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98038972203402,
+                "lng": 7.474449131882975,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 181.69701544234988,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:02+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98034559371,
+                "lng": 7.474447221570825,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 187.32201484537876,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:03+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98030180602268,
+                "lng": 7.4744390004777905,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 192.9470096138835,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:04+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98025878067021,
+                "lng": 7.474424547792619,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 198.5719998211166,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:05+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98021693200818,
+                "lng": 7.474404002716691,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 204.19698553157812,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:06+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98017666305899,
+                "lng": 7.474377563122889,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 209.82196692417108,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:07+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98013836163084,
+                "lng": 7.474345483649489,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 215.4469441159276,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:08+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98010239658292,
+                "lng": 7.474308073247454,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 221.07191739949445,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:09+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98006911427341,
+                "lng": 7.4742656922047495,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 226.696886971535,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:10+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98003883522392,
+                "lng": 7.474218748676376,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 232.32185315872223,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:11+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98001185103297,
+                "lng": 7.474167694753517,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 237.9468162852383,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:12+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97998842156793,
+                "lng": 7.474113022109677,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 243.57177668533632,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:13+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97996877246251,
+                "lng": 7.474055257265745,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 249.19673477201445,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:14+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97995309294403,
+                "lng": 7.473994956519553,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 254.8216908845809,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:15+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97994153401116,
+                "lng": 7.473932700588788,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 260.446645556735,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:16+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97993420697996,
+                "lng": 7.473869089018796,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 266.0715990912323,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:17+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.9799311824118,
+                "lng": 7.4738047344091445,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 271.6965520783292,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:18+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.979932489434084,
+                "lng": 7.473740256514519,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 277.32150483057734,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:19+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97993811545954,
+                "lng": 7.473676276276739,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 282.9464579250906,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:20+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97994800630767,
+                "lng": 7.473613409845333,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 288.57141172130383,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:21+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97996206672632,
+                "lng": 7.473552262644289,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 294.1963667064078,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:22+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.97998016130903,
+                "lng": 7.473493423542004,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 299.82132331252404,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:23+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.9800021157989,
+                "lng": 7.473437459180662,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 305.44628195120384,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:24+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.980027718766635,
+                "lng": 7.473384908519563,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 311.0712430188133,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:25+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98005672364661,
+                "lng": 7.473336277644953,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 316.6962068964762,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:26+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.980088851111184,
+                "lng": 7.473292034896348,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 322.3211739334819,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:27+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98012379176057,
+                "lng": 7.473252606356258,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 327.9461444246762,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:28+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98016120910237,
+                "lng": 7.47321837174676,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 333.5711187009109,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:29+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98020074279198,
+                "lng": 7.473189660772415,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 339.1960969663837,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        },
+        {
+            "timestamp": {
+                "value": "2022-01-01T00:00:30+00:00",
+                "format": "RFC3339"
+            },
+            "operational_status": "Airborne",
+            "position": {
+                "lat": 46.98024201210265,
+                "lng": 7.47316674994479,
+                "alt": 620.0,
+                "accuracy_h": "HAUnknown",
+                "accuracy_v": "VAUnknown",
+                "extrapolated": false
+            },
+            "height": {
+                "distance": 50.0,
+                "reference": "TakeoffLocation"
+            },
+            "track": 344.82107945500763,
+            "speed": 4.91,
+            "timestamp_accuracy": 0.0,
+            "speed_accuracy": "SA3mps",
+            "vertical_speed": 0.0
+        }
+    ],
+    "flight_details": {
+        "rid_details": {
+            "id": "1",
+            "eu_classification": {
+                "category": "EUCategoryUndefined",
+                "class": "EUClassUndefined"
+            },
+            "operator_id": "OP-0xn81lwa",
+            "uas_id": {
+                "serial_number": "157de9bb-6b49-496b-bf3f-0b768ce6a3b6",
+                "registration_id": "CHE9t1sq8bqa023t",
+                "utm_id": "07a06bba-5092-48e4-8253-7a523f885bfe"
+            },
+            "operation_description": "Delivery operation, see more details at https://deliveryops.com/operation",
+            "operator_location": {
+                "position": {
+                    "lat": 46.97615311620088,
+                    "lng": 7.476099729537965
+                }
+            }
+        },
+        "aircraft_type": "Helicopter"
+    }
+}

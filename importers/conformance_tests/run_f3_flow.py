@@ -1,5 +1,3 @@
-## A file to import flight data into the Secured Flight Spotlight instance. 
-
 import requests 
 from dotenv import load_dotenv, find_dotenv
 import json
@@ -46,6 +44,22 @@ class BlenderUploader():
         response = requests.post(securl, json = flight_declaration, headers = headers)        
         return response
         
+    def check_operation_state_every_five_seconds(self,operation_id:str):        
+        now = arrow.now()
+        three_minutes_from_now = now.shift(seconds = 180)
+        headers = {"Content-Type":'application/json',"Authorization": "Bearer "+ self.credentials['access_token']}                    
+        securl = 'http://localhost:8000/flight_declaration_ops/flight_declaration_state/{operation_id}'.format(operation_id=operation_id) # set this to self (Post the json to itself)        
+
+        if (arrow.now() > three_minutes_from_now):
+            response = requests.get(securl, headers = headers)            
+            if response.status_code == 200:
+                r = response.json()
+                print("Operation State is {operation_state}".format(operation_state = r['state']))
+                print("Sleeping 5 seconds..")
+                time.sleep(5)
+        else: 
+            print("Three minute querying finished...")
+            
             
     def update_operation_state(self,operation_id:str, new_state:int):        
 
@@ -65,7 +79,7 @@ class BlenderUploader():
         states = rid_json['current_states']
         rid_operator_details  = rid_json['flight_details']
         
-        uas_id = UASID(registration_id = 'CHE-5bisi9bpsiesw',  serial_number='d29dbf50-f411-4488-a6f1-cf2ae4d4237a',utm_id= '07a06bba-5092-48e4-8253-7a523f885bfe')
+        uas_id = UASID(registration_id = 'CHE-5bisi9bpsiesw',  serial_number='157de9bb-6b49-496b-bf3f-0b768ce6a3b6',utm_id= '07a06bba-5092-48e4-8253-7a523f885bfe')
         # eu_classification =from_dict(data_class= UAClassificationEU, data= rid_operator_details['rid_details']['eu_classification'])      
         eu_classification = UAClassificationEU()
         operator_location = OperatorLocation(position = LatLngPoint(lat = 46.97615311620088,lng = 7.476099729537965))
@@ -84,8 +98,7 @@ class BlenderUploader():
             payload = {"observations":[{"current_states":[state], "flight_details": {"rid_details" :asdict(rid_operator_details), "aircraft_type": "Helicopter","operator_name": "Thomas-Roberts" }}]}            
             securl = 'http://localhost:8000/flight_stream/set_telemetry' # set this to self (Post the json to itself)
             try:
-                response = requests.put(securl, json = payload, headers = headers)
-                
+                response = requests.put(securl, json = payload, headers = headers)                
             except Exception as e:                
                 print(e)
             else:
@@ -104,7 +117,7 @@ if __name__ == '__main__':
     credentials = my_credentials.get_cached_credentials(audience='testflight.flightblender.com', scopes=['blender.write'])
     parent_dir = dirname(abspath(__file__))  #<-- absolute dir the raw input file  is in
     
-    rel_path = '../flight_declarations_samples/flight-1.json'
+    rel_path = '../flight_declarations_samples/flight-1-bern.json'
     abs_file_path = os.path.join(parent_dir, rel_path)
     my_uploader = BlenderUploader(credentials=credentials)
     flight_declaration_response = my_uploader.upload_flight_declaration(filename=abs_file_path)
@@ -117,8 +130,8 @@ if __name__ == '__main__':
         print("Error in submitting flight declaration...")
         sys.exit()
    
-    print("Wait 20 secs...")
-    time.sleep(20)
+    print("Wait 10 secs...")
+    time.sleep(10)
     print("Setting state as activted...")
     # GCS Activates Flights
     flight_state_activted_response = my_uploader.update_operation_state(operation_id=flight_declaration_id, new_state=2)
@@ -131,17 +144,29 @@ if __name__ == '__main__':
 
     print("State set as activated...")
     
-    # submit telemetry
+    # submit telemetry, this telemetry is partly conformant, this is generated 
 
-    rel_path = "../rid_samples/flight_1_rid_aircraft_state.json"
+    rel_path = "../rid_samples/non-conforming/flight_1_bern_nonconforming.json"
     abs_file_path = os.path.join(parent_dir, rel_path)
     my_uploader = BlenderUploader(credentials=credentials)
     thread = threading.Thread(target=my_uploader.submit_telemetry,args =(abs_file_path,flight_declaration_id,))
     thread.start()
     print("Telemetry submission for 30 seconds...")
-    time.sleep(30)
-    print("Setting state as ended...")
-    # GCS Ends Flights
-    flight_state_ended = my_uploader.update_operation_state(operation_id=flight_declaration_id, new_state=5)
-    print("Flight state declared ended...")
+    time.sleep(40)
+
+    # print("Blender should set the state as non-conforming...")
+
+    # print("Checking Blender State...")
+    # thread = threading.Thread(target=my_uploader.check_operation_state_every_five_seconds,args =(abs_file_path,flight_declaration_id,))
+    # thread.start()
+    
+
+    # time.sleep(50)
+    # print("Setting state as ended...")
+    # # GCS Ends Flights
+    # flight_state_ended = my_uploader.update_operation_state(operation_id=flight_declaration_id, new_state=5)
+    # print("Flight state declared ended...")
+
+
+
 

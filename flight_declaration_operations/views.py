@@ -49,7 +49,7 @@ def set_flight_declaration(request):
     except KeyError as ke:
         msg = json.dumps({"message":"A valid flight declaration as specified by the A flight declration protocol must be submitted."})        
         return HttpResponse(msg, status=400)
-    
+    aircraft_id = '000' if 'vehicle_id' not in req else req['vehicle_id']
     submitted_by = None if 'submitted_by' not in req else req['submitted_by']
     approved_by = None if 'approved_by' not in req else req['approved_by']
     is_approved = False
@@ -140,8 +140,8 @@ def set_flight_declaration(request):
         logging.info("Flight Declaration intersections checked, found {num_intersections} declarations" %{"all_relevant_declarations": len(relevant_id_set)})
         if all_relevant_declarations:         
             is_approved = 0
-
-    fo = FlightDeclaration(operational_intent = json.dumps(asdict(parital_op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)    
+    
+    fo = FlightDeclaration(aircraft_id =aircraft_id,  operational_intent = json.dumps(asdict(parital_op_int_ref)), bounds= bounds, type_of_operation= type_of_operation, submitted_by= submitted_by, is_approved = is_approved, start_datetime = start_datetime,end_datetime = end_datetime, originating_party = originating_party, flight_declaration_raw_geojson= json.dumps(flight_declaration_geo_json), state = default_state)    
     fo.save()
     fo.add_state_history_entry(new_state=0, original_state = None,notes="Created Declaration")
 

@@ -166,10 +166,10 @@ class BlenderConformanceOps():
         
         # Flight Operation and Flight Authorization exists, create a notifications helper
         my_operation_notification = OperationConformanceNotification(flight_declaration_id=flight_declaration_id)        
-        operation_start_time = flight_declaration.start_datetime
-        operation_end_time = flight_declaration.end_datetime
+        operation_start_time = arrow.get(flight_declaration.start_datetime)
+        operation_end_time = arrow.get(flight_declaration.end_datetime)
 
-        # C3 check 
+        # C3 check         
         try: 
             assert flight_declaration.aircraft_id == aircraft_id
         except AssertionError as ae: 
@@ -180,7 +180,7 @@ class BlenderConformanceOps():
         
         # C4, C5 check 
         try: 
-            assert flight_declaration.state in ['Accepted', 'Activated']
+            assert flight_declaration.state in [1,2]
         except AssertionError as ae: 
             flight_state_not_correct_msg = "The Operation state for operation {flight_declaration_id}, is not one of 'Accepted' or 'Activated', your authorization is invalid. C4+C5 Check failed.".format(flight_declaration_id = flight_declaration_id)
             logging.error(flight_state_not_correct_msg)
@@ -190,7 +190,7 @@ class BlenderConformanceOps():
 
         # C6 check
         try: 
-            assert is_time_between(begin_time=operation_start_time, end_time=operation_end_time, check_time= now)
+            assert is_time_between(begin_time= operation_start_time, end_time= operation_end_time, check_time= now)
         except AssertionError as ae:
             telemetry_timestamp_not_within_op_start_end_msg = "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the start / end time for an operation. C6 Check failed.".format(flight_declaration_id = flight_declaration_id)
             logging.error(telemetry_timestamp_not_within_op_start_end_msg)
@@ -322,7 +322,3 @@ class BlenderConformanceOps():
         return True
 
     
-    
-
-    
-

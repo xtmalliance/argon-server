@@ -162,7 +162,7 @@ CELERYBEAT_SCHEDULE = {
     'check-flight-conformance': {
         'task': 'check_flight_conformance',
         # Every 20 secionds
-        'schedule':  timedelta(seconds=20)
+        'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=5)))
     }, 
     
 }
@@ -190,7 +190,7 @@ LOGGING = {
         'django': {
             'handlers': ['file', 'console'],            
             'propagate': True,
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'ERROR')
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO')
         },
     },
 }

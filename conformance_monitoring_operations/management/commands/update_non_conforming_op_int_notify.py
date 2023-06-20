@@ -36,10 +36,8 @@ class Command(BaseCommand):
         dest = "dryrun",
         metavar = "Set if this is a dry run",
         default= '1', 
-        help='Set if it is a dry run')
-        
-        
-        
+        help='Set if it is a dry run')       
+                
     def handle(self, *args, **options):
         # This command declares an operation as non-conforming and updates the state to the DSS (and notifies subscribers) 
         my_database_reader = BlenderDatabaseReader()  
@@ -59,13 +57,9 @@ class Command(BaseCommand):
         flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
 
         opint_subscription_end_time = timedelta(seconds=180)
-
-        operational_intent_id = flight_authorization.dss_operational_intent_id
-                
-        r = get_redis()
-        
+        operational_intent_id = flight_authorization.dss_operational_intent_id                
+        r = get_redis()        
         flight_opint = 'flight_opint.'  + flight_declaration_id
-
         if r.exists(flight_opint):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
