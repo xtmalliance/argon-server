@@ -33,7 +33,7 @@ class BlenderUploader():
         
         flight_declaration = json.loads(f_d)
         now = arrow.now()
-        one_minute_from_now = now.shift(minutes =1)
+        one_minute_from_now = now.shift(seconds = 5)
         four_minutes_from_now = now.shift(minutes =4)
 
         # Update start and end time 
