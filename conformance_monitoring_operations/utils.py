@@ -130,7 +130,7 @@ class ConformanceChecksList(StatusCode):
 def is_time_between(begin_time, end_time, check_time=None):
     # If check time is not given, default to current UTC time
     # Source: https://stackoverflow.com/questions/10048249/how-do-i-determine-if-current-time-is-within-a-specified-range-using-pythons-da
-    check_time = check_time or arrow.utcnow()
+    check_time = check_time or arrow.now()
     if begin_time < end_time:
         return check_time >= begin_time and check_time <= end_time
     else: # crosses midnight
