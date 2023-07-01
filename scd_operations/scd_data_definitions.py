@@ -44,7 +44,7 @@ class Circle:
 @dataclass
 class Altitude:
     ''' A class to hold altitude '''
-    value:int
+    value: Union[int, float]
     reference:str
     units: str
 

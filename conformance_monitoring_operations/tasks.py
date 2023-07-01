@@ -72,7 +72,7 @@ def check_operation_telemetry_conformance(flight_declaration_id:str, dry_run:str
                 altitude_m_wgs84 = message['msg_data']['altitude_mm']
                 aircraft_id = message['address']
                 
-                conformant_via_telemetry = my_conformance_ops.is_operation_conformant_via_telemetry(flight_declaration_id=flight_declaration_id,aircraft_id=aircraft_id, telemetry_location=LatLngPoint(lat = lat_dd, lng= lon_dd),altitude_m_wgs_84=altitude_m_wgs84)
+                conformant_via_telemetry = my_conformance_ops.is_operation_conformant_via_telemetry(flight_declaration_id=flight_declaration_id,aircraft_id=aircraft_id, telemetry_location=LatLngPoint(lat = lat_dd, lng= lon_dd),altitude_m_wgs_84=float(altitude_m_wgs84))
                 print(conformant_via_telemetry)
 
                 break

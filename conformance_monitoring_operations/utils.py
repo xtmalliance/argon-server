@@ -1,14 +1,17 @@
 ## This file checks the conformance of a operation per the AMC stated in the EU Conformance monitoring service 
 import logging
 import arrow
+import json
 from typing import List
 from shapely.geometry import Point
+from shapely.geometry import Polygon as Plgn
 from dotenv import load_dotenv, find_dotenv
 from common.database_operations import BlenderDatabaseReader
 from .operator_conformance_notifications import OperationConformanceNotification
 from scd_operations.scd_data_definitions import LatLngPoint, Polygon, Volume4D
 from conformance_monitoring_operations.data_definitions import PolygonAltitude
-from dacite import from_dict
+
+from .data_helper import cast_to_volume4d
 logger = logging.getLogger('django')
 load_dotenv(find_dotenv())
 
@@ -202,23 +205,27 @@ class BlenderConformanceOps():
         # Construct the boundary of the current operation by getting the operational intent
                
         # TODO: Cache this so that it need not be done everytime
-        operational_intent = flight_declaration.operational_intent
+        operational_intent = json.loads(flight_declaration.operational_intent)
+        
         all_volumes = operational_intent['volumes']
         # The provided telemetry location cast as a Shapely Point
-
-        rid_location = Point(telemetry_location.lng, telemetry_location.lat)                
+        lng = float(telemetry_location.lng)
+        lat = float(telemetry_location.lat)
+        rid_location = Point(lng,lat)                
         all_polygon_altitudes: List[PolygonAltitude] = []
 
         for v in all_volumes:
-            v4d = from_dict(data_class=Volume4D, data=v)
-            altitude_lower = v4d.altitude_lower.value
-            altitude_upper = v4d.altitude_upper.value
+            v4d = cast_to_volume4d(v)
+            altitude_lower = v4d.volume.altitude_lower.value
+            altitude_upper = v4d.volume.altitude_upper.value
             outline_polygon = v4d.volume.outline_polygon            
             point_list = []            
-            for vertex in outline_polygon['vertices']:
-                p = Point(vertex['lng'], vertex['lat'])
+            for vertex in outline_polygon.vertices:
+                p = Point(vertex.lng, vertex.lat)
                 point_list.append(p)
-            outline_polygon = Polygon([[p.x, p.y] for p in point_list])
+            outline_polygon = Plgn([[p.x, p.y] for p in point_list])
+            
+            
             pa = PolygonAltitude(polygon = outline_polygon, altitude_upper = altitude_upper, altitude_lower = altitude_lower)
             all_polygon_altitudes.append(pa)        
 
@@ -228,6 +235,7 @@ class BlenderConformanceOps():
             rid_obs_within_all_volumes.append(is_within)
             # If the aircraft RID is within the the polygon, check the altitude
             if is_within: 
+                print(altitude_lower, altitude_m_wgs_84, altitude_upper)
                 if altitude_lower <= altitude_m_wgs_84 <= altitude_upper:
                     aircraft_altitude_conformant = True
                 else: 
