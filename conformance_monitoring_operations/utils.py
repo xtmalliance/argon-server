@@ -235,19 +235,18 @@ class BlenderConformanceOps():
             rid_obs_within_all_volumes.append(is_within)
             # If the aircraft RID is within the the polygon, check the altitude
             if is_within: 
-                print(altitude_lower, altitude_m_wgs_84, altitude_upper)
+                
                 if altitude_lower <= altitude_m_wgs_84 <= altitude_upper:
                     aircraft_altitude_conformant = True
                 else: 
                     aircraft_altitude_conformant = False
 
         aircraft_bounds_conformant = any(rid_obs_within_all_volumes) 
-
+        
         try: 
             assert aircraft_altitude_conformant
         except AssertionError as ae:             
-            aircraft_altitude_nonconformant_msg = "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the start / end time for an operation. C7a check failed.".format(flight_declaration_id = flight_declaration_id)
-            
+            aircraft_altitude_nonconformant_msg = "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the altitude bounds C7a check failed.".format(flight_declaration_id = flight_declaration_id)            
             logging.error(aircraft_altitude_nonconformant_msg)
             my_operation_notification.send_conformance_status_notification(message = aircraft_altitude_nonconformant_msg, level='error')
             return ConformanceChecksList.C7  

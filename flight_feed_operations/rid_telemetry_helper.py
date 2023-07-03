@@ -54,7 +54,7 @@ class BlenderTelemetryValidator():
         accuracy_v = VerticalAccuracy(value=_state_position['accuracy_v'])
         height = RIDHeight(reference= current_state['height']['reference'], distance = current_state['height']['distance'])
 
-        position = RIDAircraftPosition(pressure_altitude = pressure_altitude, lat = _state_position['lat'], lng = _state_position['lng'], accuracy_h = accuracy_h, accuracy_v = accuracy_v, extrapolated =extrapolated,height=height)
+        position = RIDAircraftPosition(pressure_altitude = pressure_altitude, lat = _state_position['lat'], alt = _state_position['alt'],  lng = _state_position['lng'], accuracy_h = accuracy_h, accuracy_v = accuracy_v, extrapolated =extrapolated,height=height)
         speed_accuracy = SpeedAccuracy('SA3mps')
 
 

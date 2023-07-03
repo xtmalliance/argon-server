@@ -12,7 +12,7 @@ from rid_operations import rtree_helper
 from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume3D, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, Circle, Altitude, LatLngPoint, Radius,OpInttoCheckDetails, OperationalIntentUpdateResponse, OperationalIntentUpdateRequest, SubscriberToNotify, OperationalIntentUpdateSuccessResponse, SubscriptionState, NotifyPeerUSSPostPayload, USSNotificationResponse
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume3D, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, Circle, Altitude, LatLngPoint, Radius,OpInttoCheckDetails, OperationalIntentUpdateResponse, OperationalIntentUpdateRequest, SubscriberToNotify, OperationalIntentUpdateSuccessResponse, SubscriptionState, NotifyPeerUSSPostPayload, USSNotificationResponse, OperationalIntentUpdateErrorResponse
 from .scd_data_definitions import Polygon as Plgn
 import tldextract
 from os import environ as env
@@ -404,11 +404,9 @@ class SCDOperations():
         
         else: 
             # Update unsuccessful
-            d_r =OperationalIntentUpdateSuccessResponse()
-            message = CommonDSS4xxResponse(message="Error in updating operational intent in the DSS")
-            
+            d_r =OperationalIntentUpdateErrorResponse(message =dss_response['message'] )
+            message = CommonDSS4xxResponse(message="Error in updating operational intent in the DSS")            
         
-
         opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status = dss_r_status_code, message=message)
 
         return opint_update_result

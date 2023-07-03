@@ -311,6 +311,10 @@ class OperationalIntentUpdateSuccessResponse:
     operational_intent_reference: OperationalIntentReferenceDSSResponse
 
 @dataclass
+class OperationalIntentUpdateErrorResponse:
+    message: str
+
+@dataclass
 class OperationalIntentUpdateResponse:
     dss_response: Union[OperationalIntentUpdateSuccessResponse,CommonDSS4xxResponse]
     status: int

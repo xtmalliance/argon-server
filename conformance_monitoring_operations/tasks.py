@@ -34,7 +34,7 @@ def check_flight_conformance(dry_run:str = None):
     for relevant_flight_declaration in relevant_flight_declarations:   
         flight_declaration_id = str(relevant_flight_declaration)
         flight_declaration_conformant = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=relevant_flight_declaration)
-        print(flight_declaration_conformant)
+        
         if flight_declaration_conformant:
             logger.info("Operation with {flight_operation_id} is conformant...".format(flight_operation_id=flight_declaration_id))
             # Basic conformance checks passed, check telemetry conformance 
@@ -73,7 +73,7 @@ def check_operation_telemetry_conformance(flight_declaration_id:str, dry_run:str
                 aircraft_id = message['address']
                 
                 conformant_via_telemetry = my_conformance_ops.is_operation_conformant_via_telemetry(flight_declaration_id=flight_declaration_id,aircraft_id=aircraft_id, telemetry_location=LatLngPoint(lat = lat_dd, lng= lon_dd),altitude_m_wgs_84=float(altitude_m_wgs84))
-                print(conformant_via_telemetry)
+                
 
                 break
                 
