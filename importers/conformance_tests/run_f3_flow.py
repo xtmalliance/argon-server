@@ -146,7 +146,7 @@ if __name__ == '__main__':
     
     # submit telemetry, this telemetry is partly conformant, this is generated 
 
-    rel_path = "../rid_samples/non-conforming/flight_1_bern_nonconforming.json"
+    rel_path = "../rid_samples/non-conforming/flight_1_bern_fully_nonconforming.json"
     abs_file_path = os.path.join(parent_dir, rel_path)
     my_uploader = BlenderUploader(credentials=credentials)
     thread = threading.Thread(target=my_uploader.submit_telemetry,args =(abs_file_path,flight_declaration_id,))

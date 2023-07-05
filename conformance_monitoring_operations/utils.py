@@ -206,7 +206,7 @@ class BlenderConformanceOps():
                
         # TODO: Cache this so that it need not be done everytime
         operational_intent = json.loads(flight_declaration.operational_intent)
-        
+
         all_volumes = operational_intent['volumes']
         # The provided telemetry location cast as a Shapely Point
         lng = float(telemetry_location.lng)
@@ -230,18 +230,17 @@ class BlenderConformanceOps():
             all_polygon_altitudes.append(pa)        
 
         rid_obs_within_all_volumes = []
-        for p in all_polygon_altitudes:            
+        rid_obs_within_altitudes = []
+        for p in all_polygon_altitudes:      
             is_within = rid_location.within(p.polygon)
-            rid_obs_within_all_volumes.append(is_within)
             # If the aircraft RID is within the the polygon, check the altitude
-            if is_within: 
+            altitude_conformant = True if altitude_lower <= altitude_m_wgs_84 <= altitude_upper else False            
+            
+            rid_obs_within_all_volumes.append(is_within)
+            rid_obs_within_altitudes.append(altitude_conformant)
                 
-                if altitude_lower <= altitude_m_wgs_84 <= altitude_upper:
-                    aircraft_altitude_conformant = True
-                else: 
-                    aircraft_altitude_conformant = False
-
         aircraft_bounds_conformant = any(rid_obs_within_all_volumes) 
+        aircraft_altitude_conformant = any(rid_obs_within_altitudes) 
         
         try: 
             assert aircraft_altitude_conformant
