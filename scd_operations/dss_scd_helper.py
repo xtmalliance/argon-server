@@ -246,8 +246,8 @@ class SCDOperations():
                 except Exception as e: 
                     uss_audience = 'localhost'
                 else:                    
-                    switch = {'localhost':'localhost', 'internal':'host.docker.internal'}                
-                    if ext.domain in ['localhost', 'internal']:# for host.docker.internal type calls
+                    switch = {'localhost':'localhost', 'internal':'host.docker.internal','test':'local.test'}                
+                    if ext.domain in ['localhost', 'internal','test']:# for host.docker.internal type calls
                         uss_audience = switch[ext.domain]
                     else:
                         if ext.suffix in (''):
