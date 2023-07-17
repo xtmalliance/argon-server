@@ -5,6 +5,7 @@ from flight_blender.celery import app
 from os import environ as env
 from common.database_operations import BlenderDatabaseReader
 import arrow
+from . import custom_signals
 from scd_operations.scd_data_definitions import LatLngPoint
 from django.core import management
 from flight_feed_operations import flight_stream_helper
@@ -32,19 +33,17 @@ def check_flight_conformance(dry_run:str = None):
     logger.info("{num_relevant_operations} relevant operations found...".format(num_relevant_operations=len(relevant_flight_declarations)))
     for relevant_flight_declaration in relevant_flight_declarations:   
         flight_declaration_id = str(relevant_flight_declaration)
-        flight_declaration_conformant = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=relevant_flight_declaration)
+        flight_authorization_conformant = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=relevant_flight_declaration)
         
-        if flight_declaration_conformant:
+        if flight_authorization_conformant:
             logger.info("Operation with {flight_operation_id} is conformant...".format(flight_operation_id=flight_declaration_id))
             # Basic conformance checks passed, check telemetry conformance 
-            check_operation_telemetry_conformance(flight_declaration_id = flight_declaration_id)
+            # check_operation_telemetry_conformance(flight_declaration_id = flight_declaration_id)
 
         else:
+            custom_signals.flight_authorization_conformance_monitoring_signal.send(sender='check_flight_conformance', non_conformance_state= flight_authorization_conformant, flight_declaration_id = flight_declaration_id)
             # Flight Declaration is not conformant             
             logger.info("Operation with {flight_operation_id} is not conformant...".format(flight_operation_id=flight_declaration_id))
-            if not dry_run: 
-                # The operation needs to be set as non-conformant and updated to the DSS, there is no need to add off-nominal volumes                   
-                management.call_command('update_non_conforming_op_int_notify',flight_declaration_id = flight_declaration_id, dry_run =0)               
 
 # This method conducts flight telemetry checks
 @app.task(name='check_operation_telemetry_conformance')
@@ -71,8 +70,12 @@ def check_operation_telemetry_conformance(flight_declaration_id:str, dry_run:str
                 altitude_m_wgs84 = message['msg_data']['altitude_mm']
                 aircraft_id = message['address']
                 
-                conformant_via_telemetry = my_conformance_ops.is_operation_conformant_via_telemetry(flight_declaration_id=flight_declaration_id,aircraft_id=aircraft_id, telemetry_location=LatLngPoint(lat = lat_dd, lng= lon_dd),altitude_m_wgs_84=float(altitude_m_wgs84))            
-
+                conformant_via_telemetry = my_conformance_ops.is_operation_conformant_via_telemetry(flight_declaration_id=flight_declaration_id,aircraft_id=aircraft_id, telemetry_location= LatLngPoint(lat = lat_dd, lng= lon_dd),altitude_m_wgs_84=float(altitude_m_wgs84))            
+                logger.info("Operation with {flight_operation_id} is not conformant via telemetry failed test {conformant_via_telemetry}...".format(flight_operation_id=flight_declaration_id, conformant_via_telemetry = conformant_via_telemetry))
+                if conformant_via_telemetry:
+                    pass
+                else: 
+                    custom_signals.telemetry_conformance_monitoring_signal.send(sender='conformant_via_telemetry', non_conformance_state= conformant_via_telemetry, flight_declaration_id = flight_declaration_id)
                 break
                 
             

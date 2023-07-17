@@ -37,7 +37,7 @@ class VolumesConverter():
     def __init__(self):
         
         self.geo_json = {"type":"FeatureCollection","features":[]}
-        self.utm_zone = '54N'
+        self.utm_zone = env.get('UTM_ZONE','54N')
         self.all_volume_features =[]
         
     def utm_converter(self, shapely_shape: shapely.geometry, inverse:bool=False) -> shapely.geometry.shape:
