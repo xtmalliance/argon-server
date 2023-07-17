@@ -22,7 +22,6 @@ class FlightOperationConformanceHelper():
         self.my_database_reader = BlenderDatabaseReader()
         self.flight_declaration = self.my_database_reader.get_flight_declaration_by_id(flight_declaration_id=self.flight_declaration_id)
 
-
     def verify_operation_state_transition(self, original_state:int, new_state: int, event:str) -> bool:
         """
         This class updates the state of a flight operation.

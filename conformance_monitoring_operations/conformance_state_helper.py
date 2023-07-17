@@ -90,12 +90,23 @@ class StatusCode:
     @classmethod
     def value(cls, label):
         """Return the value associated with the provided label."""
+        label = label if isinstance(label, int) else label.lower()
         for k in cls.options.keys():
-            if cls.options[k].lower() == label.lower():
+            if cls.options[k].lower() == label:
                 return k
 
         raise ValueError("Label not found")
 
+
+    @classmethod
+    def state_code(cls, key):
+        """Return the value associated with the provided label."""
+        names = cls.names()
+        for k,v in names.items(): 
+            if v == key:
+                return k
+
+        raise ValueError("Key not found")
 
 
 class ConformanceChecksList(StatusCode):
@@ -113,3 +124,18 @@ class ConformanceChecksList(StatusCode):
     C9b = 11
     C10 = 12
     C11 = 13
+
+    options = {
+        C2: ("Flight Auth not granted"),
+        C3: ("Telemetry Auth mismatch"),
+        C4: ("Operation state invalid"),
+        C5: ("Operation not activated"),
+        C6: ("Telemetry time incorrect"),
+        C7a: ("Flight out of bounds"),
+        C7b: ("Flight altitude out of bounds"),
+        C8:  ("Geofence breached"),
+        C9a: ("Telemetry not received"),
+        C9b: ("Telemetry not received within last 15 secs"),
+        C10: ("State not in accepted, non-conforming, activated"),
+        C11: ("No Flight Authorization"),
+    }

@@ -18,6 +18,6 @@ class OperationConformanceNotification():
             send_operational_update_message.delay(flight_declaration_id =self.flight_declaration_id , message_text = message, level = level)
         else: 
             # If no AMQP is specified then 
-            logging.info("Conformance Notification for {operation_id}".format(operation_id = self.flight_declaration_id))
-            logging.info(message)
+            logging.error("Conformance Notification for {operation_id}".format(operation_id = self.flight_declaration_id))
+            logging.error(message)
 

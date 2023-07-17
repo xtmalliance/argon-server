@@ -41,8 +41,8 @@ class BlenderConformanceOps():
         my_database_reader = BlenderDatabaseReader()
         now = arrow.now()        
 
-        # flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= flight_declaration_id)        
-        # flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id= flight_declaration_id)        
+        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
         # # C2 Check 
         # try: 
         #     assert flight_authorization is not None
@@ -52,7 +52,7 @@ class BlenderConformanceOps():
         #     return ConformanceChecksList.C2
         
         # Flight Operation and Flight Authorization exists, create a notifications helper
-        my_operation_notification = OperationConformanceNotification(flight_declaration_id=flight_declaration_id)        
+        
         operation_start_time = arrow.get(flight_declaration.start_datetime)
         operation_end_time = arrow.get(flight_declaration.end_datetime)
 
@@ -143,7 +143,7 @@ class BlenderConformanceOps():
             # if flight state is accepted, then change it to ended and delete from dss
             return ConformanceChecksList.C11       
         # The time the most recent telemetry was sent
-        latest_telemetry_datetime = flight_declaration.latest_telemetry_datetime
+        latest_telemetry_datetime = flight_declaration.latest_telemetry_datetime        
         # Check the current time is within the start / end date time +/- 15 seconds TODO: trim this window as it is to broad
         fifteen_seconds_before_now = now.shift(seconds = -15)
         fifteen_seconds_after_now = now.shift(seconds = 15)           
@@ -155,7 +155,7 @@ class BlenderConformanceOps():
             return ConformanceChecksList.C10
                            
         # C9 state check 
-        # Operation is supposed to start check if telemetry is bieng submitted (within the last minute)
+        # Operation is supposed to start check if telemetry is bieng submitted (within the last minute)        
         if latest_telemetry_datetime:                         
             if not fifteen_seconds_before_now <= latest_telemetry_datetime <= fifteen_seconds_after_now:
                 return ConformanceChecksList.C9a
@@ -163,7 +163,6 @@ class BlenderConformanceOps():
             # declare state as contingent 
         
             return ConformanceChecksList.C9b
-
 
         return True
 
