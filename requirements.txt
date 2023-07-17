@@ -8,7 +8,7 @@ requests==2.31.0
 python-dotenv==0.19.2
 pyproj==3.3.1
 pandas==1.4.3
-Shapely==1.8.1
+Shapely==2.0.1
 python-jose==3.3.0
 cryptography==39.0.1
 pyjwt==2.4.0
@@ -16,7 +16,7 @@ jwcrypto==1.4.2
 geojson==2.5.0
 arrow==1.2.2
 tldextract==3.2.1
-rtree==1.0.0
+rtree==1.0.1
 psycopg2-binary==2.9.3
 dacite==1.6.0
 marshmallow==3.17.0

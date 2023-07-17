@@ -1,6 +1,7 @@
 version: "3"
 services:
   redis:
+    platform: linux/amd64 
     command: ["redis-server", "/redis.conf"]
     image: "redis:latest"
     ports:
@@ -29,6 +30,7 @@ services:
       - "15672:15672"
 
   db:
+    platform: linux/amd64
     image: postgres
     ports:
       - "5432:5432"
@@ -39,6 +41,7 @@ services:
       - ".env"
 
   web:
+    platform: linux/amd64
     env_file:
       - ".env"
     build: .
@@ -60,6 +63,7 @@ services:
       - .:/app
 
   celery:
+    platform: linux/amd64
     container_name: flight-blender-worker
     image: openskiessh/flight-blender
     restart: on-failure

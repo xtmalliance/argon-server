@@ -1,9 +1,8 @@
-from requests.adapters import HTTPResponse
+from django.http import HttpResponse
 from auth_helper.utils import requires_scopes
 import json
 from dataclasses import asdict, is_dataclass
 from . import view_port_ops
-from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
 from . import dss_rid_helper
@@ -168,9 +167,9 @@ def get_rid_data(request, subscription_id):
         obs_helper = flight_stream_helper.ObservationReadOperations()
         all_flights_rid_data = obs_helper.get_observations(push_cg)
 
-        return HTTPResponse(json.dumps(all_flights_rid_data), status=200, content_type='application/json')
+        return HttpResponse(json.dumps(all_flights_rid_data), status=200, content_type='application/json')
     else:
-        return HTTPResponse(json.dumps({}), status=404, content_type='application/json')
+        return HttpResponse(json.dumps({}), status=404, content_type='application/json')
 
 
 @api_view(['POST'])
