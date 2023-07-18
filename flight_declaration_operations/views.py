@@ -1,37 +1,36 @@
 # Create your views here.
-from auth_helper.utils import requires_scopes
-
+import io
 # Create your views here.
 import json
-import arrow
 import logging
-import io
+from dataclasses import asdict
+from os import environ as env
+from typing import List
+
+import arrow
+from auth_helper.utils import requires_scopes
+from django.http import HttpRequest, HttpResponse
+from django.utils.decorators import method_decorator
+from geo_fence_operations import rtree_geo_fence_helper
+from geo_fence_operations.models import GeoFence
+from rest_framework import generics, mixins, status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
-from typing import List
-from django.http import HttpResponse, HttpRequest
-from .models import FlightDeclaration
-from dataclasses import asdict
-from geo_fence_operations import rtree_geo_fence_helper
-from geo_fence_operations.models import GeoFence
-from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from shapely.geometry import shape
-from .data_definitions import (
-    FlightDeclarationCreateResponse,
-)
-from rest_framework import mixins, generics
-from .serializers import (
-    FlightDeclarationSerializer,
-    FlightDeclarationApprovalSerializer,
-    FlightDeclarationStateSerializer,
-    FlightDeclarationRequestSerializer,
-)
-from django.utils.decorators import method_decorator
-from .utils import OperationalIntentsConverter
-from .tasks import submit_flight_declaration_to_dss, send_operational_update_message
+
+from .data_definitions import FlightDeclarationCreateResponse
+from .flight_declarations_rtree_helper import \
+    FlightDeclarationRTreeIndexFactory
+from .models import FlightDeclaration
 from .pagination import StandardResultsSetPagination
-from os import environ as env
+from .serializers import (FlightDeclarationApprovalSerializer,
+                          FlightDeclarationRequestSerializer,
+                          FlightDeclarationSerializer,
+                          FlightDeclarationStateSerializer)
+from .tasks import (send_operational_update_message,
+                    submit_flight_declaration_to_dss)
+from .utils import OperationalIntentsConverter
 
 logger = logging.getLogger("django")
 
@@ -47,7 +46,9 @@ def set_flight_declaration(request: HttpRequest):
     except AssertionError:
         msg = {"message": "Unsupported Media Type"}
         return HttpResponse(
-            json.dumps(msg), status=415, content_type="application/json"
+            json.dumps(msg),
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            content_type="application/json",
         )
 
     stream = io.BytesIO(request.body)
@@ -57,34 +58,13 @@ def set_flight_declaration(request: HttpRequest):
     if not serializer.is_valid():
         return HttpResponse(
             JSONRenderer().render(serializer.errors),
-            status=400,
+            status=status.HTTP_400_BAD_REQUEST,
             content_type="application/json",
         )
 
-    try:
-        flight_declaration_geo_json = json_payload["flight_declaration_geo_json"]
-    except KeyError:
-        msg = json.dumps(
-            {
-                "message": "A valid flight declaration as specified by the A flight declaration protocol must be submitted."
-            }
-        )
-        return HttpResponse(msg, status=400)
-
-    submitted_by = (
-        None if "submitted_by" not in json_payload else json_payload["submitted_by"]
-    )
+    flight_declaration_request = serializer.create(serializer.validated_data)
     is_approved = False
-    type_of_operation = (
-        0
-        if "type_of_operation" not in json_payload
-        else json_payload["type_of_operation"]
-    )
-    originating_party = (
-        "No Flight Information"
-        if "originating_party" not in json_payload
-        else json_payload["originating_party"]
-    )
+
     now = arrow.now()
     try:
         start_datetime = (
@@ -114,15 +94,18 @@ def set_flight_declaration(request: HttpRequest):
         or e_datetime > two_days_from_now
         or s_datetime > two_days_from_now
     ):
-        msg = json.dumps(
-            {
-                "message": "A flight declaration cannot have a start / end time in the past or after two days from current time."
-            }
+        return HttpResponse(
+            json.dumps(
+                {
+                    "message": "A flight declaration cannot have a start or end time in the past or after two days from current time."
+                }
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+            content_type="application/json",
         )
-        return HttpResponse(msg, status=400)
     all_features = []
 
-    for feature in flight_declaration_geo_json["features"]:
+    for feature in flight_declaration_request.flight_declaration_geo_json["features"]:
         geometry = feature["geometry"]
         s = shape(geometry)
         if s.is_valid:
@@ -133,7 +116,9 @@ def set_flight_declaration(request: HttpRequest):
                     "message": "Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a valid geometry, please check your submitted FeatureCollection"
                 }
             )
-            return HttpResponse(op, status=400, content_type="application/json")
+            return HttpResponse(
+                op, status=status.HTTP_400_BAD_REQUEST, content_type="application/json"
+            )
 
         props = feature["properties"]
         try:
@@ -142,10 +127,12 @@ def set_flight_declaration(request: HttpRequest):
         except AssertionError:
             op = json.dumps(
                 {
-                    "message": "Error in processing the submitted GeoJSON every Feature in a GeoJSON FeatureCollection must have a min_altitude and max_altitude data structure"
+                    "message": "Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a min_altitude and max_altitude data structure"
                 }
             )
-            return HttpResponse(op, status=400, content_type="application/json")
+            return HttpResponse(
+                op, status=status.HTTP_400_BAD_REQUEST, content_type="application/json"
+            )
 
     default_state = 1  # Default state is Accepted
 
@@ -153,7 +140,7 @@ def set_flight_declaration(request: HttpRequest):
 
     partial_op_int_ref = (
         my_operational_intent_converter.create_partial_operational_intent_ref(
-            geo_json_fc=flight_declaration_geo_json,
+            geo_json_fc=flight_declaration_request.flight_declaration_geo_json,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
             priority=0,
@@ -222,13 +209,15 @@ def set_flight_declaration(request: HttpRequest):
     fo = FlightDeclaration(
         operational_intent=json.dumps(asdict(partial_op_int_ref)),
         bounds=bounds,
-        type_of_operation=type_of_operation,
-        submitted_by=submitted_by,
+        type_of_operation=flight_declaration_request.type_of_operation,
+        submitted_by=flight_declaration_request.submitted_by,
         is_approved=is_approved,
         start_datetime=start_datetime,
         end_datetime=end_datetime,
-        originating_party=originating_party,
-        flight_declaration_raw_geojson=json.dumps(flight_declaration_geo_json),
+        originating_party=flight_declaration_request.originating_party,
+        flight_declaration_raw_geojson=json.dumps(
+            flight_declaration_request.flight_declaration_geo_json
+        ),
         state=default_state,
     )
     fo.save()
@@ -272,7 +261,8 @@ def set_flight_declaration(request: HttpRequest):
     )
 
     op = json.dumps(asdict(creation_response))
-    return HttpResponse(op, status=200, content_type="application/json")
+    # TODO: Should the return status code be 201 since it creates a new record?
+    return HttpResponse(op, status=status.HTTP_200_OK, content_type="application/json")
 
 
 @method_decorator(requires_scopes(["blender.write"]), name="dispatch")
