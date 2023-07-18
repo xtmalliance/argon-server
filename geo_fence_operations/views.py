@@ -1,7 +1,7 @@
 # Create your views here.
 import uuid
 from auth_helper.utils import requires_scopes
-
+import io
 # Create your views here.
 import json
 import arrow
@@ -10,10 +10,11 @@ from . import rtree_geo_fence_helper
 from rest_framework.decorators import api_view
 from shapely.geometry import shape, Point
 from .models import GeoFence
-from django.http import HttpResponse
-from .tasks import write_geo_fence, write_geo_zone, download_geozone_source
+from django.http import HttpResponse,HttpRequest
+from .tasks import write_geo_zone, download_geozone_source
 from shapely.ops import unary_union
-from rest_framework import mixins, generics
+from rest_framework import mixins, generics,status
+from rest_framework.parsers import JSONParser
 from .serializers import GeoFenceSerializer
 from django.utils.decorators import method_decorator
 from decimal import Decimal
@@ -51,20 +52,24 @@ INDEX_NAME = "geofence_proc"
 
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
-def set_geo_fence(request):
+def set_geo_fence(request:HttpRequest):
     try:
-        assert request.headers["Content-Type"] == "application/json"
-    except AssertionError as ae:
+         assert request.headers["Content-Type"] == "application/json"
+    except AssertionError:
         msg = {"message": "Unsupported Media Type"}
-        return HttpResponse(json.dumps(msg), status=415, mimetype="application/json")
+        return HttpResponse(json.dumps(msg), status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, content_type="application/json")
 
+    stream = io.BytesIO(request.body)
+    json_payload = JSONParser().parse(stream)
+
+    #TODO: Validate JSON payload
     try:
-        geo_json_fc = request.data
+        geo_json_fc = json_payload
     except KeyError as ke:
         msg = json.dumps(
             {"message": "A geofence object is necessary in the body of the request"}
         )
-        return HttpResponse(msg, status=400)
+        return HttpResponse(msg, status=status.HTTP_400_BAD_REQUEST)
 
     shp_features = []
     for feature in geo_json_fc["features"]:
@@ -74,17 +79,14 @@ def set_geo_fence(request):
     bounds = ",".join(["{:.7f}".format(x) for x in bnd_tuple])
     try:
         s_time = geo_json_fc[0]["properties"]["start_time"]
+        start_time = arrow.get(s_time).isoformat()
     except KeyError as ke:
         start_time = arrow.now().isoformat()
-    else:
-        start_time = arrow.get(s_time).isoformat()
-
     try:
         e_time = geo_json_fc[0]["properties"]["end_time"]
+        end_time = arrow.get(e_time).isoformat()
     except KeyError as ke:
         end_time = arrow.now().shift(hours=1).isoformat()
-    else:
-        end_time = arrow.get(e_time).isoformat()
 
     try:
         upper_limit = Decimal(geo_json_fc[0]["properties"]["upper_limit"])
@@ -176,7 +178,7 @@ class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
             e_date = present.shift(days=1)
 
         all_fences_within_timelimits = GeoFence.objects.filter(
-            start_datetime__lte=s_date.isoformat(), end_datetime__gte=e_date.isoformat()
+            start_datetime__gte=s_date.isoformat(), end_datetime__lte=e_date.isoformat()
         )
         logging.info("Found %s geofences" % len(all_fences_within_timelimits))
 
