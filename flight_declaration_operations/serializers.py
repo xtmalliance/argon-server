@@ -1,9 +1,26 @@
-from rest_framework import serializers
+"""
+This module holds the Serialization classes to be used in Flight Declaration operations.
+"""
 import json
+from rest_framework import serializers
 from .models import FlightDeclaration
 from .utils import OperationalIntentsConverter
 
+
+class FlightDeclarationRequestSerializer(serializers.Serializer):
+    """
+    Deserializes the JSON received payload for validation purposes.
+    """
+    originating_party=serializers.CharField()
+    start_datetime=serializers.DateTimeField()
+    end_datetime=serializers.DateTimeField()
+    type_of_operation=serializers.IntegerField()
+    flight_declaration_geo_json=serializers.DictField()
+
 class FlightDeclarationSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for the model: FlightDeclaration
+    """
     operational_intent = serializers.SerializerMethodField() 
     flight_declaration_geojson = serializers.SerializerMethodField() 
     flight_declaration_raw_geojson = serializers.SerializerMethodField() 

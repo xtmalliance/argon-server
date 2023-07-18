@@ -4,9 +4,13 @@ from auth_helper.utils import requires_scopes
 # Create your views here.
 import json
 import arrow
+import logging
+import io
 from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
+from rest_framework.renderers import JSONRenderer
 from typing import List
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from .models import FlightDeclaration
 from dataclasses import asdict
 from geo_fence_operations import rtree_geo_fence_helper
@@ -21,6 +25,7 @@ from .serializers import (
     FlightDeclarationSerializer,
     FlightDeclarationApprovalSerializer,
     FlightDeclarationStateSerializer,
+    FlightDeclarationRequestSerializer,
 )
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
@@ -28,14 +33,12 @@ from .tasks import submit_flight_declaration_to_dss, send_operational_update_mes
 from .pagination import StandardResultsSetPagination
 from os import environ as env
 
-import logging
-
 logger = logging.getLogger("django")
 
 
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
-def set_flight_declaration(request):
+def set_flight_declaration(request: HttpRequest):
     """
     Add a new Flight Declaration. Submit a Flight Declaration into Flight Blender.
     """
@@ -43,28 +46,23 @@ def set_flight_declaration(request):
         assert request.headers["Content-Type"] == "application/json"
     except AssertionError:
         msg = {"message": "Unsupported Media Type"}
-        return HttpResponse(json.dumps(msg), status=415, content_type="application/json")
-    req = request.data
-
-    try:
-        assert req.keys() >= {
-            "originating_party",
-            "start_datetime",
-            "end_datetime",
-            "flight_declaration_geo_json",
-            "type_of_operation",
-        }
-
-    except AssertionError:
-        msg = json.dumps(
-            {
-                "message": "Not all necessary fields were provided. Originating Party, Start Datetime, End Datetime, Flight Declaration and Type of operation must be provided."
-            }
+        return HttpResponse(
+            json.dumps(msg), status=415, content_type="application/json"
         )
-        return HttpResponse(msg, status=400)
+
+    stream = io.BytesIO(request.body)
+    json_payload = JSONParser().parse(stream)
+
+    serializer = FlightDeclarationRequestSerializer(data=json_payload)
+    if not serializer.is_valid():
+        return HttpResponse(
+            JSONRenderer().render(serializer.errors),
+            status=400,
+            content_type="application/json",
+        )
 
     try:
-        flight_declaration_geo_json = req["flight_declaration_geo_json"]
+        flight_declaration_geo_json = json_payload["flight_declaration_geo_json"]
     except KeyError:
         msg = json.dumps(
             {
@@ -73,27 +71,31 @@ def set_flight_declaration(request):
         )
         return HttpResponse(msg, status=400)
 
-    submitted_by = None if "submitted_by" not in req else req["submitted_by"]
+    submitted_by = (
+        None if "submitted_by" not in json_payload else json_payload["submitted_by"]
+    )
     is_approved = False
     type_of_operation = (
-        0 if "type_of_operation" not in req else req["type_of_operation"]
+        0
+        if "type_of_operation" not in json_payload
+        else json_payload["type_of_operation"]
     )
     originating_party = (
         "No Flight Information"
-        if "originating_party" not in req
-        else req["originating_party"]
+        if "originating_party" not in json_payload
+        else json_payload["originating_party"]
     )
     now = arrow.now()
     try:
         start_datetime = (
             now.isoformat()
-            if "start_datetime" not in req
-            else arrow.get(req["start_datetime"]).isoformat()
+            if "start_datetime" not in json_payload
+            else arrow.get(json_payload["start_datetime"]).isoformat()
         )
         end_datetime = (
             now.isoformat()
-            if "end_datetime" not in req
-            else arrow.get(req["end_datetime"]).isoformat()
+            if "end_datetime" not in json_payload
+            else arrow.get(json_payload["end_datetime"]).isoformat()
         )
     except Exception:
         ten_mins_from_now = now.shift(minutes=10)
@@ -144,8 +146,6 @@ def set_flight_declaration(request):
                 }
             )
             return HttpResponse(op, status=400, content_type="application/json")
-
-
 
     default_state = 1  # Default state is Accepted
 
