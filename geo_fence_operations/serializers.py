@@ -1,14 +1,25 @@
-from rest_framework import serializers
 import json
+
+import arrow
+from rest_framework import serializers
+
 from .models import GeoFence
-from shapely.geometry import shape
+
+
+class GeoFenceRequest:
+    def __init__(self, type, features):
+        self.type = type
+        self.features = features
 
 
 class GeoFencePropertiesSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False, default="Standard Geofence")
     upper_limit = serializers.IntegerField(required=False, default=500)
     lower_limit = serializers.IntegerField(required=False, default=100)
-    start_time = serializers.DateField(required=False)
-    end_time = serializers.DateField(required=False)
+    start_time = serializers.DateField(required=False, default=arrow.now().isoformat())
+    end_time = serializers.DateField(
+        required=False, default=arrow.now().shift(hours=1).isoformat()
+    )
 
 
 class GeoFenceFeatureSerializer(serializers.Serializer):
@@ -24,6 +35,9 @@ class GeoFenceRequestSerializer(serializers.Serializer):
     features = serializers.ListField(
         child=GeoFenceFeatureSerializer(), min_length=1, max_length=1
     )
+
+    def create(self, validated_data):
+        return GeoFenceRequest(**validated_data)
 
 
 class GeoFenceSerializer(serializers.ModelSerializer):
