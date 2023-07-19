@@ -1,27 +1,50 @@
 from rest_framework import serializers
 import json
 from .models import GeoFence
+from shapely.geometry import shape
+
+
+class GeoFencePropertiesSerializer(serializers.Serializer):
+    upper_limit = serializers.IntegerField(required=False, default=500)
+    lower_limit = serializers.IntegerField(required=False, default=100)
+    start_time = serializers.DateField(required=False)
+    end_time = serializers.DateField(required=False)
+
+
+class GeoFenceFeatureSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    properties = GeoFencePropertiesSerializer()
+    geometry = serializers.DictField(
+        error_messages={"required": "A valid geometry object must be provided."}
+    )
+
+
+class GeoFenceRequestSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    features = serializers.ListField(
+        child=GeoFenceFeatureSerializer(), min_length=1, max_length=1
+    )
+
 
 class GeoFenceSerializer(serializers.ModelSerializer):
     altitude_ref = serializers.SerializerMethodField()
     raw_geo_fence = serializers.SerializerMethodField()
     geozone = serializers.SerializerMethodField()
-    
+
     def get_raw_geo_fence(self, obj):
         raw_geo_fence = json.loads(obj.raw_geo_fence)
         return raw_geo_fence
+
     def get_geozone(self, obj):
-        if obj.geozone: 
+        if obj.geozone:
             parsed_geo_zone = json.loads(obj.geozone)
-        else: 
+        else:
             parsed_geo_zone = {}
         return parsed_geo_zone
-    
+
     class Meta:
         model = GeoFence
-        fields = '__all__'
-   
-   
-    def get_altitude_ref(self,obj):
+        fields = "__all__"
+
+    def get_altitude_ref(self, obj):
         return obj.get_altitude_ref_display()
-     

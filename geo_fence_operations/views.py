@@ -2,6 +2,7 @@
 import uuid
 from auth_helper.utils import requires_scopes
 import io
+
 # Create your views here.
 import json
 import arrow
@@ -10,12 +11,13 @@ from . import rtree_geo_fence_helper
 from rest_framework.decorators import api_view
 from shapely.geometry import shape, Point
 from .models import GeoFence
-from django.http import HttpResponse,HttpRequest
+from django.http import HttpResponse, HttpRequest
 from .tasks import write_geo_zone, download_geozone_source
 from shapely.ops import unary_union
-from rest_framework import mixins, generics,status
+from rest_framework import mixins, generics, status
 from rest_framework.parsers import JSONParser
-from .serializers import GeoFenceSerializer
+from rest_framework.renderers import JSONRenderer
+from .serializers import GeoFenceSerializer, GeoFenceRequestSerializer
 from django.utils.decorators import method_decorator
 from decimal import Decimal
 from .data_definitions import (
@@ -52,17 +54,27 @@ INDEX_NAME = "geofence_proc"
 
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
-def set_geo_fence(request:HttpRequest):
+def set_geo_fence(request: HttpRequest):
     try:
-         assert request.headers["Content-Type"] == "application/json"
+        assert request.headers["Content-Type"] == "application/json"
     except AssertionError:
         msg = {"message": "Unsupported Media Type"}
-        return HttpResponse(json.dumps(msg), status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, content_type="application/json")
+        return HttpResponse(
+            json.dumps(msg),
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            content_type="application/json",
+        )
 
     stream = io.BytesIO(request.body)
     json_payload = JSONParser().parse(stream)
 
-    #TODO: Validate JSON payload
+    serializer = GeoFenceRequestSerializer(data=json_payload)
+    if not serializer.is_valid():
+        return HttpResponse(
+            JSONRenderer().render(serializer.errors),
+            status=status.HTTP_400_BAD_REQUEST,
+            content_type="application/json",
+        )
     try:
         geo_json_fc = json_payload
     except KeyError as ke:
