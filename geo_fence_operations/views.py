@@ -1,5 +1,6 @@
 # Create your views here.
 import io
+
 # Create your views here.
 import json
 import logging
@@ -26,10 +27,15 @@ from shapely.ops import unary_union
 from . import rtree_geo_fence_helper
 from .buffer_helper import toFromUTM
 from .common import validate_geo_zone
-from .data_definitions import (GeoAwarenessTestHarnessStatus,
-                               GeoAwarenessTestStatus, GeoZoneCheckRequestBody,
-                               GeoZoneCheckResult, GeoZoneChecksResponse,
-                               GeoZoneFilterPosition, GeoZoneHttpsSource)
+from .data_definitions import (
+    GeoAwarenessTestHarnessStatus,
+    GeoAwarenessTestStatus,
+    GeoZoneCheckRequestBody,
+    GeoZoneCheckResult,
+    GeoZoneChecksResponse,
+    GeoZoneFilterPosition,
+    GeoZoneHttpsSource,
+)
 from .models import GeoFence
 from .serializers import GeoFenceRequestSerializer, GeoFenceSerializer
 from .tasks import download_geozone_source, write_geo_zone

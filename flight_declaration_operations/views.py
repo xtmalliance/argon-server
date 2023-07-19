@@ -1,5 +1,6 @@
 # Create your views here.
 import io
+
 # Create your views here.
 import json
 import logging
@@ -20,16 +21,16 @@ from rest_framework.renderers import JSONRenderer
 from shapely.geometry import shape
 
 from .data_definitions import FlightDeclarationCreateResponse
-from .flight_declarations_rtree_helper import \
-    FlightDeclarationRTreeIndexFactory
+from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from .models import FlightDeclaration
 from .pagination import StandardResultsSetPagination
-from .serializers import (FlightDeclarationApprovalSerializer,
-                          FlightDeclarationRequestSerializer,
-                          FlightDeclarationSerializer,
-                          FlightDeclarationStateSerializer)
-from .tasks import (send_operational_update_message,
-                    submit_flight_declaration_to_dss)
+from .serializers import (
+    FlightDeclarationApprovalSerializer,
+    FlightDeclarationRequestSerializer,
+    FlightDeclarationSerializer,
+    FlightDeclarationStateSerializer,
+)
+from .tasks import send_operational_update_message, submit_flight_declaration_to_dss
 from .utils import OperationalIntentsConverter
 
 logger = logging.getLogger("django")

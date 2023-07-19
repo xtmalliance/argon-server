@@ -18,7 +18,9 @@ class FlightDeclarationPostTests(APITestCase):
     def setUp(self):
         self.client.defaults["HTTP_AUTHORIZATION"] = "Bearer " + JWT
         self.api_url = reverse("set_flight_declaration")
-        self.flight_time = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.flight_time = (
+            datetime.datetime.now() + datetime.timedelta(days=1)
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
         self.valid_flight_declaration_geo_json = {
             "type": "FeatureCollection",
             "features": [
@@ -198,4 +200,3 @@ class FlightDeclarationPostTests(APITestCase):
         )
         self.assertEqual(response.json()["message"], "Submitted Flight Declaration")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        

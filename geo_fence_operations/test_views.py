@@ -8,8 +8,9 @@ JWT = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0ZmxpZ2h0LmZsaWdodGJs
 
 class GeoFencePostTests(APITestCase):
     """
-    
+    Contains tests for the function set_geo_fence in views.
     """
+
     def setUp(self):
         self.client.defaults["HTTP_AUTHORIZATION"] = "Bearer " + JWT
         self.api_url = reverse("set_geo_fence")
