@@ -1,43 +1,38 @@
 # Create your views here.
-import uuid
-from auth_helper.utils import requires_scopes
 import io
-
 # Create your views here.
 import json
-import arrow
+import logging
+import uuid
+from dataclasses import asdict, is_dataclass
+from decimal import Decimal
 from typing import List
-from . import rtree_geo_fence_helper
+
+import arrow
+import pyproj
+from auth_helper.common import get_redis
+from auth_helper.utils import requires_scopes
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.utils.decorators import method_decorator
+from rest_framework import generics, mixins, status
 from rest_framework.decorators import api_view
-from shapely.geometry import shape, Point
-from .models import GeoFence
-from django.http import HttpResponse, HttpRequest
-from .tasks import write_geo_zone, download_geozone_source
-from shapely.ops import unary_union
-from rest_framework import mixins, generics, status
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
-from .serializers import GeoFenceSerializer, GeoFenceRequestSerializer
-from django.utils.decorators import method_decorator
-from decimal import Decimal
-from .data_definitions import (
-    GeoAwarenessTestHarnessStatus,
-    GeoAwarenessTestStatus,
-    GeoZoneHttpsSource,
-    GeoZoneCheckRequestBody,
-    GeoZoneChecksResponse,
-    GeoZoneCheckResult,
-    GeoZoneFilterPosition,
-)
-from django.http import JsonResponse
-import logging
-import pyproj
+from shapely.geometry import Point, shape
+from shapely.ops import unary_union
+
+from . import rtree_geo_fence_helper
 from .buffer_helper import toFromUTM
-from auth_helper.common import get_redis
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
-from dataclasses import asdict, is_dataclass
 from .common import validate_geo_zone
+from .data_definitions import (GeoAwarenessTestHarnessStatus,
+                               GeoAwarenessTestStatus, GeoZoneCheckRequestBody,
+                               GeoZoneCheckResult, GeoZoneChecksResponse,
+                               GeoZoneFilterPosition, GeoZoneHttpsSource)
+from .models import GeoFence
+from .serializers import GeoFenceRequestSerializer, GeoFenceSerializer
+from .tasks import download_geozone_source, write_geo_zone
 
 logger = logging.getLogger("django")
 
@@ -75,46 +70,27 @@ def set_geo_fence(request: HttpRequest):
             status=status.HTTP_400_BAD_REQUEST,
             content_type="application/json",
         )
-    try:
-        geo_json_fc = json_payload
-    except KeyError as ke:
-        msg = json.dumps(
-            {"message": "A geofence object is necessary in the body of the request"}
-        )
-        return HttpResponse(msg, status=status.HTTP_400_BAD_REQUEST)
+
+    geo_fence_request = serializer.create(serializer.validated_data)
 
     shp_features = []
-    for feature in geo_json_fc["features"]:
+    for feature in geo_fence_request.features:
         shp_features.append(shape(feature["geometry"]))
     combined_features = unary_union(shp_features)
     bnd_tuple = combined_features.bounds
     bounds = ",".join(["{:.7f}".format(x) for x in bnd_tuple])
-    try:
-        s_time = geo_json_fc[0]["properties"]["start_time"]
-        start_time = arrow.get(s_time).isoformat()
-    except KeyError as ke:
-        start_time = arrow.now().isoformat()
-    try:
-        e_time = geo_json_fc[0]["properties"]["end_time"]
-        end_time = arrow.get(e_time).isoformat()
-    except KeyError as ke:
-        end_time = arrow.now().shift(hours=1).isoformat()
 
-    try:
-        upper_limit = Decimal(geo_json_fc[0]["properties"]["upper_limit"])
-    except KeyError as ke:
-        upper_limit = 500.00
+    s_time = feature["properties"]["start_time"]
+    start_time = arrow.get(s_time).isoformat()
 
-    try:
-        lower_limit = Decimal(geo_json_fc[0]["properties"]["upper_limit"])
-    except KeyError as ke:
-        lower_limit = 100.00
+    e_time = feature["properties"]["end_time"]
+    end_time = arrow.get(e_time).isoformat()
 
-    try:
-        name = geo_json_fc[0]["properties"]["name"]
-    except KeyError as ke:
-        name = "Standard Geofence"
-    raw_geo_fence = json.dumps(geo_json_fc)
+    upper_limit = Decimal(feature["properties"]["upper_limit"])
+    lower_limit = Decimal(feature["properties"]["lower_limit"])
+    name = feature["properties"]["name"]
+
+    raw_geo_fence = json.dumps(json_payload)
     geo_f = GeoFence(
         raw_geo_fence=raw_geo_fence,
         start_datetime=start_time,
@@ -127,7 +103,7 @@ def set_geo_fence(request: HttpRequest):
     geo_f.save()
 
     op = json.dumps({"message": "Geofence Declaration submitted", "id": str(geo_f.id)})
-    return HttpResponse(op, status=200)
+    return HttpResponse(op, status=status.HTTP_200_OK, content_type="application/json")
 
 
 @api_view(["POST"])
@@ -137,7 +113,11 @@ def set_geozone(request):
         assert request.headers["Content-Type"] == "application/json"
     except AssertionError as ae:
         msg = {"message": "Unsupported Media Type"}
-        return HttpResponse(json.dumps(msg), status=415, mimetype="application/json")
+        return HttpResponse(
+            json.dumps(msg),
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            content_type="application/json",
+        )
 
     try:
         geo_zone = request.data
@@ -145,7 +125,7 @@ def set_geozone(request):
         msg = json.dumps(
             {"message": "A geozone object is necessary in the body of the request"}
         )
-        return HttpResponse(msg, status=400)
+        return HttpResponse(msg, status=status.HTTP_400_BAD_REQUEST)
 
     is_geo_zone_valid = validate_geo_zone(geo_zone)
 
@@ -154,7 +134,9 @@ def set_geozone(request):
 
         geo_f = uuid.uuid4()
         op = json.dumps({"message": "GeoZone Declaration submitted", "id": str(geo_f)})
-        return HttpResponse(op, status=200)
+        return HttpResponse(
+            op, status=status.HTTP_200_OK, content_type="application/json"
+        )
 
     else:
         msg = json.dumps(
@@ -162,7 +144,9 @@ def set_geozone(request):
                 "message": "A valid geozone object with a description is necessary the body of the request"
             }
         )
-        return HttpResponse(msg, status=400)
+        return HttpResponse(
+            msg, status=status.HTTP_400_BAD_REQUEST, content_type="application/json"
+        )
 
 
 @method_decorator(requires_scopes(["blender.read"]), name="dispatch")
