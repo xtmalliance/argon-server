@@ -86,11 +86,16 @@ def set_geo_fence(request: HttpRequest):
     bnd_tuple = combined_features.bounds
     bounds = ",".join(["{:.7f}".format(x) for x in bnd_tuple])
 
-    s_time = feature["properties"]["start_time"]
-    start_time = arrow.get(s_time).isoformat()
-
-    e_time = feature["properties"]["end_time"]
-    end_time = arrow.get(e_time).isoformat()
+    start_time = (
+        arrow.now().isoformat()
+        if "start_time" not in feature["properties"]
+        else arrow.get(feature["properties"]["start_time"]).isoformat()
+    )
+    end_time = (
+        arrow.now().shift(hours=1).isoformat()
+        if "end_time" not in feature["properties"]
+        else arrow.get(feature["properties"]["end_time"]).isoformat()
+    )
 
     upper_limit = Decimal(feature["properties"]["upper_limit"])
     lower_limit = Decimal(feature["properties"]["lower_limit"])

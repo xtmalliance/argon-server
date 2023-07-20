@@ -16,10 +16,8 @@ class GeoFencePropertiesSerializer(serializers.Serializer):
     name = serializers.CharField(required=False, default="Standard Geofence")
     upper_limit = serializers.IntegerField(required=False, default=500)
     lower_limit = serializers.IntegerField(required=False, default=100)
-    start_time = serializers.DateField(required=False, default=arrow.now().isoformat())
-    end_time = serializers.DateField(
-        required=False, default=arrow.now().shift(hours=1).isoformat()
-    )
+    start_time = serializers.DateField(required=False)
+    end_time = serializers.DateField(required=False)
 
 
 class GeoFenceFeatureSerializer(serializers.Serializer):
