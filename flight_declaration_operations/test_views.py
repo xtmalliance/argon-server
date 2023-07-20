@@ -6,12 +6,11 @@ import datetime
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from rest_framework.parsers import JSONParser
 
 JWT = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0ZmxpZ2h0LmZsaWdodGJsZW5kZXIuY29tIiwiY2xpZW50X2lkIjoidXNzX25vYXV0aCIsImV4cCI6MTY4Nzc4Mjk0OCwiaXNzIjoiTm9BdXRoIiwianRpIjoiODI0OWI5ODgtZjlkZi00YmNhLWI2YTctODVhZGFiZjFhMTUwIiwibmJmIjoxNjg3Nzc5MzQ3LCJzY29wZSI6ImJsZW5kZXIucmVhZCIsInN1YiI6InVzc19ub2F1dGgifQ.b63qZWs08Cp1cgfRCtbQfLom6QQyFpqUaFDNZ9ZdAjSM690StACij6FiriSFhOfFiRBv9rE0DePJzElUSwv1r1bI0IpKMtEJYsJY4DXy7ZImiJ3rSten1nnb1LLAELcDIxMZM2D1ek43EFW35al4si640JfMcSmt62bEP1b4Msc"
 
 
-class FlightDeclarationTests(APITestCase):
+class FlightDeclarationPostTests(APITestCase):
     """
     Contains tests for the function set_flight_declaration in views.
     """
@@ -19,7 +18,9 @@ class FlightDeclarationTests(APITestCase):
     def setUp(self):
         self.client.defaults["HTTP_AUTHORIZATION"] = "Bearer " + JWT
         self.api_url = reverse("set_flight_declaration")
-        self.flight_time = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.flight_time = (
+            datetime.datetime.now() + datetime.timedelta(days=1)
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
         self.valid_flight_declaration_geo_json = {
             "type": "FeatureCollection",
             "features": [
@@ -54,13 +55,13 @@ class FlightDeclarationTests(APITestCase):
         response = self.client.post(self.api_url, content_type="text/plain")
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    def test_invalid_payload(self):
+    def test_empty_json_payload(self):
         """
         The endpoint expects certain fields to be provided. Errors will be thrown otherwise.
         """
-        invalid_payload = {}
+        empty_payload = {}
         response = self.client.post(
-            self.api_url, content_type="application/json", data=invalid_payload
+            self.api_url, content_type="application/json", data=empty_payload
         )
         response_json = {
             "start_datetime": ["This field is required."],
@@ -199,4 +200,3 @@ class FlightDeclarationTests(APITestCase):
         )
         self.assertEqual(response.json()["message"], "Submitted Flight Declaration")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
