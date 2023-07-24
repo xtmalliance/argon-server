@@ -40,14 +40,14 @@ class FlightOperationConformanceHelper():
           
     def manage_operation_state_transition(self, original_state:int, new_state: int, event:str):
         '''
-        This method manages the communication with DSS once a new state has been achieved
+        This method manages the communication with DSS once a new state has been received by the POST method
         '''
         if new_state == 5: #operation has ended
             if event =='operator_confirms_ended':
                 management.call_command('operation_ended_clear_dss',flight_declaration_id = self.flight_declaration_id, dry_run =0)
 
         elif new_state == 4: # handle entry into contingent state
-            if original_state == 2 and event == 'operator_initiates_contingent':
+            if original_state == 2 and event in ['operator_initiates_contingent','blender_confirms_contingent']:
                 # Operator activates contingent state from Activated state                
                 management.call_command('operator_declares_contingency',flight_declaration_id = self.flight_declaration_id, dry_run =0)
 
@@ -56,14 +56,16 @@ class FlightOperationConformanceHelper():
                 pass
 
         elif new_state == 3: # handle entry in non-conforming state
-            if original_state == 1 and event == 'ua_departs_early_late_outside_op_intent': 
+            if event == 'ua_exits_coordinated_op_intent' and original_state in [1, 2]:
                 # Enters non-conforming from Accepted
                 # Command: Update / expand volumes
-                pass
-            elif original_state ==2 and event == 'ua_exits_coordinated_op_intent': 
-                # Enters non-conforming from Activated
-                # Command: Update / expand volumes
-                pass
+                management.call_command('transition_to_non_conforming_update_expand_volumes',flight_declaration_id = self.flight_declaration_id, dry_run =0,) 
+
+            elif event =='ua_departs_early_late' and original_state in [1,2]:
+                # Enters non-conforming from Accepted
+                # Command: declare non-conforming, no need to update volumes
+                management.call_command('transition_to_non_conforming',flight_declaration_id = self.flight_declaration_id, dry_run =0,)
+
         
         elif new_state == 2: # handle entry into activated state
             if original_state == 1 and event == 'operator_activates':

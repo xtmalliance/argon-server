@@ -1,3 +1,4 @@
+@@ -1,116 +0,0 @@
 from django.core.management.base import BaseCommand, CommandError
 from os import environ as env
 from common.database_operations import BlenderDatabaseReader

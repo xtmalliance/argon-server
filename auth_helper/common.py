@@ -33,3 +33,18 @@ def get_walrus_database():
         db = Database(host=redis_host, port=redis_port)   
     return db
         
+class RedisHelper():
+    def __init__(self):
+        # A method to get the redis instance and is used globally
+        self.redis_host = env.get('REDIS_HOST', "redis")
+        self.redis_port = env.get('REDIS_PORT', 6379)
+        self.redis_password = env.get('REDIS_PASSWORD', None)
+
+            
+    def flush_db():        
+        if self.redis_password:
+            r = redis.Redis(host=self.redis_host, port=self.redis_port, password = self.redis_password, charset="utf-8",decode_responses=True)
+        else:
+            r = redis.Redis(host=self.redis_host, port=self.redis_port, charset="utf-8",decode_responses=True)
+
+        r.flushdb()

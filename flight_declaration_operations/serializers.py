@@ -5,6 +5,7 @@ from .utils import OperationalIntentsConverter
 from conformance_monitoring_operations.operation_state_helper import FlightOperationStateMachine, get_status
 from conformance_monitoring_operations.conformance_checks_handler import FlightOperationConformanceHelper
 from common.data_definitions import OPERATOR_EVENT_LOOKUP, OPERATION_STATES
+from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 
 class FlightDeclarationSerializer(serializers.ModelSerializer):
     operational_intent = serializers.SerializerMethodField() 
@@ -55,7 +56,9 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
         
         return value
     
-    def update(self, instance, validated_data):        
+    def update(self, instance, validated_data):     
+        my_database_reader = BlenderDatabaseReader()   
+        fd = my_database_reader
         fd = FlightDeclaration.objects.get(pk=instance.id)
         original_state  = fd.state
         fd_u = FlightDeclaration.objects.filter(pk=instance.id) \
@@ -66,9 +69,9 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
         event = OPERATOR_EVENT_LOOKUP[new_state]
         fd.add_state_history_entry(original_state= original_state, new_state=new_state, notes="State changed by operator")
         my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=str(fd.id))
-        my_conformance_helper.manage_operation_state_transition(original_state=original_state, new_state=new_state, event=event)
-        
+        my_conformance_helper.manage_operation_state_transition(original_state=original_state, new_state=new_state, event=event)        
         return fd
+        
     class Meta:
         model = FlightDeclaration
         fields = ('state','submitted_by',)

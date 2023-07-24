@@ -24,7 +24,7 @@ def is_time_between(begin_time, end_time, check_time=None):
         return check_time >= begin_time or check_time <= end_time
 
 
-class BlenderConformanceOps():    
+class BlenderConformanceEngine():    
     
     def is_operation_conformant_via_telemetry(self, flight_declaration_id:str, aircraft_id:str, telemetry_location: LatLngPoint,altitude_m_wgs_84:float) -> bool:
         """ This method performs the conformance sequence per AMC1 Article 13(1) as specified in the EU AMC / GM on U-Space regulation. 

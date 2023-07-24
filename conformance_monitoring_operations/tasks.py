@@ -1,6 +1,6 @@
 import os, json
 import logging
-from .utils import BlenderConformanceOps
+from .utils import BlenderConformanceEngine
 from flight_blender.celery import app
 from os import environ as env
 from common.database_operations import BlenderDatabaseReader
@@ -25,7 +25,7 @@ logger = logging.getLogger('django')
 def check_flight_conformance(dry_run:str = None):
     # This method checks the conformance status for ongoing operations and sends notifications / via the notificaitons channel    
     dry_run = 1 if dry_run =='1' else 0        
-    my_conformance_ops = BlenderConformanceOps()    
+    my_conformance_ops = BlenderConformanceEngine()    
     my_database_reader = BlenderDatabaseReader()
     now = arrow.now().isoformat()
     relevant_flight_declarations = my_database_reader.get_current_flight_accepted_activated_declaration_ids(now = now)  
@@ -33,22 +33,23 @@ def check_flight_conformance(dry_run:str = None):
     logger.info("{num_relevant_operations} relevant operations found...".format(num_relevant_operations=len(relevant_flight_declarations)))
     for relevant_flight_declaration in relevant_flight_declarations:   
         flight_declaration_id = str(relevant_flight_declaration)        
-        flight_authorization_conformant = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=relevant_flight_declaration)             
+        flight_authorization_conformant = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=flight_declaration_id)             
         if flight_authorization_conformant == True:
             logger.info("Operation with {flight_operation_id} is conformant...".format(flight_operation_id=flight_declaration_id))
             # Basic conformance checks passed, check telemetry conformance 
-            check_operation_telemetry_conformance(flight_declaration_id = flight_declaration_id)
+            check_operation_telemetry_conformance(flight_declaration_id = flight_declaration_id)            
         else:
             custom_signals.flight_authorization_conformance_monitoring_signal.send(sender='check_flight_conformance', non_conformance_state= flight_authorization_conformant, flight_declaration_id = flight_declaration_id)
             # Flight Declaration is not conformant             
             logger.info("Operation with {flight_operation_id} is not conformant...".format(flight_operation_id=flight_declaration_id))
+            
 
 # This method conducts flight telemetry checks
 @app.task(name='check_operation_telemetry_conformance')
 def check_operation_telemetry_conformance(flight_declaration_id:str, dry_run:str = None):
     # This method checks the conformance status for ongoing operations and sends notifications / via the notificaitons channel    
     dry_run = 1 if dry_run =='1' else 0        
-    my_conformance_ops = BlenderConformanceOps()     
+    my_conformance_ops = BlenderConformanceEngine()     
 
     # Get Telemetry
     stream_ops = flight_stream_helper.StreamHelperOps()

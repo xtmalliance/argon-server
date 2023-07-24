@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from flight_declaration_operations.models import FlightDeclaration
 from common.database_operations import BlenderDatabaseReader
 from scd_operations import dss_scd_helper
+from .common import RedisHelper
 class Command(BaseCommand):
     help = 'This command delete.'
 
@@ -45,3 +46,6 @@ class Command(BaseCommand):
                         my_scd_dss_helper = dss_scd_helper.SCDOperations()
                         my_scd_dss_helper.delete_operational_intent(operational_intent_id = dss_op_int_id)
                 o.delete()
+        # Clear out Redis database
+        r = RedisHelper()
+        r.flush_db()
