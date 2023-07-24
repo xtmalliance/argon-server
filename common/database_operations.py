@@ -1,5 +1,5 @@
 from flight_declaration_operations.models import FlightAuthorization, FlightDeclaration
-from typing import Tuple
+from typing import Tuple, List
 from uuid import uuid4
 import arrow
 from django.db.utils import IntegrityError
@@ -9,6 +9,11 @@ class BlenderDatabaseReader():
     A file to unify read and write operations to the database. Eventually caching etc. can be added via this file
     """
 
+    def get_all_flight_declarations(self) ->Tuple[None, List[FlightDeclaration]]:        
+        
+        flight_declarations = FlightDeclaration.objects.all()
+        return flight_declarations
+        
     def get_flight_declaration_by_id(self, flight_declaration_id:str) ->Tuple[None, FlightDeclaration]:        
         try:
             flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
