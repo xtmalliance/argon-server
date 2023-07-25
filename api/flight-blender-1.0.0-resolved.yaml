@@ -56,6 +56,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
+  /signing_public_key:
+    get:
+      summary: 'Signing Public Key'
+
+      description: 'Get the public key used to verify signed responses from Flight Blender.'
+
+      security: []
+      responses:
+        '200':
+          description: 'Public Key Retrieved successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWKSResponse'
+        '400':
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
   /rid/capabilities:
     get:
       security:
@@ -1965,6 +2003,12 @@ components:
     Standard500ErrorResponse:
       description: An unexpected error occured.
       $ref: '#/components/schemas/Error'
+    
+    JWKSResponse: 
+      description: A JWKS public key set is returned
+      $ref: '#/components/schemas/JWKS'
+
+
 
     PongResponse:
       description: The server is running properly
@@ -2442,6 +2486,27 @@ components:
           type: string
           example: Server running properly
 
+    JWKS:
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JWK'
+
+    JWK:
+        properties:
+          alg: 
+            type: string
+          use: 
+            type: string
+          kid: 
+            type: string
+          e:
+            type: string
+          kty:
+            type: string
+          n: 
+            type: string
 
     FlightRIDData:
       type: array
