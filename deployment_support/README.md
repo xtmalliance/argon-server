@@ -47,7 +47,7 @@ If you are working in stand-alone mode, recommended initially, the above environ
 | POSTGRES_DB | string| You can name a appropriate name, see the sample file |
 | POSTGRES_HOST | string| You can name a appropriate name, see the sample file |
 | PGDATA | string | This is where the data is stored, you can use `/var/lib/postgresql/data/pgdata` here |
-| BLENDER_FQDN | string | This domain name of a Blender deployment e.g. https://beta.flightblender.com |
+| BLENDER_FQDN | string | This domain name of a Blender deployment e.g. `https://beta.flightblender.com` |
 
 ### 2. Use Docker Compose to stand up Flight Blender 
 Once you have created and saved the .env file you can then use the [docker-compose.yaml](../docker-compose.yml) file to start the instance. Just run `docker compose up` and a running instance of Flight Blender will be available. 
