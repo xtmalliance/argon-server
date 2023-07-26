@@ -9,4 +9,5 @@ urlpatterns = [
     path('set_signed_telemetry', flight_feed_views.set_signed_telemetry),    
     path('public_keys/', flight_feed_views.SignedTelmetryPublicKeyList.as_view()),
     path('public_keys/<uuid:pk>/', flight_feed_views.SignedTelmetryPublicKeyDetail.as_view()),
+    
 ]

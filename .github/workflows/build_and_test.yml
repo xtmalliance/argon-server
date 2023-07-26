@@ -33,3 +33,36 @@ jobs:
     - name: Up the docker container
       run: |
         docker-compose up -d
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.8]
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v37
+        with:
+          files: |
+            *.py
+            **/*.py
+
+      - name: Setup Python env
+        uses: actions/setup-python@v3
+
+      - name: Install black and isort
+        run: pip install black isort
+
+      - name: Black formatting the changed files
+        run: |
+          black ${{ steps.changed-files.outputs.all_changed_files }}
+      - name: Sort imports in changed files
+        run: |
+          isort ${{ steps.changed-files.outputs.all_changed_files }}

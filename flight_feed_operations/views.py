@@ -70,7 +70,7 @@ def set_air_traffic(request):
 
     try:
         assert request.headers['Content-Type'] == 'application/json'   
-    except AssertionError as ae:     
+    except AssertionError:     
         msg = {"message":"Unsupported Media Type"}
         return JsonResponse(msg, status=415)
     else:    
