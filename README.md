@@ -45,21 +45,28 @@ Take a look at sample data below to see the kind of data that can be submitted i
 - [Geofence](https://github.com/openskies-sh/flight-blender/blob/master/importers/aoi_geo_fence_samples/geo_fence.geojson) as a GeoJSON, we have converters to convert EuroCAE from ED-269 standard
 - [Flight Declaration](https://github.com/openskies-sh/flight-blender/blob/master/importers/flight_declarations_samples/flight-1.json). This file follows the format specified in [Flight Declaration Protocol](https://github.com/openskies-sh/flight-declaration-protocol-development), optionally when using DSS components it supports "operational intent" APIs.
 
-## Running Tests with Docker
+## Running with Makefile
+
+### Building and running the container
+- **make build** will build the container.
+- **make rebuild** will build the container by scratch
+- **make up** will spin up the container in detached mode
+- **make down** will stop the running container
+
+### Running Code formatting
+- **make lint** will check for coding practices/standards violations and apply fixes when possible.
+- **make black** will format the black spaces between coding lines
+- **make cleanimport** will remove unused imports and sort them in a more readable order
+
+### Runnning tests
+- **make test** will install the test dependancies to the container and execute all avaialble tests. (The container has to be up and running!)
+-  This will also create a code coverage report in *htmlcov* directory.
+- Browse the */flight-blender/htmlcov/index.html* to see the detailed tests coverage.
 
 ### Test Implementation
 - Unit tests are implemented using [pytest test framework](https://docs.pytest.org/en/7.4.x/), and Django rest framework's test module.
 - Inside each View module, a *test_views.py* is created for testing the routes exposed by *views.py*
 
-### Test execution
-
-- Spin up the Docker containers in detach mode using the command `docker compose up -d`
-- In the code editor(*VSCode preferred*), open command pallette(*Cmd±Shift±P in Mac,Ctl+Shift+P in others*) select the command: **Docker Containers: Attach Shell**.
-- Select **flight-blender-worker container**
-- This will open a new shell in the Terminal tab. And the shell is now connected to the container+the VSCode
-- Run the command `pytest` in the shell to execute all tests in the repository.
-- This will also create a code coverage report in *htmlcov* directory.
-- Browse the */flight-blender/htmlcov/index.html* to see the detailed tests coverage.
 
 ## Image Credit
 
