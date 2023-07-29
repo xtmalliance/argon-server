@@ -44,7 +44,6 @@ class Command(BaseCommand):
         current_state_int = flight_declaration.state       
 
         ## Conduct checks 
-
         if operation_conformant: 
             return True
         

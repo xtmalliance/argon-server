@@ -59,12 +59,12 @@ class FlightOperationConformanceHelper():
             if event == 'ua_exits_coordinated_op_intent' and original_state in [1, 2]:
                 # Enters non-conforming from Accepted
                 # Command: Update / expand volumes
-                management.call_command('transition_to_non_conforming_update_expand_volumes',flight_declaration_id = self.flight_declaration_id, dry_run =0,) 
+                management.call_command('update_operational_intent_to_non_conforming_update_expand_volumes',flight_declaration_id = self.flight_declaration_id, dry_run =0,) 
 
             elif event =='ua_departs_early_late' and original_state in [1,2]:
                 # Enters non-conforming from Accepted
                 # Command: declare non-conforming, no need to update volumes
-                management.call_command('transition_to_non_conforming',flight_declaration_id = self.flight_declaration_id, dry_run =0,)
+                management.call_command('update_operational_intent_to_non_conforming',flight_declaration_id = self.flight_declaration_id, dry_run =0,)
 
         
         elif new_state == 2: # handle entry into activated state
