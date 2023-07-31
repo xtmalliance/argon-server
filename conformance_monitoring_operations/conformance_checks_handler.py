@@ -53,7 +53,7 @@ class FlightOperationConformanceHelper():
 
             elif original_state == 3 and event in ['timeout','operator_confirms_contingent']:
                 # Operator activates contingent state / timeout from Non-conforming state 
-                pass
+                management.call_command('operator_declares_contingency',flight_declaration_id = self.flight_declaration_id, dry_run =0)
 
         elif new_state == 3: # handle entry in non-conforming state
             if event == 'ua_exits_coordinated_op_intent' and original_state in [1, 2]:
