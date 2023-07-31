@@ -8,11 +8,11 @@ from common.database_operations import BlenderDatabaseReader
 from .conformance_checks_handler import FlightOperationConformanceHelper
 logger = logging.getLogger('django')
 # Declare signals
-telemetry_conformance_monitoring_signal = django.dispatch.Signal()
-flight_authorization_conformance_monitoring_signal = django.dispatch.Signal()
+telemetry_non_conformance_signal = django.dispatch.Signal()
+flight_authorization_non_conformance_signal = django.dispatch.Signal()
 
 
-@receiver(telemetry_conformance_monitoring_signal)
+@receiver(telemetry_non_conformance_signal)
 def process_telemetry_conformance_message(sender, **kwargs):  
     """ This method checks if the telemetry provided is conformant to the declared flight operation states, if it is not then the state of the operation is set as non-conforming (3) or contingent (4) """ 
 
@@ -74,8 +74,8 @@ def process_telemetry_conformance_message(sender, **kwargs):
 
 
 
-@receiver(flight_authorization_conformance_monitoring_signal)
-def process_flight_authorization_conformance_message(sender, **kwargs):    
+@receiver(flight_authorization_non_conformance_signal)
+def process_flight_authorization_non_conformance_message(sender, **kwargs):    
     """ This method checks if the telemetry provided is conformant to the declared operation states, if it is not then the state of the operation is set as non-conforming (3) or contingent (4) """ 
     non_conformance_state = kwargs['non_conformance_state']
     flight_declaration_id = kwargs['flight_declaration_id']

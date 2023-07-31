@@ -18,9 +18,8 @@ if ENV_FILE:
 
 logger = logging.getLogger('django')
 
-#### Airtraffic Endpoint
 
-# This method conducts flight conformance checks
+# This method conducts flight conformance checks as a async tasks
 @app.task(name='check_flight_conformance')
 def check_flight_conformance(dry_run:str = None):
     # This method checks the conformance status for ongoing operations and sends notifications / via the notificaitons channel    
@@ -39,7 +38,7 @@ def check_flight_conformance(dry_run:str = None):
             # Basic conformance checks passed, check telemetry conformance 
             check_operation_telemetry_conformance(flight_declaration_id = flight_declaration_id)            
         else:
-            custom_signals.flight_authorization_conformance_monitoring_signal.send(sender='check_flight_conformance', non_conformance_state= flight_authorization_conformant, flight_declaration_id = flight_declaration_id)
+            custom_signals.flight_authorization_non_conformance_signal.send(sender='check_flight_conformance', non_conformance_state= flight_authorization_conformant, flight_declaration_id = flight_declaration_id)
             # Flight Declaration is not conformant             
             logger.info("Operation with {flight_operation_id} is not conformant...".format(flight_operation_id=flight_declaration_id))
             
@@ -74,7 +73,7 @@ def check_operation_telemetry_conformance(flight_declaration_id:str, dry_run:str
                 if conformant_via_telemetry:
                     pass
                 else: 
-                    custom_signals.telemetry_conformance_monitoring_signal.send(sender='conformant_via_telemetry', non_conformance_state= conformant_via_telemetry, flight_declaration_id = flight_declaration_id)
+                    custom_signals.telemetry_non_conformance_signal.send(sender='conformant_via_telemetry', non_conformance_state= conformant_via_telemetry, flight_declaration_id = flight_declaration_id)
                 break
                 
             
