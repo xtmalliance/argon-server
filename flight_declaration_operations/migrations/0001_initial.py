@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='FlightDeclaration',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('operational_intent', models.TextField()),
+                ('operational_intent', models.JSONField()),
                 ('flight_declaration_raw_geojson', models.TextField(blank=True, null=True)),
                 ('type_of_operation', models.IntegerField(choices=[(0, 'VLOS'), (1, 'BVLOS')], default=0, help_text='At the moment, only VLOS and BVLOS operations are supported, for other types of operations, please issue a pull-request')),
                 ('bounds', models.CharField(max_length=140)),

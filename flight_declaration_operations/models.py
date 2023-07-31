@@ -9,7 +9,7 @@ class FlightDeclaration(models.Model):
     OPERATION_STATE = ((0, _('Not Submitted')),(1, _('Accepted')),(2, _('Activated')),(3,_('Nonconforming')),(4,_('Contingent')),(5,_('Ended')),)    
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    operational_intent = models.TextField()
+    operational_intent = models.JSONField()
     flight_declaration_raw_geojson = models.TextField(null=True, blank=True)
     type_of_operation = models.IntegerField(choices=OPERATION_TYPES, default=1, help_text="At the moment, only VLOS and BVLOS operations are supported, for other types of operations, please issue a pull-request")
     state = models.IntegerField(choices=OPERATION_STATE, default=0, help_text="Set the state of operation")

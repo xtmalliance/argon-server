@@ -10,6 +10,7 @@ from typing import List
 
 import arrow
 from auth_helper.utils import requires_scopes
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.utils.decorators import method_decorator
 from geo_fence_operations import rtree_geo_fence_helper
@@ -208,7 +209,7 @@ def set_flight_declaration(request: HttpRequest):
             is_approved = 0
 
     fo = FlightDeclaration(
-        operational_intent=json.dumps(asdict(partial_op_int_ref)),
+        operational_intent=json.loads(json.dumps(asdict(partial_op_int_ref))),
         bounds=bounds,
         type_of_operation=flight_declaration_request.type_of_operation,
         submitted_by=flight_declaration_request.submitted_by,
@@ -238,7 +239,7 @@ def set_flight_declaration(request: HttpRequest):
             "Self deconfliction failed, this declaration cannot be sent to the DSS system.."
         )
         if amqp_connection_url:
-            self_deconfliction_failed_msg = "Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operationd declared".format(
+            self_deconfliction_failed_msg = "Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operations declared".format(
                 operation_id=flight_declaration_id
             )
             send_operational_update_message.delay(
@@ -300,21 +301,36 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
     pagination_class = StandardResultsSetPagination
 
     def get_relevant_flight_declaration(
-        self, start_date, end_date, view_port: List[float]
+        self,
+        start_date,
+        end_date,
+        view_port: List[float],
+        max_alt: int = None,
+        min_alt: int = None,
     ):
-        present = arrow.now()
+        filter_query = Q()
         if start_date and end_date:
-            s_date = arrow.get(start_date, "YYYY-MM-DD")
-            e_date = arrow.get(end_date, "YYYY-MM-DD")
+            s_date = arrow.get(start_date, "YYYY-MM-DD HH:mm:ss")
+            e_date = arrow.get(end_date, "YYYY-MM-DD HH:mm:ss")
 
         else:
+            present = arrow.now()
             s_date = present.shift(days=-1)
             e_date = present.shift(days=1)
+
         all_fd_within_timelimits = FlightDeclaration.objects.filter(
             start_datetime__gte=s_date.isoformat(), end_datetime__lte=e_date.isoformat()
         )
+        filter_query.add(
+            Q(
+                start_datetime__gte=s_date.isoformat(),
+                end_datetime__lte=e_date.isoformat(),
+            ),
+            Q.AND,
+        )
 
         logging.info("Found %s flight declarations" % len(all_fd_within_timelimits))
+
         if view_port:
             INDEX_NAME = "opint_idx"
             my_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)
@@ -330,18 +346,37 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
                 relevant_id_set.append(i["flight_declaration_id"])
 
             my_rtree_helper.clear_rtree_index()
-            filtered_relevant_fd = FlightDeclaration.objects.filter(
-                id__in=relevant_id_set
+
+            filter_query.add(Q(id__in=relevant_id_set), Q.AND)
+
+        if max_alt:
+            filter_query.add(
+                Q(
+                    operational_intent__volumes__0__volume__altitude_upper__value__lte=int(
+                        max_alt
+                    )
+                ),
+                Q.AND,
+            )
+        if min_alt:
+            filter_query.add(
+                Q(
+                    operational_intent__volumes__0__volume__altitude_lower__value__gte=int(
+                        min_alt
+                    )
+                ),
+                Q.AND,
             )
 
-        else:
-            filtered_relevant_fd = all_fd_within_timelimits
-
-        return filtered_relevant_fd
+        filtered = FlightDeclaration.objects.filter(filter_query)
+        return filtered
 
     def get_queryset(self):
         start_date = self.request.query_params.get("start_date", None)
         end_date = self.request.query_params.get("end_date", None)
+
+        max_alt = self.request.query_params.get("max_alt", None)
+        min_alt = self.request.query_params.get("min_alt", None)
 
         view = self.request.query_params.get("view", None)
         view_port = []
@@ -349,7 +384,11 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
             view_port = [float(i) for i in view.split(",")]
 
         responses = self.get_relevant_flight_declaration(
-            view_port=view_port, start_date=start_date, end_date=end_date
+            view_port=view_port,
+            start_date=start_date,
+            end_date=end_date,
+            max_alt=max_alt,
+            min_alt=min_alt,
         )
         return responses
 

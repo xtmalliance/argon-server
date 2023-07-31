@@ -2,7 +2,9 @@
 This module holds the Serialization classes to be used in Flight Declaration operations.
 """
 import json
+
 from rest_framework import serializers
+
 from .models import FlightDeclaration
 from .utils import OperationalIntentsConverter
 
@@ -61,7 +63,7 @@ class FlightDeclarationSerializer(serializers.ModelSerializer):
     flight_declaration_raw_geojson = serializers.SerializerMethodField()
 
     def get_flight_declaration_geojson(self, obj):
-        o = json.loads(obj.operational_intent)
+        o = obj.operational_intent
 
         my_operational_intent_converter = OperationalIntentsConverter()
         my_operational_intent_converter.convert_operational_intent_to_geo_json(
@@ -74,7 +76,7 @@ class FlightDeclarationSerializer(serializers.ModelSerializer):
         return json.loads(obj.flight_declaration_raw_geojson)
 
     def get_operational_intent(self, obj):
-        return json.loads(obj.operational_intent)
+        return obj.operational_intent
 
     class Meta:
         model = FlightDeclaration
