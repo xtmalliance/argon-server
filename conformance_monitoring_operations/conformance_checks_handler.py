@@ -11,7 +11,6 @@ if ENV_FILE:
 
 logger = logging.getLogger('django')
 
-
 class FlightOperationConformanceHelper():
     """
     This class handles changes / transitions to a operation when the conformance check fails, it transitions  
@@ -65,11 +64,9 @@ class FlightOperationConformanceHelper():
                 # Enters non-conforming from Accepted
                 # Command: declare non-conforming, no need to update volumes
                 management.call_command('update_operational_intent_to_non_conforming',flight_declaration_id = self.flight_declaration_id, dry_run =0,)
-
         
         elif new_state == 2: # handle entry into activated state
             if original_state == 1 and event == 'operator_activates':
                 # Operator activates accepted state to Activated state                
-                management.call_command('update_operational_intent_to_activated',flight_declaration_id = self.flight_declaration_id, dry_run =0)
-                
+                management.call_command('update_operational_intent_to_activated',flight_declaration_id = self.flight_declaration_id, dry_run =0)               
 
