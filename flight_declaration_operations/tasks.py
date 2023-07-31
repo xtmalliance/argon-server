@@ -123,7 +123,7 @@ def send_flight_approved_message(flight_declaration_id: str, message_text: str, 
     if amqp_connection_url:
         my_notification_helper = NotificationFactory(
             flight_declaration_id=flight_declaration_id, amqp_connection_url=amqp_connection_url)
-        my_notification_helper.declare_queue(queue_name='flight-approvals')
+        my_notification_helper.declare_queue(queue_name='flight-approvals-'+flight_declaration_id)
         my_notification_helper.send_message(message_details=update_message)
         logger.info("Submitted Flight Declaration Approval")
     else:
