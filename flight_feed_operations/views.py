@@ -17,16 +17,48 @@ from rid_operations.data_definitions import SignedTelemetryRequest, RIDAircraftS
 from . import flight_stream_helper
 logger = logging.getLogger('django')
 from .data_definitions import MessageVerificationFailedResponse
-from .pki_helper import MessageVerifier
+from .pki_helper import MessageVerifier, ResponseSigningOperations
 from .rid_telemetry_helper import BlenderTelemetryValidator, NestedDict
 from django.utils.decorators import method_decorator
 from .models import SignedTelmetryPublicKey
 from .serializers import SignedTelmetryPublicKeySerializer
 from rest_framework import generics
 import arrow
+from jwcrypto import jwk, jwt
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
 
 class HomeView(TemplateView):
     template_name = 'homebase/home.html'
+
+@api_view(['GET'])
+def public_key_view(request):
+    # Source: https://github.com/jazzband/django-oauth-toolkit/blob/016c6c3bf62c282991c2ce3164e8233b81e3dd4d/oauth2_provider/views/oidc.py#L105
+    keys = []
+    private_key = env.get('SECRET_KEY', None)
+    
+    if private_key:
+        try:
+            for pem in [private_key]:
+                key = jwk.JWK.from_pem(pem.encode("utf8"))
+                data = {"alg": "RS256", "use": "sig", "kid": key.thumbprint()}
+                data.update(json.loads(key.export_public()))
+                keys.append(data)
+
+            response = JsonResponse({"keys": keys})
+            response["Access-Control-Allow-Origin"] = "*"
+        except: 
+            response = JsonResponse({})
+    else:
+        response = JsonResponse({})
+        
+    return response
+
+    
 
 @api_view(['GET'])
 def ping(request):
@@ -170,7 +202,7 @@ def set_signed_telemetry(request):
     
     my_message_verifier = MessageVerifier()
     my_blender_database_reader = BlenderDatabaseReader()
-    
+    my_response_signer = ResponseSigningOperations()
     verified = my_message_verifier.verify_message(request)
     
     if not verified:
@@ -208,6 +240,7 @@ def set_signed_telemetry(request):
             single_observation_set = SignedUnSignedTelemetryObservations(current_states = all_states, flight_details = f_details)
 
             unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
+
             operation_id = f_details.id
             now = arrow.now().isoformat()
             relevant_operation_ids_qs = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
@@ -226,8 +259,15 @@ def set_signed_telemetry(request):
                 incorrect_operation_id_msg = {"message": "The operation ID: {operation_id} in the flight details object provided does not match any current operation in Flight Blender".format(operation_id = operation_id)}
                 return JsonResponse(incorrect_operation_id_msg, status=400, content_type='application/json')     
 
-        submission_success = {"message": "Telemetry data successfully submitted"}
-        return JsonResponse(submission_success, status=201, content_type='application/json')
+        submission_success = {"message": "Telemetry data succesfully submitted"}
+        content_digest = my_response_signer.generate_content_digest(submission_success)       
+        signed_data = my_response_signer.sign_json_via_django(submission_success)              
+        submission_success['signed'] = signed_data
+        response = JsonResponse(submission_success, status=201, content_type='application/json')
+        response["Content-Digest"] = content_digest
+        response['req'] = request.headers['Signature']
+        
+        return response
 
             
         
