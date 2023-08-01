@@ -29,10 +29,15 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | ALLOWED_HOSTS | string | This is used in Django, it is recommended that if you are not using IS_DEBUG above, then this needs to be set as a the domain name, if you are using IS_DEBUG above, then the system automatically allows all hosts|
 | REDIS_HOST | string | Blender uses Redis as the backend, you can use localhost if you are running redis locally |
 | REDIS_PORT | integer | Normally Redis runs at port 6379, you can set it here, if you dont setup the REDIS Host and Port, Blender will use the default values |
-| REDI_PASSWORD | string | In production the Redis instance is password protected, set the password here, see redis.conf for more information |
+| REDIS_PASSWORD | string | In production the Redis instance is password protected, set the password here, see redis.conf for more information |
 | REDIS_BROKER_URL | string | Blender has background jobs controlled via Redies, you can setup the Broker URL here |
 | HEARTBEAT_RATE_SECS |integer | Generally set it to 1 or 2 seconds, this is used when querying data externally to other USSPs |
-| AMQP_URL |string | A full connection url to a AMQP server, when this is set, messages related to your operations are sent to it, your clients can subscribe to them. |
+| AMQP_URL |string | (Optional) A full connection url to a AMQP server, when this is set, messages related to your operations are sent to it, your clients can subscribe to them. |
+
+If you are working in stand-alone mode, recommended initially, the above environment file should work. If you want to engage with a DSS and inter-operate with other USSes then you will need additional variables below. 
+
+| Variable Key | Data Type | Description |
+|--------------|--------------|:-----:|
 | DSS_SELF_AUDIENCE |string | This is the domain name of the lender instance you can set it as localhost or development / testing |
 | AUTH_DSS_CLIENT_ID | string | (optional) Sometimes authorities will provide special tokens for accessing the DSS, if you are using it locally via `/build/dev/run_locally.sh` via the InterUSS /DSS repository, you can just use a random long string |
 | AUTH_DSS_CLIENT_SECRET | string | (optional) Similar to above sometimes authorities provide  |
@@ -42,6 +47,7 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | POSTGRES_DB | string| You can name a appropriate name, see the sample file |
 | POSTGRES_HOST | string| You can name a appropriate name, see the sample file |
 | PGDATA | string | This is where the data is stored, you can use `/var/lib/postgresql/data/pgdata` here |
+| BLENDER_FQDN | string | This domain name of a Blender deployment e.g. `https://beta.flightblender.com` |
 
 ### 2. Use Docker Compose to stand up Flight Blender 
 Once you have created and saved the .env file you can then use the [docker-compose.yaml](../docker-compose.yml) file to start the instance. Just run `docker compose up` and a running instance of Flight Blender will be available. 
