@@ -78,7 +78,7 @@ class OperationalIntentsConverter():
             # remove the final point
             polygon_verticies.pop()
                 
-            volume3D = Volume3D(outline_polygon=Plgn(vertices= polygon_verticies),altitude_lower=Altitude(value=max_altitude,reference='W84',units='M'), altitude_upper=Altitude(value=min_altitude,reference='W84',units='M'))
+            volume3D = Volume3D(outline_polygon=Plgn(vertices= polygon_verticies),altitude_lower=Altitude(value=min_altitude,reference='W84',units='M'), altitude_upper=Altitude(value=max_altitude,reference='W84',units='M'))
 
             volume4D = Volume4D(volume = volume3D, time_start=Time(format="RFC3339",value=start_datetime), time_end=Time(format="RFC3339", value=end_datetime))
             all_v4d.append(volume4D)
