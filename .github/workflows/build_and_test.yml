@@ -1,4 +1,4 @@
-name: Build the API and run Lint/Tests
+name: Build the containers and run Linting, Testing.
 
 on:
   push:
@@ -7,8 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -23,16 +22,24 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: 'Create a dummy env file'
+    - name: 'Create an env file from secrets'
       run: |
         touch .env
-        cat .env
+        echo "${{ secrets.ENV_FILE }}" > .env
     - name: Build the docker container
       run: |
         docker-compose build
     - name: Up the docker container
       run: |
         docker-compose up -d
+    - name: List running containers
+      run: |
+        docker ps --format '{{.Names}}'
+    - name: Run unit tests on the container
+      run: |
+        docker exec -i flight-blender_web_1 python -m pip install -r requirements_dev.txt
+        docker exec -i flight-blender_web_1 pytest
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -62,7 +69,18 @@ jobs:
 
       - name: Black formatting the changed files
         run: |
+          if ${{ steps.changed-files.outputs.any_changed }}; then
+          echo "Python file changes detected. Running black formatting..."
           black ${{ steps.changed-files.outputs.all_changed_files }}
+          else
+          echo "No Python file changes detected. Skipping black formatting."
+          fi
       - name: Sort imports in changed files
         run: |
+          if ${{ steps.changed-files.outputs.any_changed }}; then
+          echo "Python file changes detected. Running import formatting..."
           isort ${{ steps.changed-files.outputs.all_changed_files }}
+          else
+          echo "No Python file changes detected. Skipping import formatting."
+          fi
+

@@ -1,4 +1,4 @@
-import datetime
+
 import json
 
 import pytest
@@ -9,11 +9,12 @@ from flight_declaration_operations import models as fdo_models
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
 def create_flight_plan(db) -> None:
-    flight_time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Flight plan 1
     max_alt = 100
     min_alt = 90
+    flight_s_time ="2023-08-01T9:00:00+00:00"
+    flight_e_time="2023-08-01T10:00:00+00:00"
     fdo_models.FlightDeclaration.objects.create(
         operational_intent={
             "volumes": [
@@ -65,8 +66,8 @@ def create_flight_plan(db) -> None:
         type_of_operation=1,
         submitted_by="User 001",
         is_approved=False,
-        start_datetime=flight_time,
-        end_datetime=flight_time,
+        start_datetime=flight_s_time,
+        end_datetime=flight_e_time,
         originating_party="Party 001",
         flight_declaration_raw_geojson=json.dumps(
             {
@@ -94,6 +95,8 @@ def create_flight_plan(db) -> None:
 
     max_alt = 120
     min_alt = 70
+    flight_s_time ="2023-08-01T11:00:00+00:00"
+    flight_e_time="2023-08-01T12:00:00+00:00"
     fdo_models.FlightDeclaration.objects.create(
         operational_intent={
             "volumes": [
@@ -145,8 +148,8 @@ def create_flight_plan(db) -> None:
         type_of_operation=1,
         submitted_by="User 002",
         is_approved=False,
-        start_datetime=flight_time,
-        end_datetime=flight_time,
+        start_datetime=flight_s_time,
+        end_datetime=flight_e_time,
         originating_party="PArty 002",
         flight_declaration_raw_geojson=json.dumps(
             {
@@ -173,6 +176,8 @@ def create_flight_plan(db) -> None:
     # Flight plan 2
     max_alt = 100
     min_alt = 80
+    flight_s_time ="2023-08-01T15:00:00+00:00"
+    flight_e_time="2023-08-01T16:00:00+00:00"
     fdo_models.FlightDeclaration.objects.create(
         operational_intent={
             "volumes": [
@@ -224,8 +229,8 @@ def create_flight_plan(db) -> None:
         type_of_operation=1,
         submitted_by="User 003",
         is_approved=False,
-        start_datetime=flight_time,
-        end_datetime=flight_time,
+        start_datetime=flight_s_time,
+        end_datetime=flight_e_time,
         originating_party="Party 003",
         flight_declaration_raw_geojson=json.dumps(
             {
