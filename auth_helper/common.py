@@ -41,7 +41,7 @@ class RedisHelper():
         self.redis_password = env.get('REDIS_PASSWORD', None)
 
             
-    def flush_db():        
+    def flush_db(self):        
         if self.redis_password:
             r = redis.Redis(host=self.redis_host, port=self.redis_port, password = self.redis_password, charset="utf-8",decode_responses=True)
         else:

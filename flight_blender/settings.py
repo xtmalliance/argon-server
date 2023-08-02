@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
     'rest_framework',    
     'flight_declaration_operations',
     'geo_fence_operations',
@@ -157,17 +158,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 CELERY_RESULT_BACKEND = BROKER_URL
-
-ENABLE_CONFORMANCE_MONITORING = os.getenv('ENABLE_CONFORMANCE_MONITORING', False)
-if ENABLE_CONFORMANCE_MONITORING == '1':
-    CELERYBEAT_SCHEDULE = {
-        'check-flight-conformance': {
-            'task': 'check_flight_conformance',
-            # Every 20 secionds
-            'schedule': timedelta(seconds=int(os.getenv('HEARTBEAT_RATE_SECS', default=5)))
-        }, 
-        
-    }
 
 # DataFlair #Logging Information
 LOGGING = {

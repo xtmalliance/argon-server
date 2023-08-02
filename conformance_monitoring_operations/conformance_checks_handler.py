@@ -1,7 +1,9 @@
-from common.database_operations import BlenderDatabaseReader
+from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 from .operation_state_helper import FlightOperationStateMachine, match_state, get_status
 from django.core import management
 from dotenv import load_dotenv, find_dotenv
+from .models import TaskScheduler
+import os
 import logging
 load_dotenv(find_dotenv())
  
@@ -18,8 +20,9 @@ class FlightOperationConformanceHelper():
 
     def __init__(self, flight_declaration_id:str):
         self.flight_declaration_id = flight_declaration_id
-        self.my_database_reader = BlenderDatabaseReader()
-        self.flight_declaration = self.my_database_reader.get_flight_declaration_by_id(flight_declaration_id=self.flight_declaration_id)
+        self.database_reader = BlenderDatabaseReader()
+        self.flight_declaration = self.database_reader.get_flight_declaration_by_id(flight_declaration_id=self.flight_declaration_id)
+        self.database_writer = BlenderDatabaseWriter()
 
     def verify_operation_state_transition(self, original_state:int, new_state: int, event:str) -> bool:
         """
@@ -43,7 +46,12 @@ class FlightOperationConformanceHelper():
         '''
         if new_state == 5: #operation has ended
             if event =='operator_confirms_ended':
-                management.call_command('operation_ended_clear_dss',flight_declaration_id = self.flight_declaration_id, dry_run =0)
+                management.call_command('operation_ended_clear_dss',flight_declaration_id = self.flight_declaration_id, dry_run =0)          
+
+                # Remove the conformance monitoring periodic job
+                conformance_monitoring_job = self.database_reader.get_conformance_monitoring_task(flight_declaration=self.flight_declaration)
+                if conformance_monitoring_job:
+                    self.database_writer.remove_conformance_monitoring_periodic_task(conformance_monitoring_task = conformance_monitoring_job)
 
         elif new_state == 4: # handle entry into contingent state
             if original_state == 2 and event in ['operator_initiates_contingent','blender_confirms_contingent']:
@@ -68,5 +76,15 @@ class FlightOperationConformanceHelper():
         elif new_state == 2: # handle entry into activated state
             if original_state == 1 and event == 'operator_activates':
                 # Operator activates accepted state to Activated state                
-                management.call_command('update_operational_intent_to_activated',flight_declaration_id = self.flight_declaration_id, dry_run =0)               
+                management.call_command('update_operational_intent_to_activated',flight_declaration_id = self.flight_declaration_id, dry_run =0)   
+                # TODO: Add celery periodic task to enable conformance monitoring             
+                ENABLE_CONFORMANCE_MONITORING = int(os.getenv('ENABLE_CONFORMANCE_MONITORING', 0))                
+                if ENABLE_CONFORMANCE_MONITORING:
+                    conformance_monitoring_job = self.database_writer.create_conformance_monitoring_periodic_task(flight_declaration = self.flight_declaration)
+                    if conformance_monitoring_job:
+                        logging.info("Created conformance monitoring job for {flight_declaration_id}".format(flight_declaration_id=self.flight_declaration_id))
+                    else: 
+                        logging.info("Error in creating conformance monitoring job for {flight_declaration_id}".format(flight_declaration_id=self.flight_declaration_id))
+                    
+                    
 

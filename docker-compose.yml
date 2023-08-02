@@ -55,7 +55,7 @@ services:
     env_file:
       - ".env"
     hostname: beat    
-    command: celery --app=flight_blender beat --loglevel=info
+    command: celery --app=flight_blender beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - .:/app
     depends_on:
