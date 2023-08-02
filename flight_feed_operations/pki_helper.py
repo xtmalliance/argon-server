@@ -6,7 +6,16 @@ import jwt
 import json
 import requests
 import logging
+import hashlib, http_sfv
 from auth_helper.common import get_redis
+from django.core.signing import Signer
+from jwcrypto import jwk, jws
+from jwcrypto.common import json_encode
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
+
 logger = logging.getLogger('django')
 
 class MyHTTPSignatureKeyResolver(HTTPSignatureKeyResolver):
@@ -64,4 +73,48 @@ class MessageVerifier():
             return True
         else:
             return False
+
+
+class ResponseSigningOperations:
+        
+    def __init__(self):        
+        self.signing_url = env.get('FLIGHT_PASSPORT_SIGNING_URL', None)        
+        self.signing_client_id = env.get('FLIGHT_PASSPORT_SIGNING_CLIENT_ID')
+        self.signing_client_secret = env.get('FLIGHT_PASSPORT_SIGNING_CLIENT_SECRET')
+                
+    def generate_content_digest(self, payload):
+        payload_str = json.dumps(payload)
+        return str(http_sfv.Dictionary({"sha-256": hashlib.sha256(payload_str.encode('utf-8')).digest()}))
+
+    def sign_json_via_django(self, data_to_sign):      
+
+        signer = Signer()
+        signed_obj = signer.sign_object(data_to_sign)
+        return signed_obj
+    
+    def sign_json_via_jose(self, payload):
+        '''
+        For a payload sign using the OIDC private key and return signed JWS
+        '''
+
+        algorithms = 'RS256'
+        private_key = env.get('SECRET_KEY', None)
+        if private_key:
+            try:
+                key = jwk.JWK.from_pem(private_key.encode("utf8"))
+            except Exception as e: 
+                key = None
+
+        if key:
+            payload_str = json.dumps(payload)
+            jws_token = jws.JWS(payload = payload_str)
+            
+            jws_token.add_signature(key = key, alg=algorithms, protected= json_encode({"alg":"RS256","kid": key.thumbprint()}))
+            
+            sig = jws_token.serialize()
+            s= json.loads(sig)
+            
+            return {"signature": s["protected"]+'.'+s["payload"]+'.'+s["signature"]}
+        else: 
+            return {}
 

@@ -20,7 +20,7 @@ urlpatterns = [
     path('', flight_feed_views.HomeView.as_view()),
     path('admin/', admin.site.urls),    
     path('ping', flight_feed_views.ping),
-
+    path('signing_public_key', flight_feed_views.public_key_view),
     path('flight_stream/', include('flight_feed_operations.urls')),    
 
     path('rid/', include('rid_operations.urls')),    
@@ -29,5 +29,6 @@ urlpatterns = [
 
     path('geo_fence_ops/', include('geo_fence_operations.urls')),    
     path('flight_declaration_ops/', include('flight_declaration_operations.urls')),
+    
     
 ]
