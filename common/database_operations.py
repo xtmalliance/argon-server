@@ -1,9 +1,19 @@
 from flight_declaration_operations.models import FlightAuthorization, FlightDeclaration
+from conformance_monitoring_operations.models import TaskScheduler
 from typing import Tuple, List
 from uuid import uuid4
 import arrow
 from django.db.utils import IntegrityError
-
+from django_celery_beat.models import PeriodicTask, IntervalSchedule
+import os
+import logging
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+ 
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+    
 class BlenderDatabaseReader():
     """
     A file to unify read and write operations to the database. Eventually caching etc. can be added via this file
@@ -58,6 +68,12 @@ class BlenderDatabaseReader():
         relevant_ids =  FlightDeclaration.objects.filter(start_datetime__gte = two_minutes_before_now, end_datetime__lte = five_hours_from_now).filter(state__in = [1,2]).values_list('id', flat=True)        
         return relevant_ids
 
+    def get_conformance_monitoring_task(self, flight_declaration: FlightDeclaration) -> Tuple[None, TaskScheduler]:
+        try:
+            return TaskScheduler.objects.get(flight_declaration = flight_declaration)
+        except TaskScheduler.DoesNotExist: 
+            return None
+        
 
 class BlenderDatabaseWriter():    
 
@@ -71,9 +87,7 @@ class BlenderDatabaseWriter():
             return False
         except IntegrityError as ie:
             return False
-        
-        
-
+       
     def update_telemetry_timestamp(self, flight_declaration_id:str) ->bool:        
         now = arrow.now().isoformat()
         try:
@@ -101,5 +115,22 @@ class BlenderDatabaseWriter():
         except Exception as e: 
             return False
 
+    def create_conformance_monitoring_periodic_task(self, flight_declaration:FlightDeclaration) -> bool:
+        conformance_monitoring_job = TaskScheduler()
+        every=int(os.getenv('HEARTBEAT_RATE_SECS', default=5))        
+        now = arrow.now()
+        fd_end = arrow.get(flight_declaration.end_datetime)        
+        delta = fd_end - now
+        delta_seconds = delta.total_seconds()
+        expires = now.shift(seconds = delta_seconds)                
+        task_name = 'check_flight_conformance'
+        try:
+            p_task  = conformance_monitoring_job.schedule_every(task_name= task_name, period='seconds', every = every, expires = expires, flight_declaration= flight_declaration)  
+            p_task.start()
+            return True
+        except Exception as e:             
+            return False
 
-
+    def remove_conformance_monitoring_periodic_task(self, conformance_monitoring_task:TaskScheduler):
+        conformance_monitoring_task.terminate()
+        

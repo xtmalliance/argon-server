@@ -22,7 +22,7 @@ logger = logging.getLogger('django')
 
 # This method conducts flight conformance checks as a async tasks
 @app.task(name='check_flight_conformance')
-def check_flight_conformance(flight_declaration_id:str = flight_declaration_id, dry_run:str = None):
+def check_flight_conformance(flight_declaration_id:str, dry_run:str = None):
     # This method checks the conformance status for ongoing operations and sends notifications / via the notificaitons channel    
 
     dry_run = 1 if dry_run =='1' else 0        
