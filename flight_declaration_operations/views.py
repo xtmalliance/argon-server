@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
-from .tasks import submit_flight_declaration_to_dss, send_operational_update_message
+from .tasks import submit_flight_declaration_to_dss_async, send_operational_update_message
 from .pagination import StandardResultsSetPagination
 from os import environ as env
 
@@ -161,7 +161,7 @@ def set_flight_declaration(request):
         logger.info("Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided..")
         my_database_writer = BlenderDatabaseWriter()
         my_database_writer.create_flight_authorization(flight_declaration_id=flight_declaration_id)
-        submit_flight_declaration_to_dss.delay(flight_declaration_id = flight_declaration_id)   
+        submit_flight_declaration_to_dss_async.delay(flight_declaration_id = flight_declaration_id)   
     creation_response = FlightDeclarationCreateResponse(id= flight_declaration_id, message = "Submitted Flight Declaration", is_approved = is_approved, state = default_state)
     
     op = json.dumps(asdict(creation_response))

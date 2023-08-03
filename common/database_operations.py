@@ -6,7 +6,9 @@ import arrow
 from django.db.utils import IntegrityError
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 import os
+import json
 import logging
+logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
  
@@ -124,11 +126,13 @@ class BlenderDatabaseWriter():
         delta_seconds = delta.total_seconds()
         expires = now.shift(seconds = delta_seconds)                
         task_name = 'check_flight_conformance'
+        
         try:
             p_task  = conformance_monitoring_job.schedule_every(task_name= task_name, period='seconds', every = every, expires = expires, flight_declaration= flight_declaration)  
             p_task.start()
             return True
         except Exception as e:             
+            logging.error()
             return False
 
     def remove_conformance_monitoring_periodic_task(self, conformance_monitoring_task:TaskScheduler):

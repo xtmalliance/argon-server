@@ -48,3 +48,14 @@ class RedisHelper():
             r = redis.Redis(host=self.redis_host, port=self.redis_port, charset="utf-8",decode_responses=True)
 
         r.flushdb()
+
+    def delete_all_opints(self):
+             
+        if self.redis_password:
+            r = redis.Redis(host=self.redis_host, port=self.redis_port, password = self.redis_password, charset="utf-8",decode_responses=True)
+        else:
+            r = redis.Redis(host=self.redis_host, port=self.redis_port, charset="utf-8",decode_responses=True)
+
+        all_opints = r.keys(pattern='flight_optint.*')
+        for opint in all_opints:
+            r.delete(opint)

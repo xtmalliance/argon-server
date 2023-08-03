@@ -18,8 +18,8 @@ logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
-@app.task(name='submit_flight_declaration_to_dss')
-def submit_flight_declaration_to_dss(flight_declaration_id:str):
+@app.task(name='submit_flight_declaration_to_dss_async')
+def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
     amqp_connection_url = env.get('AMQP_URL', 0)
     my_dss_opint_creator = DSSOperationalIntentsCreator(flight_declaration_id)   
     my_database_reader = BlenderDatabaseReader()  

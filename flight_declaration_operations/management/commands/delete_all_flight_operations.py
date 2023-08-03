@@ -5,7 +5,7 @@ from scd_operations import dss_scd_helper
 import json
 from auth_helper.common import RedisHelper, get_redis
 class Command(BaseCommand):
-    help = 'This command delete.'
+    help = 'This command deletes all flight operations in the Blender database and also clears the DSS if avaialble'
 
     def add_arguments(self, parser):
 
@@ -63,6 +63,6 @@ class Command(BaseCommand):
                 o.delete()
 
         # Clear out Redis database
-        print("Clearing redis...")
+        print("Clearing stored operational intents...")
         redis = RedisHelper()
-        redis.flush_db()
+        redis.delete_all_opints()

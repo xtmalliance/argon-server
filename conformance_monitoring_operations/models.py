@@ -4,9 +4,9 @@ from flight_declaration_operations.models import FlightDeclaration
 # Create your models here.
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from datetime import datetime
+import json
 
 class TaskScheduler(models.Model):
-
     periodic_task = models.ForeignKey(PeriodicTask, on_delete=models.CASCADE)
     flight_declaration = models.OneToOneField(FlightDeclaration, on_delete=models.CASCADE)
 
@@ -29,7 +29,7 @@ class TaskScheduler(models.Model):
             interval_schedule.every = every # should check to make sure this is a positive int
             interval_schedule.period = period 
             interval_schedule.save()
-        ptask = PeriodicTask(name=ptask_name, task=task_name, interval=interval_schedule, kwargs=json.dumps({'flight_declaration_id':str(flight_declaration.id)}))
+        ptask = PeriodicTask(name=ptask_name, task=task_name, interval=interval_schedule, kwargs=json.dumps({'flight_declaration_id':str(flight_declaration.id),}))        
         if args:
             ptask.args = args
         if kwargs:
