@@ -249,7 +249,7 @@ def set_signed_telemetry(request):
             unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
 
             stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
-        submission_success = {"message": "Telemetry data succesfully submitted"}
+        submission_success = {"message": "Telemetry data successfully submitted"}
         content_digest = my_response_signer.generate_content_digest(submission_success)       
         signed_data = my_response_signer.sign_json_via_django(submission_success)              
         submission_success['signed'] = signed_data

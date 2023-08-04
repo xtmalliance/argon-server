@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+
 from . import views as flight_declaration_views
 
 urlpatterns = [
@@ -22,6 +23,11 @@ urlpatterns = [
         "set_flight_declaration",
         flight_declaration_views.set_flight_declaration,
         name="set_flight_declaration",
+    ),
+        path(
+        "set_signed_flight_declaration",
+        flight_declaration_views.set_signed_flight_declaration,
+        name="set_signed_flight_declaration",
     ),
     path(
         "flight_declaration", flight_declaration_views.FlightDeclarationList.as_view(),name="flight_declaration"

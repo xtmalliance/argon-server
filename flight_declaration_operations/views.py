@@ -1,165 +1,134 @@
 # Create your views here.
 import io
-
 # Create your views here.
 import json
 import logging
 from dataclasses import asdict
-from os import environ as env
 from typing import List
 
 import arrow
-from auth_helper.utils import requires_scopes
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.utils.decorators import method_decorator
-from geo_fence_operations import rtree_geo_fence_helper
-from geo_fence_operations.models import GeoFence
 from rest_framework import generics, mixins, status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
-from rest_framework.renderers import JSONRenderer
 from shapely.geometry import shape
 
+from auth_helper.utils import requires_scopes
+from geo_fence_operations import rtree_geo_fence_helper
+from geo_fence_operations.models import GeoFence
+
 from .data_definitions import FlightDeclarationCreateResponse
-from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
+from .flight_declarations_rtree_helper import \
+    FlightDeclarationRTreeIndexFactory
 from .models import FlightDeclaration
 from .pagination import StandardResultsSetPagination
-from .serializers import (
-    FlightDeclarationApprovalSerializer,
-    FlightDeclarationRequestSerializer,
-    FlightDeclarationSerializer,
-    FlightDeclarationStateSerializer,
-)
-from .tasks import send_operational_update_message, submit_flight_declaration_to_dss
+from .serializers import (FlightDeclarationApprovalSerializer,
+                          FlightDeclarationRequestSerializer,
+                          FlightDeclarationSerializer,
+                          FlightDeclarationStateSerializer)
+from .tasks import (send_operational_update_message,
+                    submit_flight_declaration_to_dss)
 from .utils import OperationalIntentsConverter
 
 logger = logging.getLogger("django")
 
 
-@api_view(["POST"])
-@requires_scopes(["blender.write"])
-def set_flight_declaration(request: HttpRequest):
+def _parse_flight_declaration_request(json_payload):
     """
-    Add a new Flight Declaration. Submit a Flight Declaration into Flight Blender.
+    Validate the JSON payload to make sure all required fields are provided and the flight times are in proper order
     """
-    try:
-        assert request.headers["Content-Type"] == "application/json"
-    except AssertionError:
-        msg = {"message": "Unsupported Media Type"}
-        return HttpResponse(
-            json.dumps(msg),
-            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            content_type="application/json",
-        )
-
-    stream = io.BytesIO(request.body)
-    json_payload = JSONParser().parse(stream)
-
+    error = None
+    fd_request = None
     serializer = FlightDeclarationRequestSerializer(data=json_payload)
     if not serializer.is_valid():
-        return HttpResponse(
-            JSONRenderer().render(serializer.errors),
-            status=status.HTTP_400_BAD_REQUEST,
-            content_type="application/json",
-        )
+        error = serializer.errors
+        return fd_request, error
 
-    flight_declaration_request = serializer.create(serializer.validated_data)
-    is_approved = False
+    fd_request = serializer.create(serializer.validated_data)
 
+    # Validate flight time fields
     now = arrow.now()
     try:
-        start_datetime = (
+        fd_request.start_datetime = (
             now.isoformat()
-            if "start_datetime" not in json_payload
-            else arrow.get(json_payload["start_datetime"]).isoformat()
+            if fd_request.start_datetime is None
+            else arrow.get(fd_request.start_datetime).isoformat()
         )
-        end_datetime = (
+        fd_request.end_datetime = (
             now.isoformat()
-            if "end_datetime" not in json_payload
-            else arrow.get(json_payload["end_datetime"]).isoformat()
+            if fd_request.end_datetime is None
+            else arrow.get(fd_request.end_datetime).isoformat()
         )
     except Exception:
         ten_mins_from_now = now.shift(minutes=10)
-        start_datetime = now.isoformat()
-        end_datetime = ten_mins_from_now.isoformat()
+        fd_request.start_datetime = now.isoformat()
+        fd_request.end_datetime = ten_mins_from_now.isoformat()
 
     two_days_from_now = now.shift(days=2)
 
     # verify start and end date time
-    s_datetime = arrow.get(start_datetime)
-    e_datetime = arrow.get(end_datetime)
-
+    s_datetime = arrow.get(fd_request.start_datetime)
+    e_datetime = arrow.get(fd_request.end_datetime)
     if (
         s_datetime < now
         or e_datetime < now
         or e_datetime > two_days_from_now
         or s_datetime > two_days_from_now
     ):
-        return HttpResponse(
-            json.dumps(
-                {
-                    "message": "A flight declaration cannot have a start or end time in the past or after two days from current time."
-                }
-            ),
-            status=status.HTTP_400_BAD_REQUEST,
-            content_type="application/json",
-        )
-    all_features = []
+        error = {
+            "message": "A flight declaration cannot have a start or end time in the past or after two days from current time."
+        }
 
-    for feature in flight_declaration_request.flight_declaration_geo_json["features"]:
+    # Validate GeoJSON
+    all_features = []  # TODO Do we need this all_features?
+    for feature in fd_request.flight_declaration_geo_json["features"]:
         geometry = feature["geometry"]
         s = shape(geometry)
         if s.is_valid:
             all_features.append(s)
         else:
-            op = json.dumps(
-                {
-                    "message": "Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a valid geometry, please check your submitted FeatureCollection"
-                }
-            )
-            return HttpResponse(
-                op, status=status.HTTP_400_BAD_REQUEST, content_type="application/json"
-            )
-
+            error = {
+                "message": "Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a valid geometry, please check your submitted FeatureCollection"
+            }
         props = feature["properties"]
         try:
             assert "min_altitude" in props
             assert "max_altitude" in props
         except AssertionError:
-            op = json.dumps(
-                {
-                    "message": "Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a min_altitude and max_altitude data structure"
-                }
-            )
-            return HttpResponse(
-                op, status=status.HTTP_400_BAD_REQUEST, content_type="application/json"
-            )
+            error = {
+                "message": "Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a min_altitude and max_altitude data structure"
+            }
 
-    default_state = 1  # Default state is Accepted
+    return fd_request, error
 
+
+def _get_operational_intent(fd_request):
+    is_approved = False  # Default accepted is False
     my_operational_intent_converter = OperationalIntentsConverter()
-
     partial_op_int_ref = (
         my_operational_intent_converter.create_partial_operational_intent_ref(
-            geo_json_fc=flight_declaration_request.flight_declaration_geo_json,
-            start_datetime=start_datetime,
-            end_datetime=end_datetime,
+            geo_json_fc=fd_request.flight_declaration_geo_json,
+            start_datetime=fd_request.start_datetime,
+            end_datetime=fd_request.end_datetime,
             priority=0,
         )
     )
-
     bounds = my_operational_intent_converter.get_geo_json_bounds()
     logging.info("Checking intersections with Geofences..")
-    view_box = [float(i) for i in bounds.split(",")]
 
+    view_box = [float(i) for i in bounds.split(",")]
     fence_within_timelimits = GeoFence.objects.filter(
-        start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+        start_datetime__lte=fd_request.start_datetime,
+        end_datetime__gte=fd_request.end_datetime,
     ).exists()
+
     all_relevant_fences = []
     if fence_within_timelimits:
         all_fences_within_timelimits = GeoFence.objects.filter(
-            start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+            start_datetime__lte=fd_request.start_datetime,
+            end_datetime__gte=fd_request.end_datetime,
         )
         INDEX_NAME = "geofence_idx"
         my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(
@@ -183,11 +152,13 @@ def set_flight_declaration(request: HttpRequest):
 
     all_relevant_declarations = []
     existing_declaration_within_timelimits = FlightDeclaration.objects.filter(
-        start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+        start_datetime__lte=fd_request.start_datetime,
+        end_datetime__gte=fd_request.end_datetime,
     ).exists()
     if existing_declaration_within_timelimits:
         all_declarations_within_timelimits = FlightDeclaration.objects.filter(
-            start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+            start_datetime__lte=fd_request.start_datetime,
+            end_datetime__gte=fd_request.end_datetime,
         )
         INDEX_NAME = "flight_declaration_idx"
         my_fd_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)
@@ -208,45 +179,37 @@ def set_flight_declaration(request: HttpRequest):
         if all_relevant_declarations:
             is_approved = 0
 
-    fo = FlightDeclaration(
-        operational_intent=json.loads(json.dumps(asdict(partial_op_int_ref))),
-        bounds=bounds,
-        type_of_operation=flight_declaration_request.type_of_operation,
-        submitted_by=flight_declaration_request.submitted_by,
-        is_approved=is_approved,
-        start_datetime=start_datetime,
-        end_datetime=end_datetime,
-        originating_party=flight_declaration_request.originating_party,
-        flight_declaration_raw_geojson=json.dumps(
-            flight_declaration_request.flight_declaration_geo_json
-        ),
-        state=default_state,
+    return (
+        partial_op_int_ref,
+        bounds,
+        all_relevant_fences,
+        all_relevant_declarations,
+        is_approved,
     )
-    fo.save()
 
-    flight_declaration_id = str(fo.id)
-    amqp_connection_url = env.get("AMQP_URL", 0)
-    if amqp_connection_url:
-        send_operational_update_message.delay(
-            flight_declaration_id=flight_declaration_id,
-            message_text="Flight Declaration created..",
-            level="info",
-        )
+
+def _send_fd_creation_notifications(
+    flight_declaration_id: str, all_relevant_fences, all_relevant_declarations
+) -> None:
+    send_operational_update_message.delay(
+        flight_declaration_id=flight_declaration_id,
+        message_text="Flight Declaration created..",
+        level="info",
+    )
 
     if all_relevant_fences and all_relevant_declarations:
-        # Async submic flight declaration to DSS
+        # Async submit flight declaration to DSS
         logger.info(
             "Self deconfliction failed, this declaration cannot be sent to the DSS system.."
         )
-        if amqp_connection_url:
-            self_deconfliction_failed_msg = "Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operations declared".format(
+
+        send_operational_update_message.delay(
+            flight_declaration_id=flight_declaration_id,
+            message_text="Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operations declared".format(
                 operation_id=flight_declaration_id
-            )
-            send_operational_update_message.delay(
-                flight_declaration_id=flight_declaration_id,
-                message_text=self_deconfliction_failed_msg,
-                level="error",
-            )
+            ),
+            level="error",
+        )
 
     else:
         logger.info(
@@ -255,6 +218,69 @@ def set_flight_declaration(request: HttpRequest):
         submit_flight_declaration_to_dss.delay(
             flight_declaration_id=flight_declaration_id
         )
+    return None
+
+
+@api_view(["POST"])
+@requires_scopes(["blender.write"])
+def set_flight_declaration(request: HttpRequest):
+    """
+    Add a new Flight Declaration. Submit a Flight Declaration into Flight Blender.
+    """
+    try:
+        assert request.headers["Content-Type"] == "application/json"
+    except AssertionError:
+        msg = {"message": "Unsupported Media Type"}
+        return HttpResponse(
+            json.dumps(msg),
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            content_type="application/json",
+        )
+
+    stream = io.BytesIO(request.body)
+    json_payload = JSONParser().parse(stream)
+
+    # Validate the JSON payload
+    parsed_fd_request, parse_error = _parse_flight_declaration_request(json_payload)
+
+    if parse_error:
+        return HttpResponse(
+            json.dumps(parse_error),
+            status=status.HTTP_400_BAD_REQUEST,
+            content_type="application/json",
+        )
+
+    default_state = 1  # Default state is Accepted
+    (
+        partial_op_int_ref,
+        bounds,
+        all_relevant_fences,
+        all_relevant_declarations,
+        is_approved,
+    ) = _get_operational_intent(parsed_fd_request)
+
+    fo = FlightDeclaration(
+        operational_intent=json.loads(json.dumps(asdict(partial_op_int_ref))),
+        bounds=bounds,
+        type_of_operation=parsed_fd_request.type_of_operation,
+        submitted_by=parsed_fd_request.submitted_by,
+        is_approved=is_approved,
+        start_datetime=parsed_fd_request.start_datetime,
+        end_datetime=parsed_fd_request.end_datetime,
+        originating_party=parsed_fd_request.originating_party,
+        flight_declaration_raw_geojson=json.dumps(
+            parsed_fd_request.flight_declaration_geo_json
+        ),
+        state=default_state,
+    )
+    fo.save()
+
+    # Send flight creation notifications
+    flight_declaration_id = str(fo.id)
+    _send_fd_creation_notifications(
+        flight_declaration_id, all_relevant_fences, all_relevant_declarations
+    )
+
     creation_response = FlightDeclarationCreateResponse(
         id=flight_declaration_id,
         message="Submitted Flight Declaration",
@@ -265,6 +291,16 @@ def set_flight_declaration(request: HttpRequest):
     op = json.dumps(asdict(creation_response))
     # TODO: Should the return status code be 201 since it creates a new record?
     return HttpResponse(op, status=status.HTTP_200_OK, content_type="application/json")
+
+
+@api_view(["POST"])
+@requires_scopes(["blender.write"])
+def set_signed_flight_declaration(request: HttpRequest):
+    return HttpResponse(
+        json.dumps({"status": "_TO_BE_IMPLEMENTED_"}),
+        status=status.HTTP_200_OK,
+        content_type="application/json",
+    )
 
 
 @method_decorator(requires_scopes(["blender.write"]), name="dispatch")

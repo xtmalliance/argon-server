@@ -1,10 +1,11 @@
 """
 This file contains unit tests for the views functions in flight_declaration_operations
 """
-import json
 import datetime
-from django.urls import reverse
+import json
+
 import pytest
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -65,8 +66,6 @@ class FlightDeclarationPostTests(APITestCase):
             self.api_url, content_type="application/json", data=empty_payload
         )
         response_json = {
-            "start_datetime": ["This field is required."],
-            "end_datetime": ["This field is required."],
             "flight_declaration_geo_json": [
                 "A valid flight declaration as specified by the A flight declaration protocol must be submitted."
             ],
@@ -208,6 +207,7 @@ class FlightDeclarationGetTests(APITestCase):
     """
     Contains tests for class FlightDeclarationList
     """
+
     def setUp(self):
         self.client.defaults["HTTP_AUTHORIZATION"] = "Bearer " + JWT
         self.api_url = reverse("flight_declaration")
@@ -218,39 +218,57 @@ class FlightDeclarationGetTests(APITestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["total"], 3)
+        self.assertEqual(response.json()["total"], 0)
 
     def test_count_flight_plans_with_altitude_filter_1(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
         response = self.client.get(
-            self.api_url + "?min_alt=90",
+            self.api_url
+            + "?min_alt=90"
+            + "&start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["total"], 1)
 
     def test_count_flight_plans_with_altitude_filter_2(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
         response = self.client.get(
-            self.api_url + "?max_alt=100",
+            self.api_url
+            + "?max_alt=100"
+            + "&start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["total"], 2)
 
     def test_count_flight_plans_with_altitude_filter_3(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
         response = self.client.get(
-            self.api_url + "?max_alt=100&min_alt=90",
+            self.api_url
+            + "?max_alt=100&min_alt=90"
+            + "&start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["total"], 1)
 
     def test_count_flight_plans_with_datetime_filter_1(self):
-        flight_s_time ="2023-08-01 06:00:00"
-        flight_e_time="2023-08-01 23:00:00"
+        flight_s_time = "2023-08-01 06:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
         response = self.client.get(
             self.api_url
             + "?start_date={flight_s_time}&end_date={flight_e_time}".format(
-                flight_s_time=flight_s_time,flight_e_time=flight_e_time
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
             ),
             content_type="application/json",
         )
