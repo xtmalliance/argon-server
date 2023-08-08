@@ -274,3 +274,85 @@ class FlightDeclarationGetTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["total"], 3)
+
+    def test_count_flight_plans_with_datetime_filter_2(self):
+        flight_s_time = "2023-08-01 09:30:00"
+        flight_e_time = "2023-08-01 12:30:00"
+        response = self.client.get(
+            self.api_url
+            + "?start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 2)
+
+    def test_count_flight_plans_with_datetime_filter_3(self):
+        flight_s_time = "2023-08-01 15:30:00"
+        flight_e_time = "2023-08-01 17:00:00"
+        response = self.client.get(
+            self.api_url
+            + "?start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 1)
+
+    def test_count_flight_plans_with_state_filter_1(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
+        response = self.client.get(
+            self.api_url
+            + "?states=1,2,3,4,5"
+            + "&start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 3)
+
+    def test_count_flight_plans_with_state_filter_2(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
+        response = self.client.get(
+            self.api_url
+            + "?states=2,3"
+            + "&start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 2)
+
+    def test_count_flight_plans_with_state_filter_3(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
+        response = self.client.get(
+            self.api_url
+            + "?states=3"
+            + "&start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 1)
+
+    def test_count_flight_plans_with_state_filter_4(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
+        response = self.client.get(
+            self.api_url
+            + "?states=4,5"
+            + "&start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 0)

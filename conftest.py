@@ -66,6 +66,7 @@ def create_flight_plan(db) -> None:
         type_of_operation=1,
         submitted_by="User 001",
         is_approved=False,
+        state=1,
         start_datetime=flight_s_time,
         end_datetime=flight_e_time,
         originating_party="Party 001",
@@ -148,9 +149,10 @@ def create_flight_plan(db) -> None:
         type_of_operation=1,
         submitted_by="User 002",
         is_approved=False,
+        state=2,
         start_datetime=flight_s_time,
         end_datetime=flight_e_time,
-        originating_party="PArty 002",
+        originating_party="Party 002",
         flight_declaration_raw_geojson=json.dumps(
             {
                 "type": "FeatureCollection",
@@ -229,6 +231,7 @@ def create_flight_plan(db) -> None:
         type_of_operation=1,
         submitted_by="User 003",
         is_approved=False,
+        state=3,
         start_datetime=flight_s_time,
         end_datetime=flight_e_time,
         originating_party="Party 003",

@@ -1,5 +1,6 @@
 # Create your views here.
 import io
+
 # Create your views here.
 import json
 import logging
@@ -20,16 +21,16 @@ from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
 
 from .data_definitions import FlightDeclarationCreateResponse
-from .flight_declarations_rtree_helper import \
-    FlightDeclarationRTreeIndexFactory
+from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from .models import FlightDeclaration
 from .pagination import StandardResultsSetPagination
-from .serializers import (FlightDeclarationApprovalSerializer,
-                          FlightDeclarationRequestSerializer,
-                          FlightDeclarationSerializer,
-                          FlightDeclarationStateSerializer)
-from .tasks import (send_operational_update_message,
-                    submit_flight_declaration_to_dss)
+from .serializers import (
+    FlightDeclarationApprovalSerializer,
+    FlightDeclarationRequestSerializer,
+    FlightDeclarationSerializer,
+    FlightDeclarationStateSerializer,
+)
+from .tasks import send_operational_update_message, submit_flight_declaration_to_dss
 from .utils import OperationalIntentsConverter
 
 logger = logging.getLogger("django")
@@ -343,6 +344,7 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
         view_port: List[float],
         max_alt: int = None,
         min_alt: int = None,
+        states: List[int] = None,
     ):
         filter_query = Q()
         if start_date and end_date:
@@ -354,24 +356,24 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
             s_date = present.shift(days=-1)
             e_date = present.shift(days=1)
 
-        all_fd_within_timelimits = FlightDeclaration.objects.filter(
-            start_datetime__gte=s_date.isoformat(), end_datetime__lte=e_date.isoformat()
+        all_fd_overlaps_timelimits = FlightDeclaration.objects.filter(
+            end_datetime__gte=s_date.isoformat(), start_datetime__lte=e_date.isoformat()
         )
         filter_query.add(
             Q(
-                start_datetime__gte=s_date.isoformat(),
-                end_datetime__lte=e_date.isoformat(),
+                end_datetime__gte=s_date.isoformat(),
+                start_datetime__lte=e_date.isoformat(),
             ),
             Q.AND,
         )
 
-        logging.info("Found %s flight declarations" % len(all_fd_within_timelimits))
+        logging.info("Found %s flight declarations" % len(all_fd_overlaps_timelimits))
 
         if view_port:
             INDEX_NAME = "opint_idx"
             my_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)
             my_rtree_helper.generate_flight_declaration_index(
-                all_flight_declarations=all_fd_within_timelimits
+                all_flight_declarations=all_fd_overlaps_timelimits
             )
 
             all_relevant_fences = my_rtree_helper.check_box_intersection(
@@ -403,6 +405,11 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
                 ),
                 Q.AND,
             )
+        if states:
+            filter_query.add(
+                Q(state__in=states),
+                Q.AND,
+            )
 
         filtered = FlightDeclaration.objects.filter(filter_query)
         return filtered
@@ -415,6 +422,11 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
         min_alt = self.request.query_params.get("min_alt", None)
 
         view = self.request.query_params.get("view", None)
+        state_str = self.request.query_params.get("states")
+
+        states = []
+        if state_str:
+            states = state_str.split(",")
         view_port = []
         if view:
             view_port = [float(i) for i in view.split(",")]
@@ -425,6 +437,7 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
             end_date=end_date,
             max_alt=max_alt,
             min_alt=min_alt,
+            states=states,
         )
         return responses
 
