@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import List, Optional
+
 from shapely.geometry import shape
+
 # from marshmallow import Schema, fields
 
 # class FlightDeclarationSchema(Schema):
@@ -12,22 +14,25 @@ from shapely.geometry import shape
 #     state = fields.int()
 #     originating_party = fields.Str()
 
-#     #Computed fields 
+#     #Computed fields
 #     #bounds = fields.Str()
 #     #state = fields.Int()
 #     #type_of_operation = fields.Int()
 #     #flight_declaration_raw_geojson = fields.Str()
 #     #operational_intent = fields.Str()
 
+
 @dataclass
 class FlightDeclarationRequest:
     """Class for keeping track of an operational intent test injections"""
+
     features: List[shape]
     type_of_operation: int
     submitted_by: Optional[str]
     approved_by: Optional[str]
     is_approved: bool
-    state:int
+    state: int
+
 
 @dataclass
 class Altitude:
@@ -35,12 +40,11 @@ class Altitude:
     datum: str
 
 
-    
 @dataclass
 class FlightDeclarationCreateResponse:
-    """ Hold data for success response """
-    id:str
+    """Hold data for success response"""
+
+    id: str
     message: str
     is_approved: int
     state: int
-    

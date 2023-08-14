@@ -1,3 +1,4 @@
+
 from flight_blender.celery import app
 from scd_operations.opint_helper import DSSOperationalIntentsCreator
 from auth_helper.common import get_redis
@@ -12,8 +13,10 @@ from dacite import from_dict
 from scd_operations.scd_data_definitions import OperationalIntentStorage, SuccessfulOperationalIntentFlightIDStorage, NotifyPeerUSSPostPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, SubscriptionState
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 from common.data_definitions import OPERATION_STATES 
+import logging
 from os import environ as env
 import arrow
+
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -36,14 +39,24 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
         logger.info("Submitting to DSS..")
 
         opint_submission_result = my_dss_opint_creator.submit_flight_declaration_to_dss()    
-            
+         
         if opint_submission_result.status_code == 500:
-            logger.error("Error in submitting Flight Declaration to the DSS %s" % opint_submission_result.status)
-            if amqp_connection_url:        
-                dss_submission_error_msg = "Flight Operation with ID {operation_id} could not be submitted to the DSS, check the Auth server and / or the DSS URL".format(operation_id = flight_declaration_id)
-                send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = dss_submission_error_msg, level = 'error')
+            logger.error(
+                "Error in submitting Flight Declaration to the DSS %s"
+                % opint_submission_result.status
+            )
+            if amqp_connection_url:
+                dss_submission_error_msg = "Flight Operation with ID {operation_id} could not be submitted to the DSS, check the Auth server and / or the DSS URL".format(
+                    operation_id=flight_declaration_id
+                )
+                send_operational_update_message.delay(
+                    flight_declaration_id=flight_declaration_id,
+                    message_text=dss_submission_error_msg,
+                    level="error",
+                )
 
         elif opint_submission_result.status_code in [200, 201]:
+
             logger.info("Successfully submitted Flight Declaration to the DSS %s" % opint_submission_result.status)
 
             if amqp_connection_url:        
@@ -113,19 +126,42 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
             send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = validation_not_ok_msg, level = 'error')
 
 
-@app.task(name="send_operational_update_message")
-def send_operational_update_message(flight_declaration_id:str, message_text:str , level:str = 'info', timestamp: str = None):
+    else:
+        logging.error(
+            "Flight Declaration start / end times are not valid, please check the submitted declaration, this operation will not be sent to the DSS for strategic deconfliction"
+        )
+        if amqp_connection_url:
+            validation_not_ok_msg = "Flight Operation with ID {operation_id} did not pass time validation, start and end time may not be ahead of two hours".format(
+                operation_id=flight_declaration_id
+            )
+            send_operational_update_message.delay(
+                flight_declaration_id=flight_declaration_id,
+                message_text=validation_not_ok_msg,
+                level="error",
+            )
 
-    if not timestamp: 
+@app.task(name="send_operational_update_message")
+def send_operational_update_message(
+    flight_declaration_id: str,
+    message_text: str,
+    level: str = "info",
+    timestamp: str = None,
+):
+    if not timestamp:
         now = arrow.now()
         timestamp = now.isoformat()
 
-    update_message = FlightDeclarationUpdateMessage(body=message_text, level=level, timestamp = timestamp)
-    amqp_connection_url = env.get('AMQP_URL', 0)
+    update_message = FlightDeclarationUpdateMessage(
+        body=message_text, level=level, timestamp=timestamp
+    )
+    amqp_connection_url = env.get("AMQP_URL", 0)
     if amqp_connection_url:
-        my_notification_helper = NotificationFactory(flight_declaration_id = flight_declaration_id, amqp_connection_url=amqp_connection_url)
+        my_notification_helper = NotificationFactory(
+            flight_declaration_id=flight_declaration_id,
+            amqp_connection_url=amqp_connection_url,
+        )
         my_notification_helper.declare_queue(queue_name=flight_declaration_id)
-        my_notification_helper.send_message(message_details= update_message)
+        my_notification_helper.send_message(message_details=update_message)
         logger.info("Submitted Flight Declaration Notification")
-    else: 
+    else:
         logger.info("No AMQP URL specified ")

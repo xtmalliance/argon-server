@@ -1,4 +1,3 @@
-
 """flight_blender URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -16,13 +15,26 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+
 from . import views as flight_declaration_views
 
 urlpatterns = [
 
-    path('set_flight_declaration', flight_declaration_views.set_flight_declaration),
-    path('flight_declaration', flight_declaration_views.FlightDeclarationList.as_view()),
-    path('flight_declaration/<uuid:pk>', flight_declaration_views.FlightDeclarationDetail.as_view()),
-    path('flight_declaration_review/<uuid:pk>', flight_declaration_views.FlightDeclarationApproval.as_view(),name='flight-declaration-review'),
-    path('flight_declaration_state/<uuid:pk>', flight_declaration_views.FlightDeclarationStateUpdate.as_view())    
+    path("set_flight_declaration", flight_declaration_views.set_flight_declaration),
+    path(
+        "flight_declaration", flight_declaration_views.FlightDeclarationList.as_view()
+    ),
+    path(
+        "flight_declaration/<uuid:pk>",
+        flight_declaration_views.FlightDeclarationDetail.as_view(),
+    ),
+    path(
+        "flight_declaration_review/<uuid:pk>",
+        flight_declaration_views.FlightDeclarationApproval.as_view(),
+        name="flight-declaration-review",
+    ),
+    path(
+        "flight_declaration_state/<uuid:pk>",
+        flight_declaration_views.FlightDeclarationStateUpdate.as_view(),
+    ),
 ]

@@ -4,15 +4,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flight_declaration_operations', '0002_flightdeclaration_state_and_more'),
+        ("flight_declaration_operations", "0002_flightdeclaration_state_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='flightdeclaration',
-            name='state',
-            field=models.IntegerField(choices=[(0, 'Not Submitted'), (1, 'Accepted'), (2, 'Activated'), (3, 'Nonconforming'), (4, 'Contingent'), (5, 'Ended')], default=0, help_text='Set the state of operation'),
+            model_name="flightdeclaration",
+            name="state",
+            field=models.IntegerField(
+                choices=[
+                    (0, "Not Submitted"),
+                    (1, "Accepted"),
+                    (2, "Activated"),
+                    (3, "Nonconforming"),
+                    (4, "Contingent"),
+                    (5, "Ended"),
+                ],
+                default=0,
+                help_text="Set the state of operation",
+            ),
         ),
     ]
