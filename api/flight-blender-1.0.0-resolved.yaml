@@ -58,9 +58,9 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
   /signing_public_key:
     get:
-      summary: 'Signing Public Key'
+      summary: 'Blender Signing Public Key'
 
-      description: 'Get the public key used to verify signed responses from Flight Blender.'
+      description: 'Get the public key used to verify signed responses from Flight Blender. When Flight Blender will sign responses and this endpoint will provide a public key that can be used to verify signatures of messages singed by Flight Blender'
 
       security: []
       responses:
@@ -94,6 +94,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
+      tags:
+        - message-signing-verification
   /rid/capabilities:
     get:
       security:
@@ -1121,7 +1123,7 @@ paths:
       security:
         - AuthFromPassport: [blender.read]
 
-      description: 'List Authorized Public keys'
+      description: 'List Authorized Public keys that can be used for submitting remote ID data using the associated private key.'
       parameters: []
       responses:
         '200':
@@ -1133,12 +1135,12 @@ paths:
                   $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - signed-rid
+      - message-signing-verification
     post:
-      operationId: Create a new all Public Key
+      operationId: Create a new Public Key
       security:
         - AuthFromPassport: [ blender.write]
-      description: 'Create a new Authorized Public key'
+      description: 'Create a new Authorized Public key. Once this key is submitted to Flight Blender, messages signed by the corresponding private key will be validated and processed.'
       parameters: []
       requestBody:
         content:
@@ -1159,13 +1161,13 @@ paths:
                 $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - signed-rid
+      - message-signing-verification
   /flight_stream/public_keys/{id}/:
     get:
       operationId: Get a single key
       security:
         - AuthFromPassport: [blender.read]
-      description: 'Get a single Authorized Public key'
+      description: 'Get a single Authorized Public key by ID. A JWK json will be returned by Flight Blender.'
       parameters:
       - name: id
         in: path
@@ -1181,7 +1183,7 @@ paths:
                 $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - signed-rid
+      - message-signing-verification
     put:
       operationId: Update public key details
       description: 'Update the Public Key URL for a key'
@@ -1213,7 +1215,7 @@ paths:
                 $ref: '#/components/schemas/SignedTelmetryPublicKey'
           description: ''
       tags:
-      - signed-rid
+      - message-signing-verification
     delete:
       operationId: Remove Public Key
       description: 'Remove details of a public key in Blender'
@@ -1230,7 +1232,7 @@ paths:
         '204':
           description: ''
       tags:
-      - signed-rid
+      - message-signing-verification
   /flight_declaration_ops/flight_declaration/{flight_declaration_id}:
     get:
       summary: 'Get the details of a single flight declaration'
@@ -4706,3 +4708,5 @@ tags:
     description: The InterUSS monitoring test suite has developed a series of tests to check compliance for ED-269 geofences as part of the EU U-Space regulations, these endpoints interact with the qualifier test suite.
   - name: telemetry
     description: Flight Blender enables GCS and trackers to submit telemetry data for processes, use this end point to submit the telemetry data.
+  - name: message-signing-verification
+    description: Flight Blender provides security related features for signing of requests and responses. These endpoints provide data about public keys that can used to verify messages on Blender and also in environments outside Blender
