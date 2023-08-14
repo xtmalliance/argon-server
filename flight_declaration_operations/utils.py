@@ -23,8 +23,10 @@ class OperationalIntentsConverter:
     """A class to covert a operational Intnet  in to GeoJSON"""
 
     def __init__(self):
-        self.geo_json = {"type": "FeatureCollection", "features": []}
-        self.utm_zone = "54N"  # Zone for Switzerland
+
+        self.geo_json = {"type":"FeatureCollection","features":[]}
+        self.utm_zone = env.get('UTM_ZONE', '54N') # Default Zone for Switzerland
+
         self.all_features = []
 
     def utm_converter(
@@ -121,7 +123,35 @@ class OperationalIntentsConverter:
             )
             all_v4d.append(volume4D)
 
+        
         return all_v4d
+    
+    def buffer_point_to_volume4d(self, lat: float, lng:float, max_altitude: float, min_altitude: float, start_datetime:str, end_datetime :str  )-> Volume4D:
+        """ 
+        This methiod generates a new Volume 4D object based on the latest telemetry
+        """
+        
+        p = Point(lat,lng)        
+        buffed_s = p.buffer(0.0001)
+
+        co_ordinates = list(zip(*buffed_s.exterior.coords.xy))
+        # Convert bounds vertex list
+        polygon_verticies = []
+        for cur_co_ordinate in co_ordinates:
+            v = LatLngPoint(lat = cur_co_ordinate[1],lng = cur_co_ordinate[0])
+            polygon_verticies.append(v)
+
+        # remove the final point
+        polygon_verticies.pop()
+            
+        volume3D = Volume3D(outline_polygon=Plgn(vertices= polygon_verticies),altitude_lower=Altitude(value=max_altitude,reference='W84',units='M'), altitude_upper=Altitude(value=min_altitude,reference='W84',units='M'))
+
+        volume4D = Volume4D(volume = volume3D, time_start=Time(format="RFC3339",value=start_datetime), time_end=Time(format="RFC3339", value=end_datetime))
+        
+        return volume4D
+
+
+
 
     def get_geo_json_bounds(self) -> str:
         combined_features = unary_union(self.all_features)

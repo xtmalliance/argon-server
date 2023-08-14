@@ -7,20 +7,22 @@ from typing import List
 
 import arrow
 from django.http import HttpResponse, JsonResponse
-from django.utils.decorators import method_decorator
-from rest_framework import generics, mixins
-from rest_framework.decorators import api_view
-from shapely.geometry import shape
 
-from auth_helper.utils import requires_scopes
+from .models import FlightDeclaration
+from common.database_operations import BlenderDatabaseWriter
+from dataclasses import asdict
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
+from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
+from shapely.geometry import shape
+from .data_definitions import FlightDeclarationRequest, Altitude, FlightDeclarationCreateResponse
+from rest_framework import mixins, generics, status
+from rest_framework.response import Response
+from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
+from django.utils.decorators import method_decorator
+from .utils import OperationalIntentsConverter
+from .tasks import submit_flight_declaration_to_dss_async, send_operational_update_message
 
-from .data_definitions import (Altitude, FlightDeclarationCreateResponse,
-                               FlightDeclarationRequest)
-from .flight_declarations_rtree_helper import \
-    FlightDeclarationRTreeIndexFactory
-from .models import FlightDeclaration
 from .pagination import StandardResultsSetPagination
 from .serializers import (FlightDeclarationApprovalSerializer,
                           FlightDeclarationSerializer,
@@ -70,8 +72,9 @@ def set_flight_declaration(request):
         )
         return HttpResponse(msg, status=400)
 
-    submitted_by = None if "submitted_by" not in req else req["submitted_by"]
-    approved_by = None if "approved_by" not in req else req["approved_by"]
+    aircraft_id = '000' if 'vehicle_id' not in req else req['vehicle_id']
+    submitted_by = None if 'submitted_by' not in req else req['submitted_by']
+    approved_by = None if 'approved_by' not in req else req['approved_by']
     is_approved = False
     type_of_operation = (
         0 if "type_of_operation" not in req else req["type_of_operation"]
@@ -161,18 +164,17 @@ def set_flight_declaration(request):
         state=default_state,
     )
 
+
+    default_state = 0 # Default state is Acccepted
+
+    flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
+
     my_operational_intent_converter = OperationalIntentsConverter()
+        
+    parital_op_int_ref = my_operational_intent_converter.create_partial_operational_intent_ref(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime, priority=0)    
+    
+    bounds = my_operational_intent_converter.get_geo_json_bounds()    
 
-    parital_op_int_ref = (
-        my_operational_intent_converter.create_partial_operational_intent_ref(
-            geo_json_fc=flight_declaration_geo_json,
-            start_datetime=start_datetime,
-            end_datetime=end_datetime,
-            priority=0,
-        )
-    )
-
-    bounds = my_operational_intent_converter.get_geo_json_bounds()
     logging.info("Checking intersections with Geofences..")
     view_box = [float(i) for i in bounds.split(",")]
 
@@ -231,6 +233,7 @@ def set_flight_declaration(request):
         if all_relevant_declarations:
             is_approved = 0
 
+
     fo = FlightDeclaration(
         operational_intent=json.dumps(asdict(parital_op_int_ref)),
         bounds=bounds,
@@ -243,9 +246,14 @@ def set_flight_declaration(request):
         flight_declaration_raw_geojson=json.dumps(flight_declaration_geo_json),
         state=default_state,
     )
+
     fo.save()
+    fo.add_state_history_entry(new_state=0, original_state = None,notes="Created Declaration")
 
     flight_declaration_id = str(fo.id)
+
+
+    if all_relevant_fences and all_relevant_declarations:     
 
     send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
@@ -254,6 +262,7 @@ def set_flight_declaration(request):
     )
 
     if all_relevant_fences and all_relevant_declarations:
+
         # Async submic flight declaration to DSS
         logger.info(
             "Self deconfliction failed, this declaration cannot be sent to the DSS system.."
@@ -282,11 +291,15 @@ def set_flight_declaration(request):
         state=default_state,
     )
 
+
     op = json.dumps(asdict(creation_response))
     return HttpResponse(op, status=200, content_type="application/json")
 
 
-@method_decorator(requires_scopes(["blender.write"]), name="dispatch")
+@
+
+
+(requires_scopes(["blender.write"]), name="dispatch")
 class FlightDeclarationApproval(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationApprovalSerializer
@@ -301,6 +314,7 @@ class FlightDeclarationStateUpdate(mixins.UpdateModelMixin, generics.GenericAPIV
     serializer_class = FlightDeclarationStateSerializer
 
     def put(self, request, *args, **kwargs):
+        
         return self.update(request, *args, **kwargs)
 
 

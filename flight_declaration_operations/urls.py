@@ -19,6 +19,7 @@ from django.urls import path
 from . import views as flight_declaration_views
 
 urlpatterns = [
+
     path("set_flight_declaration", flight_declaration_views.set_flight_declaration),
     path(
         "flight_declaration", flight_declaration_views.FlightDeclarationList.as_view()

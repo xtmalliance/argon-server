@@ -1,5 +1,4 @@
 import json
-import redis
 from .common import get_redis
 import logging
 from datetime import datetime, timedelta
@@ -57,7 +56,7 @@ class AuthorityCredentialsGetter():
             payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas dss.write.identification_service_areas', "issuer":issuer}       
             
         else: 
-            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'dss.read.identification_service_areas dss.write.identification_service_areas'}    
+            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"intended_audience":audience,"scope": 'dss.read.identification_service_areas dss.write.identification_service_areas'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
         
@@ -65,15 +64,15 @@ class AuthorityCredentialsGetter():
         t_data = token_data.json()     
         return t_data
 
-    def get_scd_credentials(self, audience):        
-        
+    def get_scd_credentials(self, audience:str):        
         issuer = audience if audience =='localhost' else None
+        
         if audience in ['localhost','host.docker.internal']:
             # Test instance of DSS
             payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'utm.strategic_coordination', "issuer":issuer}       
             
         else: 
-            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"audience":audience,"scope": 'utm.strategic_coordination'}    
+            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"intended_audience":audience,"scope": 'utm.strategic_coordination'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
 

@@ -233,13 +233,13 @@ paths:
   /flight_stream/set_telemetry:
     put: 
       tags:
-      - rid
-      summary: 'Add Remote-ID observation(s)'
+      - telemetry
+      summary: 'Add Telemetry observation(s)'
       security:
         - AuthFromPassport: [blender.write]
       description:
-        "Submit data that is compliant with ASTM RemoteID from the vehicle into Blender, after submission, Flight Blender will \
-        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces. A single or multiple flight states can be submitted at a given time"
+        "Submit data that is compliant with ASTM RemoteID from the vehicle / GCS into Blender, after submission, Flight Blender will \
+        \ normalize the data and eventually send it to Flight Spotlight or make it available to other interfaces e.g. Network RID. A single or multiple flight states can be submitted at a given time."
       requestBody:
         required: true
         content:
@@ -1891,19 +1891,13 @@ components:
             format: email
           state:
             enum:
-            - 0
-            - 1
             - 2
-            - 3
             - 4
             - 5 
             type: integer
             description: >
               The state of the operation
-              * `0` - Processing
-              * `1` - Accepted
               * `2` - Activated
-              * `3` - Nonconforming
               * `4` - Contingent
               * `5` - Ended    
 
@@ -2077,6 +2071,9 @@ components:
           description: Email address of person submitting this declaration
           type: string
           format: email  
+        aircraft_id:
+          description: Id of the aircraft 
+          type: string          
         is_approved:
           description: Is the operation approved for flight?
           type: string
@@ -2088,6 +2085,10 @@ components:
           format: date-time
         end_datetime:
           description: The enddate for the query
+          type: string
+          format: date-time
+        latest_telemetry_datetime:
+          description: The the date time of the latest telemetry observation was sent
           type: string
           format: date-time
         flight_declaration_geojson:
@@ -2114,8 +2115,7 @@ components:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
         operational_intent:
           description: The operational intent for this flight declaration, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
-          $ref: '#/components/schemas/OperationalIntentDetails'
-            
+          $ref: '#/components/schemas/OperationalIntentDetails'            
         state:
           enum:
           - 0 
@@ -2811,9 +2811,9 @@ components:
       type: object
       properties:
         id:
-          description: ID for this flight, matching argument in request.
+          description: ID for this flight, matching a existing flight declaration ID in Flight Blender in request. If the ID of does not match, Blender will reject data from this endpoint.
           type: string
-          example: a3423b-213401-0023        
+          example: 238c0189-cdb1-43f0-8510-5718b37eeca4    
           
         eu_classification:
           description: When this field is specified, the Classification Type is "European
@@ -4704,3 +4704,5 @@ tags:
     description: You can submit geo-fences as GeoJSON into Flight Blender, Blender will convert the GeoJSON to a ED-269 Geofence in the background, use these operations into Flight Blender.
   - name: geozone-qualifier
     description: The InterUSS monitoring test suite has developed a series of tests to check compliance for ED-269 geofences as part of the EU U-Space regulations, these endpoints interact with the qualifier test suite.
+  - name: telemetry
+    description: Flight Blender enables GCS and trackers to submit telemetry data for processes, use this end point to submit the telemetry data.

@@ -44,7 +44,7 @@ class Circle:
 @dataclass
 class Altitude:
     ''' A class to hold altitude '''
-    value:int
+    value: Union[int, float]
     reference:str
     units: str
 
@@ -263,6 +263,17 @@ class OperationalIntentSubmissionStatus:
     operational_intent_id: uuid4
 
 @dataclass
+class SubscriptionState:
+    subscription_id:str
+    notification_index: int
+
+@dataclass 
+class NotifyPeerUSSPostPayload : 
+    operational_intent_id: uuid4
+    operational_intent: OperationalIntentDetailsUSSResponse
+    subscriptions: List[SubscriptionState]
+
+@dataclass
 class DeleteOperationalIntentConstuctor:
     """This method holds information to send to the DSS to delete a Operational intent """
     entity_id:uuid4
@@ -288,6 +299,40 @@ class DeleteOperationalIntentResponse:
     status: int
     message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
     
+@dataclass
+class SubscriberToNotify:
+    subscriptions: List[SubscriptionState]
+    uss_base_url: str
+
+
+@dataclass
+class OperationalIntentUpdateSuccessResponse:
+    subscribers: List[SubscriberToNotify]
+    operational_intent_reference: OperationalIntentReferenceDSSResponse
+
+@dataclass
+class OperationalIntentUpdateErrorResponse:
+    message: str
+
+@dataclass
+class OperationalIntentUpdateResponse:
+    dss_response: Union[OperationalIntentUpdateSuccessResponse,CommonDSS4xxResponse]
+    status: int
+    message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
+
+@dataclass
+class USSNotificationResponse:
+    status: int
+    message:Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
+
+@dataclass
+class OperationalIntentUpdateRequest:
+    extents: List[Volume4D]
+    state: str
+    key: List[str]
+    uss_base_url:str
+    subscription_id: str
+
 @dataclass
 class DeleteFlightResponse:
     result:  Literal[DeleteFlightStatus.Closed, DeleteFlightStatus.Failed]

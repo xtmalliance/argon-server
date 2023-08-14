@@ -8,10 +8,11 @@ from dotenv import load_dotenv, find_dotenv
 from uuid import UUID
 from django.http import JsonResponse
 from django.utils.datastructures import MultiValueDictKeyError
-from .uss_data_definitions import OperationalIntentNotFoundResponse, OperationalIntentDetails, UpdateOperationalIntent, GenericErrorResponseMessage, SummaryFlightsOnly,OperatorDetailsSuccessResponse, FlightDetailsNotFoundMessage
+from .uss_data_definitions import OperationalIntentNotFoundResponse, OperationalIntentDetails, UpdateOperationalIntent, GenericErrorResponseMessage, SummaryFlightsOnly,OperatorDetailsSuccessResponse, FlightDetailsNotFoundMessage, UpdateChangedOpIntDetailsPost
 from scd_operations.scd_data_definitions import OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, OperationalIntentReferenceDSSResponse, Time
 from rid_operations.rid_utils import RIDAuthData, RIDAircraftPosition, RIDHeight, RIDAircraftState, RIDOperatorDetails, RIDFlightResponse, LatLngPoint, RIDOperatorDetails, TelemetryFlightDetails
 import arrow
+from dacite import from_dict
 import json 
 import logging 
 from auth_helper.common import get_redis
@@ -34,12 +35,30 @@ class EnhancedJSONEncoder(json.JSONEncoder):
                 return asdict(o)
             return super().default(o)
 
+
 @api_view(['POST'])
 @requires_scopes(['utm.strategic_coordination'])
 def USSUpdateOpIntDetails(request):
     # TODO: Process changing of updated operational intent 
+    # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
+
+    op_int_update_details_data = request.data
+
+    op_int_update_detail = from_dict(data_class= UpdateChangedOpIntDetailsPost, data = op_int_update_details_data)
+
+    # Write the operational Intent 
+    opint_id = op_int_update_detail.operationaal_intent_id
+    
+    opint_flightref = 'opint_flightref.' + str(opint_id)
+
+    # Read the new operational intent
+
+    # Store the opint, see what other operations conflict the opint
+
     updated_success = UpdateOperationalIntent(message="New or updated full operational intent information received successfully ")
     return JsonResponse(json.loads(json.dumps(updated_success, cls=EnhancedJSONEncoder)), status=204)
+
+
 
 @api_view(['GET'])
 @requires_scopes(['utm.strategic_coordination'])
@@ -47,7 +66,14 @@ def USSOffNominalPositionDetails(request, entity_id):
     # r = get_redis()    
     raise NotImplementedError
 
-    
+
+
+@api_view(['GET'])
+@requires_scopes(['utm.conformance_monitoring_sa'])
+def USSOpIntDetailTelemetry(request, entity_id):
+    # Get the telemetry of a off-nominal USSP, for more information see https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml
+    raise NotImplementedError
+
 
 @api_view(['GET'])
 @requires_scopes(['utm.strategic_coordination'])

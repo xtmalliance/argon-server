@@ -46,12 +46,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
     'rest_framework',    
     'flight_declaration_operations',
     'geo_fence_operations',
     'scd_operations',
     'uss_operations',
     'flight_feed_operations',
+    'conformance_monitoring_operations',
     'rid_operations'
 ]
 
@@ -157,7 +159,6 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 CELERY_RESULT_BACKEND = BROKER_URL
 
-
 # DataFlair #Logging Information
 LOGGING = {
     'version': 1,
@@ -181,7 +182,7 @@ LOGGING = {
         'django': {
             'handlers': ['file', 'console'],            
             'propagate': True,
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'ERROR')
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO')
         },
     },
 }

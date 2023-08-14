@@ -131,8 +131,7 @@ class RemoteIDOperations():
                     except Exception as re:
                         logger.error("Error in sending subscriber notification to %s :  %s " % (url, re))
                     
-                    
-                    
+                                       
 
 
                 logger.info("Succesfully created a DSS ISA %s" % new_isa_id)

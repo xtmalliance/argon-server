@@ -119,7 +119,7 @@ def SCDAuthTest(request, operation_id):
         one_minute_from_now_str = one_minute_from_now.isoformat()
         two_minutes_from_now = now.shift(minutes=2)
         two_minutes_from_now_str = two_minutes_from_now.isoformat()
-        opint_subscription_end_time = timedelta(seconds=60)
+        opint_subscription_end_time = timedelta(seconds=180)
         # TODO use ImplicitDict for this
         try:
             operational_intent = scd_test_data['operational_intent']
@@ -201,7 +201,7 @@ def SCDAuthTest(request, operation_id):
                 r.expire(name = flight_opint, time = opint_subscription_end_time)
 
                 # Store the details of the operational intent reference
-                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=operational_intent_data.off_nominal_volumes)
+                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=op_int_submission.operational_intent_id)
                 
                 opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
                 r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))

@@ -4,7 +4,7 @@ import json
 import requests
 import logging
 from dataclasses import asdict
-from typing import List
+from typing import List, Optional
 from auth_helper import dss_auth_helper
 from datetime import datetime
 from shapely.ops import unary_union
@@ -12,7 +12,8 @@ from rid_operations import rtree_helper
 from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
-from .scd_data_definitions import ImplicitSubscriptionParameters, Volume3D, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, Circle, Altitude, LatLngPoint, Radius,OpInttoCheckDetails
+from os import environ as env
+from .scd_data_definitions import ImplicitSubscriptionParameters, Volume3D, Volume4D, OperationalIntentReference,OperationalIntentSubmissionSuccess, OperationalIntentReferenceDSSResponse, Time, LatLng, OperationalIntentSubmissionError, OperationalIntentSubmissionStatus, DeleteOperationalIntentConstuctor, CommonDSS4xxResponse,DeleteOperationalIntentResponse, DeleteOperationalIntentResponseSuccess, CommonDSS2xxResponse, QueryOperationalIntentPayload, OperationalIntentDetailsUSSResponse, OperationalIntentUSSDetails, Circle, Altitude, LatLngPoint, Radius,OpInttoCheckDetails, OperationalIntentUpdateResponse, OperationalIntentUpdateRequest, SubscriberToNotify, OperationalIntentUpdateSuccessResponse, SubscriptionState, NotifyPeerUSSPostPayload, USSNotificationResponse, OperationalIntentUpdateErrorResponse
 from .scd_data_definitions import Polygon as Plgn
 import tldextract
 from os import environ as env
@@ -37,7 +38,7 @@ class VolumesConverter():
     def __init__(self):
         
         self.geo_json = {"type":"FeatureCollection","features":[]}
-        self.utm_zone = '54N'
+        self.utm_zone = env.get('UTM_ZONE','54N')
         self.all_volume_features =[]
         
     def utm_converter(self, shapely_shape: shapely.geometry, inverse:bool=False) -> shapely.geometry.shape:
@@ -119,6 +120,20 @@ class VolumesConverter():
         return geo_json_features
 
 
+class OperationalIntentReferenceHelper():
+    '''
+    A class to parse Operational Intent References into Dataclass objects
+    '''
+    def parse_operational_intent_reference_from_dss(self, operational_intent_reference)-> OperationalIntentReferenceDSSResponse:
+
+        time_start = Time(format=operational_intent_reference['time_start']['format'], value= operational_intent_reference['time_start']['value'] )
+        
+        time_end = Time(format=operational_intent_reference['time_end']['format'], value= operational_intent_reference['time_end']['value'] )
+
+        op_int_reference = OperationalIntentReferenceDSSResponse(id = operational_intent_reference['id'], uss_availability =  operational_intent_reference['uss_availability'], manager= operational_intent_reference['manager'], version = operational_intent_reference['version'], state = operational_intent_reference['state'], ovn = operational_intent_reference['ovn'], time_start=time_start, time_end=time_end, uss_base_url= operational_intent_reference['uss_base_url'], subscription_id=operational_intent_reference['subscription_id'])
+
+        return op_int_reference
+
 class SCDOperations():
     def __init__(self):
         self.dss_base_url = env.get('DSS_BASE_URL')        
@@ -147,14 +162,13 @@ class SCDOperations():
         
         return auth_token
 
-
-    def delete_operational_intent(self, operational_intent_id:uuid.uuid4, ovn:str):
+    def delete_operational_intent(self, dss_operational_intent_ref_id:str, ovn:str)-> Optional[DeleteOperationalIntentResponse]:
         auth_token = self.get_auth_token()
         
-        dss_opint_delete_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_id + '/'+ ovn
+        dss_opint_delete_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + dss_operational_intent_ref_id + '/'+ ovn
         
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
-        delete_payload = DeleteOperationalIntentConstuctor(entity_id= operational_intent_id, ovn = ovn)
+        delete_payload = DeleteOperationalIntentConstuctor(entity_id= dss_operational_intent_ref_id, ovn = ovn)
 
         dss_r = requests.delete(dss_opint_delete_url, json =json.loads(json.dumps(asdict(delete_payload))), headers=headers)
         
@@ -162,7 +176,7 @@ class SCDOperations():
         dss_r_status_code = dss_r.status_code
 
         if dss_r_status_code == 200:
-            common_200_response = CommonDSS2xxResponse(message="Successfully deleted operational intent id %s" % operational_intent_id)
+            common_200_response = CommonDSS2xxResponse(message="Successfully deleted operational intent id %s" % dss_operational_intent_ref_id)
             dss_response_formatted = DeleteOperationalIntentResponseSuccess(subscribers= dss_response["subscribers"],operational_intent_reference=dss_response['operational_intent_reference'])
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=dss_response_formatted, status =200, message= common_200_response)
         elif dss_r_status_code == 404:
@@ -190,7 +204,9 @@ class SCDOperations():
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
 
         all_opints_to_check = []
-            
+        
+        blender_base_url = env.get("BLENDER_FQDN", 0) 
+        my_op_int_ref_helper = OperationalIntentReferenceHelper()
         all_uss_operational_intent_details = []
         for volume in volumes: 
             operational_intent_references = []
@@ -201,8 +217,7 @@ class SCDOperations():
             except Exception as re:
                 logger.error("Error in getting operational intent for the volume %s " % re)            
             else:
-                dss_operational_intent_references = operational_intent_ref_response.json()
-            
+                dss_operational_intent_references = operational_intent_ref_response.json()            
                 operational_intent_references = dss_operational_intent_references['operational_intent_references']
 
             if operational_intent_references:
@@ -222,29 +237,30 @@ class SCDOperations():
                     operational_intent_reference = op_int_uss_details.json()
                     o_i_r = operational_intent_reference['operational_intent_reference']
                     o_i_r_formatted = OperationalIntentReferenceDSSResponse(id= o_i_r['id'], manager=o_i_r['manager'], uss_availability=o_i_r['uss_availability'], version= o_i_r['version'],state = o_i_r['state'], ovn = o_i_r['ovn'], time_start=o_i_r['time_start'], time_end=o_i_r['time_end'], uss_base_url= o_i_r['uss_base_url'], subscription_id= o_i_r['subscription_id'] )
-                    all_uss_operational_intent_details.append(o_i_r_formatted)
+                    if o_i_r_formatted.uss_base_url != blender_base_url:
+                        all_uss_operational_intent_details.append(o_i_r_formatted)
 
 
             for current_uss_operational_intent_detail in all_uss_operational_intent_details:
-                # check the USS for flight volume                    
+                # check the USS for flight volume           
+                current_uss_base_url = current_uss_operational_intent_detail.uss_base_url                
                 try:
-                    ext = tldextract.extract(current_uss_operational_intent_detail.uss_base_url)  
+                    ext = tldextract.extract(current_uss_base_url)  
                 except Exception as e: 
                     uss_audience = 'localhost'
                 else:                    
-                    switch = {'localhost':'localhost', 'internal':'host.docker.internal'}                
-                    if ext.domain in ['localhost', 'internal']:# for host.docker.internal type calls
+                    switch = {'localhost':'localhost', 'internal':'host.docker.internal','test':'local.test'}                
+                    if ext.domain in ['localhost', 'internal','test']:# for host.docker.internal type calls
                         uss_audience = switch[ext.domain]
                     else:
                         if ext.suffix in (''):
                             uss_audience = ext.domain
                         else:
                             uss_audience = '.'.join(ext[:3]) # get the subdomain, domain and suffix and create a audience and get credentials
-                
-                uss_auth_token = self.get_auth_token(audience = uss_audience)          
+                uss_auth_token = self.get_auth_token(audience = uss_audience)         
                 
                 uss_headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + uss_auth_token['access_token']}
-                uss_operational_intent_url = current_uss_operational_intent_detail.uss_base_url + '/uss/v1/operational_intents/'+ current_uss_operational_intent_detail.id
+                uss_operational_intent_url = current_uss_base_url + '/uss/v1/operational_intents/'+ current_uss_operational_intent_detail.id
                 
                 try:
                     uss_operational_intent_request = requests.get(uss_operational_intent_url, headers=uss_headers)
@@ -261,6 +277,7 @@ class SCDOperations():
 
                         op_int_det = operational_intent_details_json['operational_intent']['details']
                         op_int_ref = operational_intent_details_json['operational_intent']['reference']
+                        op_int_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_reference =op_int_ref)
 
                         all_volumes = op_int_det['volumes']
                         all_v4d = []
@@ -284,8 +301,8 @@ class SCDOperations():
                             altitude_lower = Altitude(value = cur_volume['volume']['altitude_lower']['value'],reference= cur_volume['volume']['altitude_lower']['reference'], units =cur_volume['volume']['altitude_lower']['units'] )
                             altitude_upper = Altitude(value = cur_volume['volume']['altitude_upper']['value'],reference=  cur_volume['volume']['altitude_upper']['reference'], units =cur_volume['volume']['altitude_upper']['units'] )                        
                             volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
-                         
-                         
+                        
+                        
                             time_start = Time(format = cur_volume['time_start']['format'], value = cur_volume['time_start']['value'])
                             time_end = Time(format =cur_volume['time_end']['format'] , value = cur_volume['time_end']['value'])
 
@@ -294,12 +311,6 @@ class SCDOperations():
                             all_v4d.append(cur_v4d)
 
                         op_int_detail = OperationalIntentUSSDetails(volumes =all_v4d, priority = op_int_det['priority'], off_nominal_volumes =  op_int_det['off_nominal_volumes'])
-
-                        time_start = Time(format=op_int_ref['time_start']['format'], value= op_int_ref['time_start']['value'] )
-                        
-                        time_end = Time(format=op_int_ref['time_end']['format'], value= op_int_ref['time_end']['value'] )
-
-                        op_int_reference = OperationalIntentReferenceDSSResponse(id = op_int_ref['id'], uss_availability =  op_int_ref['uss_availability'], manager= op_int_ref['manager'], version = op_int_ref['version'], state = op_int_ref['state'], ovn = op_int_ref['ovn'], time_start=time_start, time_end=time_end, uss_base_url= op_int_ref['uss_base_url'], subscription_id=op_int_ref['subscription_id'])
 
                         uss_op_int_details = OperationalIntentDetailsUSSResponse(reference=op_int_reference, details=op_int_detail)
 
@@ -317,13 +328,85 @@ class SCDOperations():
         
         return all_opints_to_check
 
-    def notify_peer_uss_of_changed_operational_intent(self,operation_id):
-        """ This method notifies a peer when a flight goes off nominal """
-        raise NotImplementedError
+    def notify_peer_uss_of_created_updated_operational_intent(self,uss_base_url:str, notification_payload: NotifyPeerUSSPostPayload, audience:str):
+        """ This method posts operaitonal intent details to peer USS via a POST request to /uss/v1/operational_intents """
+        notification_url = self.uss_base_url + 'uss/v1/operational_intents'
+        headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
+        
+        auth_token = self.get_auth_token(audience = audience)
 
-    def update_specified_operational_intent_referecnce(self, operation_id):
-        """ This method updates a operational intent mainly changing the flight state """
-        raise NotImplementedError
+
+        uss_r = requests.post(notification_url, json =json.loads(json.dumps(asdict(notification_payload))), headers=headers)                            
+        
+        uss_r_status_code = uss_r.status_code
+        
+        if uss_r_status_code == 204:
+            result_message = CommonDSS2xxResponse(message="Notified successfully")
+        else: 
+            result_message = CommonDSS4xxResponse(message="Error in notification")
+
+            
+        notification_result = USSNotificationResponse(status = uss_r_status_code, message=result_message)
+
+        return notification_result
+
+    def update_specified_operational_intent_reference(self, operational_intent_ref_id:str, extents:List[Volume4D], new_state:str, ovn:str, subscription_id:str, get_airspace_keys= False) -> Optional[OperationalIntentUpdateResponse]:
+        """ This method updates a operational intent from one state to other """
+        auth_token = self.get_auth_token()
+        blender_base_url = env.get("BLENDER_FQDN", 0) 
+        airspace_keys =[]  
+        
+        operational_intent_update = OperationalIntentUpdateRequest(extents= extents, state= new_state, uss_base_url = blender_base_url,subscription_id=subscription_id, key = airspace_keys)        
+        if get_airspace_keys: # this is a update request for Nonconforming / contingent state so we dont need keys.
+            all_existing_operational_intent_details =  self.get_latest_airspace_volumes(volumes =extents)             
+            if all_existing_operational_intent_details:
+                logging.info("Getting ovn / airspace keys from {num_existing_op_ints} operational intent details".format(num_existing_op_ints = len(all_existing_operational_intent_details)))            
+                for cur_op_int_detail in all_existing_operational_intent_details:
+                    airspace_keys.append(cur_op_int_detail.ovn)
+            logging.info("Airspace keys: %s"% airspace_keys)
+
+            operational_intent_update.keys = airspace_keys        
+
+        dss_opint_update_url = self.dss_base_url + 'dss/v1/operational_intent_references/' + operational_intent_ref_id + '/'+ ovn        
+        headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + auth_token['access_token']}
+        logging.info("Checking flight deconfliction status")
+        
+        dss_r = requests.put(dss_opint_update_url, json =json.loads(json.dumps(asdict(operational_intent_update))), headers=headers)                            
+        dss_response = dss_r.json()
+        dss_r_status_code = dss_r.status_code
+        
+        if dss_r_status_code in [200,201]:
+            # Update request was successful            
+            subscribers = dss_response['subscribers']
+            all_subscribers = []
+            for subscriber in subscribers:                
+                subscriptions = subscriber['subscriptions']
+                uss_base_url = subscriber['uss_base_url']
+                all_subscription_states: List[SubscriptionState] = []
+                for subscription in subscriptions:                    
+                    s_state = SubscriptionState(subscription_id= subscription['subscription_id'], notification_index=subscription['notification_index'])
+                    all_subscription_states.append(s_state)
+                subscriber_obj = SubscriberToNotify(subscriptions=all_subscribers, uss_base_url=uss_base_url)
+                all_subscribers.append(subscriber_obj)
+
+            my_op_int_ref_helper = OperationalIntentReferenceHelper()
+            operational_intent_reference:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_reference = dss_response['operational_intent_reference'])
+
+            d_r = OperationalIntentUpdateSuccessResponse(subscribers=all_subscribers,operational_intent_reference = operational_intent_reference)
+            logging.info("Updated Operational Intent in the DSS Successfully")
+
+            message = CommonDSS4xxResponse(message="Successfully updated operational intent")
+            # error in deletion
+        
+        else: 
+            # Update unsuccessful
+            d_r =OperationalIntentUpdateErrorResponse(message =dss_response['message'] )
+            message = CommonDSS4xxResponse(message="Error in updating operational intent in the DSS")            
+        
+        opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status = dss_r_status_code, message=message)
+
+        return opint_update_result
+
 
     def create_and_submit_operational_intent_reference(self, state:str, priority:str, volumes:List[Volume4D], off_nominal_volumes:List[Volume4D]) -> OperationalIntentSubmissionStatus:        
         auth_token = self.get_auth_token()
@@ -380,10 +463,9 @@ class SCDOperations():
             
             if dss_r_status_code in [200,201]:
                 subscribers = dss_response['subscribers']
-                o_i_r = dss_response['operational_intent_reference']
-                time_start = Time(format=o_i_r['time_start']['format'], value=o_i_r['time_start']['value'])
-                time_end = Time(format=o_i_r['time_end']['format'], value=o_i_r['time_end']['value'])
-                operational_intent_r = OperationalIntentReferenceDSSResponse(id=o_i_r['id'], manager=o_i_r['manager'],uss_availability=o_i_r['uss_availability'], version=o_i_r['version'], state = o_i_r['state'], ovn= o_i_r['ovn'], time_start=time_start, time_end=time_end, uss_base_url=o_i_r['uss_base_url'], subscription_id=o_i_r['subscription_id'])
+                o_i_r = dss_response['operational_intent_reference']                    
+                my_op_int_ref_helper = OperationalIntentReferenceHelper()
+                operational_intent_r:OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(operational_intent_reference =o_i_r)                
                 dss_creation_response = OperationalIntentSubmissionSuccess(operational_intent_reference = operational_intent_r, subscribers = subscribers)
                 logger.info("Successfully created operational intent in the DSS")
                 logger.debug("Response details from the DSS %s" % dss_r.text)

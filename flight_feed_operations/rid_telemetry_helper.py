@@ -54,7 +54,7 @@ class BlenderTelemetryValidator():
         accuracy_v = VerticalAccuracy(value=_state_position['accuracy_v'])
         height = RIDHeight(reference= current_state['height']['reference'], distance = current_state['height']['distance'])
 
-        position = RIDAircraftPosition(pressure_altitude = pressure_altitude, lat = _state_position['lat'], lng = _state_position['lng'], accuracy_h = accuracy_h, accuracy_v = accuracy_v, extrapolated =extrapolated,height=height)
+        position = RIDAircraftPosition(pressure_altitude = pressure_altitude, lat = _state_position['lat'], alt = _state_position['alt'],  lng = _state_position['lng'], accuracy_h = accuracy_h, accuracy_v = accuracy_v, extrapolated =extrapolated,height=height)
         speed_accuracy = SpeedAccuracy('SA3mps')
 
 
@@ -77,6 +77,7 @@ class BlenderTelemetryValidator():
 
         if 'eu_classification' in rid_flight_details.keys():
             eu_classification_details = rid_flight_details['eu_classification']            
+            
             eu_classification = UAClassificationEU(category = eu_classification_details['category'], class_ =  eu_classification_details['class_'])
         else:  
             eu_classification = UAClassificationEU(category = "", class_ ="")
@@ -87,8 +88,7 @@ class BlenderTelemetryValidator():
         else: 
             uas_id = UASID(serial_number="",
             registration_id = "", utm_id ="")
-        if 'operator_location' in rid_flight_details.keys():
-            
+        if 'operator_location' in rid_flight_details.keys():            
             if 'position' in rid_flight_details['operator_location']:
                 o_location_position = rid_flight_details['operator_location']['position']
                 operator_position = LatLngPoint(lat = o_location_position['lat'], lng =  o_location_position['lng'])

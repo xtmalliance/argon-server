@@ -1,0 +1,66 @@
+{
+    "exchange_type": "flight_declaration",
+    "flight_id": "5a7f3377-b991-4cc8-af2d-379d57f786d1",
+    "plan_id": "a5b5484c-a23c-4e83-8bb8-a6a5c294e45b",
+    "flight_state": 2,
+    "flight_approved": 0,
+    "sequence_number": 0,
+    "start_datetime": "2023-06-12T16:35:08.842Z",
+    "end_datetime": "2023-06-12T16:40:08.842Z",
+    "version": "1.0.0",
+    "purpose": "Delivery",
+    "expect_telemetry": true,
+    "originating_party": "Medicine Delivery Company",
+    "contact_url": "https://utm.originatingparty.com/contact?5a7f3377-b991-4cc8-af2d-379d57f786d1",
+    "type_of_operation": 0,
+    "vehicle_id": "157de9bb-6b49-496b-bf3f-0b768ce6a3b6",
+    "operator_id": "4a725cb5-02d2-4f78-888f-b93088d324be",
+    "flight_declaration_geo_json": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "id": "0",
+                    "start_datetime": "2023-06-09T16:29:08.842Z",
+                    "end_datetime": "2023-06-09T16:29:08.842Z",
+                    "max_altitude": {
+                        "meters": 600.4,
+                        "datum": "w84"
+                    },
+                    "min_altitude": {
+                        "meters": 700.4,
+                        "datum": "w84"
+                    }
+                },
+                "geometry": {
+                    "coordinates": [
+                        [
+                            [
+                                7.470700076878245,
+                                46.988539922914924
+                            ],
+                            [
+                                7.470700076878245,
+                                46.97936054157279
+                            ],
+                            [
+                                7.487045772981162,
+                                46.97936054157279
+                            ],
+                            [
+                                7.487045772981162,
+                                46.988539922914924
+                            ],
+                            [
+                                7.470700076878245,
+                                46.988539922914924
+                            ]
+                        ]
+                    ],
+                    "type": "Polygon"
+                }
+            }
+        ]
+    }
+}

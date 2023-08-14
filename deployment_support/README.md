@@ -32,7 +32,7 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | REDIS_PASSWORD | string | In production the Redis instance is password protected, set the password here, see redis.conf for more information |
 | REDIS_BROKER_URL | string | Blender has background jobs controlled via Redies, you can setup the Broker URL here |
 | HEARTBEAT_RATE_SECS |integer | Generally set it to 1 or 2 seconds, this is used when querying data externally to other USSPs |
-| AMQP_URL |string | (Optional) A full connection url to a AMQP server, when this is set, messages related to your operations are sent to it, your clients can subscribe to them. |
+| DATABASE_URL |string | A full database url with userame and password as necessary, you can review various database [url schema](https://github.com/jazzband/dj-database-url#url-schema) |
 
 If you are working in stand-alone mode, recommended initially, the above environment file should work. If you want to engage with a DSS and inter-operate with other USSes then you will need additional variables below. 
 
@@ -48,6 +48,11 @@ If you are working in stand-alone mode, recommended initially, the above environ
 | POSTGRES_HOST | string| You can name a appropriate name, see the sample file |
 | PGDATA | string | This is where the data is stored, you can use `/var/lib/postgresql/data/pgdata` here |
 | BLENDER_FQDN | string | This domain name of a Blender deployment e.g. `https://beta.flightblender.com` |
+For Advanced operations, the following two configurations are recommended
+| Variable Key | Data Type | Description |
+|--------------|--------------|:-----:|
+| AMQP_URL |string | (Optional) A full connection url to a AMQP server, when this is set, messages related to your operations are sent to it, your clients can subscribe to them. |
+| ENABLE_CONFORMANCE_MONITORING | int | (Optional) By default conformance monitoring is turned off, set this flag if you want to enable conformance monitoring. Conformance monitoring is a advanced UTM service so it is recommended that this service be turned off initially. |
 
 ### 2. Use Docker Compose to stand up Flight Blender 
 Once you have created and saved the .env file you can then use the [docker-compose.yaml](../docker-compose.yml) file to start the instance. Just run `docker compose up` and a running instance of Flight Blender will be available. 
