@@ -62,7 +62,6 @@ class FlightDeclarationApprovalSerializer(serializers.ModelSerializer):
 
 class FlightDeclarationStateSerializer(serializers.ModelSerializer):
 
-
     def validate_state(self, value):
         if self.instance and value not in list(OPERATOR_EVENT_LOOKUP.keys()):
             raise serializers.ValidationError("An operator can only set the state to Activated (2), Contingent (4) or Ended (5) using this end point")

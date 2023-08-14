@@ -119,13 +119,6 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
 
         logger.info("Details of the submission status %s" % opint_submission_result.message)
 
-    else:            
-        logger.error("Flight Declaration start / end times are not valid, please check the submitted declaration, this operation will not be sent to the DSS for strategic deconfliction")
-        if amqp_connection_url:        
-            validation_not_ok_msg = "Flight Operation with ID {operation_id} did not pass time validation, start and end time may not be ahead of two hours".format(operation_id = flight_declaration_id)
-            send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = validation_not_ok_msg, level = 'error')
-
-
     else:
         logging.error(
             "Flight Declaration start / end times are not valid, please check the submitted declaration, this operation will not be sent to the DSS for strategic deconfliction"

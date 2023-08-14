@@ -4,11 +4,11 @@ import json
 import logging
 from dataclasses import asdict
 from typing import List
-
 import arrow
 from django.http import HttpResponse, JsonResponse
-
 from .models import FlightDeclaration
+from rest_framework.decorators import api_view
+from auth_helper.utils import requires_scopes
 from common.database_operations import BlenderDatabaseWriter
 from dataclasses import asdict
 from geo_fence_operations import rtree_geo_fence_helper
@@ -28,7 +28,7 @@ from .serializers import (FlightDeclarationApprovalSerializer,
                           FlightDeclarationSerializer,
                           FlightDeclarationStateSerializer)
 from .tasks import (send_operational_update_message,
-                    submit_flight_declaration_to_dss)
+                    submit_flight_declaration_to_dss_async)
 from .utils import OperationalIntentsConverter
 
 logger = logging.getLogger("django")
@@ -252,9 +252,6 @@ def set_flight_declaration(request):
 
     flight_declaration_id = str(fo.id)
 
-
-    if all_relevant_fences and all_relevant_declarations:     
-
     send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
         message_text="Flight Declaration created..",
@@ -281,7 +278,7 @@ def set_flight_declaration(request):
         logger.info(
             "Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided.."
         )
-        submit_flight_declaration_to_dss.delay(
+        submit_flight_declaration_to_dss_async.delay(
             flight_declaration_id=flight_declaration_id
         )
     creation_response = FlightDeclarationCreateResponse(
@@ -296,10 +293,7 @@ def set_flight_declaration(request):
     return HttpResponse(op, status=200, content_type="application/json")
 
 
-@
-
-
-(requires_scopes(["blender.write"]), name="dispatch")
+@method_decorator(requires_scopes(["blender.write"]), name="dispatch")
 class FlightDeclarationApproval(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationApprovalSerializer
