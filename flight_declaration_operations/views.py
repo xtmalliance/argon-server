@@ -290,8 +290,9 @@ def set_flight_declaration(request: HttpRequest):
     )
 
     op = json.dumps(asdict(creation_response))
-    # TODO: Should the return status code be 201 since it creates a new record?
-    return HttpResponse(op, status=status.HTTP_200_OK, content_type="application/json")
+    return HttpResponse(
+        op, status=status.HTTP_201_CREATED, content_type="application/json"
+    )
 
 
 @api_view(["POST"])
