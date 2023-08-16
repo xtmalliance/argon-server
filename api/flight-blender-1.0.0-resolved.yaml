@@ -2099,7 +2099,7 @@ components:
           description: Email address of person approving this declaration
           type: string
           format: email
-        submitted_by:
+        originating_party:
           description: Email address of person submitting this declaration
           type: string
           format: email  
