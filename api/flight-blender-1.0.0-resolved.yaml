@@ -2346,10 +2346,15 @@ components:
           description: Maximum bounding altitude of this volume.
 
     Altitude:
-      format: float
+      type: object
       description: An altitude, in meters, above the WGS84 ellipsoid.
-      type: number
-      example: 19.5
+      properties:
+        value:
+          type: integer
+        reference:
+          type: string
+        units:
+          type: string
 
     Volume4D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
       description: Contiguous block of geographic spacetime.
