@@ -1090,7 +1090,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FlightDeclarationList'
+                $ref: '#/components/schemas/FlightDeclarationPaginatedList'
         '400':
           description: Bad request submitted
           content:
@@ -1590,7 +1590,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GeoFenceGeoJSONList'
+                $ref: '#/components/schemas/GeoFenceGeoJSONPaginatedList'
         '400':
           description: Bad request submitted
           content:
@@ -2031,6 +2031,36 @@ components:
         observations:
             $ref: '#/components/schemas/ArrayOfObservations'
 
+    FlightDeclarationPaginatedList: 
+      type: object
+      properties: 
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              format: uri
+              description: URL of the next page to query
+            previous:
+              type: string
+              format: uri
+              description: URL of the previous page to query
+        total: 
+          type: integer
+        page:    
+          type: integer
+          example: 1 
+        pages:
+          type: integer
+          example: 2
+        page_size:
+          type: integer 
+          example: 10
+        results: 
+          $ref: '#/components/schemas/FlightDeclarationList'
+  
+
+
     FlightDeclarationList:
       type: array
       items:
@@ -2403,6 +2433,35 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/GeoFenceDetails'
+
+    GeoFenceGeoJSONPaginatedList: 
+      type: object
+      properties: 
+        links:
+          type: object
+          properties:
+            next:
+              type: string
+              format: uri
+              description: URL of the next page to query
+            previous:
+              type: string
+              format: uri
+              description: URL of the previous page to query
+        total: 
+          type: integer
+        page:    
+          type: integer
+          example: 1 
+        pages:
+          type: integer
+          example: 2
+        page_size:
+          type: integer 
+          example: 10
+        results: 
+          $ref: '#/components/schemas/GeoFenceGeoJSONList'
+  
 
     Point2D:
       type: array

@@ -24,6 +24,7 @@ from rest_framework.renderers import JSONRenderer
 from shapely.geometry import Point, shape
 from shapely.ops import unary_union
 
+from flight_declaration_operations.pagination import StandardResultsSetPagination
 from . import rtree_geo_fence_helper
 from .buffer_helper import toFromUTM
 from .common import validate_geo_zone
@@ -173,6 +174,7 @@ class GeoFenceDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
 class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = GeoFence.objects.filter(is_test_dataset=False)
     serializer_class = GeoFenceSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get_relevant_geo_fence(self, start_date, end_date, view_port: List[float]):
         present = arrow.now()
