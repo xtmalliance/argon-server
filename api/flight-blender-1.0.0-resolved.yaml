@@ -2329,18 +2329,18 @@ components:
         A three-dimensional geographic volume consisting of a vertically-extruded
         polygon.
       required:
-        - footprint
+        - outline_polygon
       type: object
       properties:
-        footprint:
+        outline_polygon:
           anyOf:
             - $ref: '#/components/schemas/GeoPolygon'
           description: Projection of this volume onto the earth's surface.
-        altitude_lo:
+        altitude_lower:
           anyOf:
             - $ref: '#/components/schemas/Altitude'
           description: Minimum bounding altitude of this volume.
-        altitude_hi:
+        altitude_upper:
           anyOf:
             - $ref: '#/components/schemas/Altitude'
           description: Maximum bounding altitude of this volume.
@@ -2354,10 +2354,10 @@ components:
     Volume4D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
       description: Contiguous block of geographic spacetime.
       required:
-        - spatial_volume
+        - volume
       type: object
       properties:
-        spatial_volume:
+        volume:
           anyOf:
             - $ref: '#/components/schemas/Volume3D'
           description: Constant spatial extent of this volume.
