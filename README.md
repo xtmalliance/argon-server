@@ -2,7 +2,7 @@
 
 # Flight Blender
 
-Flight Blender is a backend / data-processing engine that to stand up standards compliant UTM services and be latest regulations on UTM / U-Space in the EU and other jurisdictions. Specifically, it gives you:
+Flight Blender is a backend / data-processing engine to stand up standards-compliant UTM services that adhere to the latest regulations on UTM / U-Space in the EU and other jurisdictions. Specifically, it gives you:
 
 - an open source Remote ID "service provider" compatible with ASTM Remote ID standard
 - an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation for flight authorisation
