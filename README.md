@@ -6,8 +6,9 @@ Flight Blender is a backend / data-processing engine that to stand up standards 
 
 - an open source Remote ID "service provider" compatible with ASTM Remote ID standard
 - an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation for flight authorisation
-- ability to interact with interuss/dss software to exchange data
+- ability to interact with `interuss/dss` or similar interoperability software to exchange data with other UTM implementations
 - ability to consume geo-fences per the ED-269 standard
+- basic monitoring of conformance and operator notificaitons
 - a flight traffic feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data.
 
 There are different modules that enable this:
@@ -17,9 +18,10 @@ There are different modules that enable this:
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this support both the ASTM USS <-> USS API and can also be used as a standalone component, for supported DSS APIs see below
 - _Network Remote-ID_ : The Network RID module is compliant with ASTM standards for Network RID and can be used as a "display provider" or as a "service provider" 
 - _Operator Notifications_: Using a AMQP queue you can send notifications to the operator 
+- _Conformance Monitoring_ (beta): Monitory trajectory / flight path against the declared 4D Volume 
 
 ## ▶️ Get started in 20 mins
-Follow our 5-step process to deploy Flight Blender and Flight Spotlight and get started with the basic concepts of the software.
+Follow our 5-step process to deploy Flight Blender and get started with the basic concepts of the software.
 
 Read the ⏲️ [20-minute quickstart](deployment_support/README.md) now!
 
@@ -32,7 +34,6 @@ Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
 To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openskies-sh/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
-
 
 ## Technical details
 
