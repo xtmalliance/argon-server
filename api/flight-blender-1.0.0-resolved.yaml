@@ -1891,17 +1891,9 @@ components:
           submitted_by:
             type: string
             format: email
-          state:
-            enum:
-            - 2
-            - 4
-            - 5 
-            type: integer
-            description: >
-              The state of the operation
-              * `2` - Activated
-              * `4` - Contingent
-              * `5` - Ended    
+          state:          
+            $ref: '#/components/schemas/FlightDeclarationStateOperatorUpdateEnum'
+          
 
     RemoteIDDataProcessed:
       description: Remote ID data processed successfully
@@ -1926,29 +1918,8 @@ components:
           type: boolean
           example: 1
         state:
-          enum:
-          - 0
-          - 1
-          - 2
-          - 3
-          - 4 
-          - 5
-          - 6
-          - 7
-          - 8
-          type: integer
-          example: 0
-          description: >
-            The state of the operation
-            * `0` - Processing
-            * `1` - Accepted
-            * `2` - Activated
-            * `3` - Nonconforming
-            * `4` - Contingent
-            * `5` - Ended
-            * `6` - Withdrawn
-            * `7` - Cancelled
-            * `8` - Rejected
+          $ref: '#/components/schemas/FlightDeclarationStateEnum'
+        
 
 
     SubscriptionCreated:
@@ -2155,23 +2126,7 @@ components:
           description: The operational intent for this flight declaration, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
           $ref: '#/components/schemas/OperationalIntentDetails'            
         state:
-          enum:
-          - 0 
-          - 1
-          - 2
-          - 3
-          - 4
-          - 5
-          description: >
-            The state of the operation
-             * `0` - Processing
-             * `1` - Accepted
-             * `2` - Activated
-             * `3` - Nonconforming
-             * `4` - Contingent
-             * `5` - Ended
-
-          type: integer
+          $ref: '#/components/schemas/FlightDeclarationStateEnum'
         type_of_operation: 
           enum:
           - 1
@@ -2228,6 +2183,45 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
+    FlightDeclarationStateEnum:  
+          type: integer
+          
+          enum:
+          - 0 
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          description: >
+            The state of the operation
+             * `0` - Processing
+             * `1` - Accepted
+             * `2` - Activated
+             * `3` - Nonconforming
+             * `4` - Contingent
+             * `5` - Ended
+             * `6` - Withdrawn
+             * `7` - Cancelled
+             * `8` - Rejected
+
+    FlightDeclarationStateOperatorUpdateEnum:  
+          type: integer
+          
+          enum:
+          - 2
+          - 3
+          - 5
+          description: >
+            The state of the operation          
+             
+             * `2` - Activated
+             * `3` - Nonconforming
+             * `5` - Ended
+             
 
     FlightDeclarationFeatureGeoJSON:
       type: object
