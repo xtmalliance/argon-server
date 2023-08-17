@@ -153,15 +153,15 @@ def set_flight_declaration(request):
             meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"]
         )
 
-    default_state = 0 # Default state is NotSubmittedtoDSS
-    
+    declaration_state = 0 # Default state is Processed
+
     flight_declaration = FlightDeclarationRequest(
         features=all_features,
         type_of_operation=type_of_operation,
         submitted_by=submitted_by,
         approved_by=approved_by,
         is_approved=is_approved,
-        state=default_state,
+        state=declaration_state,
     )
 
     flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
@@ -202,6 +202,7 @@ def set_flight_declaration(request):
         )
         if all_relevant_fences:
             is_approved = 0
+            declaration_state = 8
 
     all_relevant_declarations = []
     existing_declaration_within_timelimits = FlightDeclaration.objects.filter(
@@ -229,6 +230,7 @@ def set_flight_declaration(request):
         )
         if all_relevant_declarations:
             is_approved = 0
+            declaration_state = 8
 
 
     fo = FlightDeclaration(
@@ -241,11 +243,13 @@ def set_flight_declaration(request):
         end_datetime=end_datetime,
         originating_party=originating_party,
         flight_declaration_raw_geojson=json.dumps(flight_declaration_geo_json),
-        state=default_state,
+        state=declaration_state,
     )
 
     fo.save()
     fo.add_state_history_entry(new_state=0, original_state = None,notes="Created Declaration")
+    if declaration_state != 0:        
+        fo.add_state_history_entry(new_state=declaration_state, original_state = 0,notes="Rejected by Flight Blender becuase of conflicts")
 
     flight_declaration_id = str(fo.id)
 
@@ -262,7 +266,7 @@ def set_flight_declaration(request):
             "Self deconfliction failed, this declaration cannot be sent to the DSS system.."
         )
 
-        self_deconfliction_failed_msg = "Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operationd declared".format(
+        self_deconfliction_failed_msg = "Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operations declared in the area".format(
             operation_id=flight_declaration_id
         )
         send_operational_update_message.delay(
@@ -275,14 +279,15 @@ def set_flight_declaration(request):
         logger.info(
             "Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided.."
         )
-        submit_flight_declaration_to_dss_async.delay(
-            flight_declaration_id=flight_declaration_id
-        )
+        if declaration_state == 0:
+            submit_flight_declaration_to_dss_async.delay(
+                flight_declaration_id=flight_declaration_id
+            )
     creation_response = FlightDeclarationCreateResponse(
         id=flight_declaration_id,
         message="Submitted Flight Declaration",
         is_approved=is_approved,
-        state=default_state,
+        state=declaration_state,
     )
 
 
