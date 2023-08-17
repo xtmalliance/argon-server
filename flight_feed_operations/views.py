@@ -4,7 +4,7 @@ import logging
 from django.http import JsonResponse
 from auth_helper.utils import requires_scopes
 from rest_framework.decorators import api_view
-from .tasks import write_incoming_air_traffic_data, start_openskies_stream
+from .tasks import write_incoming_air_traffic_data, start_opensky_network_stream
 from .data_definitions import SingleAirtrafficObservation, FlightObservationsProcessingResponse
 from dataclasses import asdict
 from common.database_operations import BlenderDatabaseReader
@@ -188,7 +188,7 @@ def start_opensky_feed(request):
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
     
     if view_port_valid:
-        start_openskies_stream.delay(view_port = json.dumps(view_port))
+        start_opensky_network_stream.delay(view_port = json.dumps(view_port))
         
         return JsonResponse({"message":"Openskies Newtork stream started"},  status=200, content_type='application/json')
     else:

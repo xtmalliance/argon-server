@@ -10,6 +10,9 @@ from . import flight_stream_helper
 from flight_blender.celery import app
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
+from pyproj import Transformer
+
+
 load_dotenv(find_dotenv())
  
 ENV_FILE = find_dotenv()
@@ -31,8 +34,13 @@ def write_incoming_air_traffic_data(observation):
     cg.all_observations.trim(1000)
     return msg_id
 
-@app.task(name='start_openskies_stream')
-def start_openskies_stream(view_port:str):   
+lonlat_to_webmercator = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+def mercator_transform(lon, lat):
+    x, y = lonlat_to_webmercator.transform(lon, lat)
+    return x, y
+
+@app.task(name='start_opensky_network_stream')
+def start_opensky_network_stream(view_port:str):   
     view_port = json.loads(view_port)
     
     # submit task to write to the flight stream
@@ -56,7 +64,7 @@ def start_openskies_stream(view_port:str):
         response= requests.get(url_data, auth=(openskies_username, openskies_password))
         logger.info(url_data)
         #LOAD TO PANDAS DATAFRAME
-        col_name=['icao24','callsign','origin_country','time_position','last_contact','long','lat','baro_altitude','on_ground','velocity',       
+        col_name = ['icao24','callsign','origin_country','time_position','last_contact','long','lat','baro_altitude','on_ground','velocity',       
         'true_track','vertical_rate','sensors','geo_altitude','squawk','spi','position_source']
         
         response_data = response.json()
@@ -66,12 +74,9 @@ def start_openskies_stream(view_port:str):
             
             if response_data['states'] is not None:
                 flight_df=pd.DataFrame(response_data['states'],columns=col_name)
-                flight_df=flight_df.fillna('No Data') 
-                
-                all_observations = []
+                flight_df=flight_df.fillna('No Data')                 
                 for index, row in flight_df.iterrows():
-                    metadata = {'velocity':row['velocity']}
-                    
+                    metadata = {'velocity':row['velocity']}                    
                     lat_dd =  row['lat']
                     lon_dd = row['long']
                     altitude_mm =  row['baro_altitude']
