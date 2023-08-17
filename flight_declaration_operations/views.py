@@ -351,6 +351,23 @@ class FlightDeclarationDetail(mixins.RetrieveModelMixin, generics.GenericAPIView
         return self.retrieve(request, *args, **kwargs)
 
 
+
+@api_view(["GET"])
+@requires_scopes(["blender.read"])
+def network_flight_declaration_details(request):
+    def get(self, request, flight_declaration_id):
+
+        # Check if the flight declaration exists
+
+        # Check if the status is rejected 
+
+        # Check redis for opints 
+        
+        # return opints 
+
+        
+        return JsonResponse({})
+
 @method_decorator(requires_scopes(["blender.read"]), name="dispatch")
 class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()

@@ -1129,6 +1129,57 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - flight-declarations
+
+  /flight_declaration_ops/{flight_declaration_id}/network_flight_declarations:
+    get:
+      parameters:
+        - in: path
+          name: flight_declaration_id
+          description: 'This is the ID of the flight declaration'
+          schema:
+            type: string
+            format: uuid
+          required: true
+
+      summary: 'Get a list of all flight declarations / operational intents from the USS Network'
+      security:
+        - AuthFromPassport: [blender.read]
+      description: "Get a list of all Operational Intents from the USSP network"
+
+      responses:
+        '200':
+          description: The USSP network has been queried and the operational intents near the current flight declaration are provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightDeclarationList'
+        '400':
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+      tags:
+        - flight-declarations
+
   /flight_stream/public_keys/:
     get:
       operationId: Get all Public Keys      
@@ -2234,18 +2285,15 @@ components:
 
     FlightDeclarationStateOperatorUpdateEnum:  
           type: integer
-          
           enum:
           - 2
           - 3
           - 5
           description: >
             The state of the operation          
-             
              * `2` - Activated
              * `3` - Nonconforming
              * `5` - Ended
-             
 
     FlightDeclarationFeatureGeoJSON:
       type: object

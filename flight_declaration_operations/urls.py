@@ -13,13 +13,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path
-
 from . import views as flight_declaration_views
 
 urlpatterns = [
-
     path("set_flight_declaration", flight_declaration_views.set_flight_declaration),
     path(
         "flight_declaration", flight_declaration_views.FlightDeclarationList.as_view()
@@ -27,6 +24,10 @@ urlpatterns = [
     path(
         "flight_declaration/<uuid:pk>",
         flight_declaration_views.FlightDeclarationDetail.as_view(),
+    ),
+    path(
+        "flight_declaration/<uuid:flight_declaration_id>/network_flight_declarations",
+        flight_declaration_views.network_flight_declaration_details,
     ),
     path(
         "flight_declaration_review/<uuid:pk>",
