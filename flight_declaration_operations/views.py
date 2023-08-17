@@ -153,7 +153,8 @@ def set_flight_declaration(request):
             meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"]
         )
 
-    default_state = 0 # Default state is Acccepted
+    default_state = 0 # Default state is NotSubmittedtoDSS
+    
     flight_declaration = FlightDeclarationRequest(
         features=all_features,
         type_of_operation=type_of_operation,
@@ -162,8 +163,6 @@ def set_flight_declaration(request):
         is_approved=is_approved,
         state=default_state,
     )
-
-
 
     flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
 
