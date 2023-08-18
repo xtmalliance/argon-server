@@ -158,7 +158,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         new_state = 4
         # TODO: Uncomment
         # management.call_command('operation_ended_clear_dss', flight_declaration_id = flight_declaration_id, dry_run = True)
-    elif non_conformance_state_label == "C11":
+    elif non_conformance_state_code == "C11":
         authorization_not_granted_message = "There is no flight authorization for operation with ID {flight_declaration_id}. Check C11 Failed".format(
             flight_declaration_id=flight_declaration_id
         )
@@ -180,7 +180,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
             original_state=original_state,
             new_state=new_state,
             notes="State changed by flight authorization checks: %s"
-            % non_conformance_state_label,
+            % non_conformance_state_code,
         )
         my_conformance_helper = FlightOperationConformanceHelper(
             flight_declaration_id=flight_declaration_id
