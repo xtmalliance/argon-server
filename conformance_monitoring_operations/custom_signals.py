@@ -171,7 +171,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         fd.add_state_history_entry(
             original_state=original_state,
             new_state=new_state,
-            notes="State changed by flight authorization checks: %s"
+            notes="State changed by flight authorization checks because of telemetry non-conformance: %s"
             % non_conformance_state_code,
         )
         my_conformance_helper = FlightOperationConformanceHelper(

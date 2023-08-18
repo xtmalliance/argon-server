@@ -27,6 +27,9 @@ class FlightOperationConformanceHelper:
             flight_declaration_id=self.flight_declaration_id
         )
         self.database_writer = BlenderDatabaseWriter()
+        self.ENABLE_CONFORMANCE_MONITORING = int(
+            os.getenv("ENABLE_CONFORMANCE_MONITORING", 0)
+        )
 
     def verify_operation_state_transition(
         self, original_state: int, new_state: int, event: str
@@ -60,16 +63,17 @@ class FlightOperationConformanceHelper:
                     dry_run=0,
                 )
 
-                # Remove the conformance monitoring periodic job
-                conformance_monitoring_job = (
-                    self.database_reader.get_conformance_monitoring_task(
-                        flight_declaration=self.flight_declaration
+                if self.ENABLE_CONFORMANCE_MONITORING:
+                    # Remove the conformance monitoring periodic job
+                    conformance_monitoring_job = (
+                        self.database_reader.get_conformance_monitoring_task(
+                            flight_declaration=self.flight_declaration
+                        )
                     )
-                )
-                if conformance_monitoring_job:
-                    self.database_writer.remove_conformance_monitoring_periodic_task(
-                        conformance_monitoring_task=conformance_monitoring_job
-                    )
+                    if conformance_monitoring_job:
+                        self.database_writer.remove_conformance_monitoring_periodic_task(
+                            conformance_monitoring_task=conformance_monitoring_job
+                        )
 
         elif new_state == 4:  # handle entry into contingent state
             if original_state == 2 and event in [
@@ -97,7 +101,7 @@ class FlightOperationConformanceHelper:
         elif new_state == 3:  # handle entry in non-conforming state
             if event == "ua_exits_coordinated_op_intent" and original_state in [1, 2]:
                 # Enters non-conforming from Accepted
-                # Command: Update / expand volumes
+                # Command: Update / expand volumes, if DSS is present
                 management.call_command(
                     "update_operational_intent_to_non_conforming_update_expand_volumes",
                     flight_declaration_id=self.flight_declaration_id,
@@ -121,11 +125,7 @@ class FlightOperationConformanceHelper:
                     flight_declaration_id=self.flight_declaration_id,
                     dry_run=0,
                 )
-                # TODO: Add celery periodic task to enable conformance monitoring
-                ENABLE_CONFORMANCE_MONITORING = int(
-                    os.getenv("ENABLE_CONFORMANCE_MONITORING", 0)
-                )
-                if ENABLE_CONFORMANCE_MONITORING:
+                if self.ENABLE_CONFORMANCE_MONITORING:
                     conformance_monitoring_job = self.database_writer.create_conformance_monitoring_periodic_task(
                         flight_declaration=self.flight_declaration
                     )
