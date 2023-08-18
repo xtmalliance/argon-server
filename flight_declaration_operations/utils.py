@@ -116,11 +116,19 @@ class OperationalIntentsConverter:
                 altitude_upper=Altitude(value=max_altitude, reference="W84", units="M"),
             )
 
-            volume4D = Volume4D(
-                volume=volume3D,
-                time_start=Time(format="RFC3339", value=start_datetime),
-                time_end=Time(format="RFC3339", value=end_datetime),
-            )
+            if "start_time" in feature["properties"] and "end_time" in feature["properties"]:
+                volume4D = Volume4D(
+                    volume=volume3D,
+                    time_start=Time(format="RFC3339", value=feature["properties"]["start_time"]),
+                    time_end=Time(format="RFC3339", value=feature["properties"]["end_time"]),
+                )
+            else:
+                volume4D = Volume4D(
+                    volume=volume3D,
+                    time_start=Time(format="RFC3339", value=start_datetime),
+                    time_end=Time(format="RFC3339", value=end_datetime),
+                )
+
             all_v4d.append(volume4D)
 
         
