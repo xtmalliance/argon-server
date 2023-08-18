@@ -164,7 +164,7 @@ def set_flight_declaration(request):
         state=declaration_state,
     )
 
-    flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=default_state)
+    flight_declaration = FlightDeclarationRequest(features = all_features, type_of_operation=type_of_operation, submitted_by=submitted_by, approved_by= approved_by, is_approved=is_approved, state=declaration_state)
 
     my_operational_intent_converter = OperationalIntentsConverter()
         
