@@ -14,21 +14,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
+
 from flight_feed_operations import views as flight_feed_views
+
 urlpatterns = [
-    path('', flight_feed_views.HomeView.as_view()),
-    path('admin/', admin.site.urls),    
-    path('ping', flight_feed_views.ping),
-    path('signing_public_key', flight_feed_views.public_key_view),
-    path('flight_stream/', include('flight_feed_operations.urls')),    
-
-    path('rid/', include('rid_operations.urls')),    
-    path('scd/', include('scd_operations.urls')),    
-    path('uss/', include('uss_operations.urls')),    
-
-    path('geo_fence_ops/', include('geo_fence_operations.urls')),    
-    path('flight_declaration_ops/', include('flight_declaration_operations.urls')),
-    
-    
+    path("", flight_feed_views.HomeView.as_view()),
+    path("admin/", admin.site.urls),
+    path("ping", flight_feed_views.ping),
+    path("signing_public_key", flight_feed_views.public_key_view),
+    path("flight_stream/", include("flight_feed_operations.urls")),
+    path("rid/", include("rid_operations.urls")),
+    path("scd/", include("scd_operations.urls")),
+    path("uss/", include("uss_operations.urls")),
+    path("geo_fence_ops/", include("geo_fence_operations.urls")),
+    path("flight_declaration_ops/", include("flight_declaration_operations.urls")),
+    path("non_repudiation/", include("non_repudiation.urls")),
 ]

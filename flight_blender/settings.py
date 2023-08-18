@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'scd_operations',
     'uss_operations',
     'flight_feed_operations',
-    'rid_operations'
+    'rid_operations',
+    'non_repudiation'
 ]
 
 MIDDLEWARE = [

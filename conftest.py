@@ -4,6 +4,7 @@ import json
 import pytest
 
 from flight_declaration_operations import models as fdo_models
+from non_repudiation import models as nr_models
 
 
 @pytest.mark.django_db
@@ -259,3 +260,28 @@ def create_flight_plan(db) -> None:
     )
     yield
     fdo_models.FlightDeclaration.objects.all().delete()
+
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="function")
+def create_public_keys(db) -> None:
+    nr_models.PublicKey.objects.create(
+        key_id="001",
+        url="http://publickeyTrue.com",
+        is_active=True
+    )
+
+    nr_models.PublicKey.objects.create(
+        key_id="002",
+        url="http://publickeyFalse.com",
+        is_active=False
+    )
+
+    nr_models.PublicKey.objects.create(
+        key_id="003",
+        url="http://publickey.com",
+        is_active=True
+    )
+    yield
+    nr_models.PublicKey.objects.all().delete()
