@@ -54,7 +54,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 INDEX_NAME = "geofence_proc"
 
 
-@api_view(["POST"])
+@api_view(["PUT"])
 @requires_scopes(["blender.write"])
 def set_geo_fence(request: HttpRequest):
     try:
