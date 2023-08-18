@@ -116,7 +116,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
     )
 
     non_conformance_state_code = ConformanceChecksList.state_code(non_conformance_state)
-
+    event = None
     if non_conformance_state_code == "C9a":
         telemetry_not_being_received_error_msg = "The telemetry for operation {flight_declaration_id}, has not been received in the past 15 seconds. Check C9a Failed".format(
             flight_declaration_id=flight_declaration_id
