@@ -67,7 +67,6 @@ class DSSOperationalIntentsCreator:
             )
         )
 
-        view_rect_bounds = flight_declaration.bounds
         operational_intent = json.loads(flight_declaration.operational_intent)
 
         operational_intent_data = from_dict(
@@ -75,38 +74,6 @@ class DSSOperationalIntentsCreator:
             data=operational_intent,
         )
 
-        # my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
-        # my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
-        # view_box = list(map(float, view_rect_bounds.split(',')))
-
-        # all_flight_declarations = my_rtree_helper.check_box_intersection(view_box= view_box)
-
-        # # flight authorisation data is correct, can submit the operational intent to the DSS
-        # self_deconflicted = False if operational_intent_data.priority == 0 else True
-
-        # if all_flight_declarations and self_deconflicted == False:
-        #     # there are existing op_ints in the area.
-        #     deconflicted_status = []
-        #     for existing_op_int in all_flight_declarations:
-        #         # check if start time or end time is between the existing bounds
-        #         is_start_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=arrow.get(flight_declaration.start_datetime))
-        #         is_end_within = dss_scd_helper.is_time_within_time_period(start_time=arrow.get(existing_op_int['start_time']).datetime, end_time= arrow.get(existing_op_int['end_time']).datetime, time_to_check=flight_declaration.end_datetime)
-
-        #         timeline_status = [is_start_within, is_end_within]
-
-        #         if all(timeline_status):
-        #             deconflicted_status.append(True)
-        #         else:
-        #             deconflicted_status.append(False)
-
-        #     self_deconflicted = all(deconflicted_status)
-        # else:
-        #     # No existing op ints we can plan it.
-        #     self_deconflicted = True
-
-        # my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')
-        # logger.info("Self deconfliction status %s" % self_deconflicted)
-        # if self_deconflicted:
         auth_token = my_scd_dss_helper.get_auth_token()
 
         if "error" in auth_token:

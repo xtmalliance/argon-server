@@ -8,7 +8,7 @@ import uuid
 from dataclasses import asdict, is_dataclass
 from decimal import Decimal
 from typing import List
-
+from implicitdict import ImplicitDict
 import arrow
 import pyproj
 from auth_helper.common import get_redis
