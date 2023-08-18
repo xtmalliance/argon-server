@@ -1,6 +1,4 @@
-
 class StatusCode:
-
     @classmethod
     def list(cls):
         """Return the StatusCode options as a list of mapped key / value items."""
@@ -23,7 +21,6 @@ class StatusCode:
 
     @classmethod
     def labels(cls):
-        
         return cls.options.values()
 
     @classmethod
@@ -42,7 +39,7 @@ class StatusCode:
         status_names = {}
 
         for d in dir(cls):
-            if d.startswith('_'):
+            if d.startswith("_"):
                 continue
             if d != d.upper():
                 continue
@@ -67,16 +64,19 @@ class StatusCode:
         """Return a dict representation containing all required information"""
         values = {}
 
-        for name, value, in cls.names().items():
+        for (
+            name,
+            value,
+        ) in cls.names().items():
             entry = {
-                'key': value,
-                'name': name,
-                'label': cls.label(value),
+                "key": value,
+                "name": name,
+                "label": cls.label(value),
             }
 
-            if hasattr(cls, 'colors'):
+            if hasattr(cls, "colors"):
                 if color := cls.colors.get(value, None):
-                    entry['color'] = color
+                    entry["color"] = color
 
             values[name] = entry
 
@@ -97,12 +97,11 @@ class StatusCode:
 
         raise ValueError("Label not found")
 
-
     @classmethod
     def state_code(cls, key):
         """Return the value associated with the provided label."""
         names = cls.names()
-        for k,v in names.items(): 
+        for k, v in names.items():
             if v == key:
                 return k
 
@@ -110,8 +109,9 @@ class StatusCode:
 
 
 class ConformanceChecksList(StatusCode):
-    ''' A list of conformance checks and their status'''
-    # 1 is reserved for True / check 
+    """A list of conformance checks and their status"""
+
+    # 1 is reserved for True / check
     C2 = 2
     C3 = 3
     C4 = 4
@@ -133,7 +133,7 @@ class ConformanceChecksList(StatusCode):
         C6: ("Telemetry time incorrect"),
         C7a: ("Flight out of bounds"),
         C7b: ("Flight altitude out of bounds"),
-        C8:  ("Geofence breached"),
+        C8: ("Geofence breached"),
         C9a: ("Telemetry not received"),
         C9b: ("Telemetry not received within last 15 secs"),
         C10: ("State not in accepted, non-conforming, activated"),

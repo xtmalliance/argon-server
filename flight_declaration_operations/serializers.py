@@ -32,9 +32,7 @@ class FlightDeclarationSerializer(serializers.ModelSerializer):
         return json.loads(obj.operational_intent)
 
     class Meta:
-        model = FlightDeclaration
-
-        
+        model = FlightDeclaration        
         fields = (
             "operational_intent",
             "originating_party",
