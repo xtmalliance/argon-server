@@ -2076,7 +2076,7 @@ components:
           description: Email address of person approving this declaration
           type: string
           format: email
-        submitted_by:
+        originating_party:
           description: Email address of person submitting this declaration
           type: string
           format: email  
@@ -2329,48 +2329,53 @@ components:
         A three-dimensional geographic volume consisting of a vertically-extruded
         polygon.
       required:
-        - footprint
+        - outline_polygon
       type: object
       properties:
-        footprint:
+        outline_polygon:
           anyOf:
             - $ref: '#/components/schemas/GeoPolygon'
           description: Projection of this volume onto the earth's surface.
-        altitude_lo:
+        altitude_lower:
           anyOf:
             - $ref: '#/components/schemas/Altitude'
           description: Minimum bounding altitude of this volume.
-        altitude_hi:
+        altitude_upper:
           anyOf:
             - $ref: '#/components/schemas/Altitude'
           description: Maximum bounding altitude of this volume.
 
     Altitude:
-      format: float
+      type: object
       description: An altitude, in meters, above the WGS84 ellipsoid.
-      type: number
-      example: 19.5
+      properties:
+        value:
+          type: integer
+        reference:
+          type: string
+        units:
+          type: string
 
     Volume4D: # Reference https://github.com/uastech/standards/blob/master/remoteid/canonical.yaml
       description: Contiguous block of geographic spacetime.
       required:
-        - spatial_volume
+        - volume
       type: object
       properties:
-        spatial_volume:
+        volume:
           anyOf:
             - $ref: '#/components/schemas/Volume3D'
           description: Constant spatial extent of this volume.
         time_start:
-          format: date-time
           description:
             Beginning time of this volume.  RFC 3339 format, per OpenAPI
             specification.
-          type: string
+          anyOf:
+            - $ref: '#/components/schemas/Time'
         time_end:
-          format: date-time
           description: End time of this volume.  RFC 3339 format, per OpenAPI specification.
-          type: string
+          anyOf:
+            - $ref: '#/components/schemas/Time'
 
     GeoFenceGeoJSON:
       type: object
