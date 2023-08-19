@@ -38,6 +38,7 @@ If you are working in stand-alone mode, recommended initially, the above environ
 
 | Variable Key | Data Type | Description |
 |--------------|--------------|:-----:|
+| USSP_NETWORK_ENABLED |int | Set it as 0 for standalone mode set it as 1 for interacting with a ASTM compliant DSS system |
 | DSS_SELF_AUDIENCE |string | This is the domain name of the lender instance you can set it as localhost or development / testing |
 | AUTH_DSS_CLIENT_ID | string | (optional) Sometimes authorities will provide special tokens for accessing the DSS, if you are using it locally via `/build/dev/run_locally.sh` via the InterUSS /DSS repository, you can just use a random long string |
 | AUTH_DSS_CLIENT_SECRET | string | (optional) Similar to above sometimes authorities provide  |

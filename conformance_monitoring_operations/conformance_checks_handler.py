@@ -4,6 +4,7 @@ from django.core import management
 from dotenv import load_dotenv, find_dotenv
 from .models import TaskScheduler
 import os
+from os import environ as env
 import logging
 
 load_dotenv(find_dotenv())
@@ -27,6 +28,10 @@ class FlightOperationConformanceHelper:
             flight_declaration_id=self.flight_declaration_id
         )
         self.database_writer = BlenderDatabaseWriter()
+        self.ENABLE_CONFORMANCE_MONITORING = int(
+            os.getenv("ENABLE_CONFORMANCE_MONITORING", 0)
+        )
+        self.USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
 
     def verify_operation_state_transition(
         self, original_state: int, new_state: int, event: str
@@ -54,22 +59,24 @@ class FlightOperationConformanceHelper:
         """
         if new_state == 5:  # operation has ended
             if event == "operator_confirms_ended":
-                management.call_command(
-                    "operation_ended_clear_dss",
-                    flight_declaration_id=self.flight_declaration_id,
-                    dry_run=0,
-                )
+                if self.USSP_NETWORK_ENABLED:
+                    management.call_command(
+                        "operation_ended_clear_dss",
+                        flight_declaration_id=self.flight_declaration_id,
+                        dry_run=0,
+                    )
 
-                # Remove the conformance monitoring periodic job
-                conformance_monitoring_job = (
-                    self.database_reader.get_conformance_monitoring_task(
-                        flight_declaration=self.flight_declaration
+                if self.ENABLE_CONFORMANCE_MONITORING:
+                    # Remove the conformance monitoring periodic job
+                    conformance_monitoring_job = (
+                        self.database_reader.get_conformance_monitoring_task(
+                            flight_declaration=self.flight_declaration
+                        )
                     )
-                )
-                if conformance_monitoring_job:
-                    self.database_writer.remove_conformance_monitoring_periodic_task(
-                        conformance_monitoring_task=conformance_monitoring_job
-                    )
+                    if conformance_monitoring_job:
+                        self.database_writer.remove_conformance_monitoring_periodic_task(
+                            conformance_monitoring_task=conformance_monitoring_job
+                        )
 
         elif new_state == 4:  # handle entry into contingent state
             if original_state == 2 and event in [
@@ -77,55 +84,56 @@ class FlightOperationConformanceHelper:
                 "blender_confirms_contingent",
             ]:
                 # Operator activates contingent state from Activated state
-                management.call_command(
-                    "operator_declares_contingency",
-                    flight_declaration_id=self.flight_declaration_id,
-                    dry_run=0,
-                )
+                if self.USSP_NETWORK_ENABLED:
+                    management.call_command(
+                        "operator_declares_contingency",
+                        flight_declaration_id=self.flight_declaration_id,
+                        dry_run=0,
+                    )
 
             elif original_state == 3 and event in [
                 "timeout",
                 "operator_confirms_contingent",
             ]:
                 # Operator activates contingent state / timeout from Non-conforming state
-                management.call_command(
-                    "operator_declares_contingency",
-                    flight_declaration_id=self.flight_declaration_id,
-                    dry_run=0,
-                )
+                if self.USSP_NETWORK_ENABLED:
+                    management.call_command(
+                        "operator_declares_contingency",
+                        flight_declaration_id=self.flight_declaration_id,
+                        dry_run=0,
+                    )
 
         elif new_state == 3:  # handle entry in non-conforming state
             if event == "ua_exits_coordinated_op_intent" and original_state in [1, 2]:
                 # Enters non-conforming from Accepted
-                # Command: Update / expand volumes
-                management.call_command(
-                    "update_operational_intent_to_non_conforming_update_expand_volumes",
-                    flight_declaration_id=self.flight_declaration_id,
-                    dry_run=0,
-                )
+                # Command: Update / expand volumes, if DSS is present
+                if self.USSP_NETWORK_ENABLED:
+                    management.call_command(
+                        "update_operational_intent_to_non_conforming_update_expand_volumes",
+                        flight_declaration_id=self.flight_declaration_id,
+                        dry_run=0,
+                    )
 
             elif event == "ua_departs_early_late" and original_state in [1, 2]:
                 # Enters non-conforming from Accepted
                 # Command: declare non-conforming, no need to update volumes
-                management.call_command(
-                    "update_operational_intent_to_non_conforming",
-                    flight_declaration_id=self.flight_declaration_id,
-                    dry_run=0,
-                )
+                if self.USSP_NETWORK_ENABLED:
+                    management.call_command(
+                        "update_operational_intent_to_non_conforming",
+                        flight_declaration_id=self.flight_declaration_id,
+                        dry_run=0,
+                    )
 
         elif new_state == 2:  # handle entry into activated state
             if original_state == 1 and event == "operator_activates":
                 # Operator activates accepted state to Activated state
-                management.call_command(
-                    "update_operational_intent_to_activated",
-                    flight_declaration_id=self.flight_declaration_id,
-                    dry_run=0,
-                )
-                # TODO: Add celery periodic task to enable conformance monitoring
-                ENABLE_CONFORMANCE_MONITORING = int(
-                    os.getenv("ENABLE_CONFORMANCE_MONITORING", 0)
-                )
-                if ENABLE_CONFORMANCE_MONITORING:
+                if self.USSP_NETWORK_ENABLED:
+                    management.call_command(
+                        "update_operational_intent_to_activated",
+                        flight_declaration_id=self.flight_declaration_id,
+                        dry_run=0,
+                    )
+                if self.ENABLE_CONFORMANCE_MONITORING:
                     conformance_monitoring_job = self.database_writer.create_conformance_monitoring_periodic_task(
                         flight_declaration=self.flight_declaration
                     )
