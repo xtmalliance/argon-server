@@ -15,21 +15,40 @@ from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
 from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
 from shapely.geometry import shape
-from .data_definitions import FlightDeclarationRequest, Altitude, FlightDeclarationCreateResponse
+from .data_definitions import (
+    FlightDeclarationRequest,
+    Altitude,
+    FlightDeclarationCreateResponse,
+)
 from rest_framework import mixins, generics, status
 from rest_framework.response import Response
-from .serializers import FlightDeclarationSerializer, FlightDeclarationApprovalSerializer, FlightDeclarationStateSerializer
+from .serializers import (
+    FlightDeclarationSerializer,
+    FlightDeclarationApprovalSerializer,
+    FlightDeclarationStateSerializer,
+)
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
-from .tasks import submit_flight_declaration_to_dss_async, send_operational_update_message
+from .tasks import (
+    submit_flight_declaration_to_dss_async,
+    send_operational_update_message,
+)
 
 from .pagination import StandardResultsSetPagination
-from .serializers import (FlightDeclarationApprovalSerializer,
-                          FlightDeclarationSerializer,
-                          FlightDeclarationStateSerializer)
-from .tasks import (send_operational_update_message,
-                    submit_flight_declaration_to_dss_async)
+from .serializers import (
+    FlightDeclarationApprovalSerializer,
+    FlightDeclarationSerializer,
+    FlightDeclarationStateSerializer,
+)
+from .tasks import (
+    send_operational_update_message,
+    submit_flight_declaration_to_dss_async,
+)
 from .utils import OperationalIntentsConverter
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
 
@@ -72,9 +91,10 @@ def set_flight_declaration(request):
         )
         return HttpResponse(msg, status=400)
 
-    aircraft_id = '000' if 'vehicle_id' not in req else req['vehicle_id']
-    submitted_by = None if 'submitted_by' not in req else req['submitted_by']
-    approved_by = None if 'approved_by' not in req else req['approved_by']
+    USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
+    aircraft_id = "000" if "vehicle_id" not in req else req["vehicle_id"]
+    submitted_by = None if "submitted_by" not in req else req["submitted_by"]
+    approved_by = None if "approved_by" not in req else req["approved_by"]
     is_approved = False
     type_of_operation = (
         0 if "type_of_operation" not in req else req["type_of_operation"]
@@ -153,7 +173,7 @@ def set_flight_declaration(request):
             meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"]
         )
 
-    declaration_state = 0 # Default state is Processed
+    declaration_state = 0  # Default state is Processed
 
     flight_declaration = FlightDeclarationRequest(
         features=all_features,
@@ -163,12 +183,19 @@ def set_flight_declaration(request):
         is_approved=is_approved,
         state=declaration_state,
     )
-    
+
     my_operational_intent_converter = OperationalIntentsConverter()
-        
-    parital_op_int_ref = my_operational_intent_converter.create_partial_operational_intent_ref(geo_json_fc = flight_declaration_geo_json, start_datetime = start_datetime, end_datetime = end_datetime, priority=0)    
-    
-    bounds = my_operational_intent_converter.get_geo_json_bounds()    
+
+    parital_op_int_ref = (
+        my_operational_intent_converter.create_partial_operational_intent_ref(
+            geo_json_fc=flight_declaration_geo_json,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            priority=0,
+        )
+    )
+
+    bounds = my_operational_intent_converter.get_geo_json_bounds()
 
     logging.info("Checking intersections with Geofences..")
     view_box = [float(i) for i in bounds.split(",")]
@@ -230,7 +257,6 @@ def set_flight_declaration(request):
             is_approved = 0
             declaration_state = 8
 
-
     fo = FlightDeclaration(
         operational_intent=json.dumps(asdict(parital_op_int_ref)),
         bounds=bounds,
@@ -245,9 +271,15 @@ def set_flight_declaration(request):
     )
 
     fo.save()
-    fo.add_state_history_entry(new_state=0, original_state = None,notes="Created Declaration")
-    if declaration_state != 0:        
-        fo.add_state_history_entry(new_state=declaration_state, original_state = 0,notes="Rejected by Flight Blender becuase of conflicts")
+    fo.add_state_history_entry(
+        new_state=0, original_state=None, notes="Created Declaration"
+    )
+    if declaration_state != 0:
+        fo.add_state_history_entry(
+            new_state=declaration_state,
+            original_state=0,
+            notes="Rejected by Flight Blender becuase of conflicts",
+        )
 
     flight_declaration_id = str(fo.id)
 
@@ -276,7 +308,8 @@ def set_flight_declaration(request):
         logger.info(
             "Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided.."
         )
-        if declaration_state == 0:
+        # Only send it to the USSP network if the declaration is accepted and the network is available.
+        if declaration_state == 0 and USSP_NETWORK_ENABLED:
             submit_flight_declaration_to_dss_async.delay(
                 flight_declaration_id=flight_declaration_id
             )
@@ -286,7 +319,6 @@ def set_flight_declaration(request):
         is_approved=is_approved,
         state=declaration_state,
     )
-
 
     op = json.dumps(asdict(creation_response))
     return HttpResponse(op, status=200, content_type="application/json")
@@ -307,7 +339,6 @@ class FlightDeclarationStateUpdate(mixins.UpdateModelMixin, generics.GenericAPIV
     serializer_class = FlightDeclarationStateSerializer
 
     def put(self, request, *args, **kwargs):
-        
         return self.update(request, *args, **kwargs)
 
 
