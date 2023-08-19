@@ -61,10 +61,10 @@ class FlightOperationConformanceHelper:
             if event == "operator_confirms_ended":
                 if self.USSP_NETWORK_ENABLED:
                     management.call_command(
-                    "operation_ended_clear_dss",
-                    flight_declaration_id=self.flight_declaration_id,
-                    dry_run=0,
-                    )  
+                        "operation_ended_clear_dss",
+                        flight_declaration_id=self.flight_declaration_id,
+                        dry_run=0,
+                    )
 
                 if self.ENABLE_CONFORMANCE_MONITORING:
                     # Remove the conformance monitoring periodic job
