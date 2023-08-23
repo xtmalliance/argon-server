@@ -1,4 +1,8 @@
-from flight_declaration_operations.models import FlightAuthorization, FlightDeclaration
+from flight_declaration_operations.models import (
+    FlightAuthorization,
+    FlightDeclaration,
+)
+from geo_fence_operations.models import GeoFence
 from conformance_monitoring_operations.models import TaskScheduler
 from typing import Tuple, List
 from uuid import uuid4
@@ -30,6 +34,9 @@ class BlenderDatabaseReader:
     def get_all_flight_declarations(self) -> Tuple[None, List[FlightDeclaration]]:
         flight_declarations = FlightDeclaration.objects.all()
         return flight_declarations
+
+    def check_flight_declaration_exists(self, flight_declaration_id: str) -> bool:
+        return FlightDeclaration.objects.filter(id=flight_declaration_id).exists()
 
     def get_flight_declaration_by_id(
         self, flight_declaration_id: str
@@ -68,7 +75,7 @@ class BlenderDatabaseReader:
             return None
 
     def get_current_flight_declaration_ids(self, now: str) -> Tuple[None, uuid4]:
-        """This method gets flight operation ids that are active in the system"""
+        """This method gets flight operation ids that are active in the system within near the time interval"""
         n = arrow.get(now)
 
         two_minutes_before_now = n.shift(seconds=-120).isoformat()

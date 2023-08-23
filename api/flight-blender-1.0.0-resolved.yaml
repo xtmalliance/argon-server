@@ -1148,11 +1148,11 @@ paths:
 
       responses:
         '200':
-          description: The USSP network has been queried and the operational intents near the current flight declaration are provided
+          description: The USSP network has been queried and the operational intents that encompass the bounds of the current flight declaration are provided. 
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FlightDeclarationList'
+                $ref: '#/components/schemas/NetworkOpIntsGeoJSON'
         '400':
           description: Bad request submitted
           content:
@@ -2594,6 +2594,21 @@ components:
           items:
             $ref: '#/components/schemas/Point2D'
     GeoFenceGeometryGeoJSON:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - Polygon
+            - MultiPolygon
+
+        coordinates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Point2D'
+    NetworkOpIntsGeoJSON:
       type: object
       required:
         - type
