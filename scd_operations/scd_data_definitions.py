@@ -101,6 +101,7 @@ class TestInjectionResultState(str, enum.Enum):
     Planned = 'Planned'
     Rejected = 'Rejected'
     ConflictWithFlight = 'ConflictWithFlight'
+    ReadyToFly = 'ReadyToFly'
     Failed = 'Failed'
     
 class IDTechnology(str, enum.Enum):
