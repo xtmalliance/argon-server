@@ -167,12 +167,16 @@ class DeleteFlightResponse:
     result: Literal[DeleteFlightStatusResponseEnum.Failed, DeleteFlightStatusResponseEnum.Closed]
     notes: str
 
-@dataclass 
-class ClearAreaResponse:
+@dataclass
+class ClearAreaResponseOutcome: 
     ''' Response after clearing flights in an area '''
     success: bool
     message: str
     timestamp: StringBasedDateTime
+
+@dataclass 
+class ClearAreaResponse:
+    outcome: ClearAreaResponseOutcome
 
 @dataclass 
 class ClearAreaRequestData:

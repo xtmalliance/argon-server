@@ -109,8 +109,8 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
                     blender_base_url = env.get("BLENDER_FQDN", 0)
 
                     if uss_base_url != blender_base_url: # There are others who are subscribesd, not just ourselves
-                        subscriptions = from_dict(dataclass=SubscriptionState, data = subscriptions_raw)
-                        op_int_details = from_dict(dataclass = OperationalIntentUSSDetails, data = json.loads(fo.operational_intent))
+                        subscriptions = from_dict(data_class=SubscriptionState, data = subscriptions_raw)
+                        op_int_details = from_dict(data_class = OperationalIntentUSSDetails, data = json.loads(fo.operational_intent))
                         operational_intent = OperationalIntentDetailsUSSResponse(reference=opint_submission_result.dss_response.operational_intent_reference, details=op_int_details)
                         post_notification_payload = NotifyPeerUSSPostPayload(operational_intent_id=created_opint, operational_intent=operational_intent, subscriptions=subscriptions)
                         # Notify Subscribers

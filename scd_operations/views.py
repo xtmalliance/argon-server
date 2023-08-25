@@ -6,7 +6,7 @@ from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,SCDTestStatusResponse, CapabilitiesResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage,  ClearAreaResponse, SuccessfulOperationalIntentFlightIDStorage
+from .scd_data_definitions import SCDTestInjectionDataPayload, FlightAuthorizationDataPayload, TestInjectionResult,SCDTestStatusResponse, CapabilitiesResponse, DeleteFlightResponse,LatLngPoint, Polygon, Circle, Altitude, Volume3D, Time, Radius, Volume4D, OperationalIntentTestInjection, OperationalIntentStorage,  ClearAreaResponse, ClearAreaResponseOutcome,SuccessfulOperationalIntentFlightIDStorage
 from . import dss_scd_helper
 from rid_operations import rtree_helper
 from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
@@ -16,6 +16,7 @@ import logging
 from uuid import UUID
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
+
 
 load_dotenv(find_dotenv())
 INDEX_NAME = 'opint_proc'
@@ -53,22 +54,52 @@ def SCDClearAreaRequest(request):
     clear_area_request = request.data
     try:
         request_id = clear_area_request['request_id']
-        extent = clear_area_request['extent']
+        extent_raw = clear_area_request['extent']
     except KeyError as ke: 
         return Response({"result":"Could not parse clear area payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
     
     r = get_redis()
+
+    # Convert the extent to V4D
+    outline_polygon = None
+    outline_circle = None
+    if 'outline_polygon' in extent_raw['volume'].keys():
+        all_vertices = extent_raw['volume']['outline_polygon']['vertices']
+        polygon_verticies = []
+        for vertex in all_vertices:
+            v = LatLngPoint(lat = vertex['lat'],lng=vertex['lng'])
+            polygon_verticies.append(v)
+        polygon_verticies.pop() # remove the last vertex to prevent interseaction
+
+        outline_polygon = Polygon(vertices=polygon_verticies)
+
+    if 'outline_circle' in extent_raw['volume'].keys():                
+        circle_center =  LatLngPoint(lat = extent_raw['volume']['outline_circle']['center']['lat'], lng = extent_raw['volume']['outline_circle']['center']['lng'])
+        circle_radius = Radius(value =extent_raw['volume']['outline_circle']['radius']['value'], units = extent_raw['volume']['outline_circle']['radius']['units'])                                    
+        outline_circle = Circle(center =circle_center, radius=circle_radius)
+        
+    altitude_lower = Altitude(value = extent_raw['volume']['altitude_lower']['value'],reference= extent_raw['volume']['altitude_lower']['reference'], units =extent_raw['volume']['altitude_lower']['units'])
+    altitude_upper = Altitude(value = extent_raw['volume']['altitude_upper']['value'],reference=  extent_raw['volume']['altitude_upper']['reference'], units =extent_raw['volume']['altitude_upper']['units'])                        
+    volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
+
+
+    time_start = Time(format = extent_raw['time_start']['format'], value = extent_raw['time_start']['value'])
+    time_end = Time(format =extent_raw['time_end']['format'] , value = extent_raw['time_end']['value'])
+    
+    volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
+
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
-    my_geo_json_converter.convert_volumes_to_geojson(volumes = extent)
+    my_geo_json_converter.convert_volumes_to_geojson(volumes = [volume4D])
     view_rect_bounds = my_geo_json_converter.get_bounds()
 
-    my_rtree_helper = rtree_helper.RTreeIndexFactory(index_name=INDEX_NAME)
+    my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
     my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
 
     all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
-    
+    all_deletion_requests_status = []
     if all_existing_op_ints_in_area:
-        for flight_details in all_existing_op_ints_in_area:            
+        for flight_details in all_existing_op_ints_in_area:  
+            deletion_success = False          
             operation_id =  flight_details['operation_id']
             op_int_details_key = 'flight_opint.'+ operation_id
             
@@ -82,15 +113,20 @@ def SCDClearAreaRequest(request):
                 opint_id = op_int_detail['success_response']['operational_intent_reference']['id']
                 ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
                 logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
+                
 
-                my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
-        clear_area_status = ClearAreaResponse(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
+                deletion_request = my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
+                if deletion_request.status ==200:
+                    deletion_success= True
+                all_deletion_requests_status.append(deletion_success)
+        clear_area_status = ClearAreaResponseOutcome(success=all(all_deletion_requests_status), message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
 
     else:
-        clear_area_status = ClearAreaResponse(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
-   
+        clear_area_status = ClearAreaResponseOutcome(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
+    
     my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')
-    return JsonResponse(json.loads(json.dumps(clear_area_status, cls=EnhancedJSONEncoder)), status=200)
+    clear_area_response = ClearAreaResponse(outcome=clear_area_status)
+    return JsonResponse(json.loads(json.dumps(clear_area_response, cls=EnhancedJSONEncoder)), status=200)
 
 @api_view(['PUT','DELETE'])
 @requires_scopes(['utm.inject_test_data'])
@@ -112,7 +148,7 @@ def SCDAuthTest(request, operation_id):
                         
         now = arrow.now()
 
-        my_rtree_helper = rtree_helper.RTreeIndexFactory(index_name=INDEX_NAME)
+        my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
         my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
 
         one_minute_from_now = now.shift(minutes=1)
@@ -162,6 +198,7 @@ def SCDAuthTest(request, operation_id):
         test_injection_data = SCDTestInjectionDataPayload(operational_intent= operational_intent_data, flight_authorisation= f_a)
 
         my_geo_json_converter = dss_scd_helper.VolumesConverter()
+      
         my_geo_json_converter.convert_volumes_to_geojson(volumes = all_volumes)
         view_rect_bounds = my_geo_json_converter.get_bounds()
                     
@@ -191,10 +228,10 @@ def SCDAuthTest(request, operation_id):
             return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)      
             
         else: 
-            op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = test_injection_data.operational_intent_data.state, volumes = test_injection_data.operational_intent_data.volumes, off_nominal_volumes = test_injection_data.operational_intent_data.off_nominal_volumes, priority = test_injection_data.operational_intent_data.priority)
+            op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = test_injection_data.operational_intent.state, volumes = test_injection_data.operational_intent.volumes, off_nominal_volumes = test_injection_data.operational_intent.off_nominal_volumes, priority = test_injection_data.operational_intent.priority)
             if op_int_submission.status == "success":                
                 view_r_bounds = ",".join(map(str,view_rect_bounds))
-                operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= test_injection_data.operational_intent_data)
+                operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= test_injection_data.operational_intent)
                 # Store flight ID 
                 flight_opint = 'flight_opint.' + str(operation_id)
                 r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
