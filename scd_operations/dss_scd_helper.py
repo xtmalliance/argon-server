@@ -125,7 +125,6 @@ class VolumesConverter:
     
     def convert_volumes_to_geojson(self, volumes: List[Volume4D]) -> None:
         for volume in volumes:
-            print(volume)
             geo_json_features = self._convert_volume_to_geojson_feature(volume)
             self.geo_json["features"] += geo_json_features
 
@@ -580,7 +579,6 @@ class SCDOperations:
 
                         operational_intent_volumes = op_int_detail.volumes
                         my_volume_converter = VolumesConverter()
-
                         my_volume_converter.convert_volumes_to_geojson(
                             volumes=operational_intent_volumes
                         )

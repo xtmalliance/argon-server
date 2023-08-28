@@ -57,9 +57,9 @@ def SCDClearAreaRequest(request):
         extent_raw = clear_area_request['extent']        
     except KeyError as ke: 
         return Response({"result":"Could not parse clear area payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
-    
     r = get_redis()
     # Convert the extent to V4D
+    
     outline_polygon = None
     outline_circle = None    
     if 'outline_polygon' in extent_raw['volume'].keys():
@@ -81,18 +81,11 @@ def SCDClearAreaRequest(request):
     altitude_upper = Altitude(value = extent_raw['volume']['altitude_upper']['value'],reference=  extent_raw['volume']['altitude_upper']['reference'], units =extent_raw['volume']['altitude_upper']['units'])                        
     volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
 
-
     time_start = Time(format = extent_raw['time_start']['format'], value = extent_raw['time_start']['value'])
     time_end = Time(format =extent_raw['time_end']['format'] , value = extent_raw['time_end']['value'])
     
     volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
-    
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
-    volumes_valid = my_geo_json_converter.validate_volumes(volumes=[volume4D])
-    
-    if not volumes_valid:
-        invalid_volume_status = ClearAreaResponseOutcome(success=False, message="Some volumes provided are not valid, they must contain at least three vertices", timestamp=arrow.now().isoformat())        
-        return JsonResponse(json.loads(json.dumps(invalid_volume_status, cls=EnhancedJSONEncoder)), status=200)
     
     my_geo_json_converter.convert_volumes_to_geojson(volumes = [volume4D])
     view_rect_bounds = my_geo_json_converter.get_bounds()
@@ -106,6 +99,7 @@ def SCDClearAreaRequest(request):
     all_deletion_requests_status = []
     if all_existing_op_ints_in_area:
         for flight_details in all_existing_op_ints_in_area:  
+            print(flight_details)
             deletion_success = False          
             operation_id =  flight_details['operation_id']
             op_int_details_key = 'flight_opint.'+ operation_id
@@ -169,45 +163,43 @@ def SCDAuthTest(request, operation_id):
         try:
             operational_intent = scd_test_data['operational_intent']
             operational_intent_volumes = operational_intent['volumes']
-            all_volumes = []
-            for volume in operational_intent_volumes:
-                outline_polygon = None
-                outline_circle = None
-                if 'outline_polygon' in volume['volume'].keys():
-                    all_vertices = volume['volume']['outline_polygon']['vertices']
-                    polygon_verticies = []
-                    for vertex in all_vertices:
-                        v = LatLngPoint(lat = vertex['lat'],lng=vertex['lng'])
-                        polygon_verticies.append(v)
-                    polygon_verticies.pop() # remove the last vertex to prevent interseaction
-
-                    outline_polygon = Polygon(vertices=polygon_verticies)
-
-                if 'outline_circle' in volume['volume'].keys():                
-                    circle_center =  LatLngPoint(lat = volume['volume']['outline_circle']['center']['lat'], lng = volume['volume']['outline_circle']['center']['lng'])
-                    circle_radius = Radius(value =volume['volume']['outline_circle']['radius']['value'], units = volume['volume']['outline_circle']['radius']['units'])                                    
-                    outline_circle = Circle(center =circle_center, radius=circle_radius)
-                    
-                altitude_lower = Altitude(value = volume['volume']['altitude_lower']['value'],reference= volume['volume']['altitude_lower']['reference'], units =volume['volume']['altitude_lower']['units'])
-                altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])                        
-                volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
-
-
-                time_start = Time(format = volume['time_start']['format'], value = volume['time_start']['value'])
-                time_end = Time(format =volume['time_end']['format'] , value = volume['time_end']['value'])
-                
-                volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
-                all_volumes.append(volume4D)
-            
-            operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])   
-            # convert operational intent to GeoJSON and get bounds
         except KeyError as ke:
             return Response({"result":"Could not parse test injection payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
+        
+        all_volumes = []
+        for volume in operational_intent_volumes:
+            outline_polygon = None
+            outline_circle = None
+            if 'outline_polygon' in volume['volume'].keys():
+                all_vertices = volume['volume']['outline_polygon']['vertices']
+                polygon_verticies = []
+                for vertex in all_vertices:
+                    v = LatLngPoint(lat = vertex['lat'],lng=vertex['lng'])
+                    polygon_verticies.append(v)
+                outline_polygon = Polygon(vertices=polygon_verticies)
 
+            if 'outline_circle' in volume['volume'].keys():                
+                circle_center =  LatLngPoint(lat = volume['volume']['outline_circle']['center']['lat'], lng = volume['volume']['outline_circle']['center']['lng'])
+                circle_radius = Radius(value =volume['volume']['outline_circle']['radius']['value'], units = volume['volume']['outline_circle']['radius']['units'])                                    
+                outline_circle = Circle(center =circle_center, radius=circle_radius)
+                
+            altitude_lower = Altitude(value = volume['volume']['altitude_lower']['value'],reference= volume['volume']['altitude_lower']['reference'], units =volume['volume']['altitude_lower']['units'])
+            altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])                        
+            volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
+
+            time_start = Time(format = volume['time_start']['format'], value = volume['time_start']['value'])
+            time_end = Time(format =volume['time_end']['format'] , value = volume['time_end']['value'])
+            
+            volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
+            all_volumes.append(volume4D)
+        
+        operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])   
+        # convert operational intent to GeoJSON and get bounds
         test_injection_data = SCDTestInjectionDataPayload(operational_intent= operational_intent_data, flight_authorisation= f_a)
 
         my_geo_json_converter = dss_scd_helper.VolumesConverter()
-      
+        
+        
         my_geo_json_converter.convert_volumes_to_geojson(volumes = all_volumes)
         view_rect_bounds = my_geo_json_converter.get_bounds()
                     
@@ -225,8 +217,7 @@ def SCDAuthTest(request, operation_id):
         if not is_reg_number_valid:            
             injection_response = asdict(rejected_test_injection_response)
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-       
-        
+    
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
     
         auth_token = my_scd_dss_helper.get_auth_token()
@@ -286,7 +277,7 @@ def SCDAuthTest(request, operation_id):
             opint_id = op_int_detail['success_response']['operational_intent_reference']['id']
             ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
             logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
-            my_scd_dss_helper.delete_operational_intent(operational_intent_id=opint_id, ovn= ovn)
+            my_scd_dss_helper.delete_operational_intent(dss_operational_intent_ref_id=opint_id, ovn= ovn)
             r.delete(op_int_details_key)
 
             delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system.")

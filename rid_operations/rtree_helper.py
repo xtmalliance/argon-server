@@ -67,8 +67,7 @@ class OperationalIntentsIndexFactory():
 
     def check_box_intersection(self, view_box:List[float]):
         
-        intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]      
-        print('h343222')
+        intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]     
         return intersections
 
 def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon_to_check:Polygon ) -> True:     
