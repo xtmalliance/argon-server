@@ -20,21 +20,30 @@ class OperationalIntentsIndexFactory():
     def delete_from_index(self,enumerated_id:int, view:List[float]):                
         self.idx.delete(id = enumerated_id, coordinates= (view[0], view[1], view[2], view[3]))
 
+    def check_op_ints_exist(self, pattern:str = None) -> bool:
+        """This method generates a rTree index of currently active operational indexes """      
+        pattern = pattern if pattern else 'flight_opint.*'
+        
+        all_op_ints = self.r.keys(pattern=pattern)
+        if all_op_ints: 
+            return True
+        else: 
+            return False
     def generate_operational_intents_index(self, pattern:str = None) -> None:
         """This method generates a rTree index of currently active operational indexes """      
         pattern = pattern if pattern else 'flight_opint.*'
+        
         all_op_ints = self.r.keys(pattern=pattern)
-        for flight_idx, flight_id in enumerate(all_op_ints):
-                                 
-            flight_id_str = flight_id.split('.')[1]        
-            
+        for flight_idx, flight_id in enumerate(all_op_ints):                                 
+            flight_id_str = flight_id.split('.')[1]                    
             enumerated_flight_id = int(hashlib.sha256(flight_id_str.encode('utf-8')).hexdigest(), 16) % 10**8
             operational_intent_view_raw = self.r.get(flight_id)   
             operational_intent_view = json.loads(operational_intent_view_raw)            
             split_view = operational_intent_view['bounds'].split(",")
             start_time = operational_intent_view['start_time']
             end_time  = operational_intent_view['end_time']            
-            view = [float(i) for i in split_view]            
+            view = [float(i) for i in split_view]         
+            
             self.add_box_to_index(enumerated_id= enumerated_flight_id, flight_id = flight_id_str, view = view, start_time=start_time, end_time= end_time)
 
     def clear_rtree_index(self, pattern:str):
@@ -52,8 +61,14 @@ class OperationalIntentsIndexFactory():
             view = [float(i) for i in split_view]            
             self.delete_from_index(enumerated_id= enumerated_flight_id,view = view)
 
+    def close_index(self):
+        """Method to delete / close index """
+        self.idx.close()
+
     def check_box_intersection(self, view_box:List[float]):
-        intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]        
+        
+        intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]      
+        print('h343222')
         return intersections
 
 def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon_to_check:Polygon ) -> True:     

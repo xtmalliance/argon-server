@@ -78,6 +78,18 @@ class VolumesConverter:
         self.utm_zone = env.get("UTM_ZONE", "54N")
         self.all_volume_features = []
 
+    def validate_volume(self, volume:Volume4D)->bool:
+        v = asdict(volume)
+        cur_volume = v["volume"]
+        if "outline_polygon" in cur_volume.keys():
+            outline_polygon = cur_volume["outline_polygon"]        
+            if outline_polygon:           
+                total_vertices = len(outline_polygon["vertices"])                
+                # Check the vertices is at least 3
+                if total_vertices < 3:
+                    return False
+        return True
+
     def utm_converter(
         self, shapely_shape: shapely.geometry, inverse: bool = False
     ) -> shapely.geometry.shape:
@@ -103,9 +115,17 @@ class VolumesConverter:
         return shapely.geometry.shape(
             {"type": point_or_polygon, "coordinates": tuple(new_coordinates)}
         )
-
+    
+    def validate_volumes(self, volumes: List[Volume4D]) -> bool:
+        all_volumes_ok = []
+        for volume in volumes:
+            volume_validated = self.validate_volume(volume)
+            all_volumes_ok.append(volume_validated)
+        return all(all_volumes_ok)
+    
     def convert_volumes_to_geojson(self, volumes: List[Volume4D]) -> None:
         for volume in volumes:
+            print(volume)
             geo_json_features = self._convert_volume_to_geojson_feature(volume)
             self.geo_json["features"] += geo_json_features
 
@@ -132,11 +152,10 @@ class VolumesConverter:
         v = asdict(volume)
         cur_volume = v["volume"]
         geo_json_features = []
-
         if "outline_polygon" in cur_volume.keys():
-            outline_polygon = cur_volume["outline_polygon"]
-            if outline_polygon:
-                point_list = []
+            outline_polygon = cur_volume["outline_polygon"]        
+            if outline_polygon:                
+                point_list = []         
                 for vertex in outline_polygon["vertices"]:
                     p = Point(vertex["lng"], vertex["lat"])
                     point_list.append(p)

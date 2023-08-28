@@ -54,22 +54,21 @@ def SCDClearAreaRequest(request):
     clear_area_request = request.data
     try:
         request_id = clear_area_request['request_id']
-        extent_raw = clear_area_request['extent']
+        extent_raw = clear_area_request['extent']        
     except KeyError as ke: 
         return Response({"result":"Could not parse clear area payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
     
     r = get_redis()
-
     # Convert the extent to V4D
     outline_polygon = None
-    outline_circle = None
+    outline_circle = None    
     if 'outline_polygon' in extent_raw['volume'].keys():
         all_vertices = extent_raw['volume']['outline_polygon']['vertices']
         polygon_verticies = []
         for vertex in all_vertices:
             v = LatLngPoint(lat = vertex['lat'],lng=vertex['lng'])
             polygon_verticies.append(v)
-        polygon_verticies.pop() # remove the last vertex to prevent interseaction
+        # polygon_verticies.pop() # remove the last vertex to prevent interseaction
 
         outline_polygon = Polygon(vertices=polygon_verticies)
 
@@ -87,15 +86,23 @@ def SCDClearAreaRequest(request):
     time_end = Time(format =extent_raw['time_end']['format'] , value = extent_raw['time_end']['value'])
     
     volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
-
+    
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
+    volumes_valid = my_geo_json_converter.validate_volumes(volumes=[volume4D])
+    
+    if not volumes_valid:
+        invalid_volume_status = ClearAreaResponseOutcome(success=False, message="Some volumes provided are not valid, they must contain at least three vertices", timestamp=arrow.now().isoformat())        
+        return JsonResponse(json.loads(json.dumps(invalid_volume_status, cls=EnhancedJSONEncoder)), status=200)
+    
     my_geo_json_converter.convert_volumes_to_geojson(volumes = [volume4D])
     view_rect_bounds = my_geo_json_converter.get_bounds()
-
-    my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
+    my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)    
     my_rtree_helper.generate_operational_intents_index(pattern='flight_opint.*')
-
-    all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
+    op_ints_exist = my_rtree_helper.check_op_ints_exist()
+    all_existing_op_ints_in_area = []
+    if op_ints_exist:        
+        all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box= view_rect_bounds)
+    
     all_deletion_requests_status = []
     if all_existing_op_ints_in_area:
         for flight_details in all_existing_op_ints_in_area:  
@@ -119,12 +126,14 @@ def SCDClearAreaRequest(request):
                 if deletion_request.status ==200:
                     deletion_success= True
                 all_deletion_requests_status.append(deletion_success)
+
+            my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')
+            
         clear_area_status = ClearAreaResponseOutcome(success=all(all_deletion_requests_status), message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
 
     else:
         clear_area_status = ClearAreaResponseOutcome(success=True, message="All operational intents in the area cleared successfully", timestamp=arrow.now().isoformat())
     
-    my_rtree_helper.clear_rtree_index(pattern='flight_opint.*')
     clear_area_response = ClearAreaResponse(outcome=clear_area_status)
     return JsonResponse(json.loads(json.dumps(clear_area_response, cls=EnhancedJSONEncoder)), status=200)
 
@@ -238,7 +247,7 @@ def SCDAuthTest(request, operation_id):
                 r.expire(name = flight_opint, time = opint_subscription_end_time)
 
                 # Store the details of the operational intent reference
-                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(flight_id=str(operation_id), operational_intent_id=op_int_submission.operational_intent_id)
+                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(operation_id=str(operation_id), operational_intent_id=op_int_submission.operational_intent_id)
                 
                 opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
                 r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
