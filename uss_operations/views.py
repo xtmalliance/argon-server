@@ -116,8 +116,8 @@ def USSOpIntDetails(request, opint_id):
     if r.exists(opint_flightref):
         opint_ref_raw = r.get(opint_flightref)
         opint_ref = json.loads(opint_ref_raw)
-        flight_id = opint_ref["flight_id"]
-        flight_opint = "flight_opint." + flight_id
+        opint_id = opint_ref["operational_intent_id"]
+        flight_opint = "flight_opint." + opint_id
 
         if r.exists(flight_opint):
             op_int_details_raw = r.get(flight_opint)
