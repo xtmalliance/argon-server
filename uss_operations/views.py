@@ -110,13 +110,12 @@ def USSOpIntDetailTelemetry(request, entity_id):
 @requires_scopes(["utm.strategic_coordination"])
 def USSOpIntDetails(request, opint_id):
     r = get_redis()
-
     opint_flightref = "opint_flightref." + str(opint_id)
 
     if r.exists(opint_flightref):
         opint_ref_raw = r.get(opint_flightref)
         opint_ref = json.loads(opint_ref_raw)
-        opint_id = opint_ref["operational_intent_id"]
+        opint_id = opint_ref["operation_id"]
         flight_opint = "flight_opint." + opint_id
 
         if r.exists(flight_opint):

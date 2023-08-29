@@ -158,7 +158,7 @@ class SCDTestStatusResponse:
 
 @dataclass
 class CapabilitiesResponse:
-    capabilities: List[Literal[USSCapabilitiesResponseEnum.BasicStrategicConflictDetection, USSCapabilitiesResponseEnum.FlightAuthorisationValidation, USSCapabilitiesResponseEnum.HighPriorityFlights]]
+    capabilities: List[Literal[USSCapabilitiesResponseEnum.BasicStrategicConflictDetection, USSCapabilitiesResponseEnum.FlightAuthorisationValidation]]
     
 
 @dataclass
@@ -349,7 +349,8 @@ class QueryOperationalIntentPayload:
 
 @dataclass
 class OperationalIntentReferenceDSSDetails:
-    operational_intent_refrence: OperationalIntentReferenceDSSResponse
+    operational_intent_reference: OperationalIntentReferenceDSSResponse
+    operational_intent_id:str
 
 @dataclass
 class SuccessfulOperationalIntentFlightIDStorage:

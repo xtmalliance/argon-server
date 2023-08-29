@@ -2,6 +2,7 @@ import uuid
 from auth_helper.common import get_redis
 import json
 import requests
+import arrow
 import logging
 from dataclasses import asdict
 from typing import List, Optional
@@ -45,6 +46,7 @@ from .scd_data_definitions import (
     NotifyPeerUSSPostPayload,
     USSNotificationResponse,
     OperationalIntentUpdateErrorResponse,
+    OperationalIntentTestInjection
 )
 from .scd_data_definitions import Polygon as Plgn
 import tldextract
@@ -69,17 +71,48 @@ def is_time_within_time_period(
         # Over midnight:
         return time_to_check >= start_time or time_to_check <= end_time
 
+class OperationalIntentValidator: 
+    def __init__(self, operational_intent_data: OperationalIntentTestInjection):
+        self.operational_intent_data = operational_intent_data
 
-class VolumesConverter:
-    """A class to covert a Volume4D in to GeoJSON"""
+    def validate_operational_intent_state(self):
+        try:
+            assert self.operational_intent_data.state == 'Accepted'
+        except AssertionError as ae: 
+            return False
+        else:
+            return True
+        
+    def validate_operational_intent_state_off_nominals(self):
+        if self.operational_intent_data.state == 'Accepted' and bool(self.operational_intent_data.off_nominal_volumes): 
+            return False
+        else: 
+            return True
 
-    def __init__(self):
-        self.geo_json = {"type": "FeatureCollection", "features": []}
-        self.utm_zone = env.get("UTM_ZONE", "54N")
-        self.all_volume_features = []
+    def validate_operational_intent_test_data(self) -> bool:
+        operational_intent_test_data_ok = []
+        operational_intent_state_ok = self.validate_operational_intent_state()
+        state_off_nominals_ok = self.validate_operational_intent_state_off_nominals()        
+        operational_intent_test_data_ok.append(operational_intent_state_ok)        
+        operational_intent_test_data_ok.append(state_off_nominals_ok)     
+        return all(operational_intent_test_data_ok)
+    
+class VolumesValidator:
+    
+    def validate_volume_start_end_date(self, volume:Volume4D) -> bool:        
+        now = arrow.now()
+        thirty_days_from_now = now.shift(days=30)        
+        volume_start_datetime = arrow.get(volume.time_start.value)
+        # volume_end_datetime = arrow.get(volume.time_end)
+        
+        if volume_start_datetime > thirty_days_from_now:
+            return False
+        else: 
+            return True
+        
 
-    def validate_volume(self, volume:Volume4D)->bool:
-        v = asdict(volume)
+    def validate_polygon_vertices(self, volume:Volume4D)-> bool:
+        v = asdict(volume)        
         cur_volume = v["volume"]
         if "outline_polygon" in cur_volume.keys():
             outline_polygon = cur_volume["outline_polygon"]        
@@ -89,6 +122,23 @@ class VolumesConverter:
                 if total_vertices < 3:
                     return False
         return True
+
+    def validate_volumes(self, volumes: List[Volume4D]) -> bool:
+        all_volumes_ok = []
+        for volume in volumes:
+            volume_validated = self.validate_polygon_vertices(volume)
+            volume_start_end_time_validated = self.validate_volume_start_end_date(volume)
+            all_volumes_ok.append(volume_validated)
+            all_volumes_ok.append(volume_start_end_time_validated)
+        return all(all_volumes_ok)
+    
+class VolumesConverter:
+    """A class to covert a Volume4D in to GeoJSON"""
+
+    def __init__(self):
+        self.geo_json = {"type": "FeatureCollection", "features": []}
+        self.utm_zone = env.get("UTM_ZONE", "54N")
+        self.all_volume_features = []
 
     def utm_converter(
         self, shapely_shape: shapely.geometry, inverse: bool = False
@@ -115,13 +165,6 @@ class VolumesConverter:
         return shapely.geometry.shape(
             {"type": point_or_polygon, "coordinates": tuple(new_coordinates)}
         )
-    
-    def validate_volumes(self, volumes: List[Volume4D]) -> bool:
-        all_volumes_ok = []
-        for volume in volumes:
-            volume_validated = self.validate_volume(volume)
-            all_volumes_ok.append(volume_validated)
-        return all(all_volumes_ok)
     
     def convert_volumes_to_geojson(self, volumes: List[Volume4D]) -> None:
         for volume in volumes:

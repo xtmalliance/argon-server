@@ -16,7 +16,7 @@ import logging
 from uuid import UUID
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
-
+from auth_helper.common import RedisHelper
 
 load_dotenv(find_dotenv())
 INDEX_NAME = 'opint_proc'
@@ -59,6 +59,9 @@ def SCDClearAreaRequest(request):
         return Response({"result":"Could not parse clear area payload, expected key %s not found " % ke }, status = status.HTTP_400_BAD_REQUEST)
     r = get_redis()
     # Convert the extent to V4D
+    # my_redis_helper = RedisHelper()
+    # my_redis_helper.delete_all_opints()
+    
     
     outline_polygon = None
     outline_circle = None    
@@ -98,10 +101,10 @@ def SCDClearAreaRequest(request):
     
     all_deletion_requests_status = []
     if all_existing_op_ints_in_area:
-        for flight_details in all_existing_op_ints_in_area:  
-            print(flight_details)
+        for flight_details in all_existing_op_ints_in_area: 
             deletion_success = False          
-            operation_id =  flight_details['operation_id']
+            print(flight_details)
+            operation_id =  flight_details['flight_id']
             op_int_details_key = 'flight_opint.'+ operation_id
             
             op_int_details = r.get(op_int_details_key)
@@ -141,6 +144,7 @@ def SCDAuthTest(request, operation_id):
         rejected_test_injection_response = TestInjectionResult(result = "Rejected", notes="An existing operational intent already exists and conflicts in space and time",operational_intent_id="")
         planned_test_injection_response = TestInjectionResult(result = "Planned", notes="Successfully created operational intent in the DSS",operational_intent_id ="")
         conflict_with_flight_test_injection_response = TestInjectionResult(result = "ConflictWithFlight", notes="Processing of operational intent has failed, flight not deconflicted",operational_intent_id ="")        
+        ready_to_fly_injection_response = TestInjectionResult(result = "ReadToFly", notes="Processing of operational intent has failed, flight not deconflicted",operational_intent_id ="")        
 
         scd_test_data = request.data
         try:
@@ -178,13 +182,13 @@ def SCDAuthTest(request, operation_id):
                     polygon_verticies.append(v)
                 outline_polygon = Polygon(vertices=polygon_verticies)
 
-            if 'outline_circle' in volume['volume'].keys():                
+            if 'outline_circle' in volume['volume'].keys():
                 circle_center =  LatLngPoint(lat = volume['volume']['outline_circle']['center']['lat'], lng = volume['volume']['outline_circle']['center']['lng'])
-                circle_radius = Radius(value =volume['volume']['outline_circle']['radius']['value'], units = volume['volume']['outline_circle']['radius']['units'])                                    
+                circle_radius = Radius(value =volume['volume']['outline_circle']['radius']['value'], units = volume['volume']['outline_circle']['radius']['units'])                     
                 outline_circle = Circle(center =circle_center, radius=circle_radius)
                 
             altitude_lower = Altitude(value = volume['volume']['altitude_lower']['value'],reference= volume['volume']['altitude_lower']['reference'], units =volume['volume']['altitude_lower']['units'])
-            altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])                        
+            altitude_upper = Altitude(value = volume['volume']['altitude_upper']['value'],reference=  volume['volume']['altitude_upper']['reference'], units =volume['volume']['altitude_upper']['units'])
             volume3D = Volume3D(outline_circle=outline_circle, outline_polygon=outline_polygon, altitude_lower = altitude_lower, altitude_upper= altitude_upper)
 
             time_start = Time(format = volume['time_start']['format'], value = volume['time_start']['value'])
@@ -193,15 +197,25 @@ def SCDAuthTest(request, operation_id):
             volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
             all_volumes.append(volume4D)
         
-        operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])   
-        # convert operational intent to GeoJSON and get bounds
+        operational_intent_data = OperationalIntentTestInjection(volumes = all_volumes, priority = operational_intent['priority'], off_nominal_volumes = operational_intent['off_nominal_volumes'], state = operational_intent['state'])
+
+        my_operational_intent_validator = dss_scd_helper.OperationalIntentValidator(operational_intent_data=operational_intent_data)
+        operational_intent_valid = my_operational_intent_validator.validate_operational_intent_test_data()
+        
+        if not operational_intent_valid:            
+            
+            return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
+                    
         test_injection_data = SCDTestInjectionDataPayload(operational_intent= operational_intent_data, flight_authorisation= f_a)
 
+        my_scd_dss_helper = dss_scd_helper.SCDOperations()    
         my_geo_json_converter = dss_scd_helper.VolumesConverter()
-        
-        
-        my_geo_json_converter.convert_volumes_to_geojson(volumes = all_volumes)
-        view_rect_bounds = my_geo_json_converter.get_bounds()
+        my_volumes_validator = dss_scd_helper.VolumesValidator()
+        volumes_valid = my_volumes_validator.validate_volumes(volumes = [volume4D])
+
+        if not volumes_valid:            
+            
+            return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
                     
         # Check flight auth data first before going to DSS
         my_serial_number_validator = UAVSerialNumberValidator(serial_number = flight_authorization_data['uas_serial_number'])
@@ -211,36 +225,44 @@ def SCDAuthTest(request, operation_id):
         is_reg_number_valid = my_reg_number_validator.is_valid()
             
         if not is_serial_number_valid:
+            
             injection_response = asdict(rejected_test_injection_response)
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
         
         if not is_reg_number_valid:            
+            
             injection_response = asdict(rejected_test_injection_response)
             return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
     
-        my_scd_dss_helper = dss_scd_helper.SCDOperations()
-    
+        my_geo_json_converter.convert_volumes_to_geojson(volumes = all_volumes)
+        view_rect_bounds = my_geo_json_converter.get_bounds()
+                    
         auth_token = my_scd_dss_helper.get_auth_token()
         if 'error' in auth_token:
             logging.error("Error in retrieving auth_token, check if the auth server is running properly, error details below")
             logging.error(auth_token['error'])    
             failed_test_injection_response.notes  
-            return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)      
+            return Response(json.loads(json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)      
             
         else: 
             op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(state = test_injection_data.operational_intent.state, volumes = test_injection_data.operational_intent.volumes, off_nominal_volumes = test_injection_data.operational_intent.off_nominal_volumes, priority = test_injection_data.operational_intent.priority)
+
             if op_int_submission.status == "success":                
                 view_r_bounds = ",".join(map(str,view_rect_bounds))
                 operational_intent_full_details = OperationalIntentStorage(bounds=view_r_bounds, start_time=one_minute_from_now_str, end_time=two_minutes_from_now_str, alt_max=50, alt_min=25, success_response = op_int_submission.dss_response, operational_intent_details= test_injection_data.operational_intent)
                 # Store flight ID 
                 flight_opint = 'flight_opint.' + str(operation_id)
+                
+                logging.info("Flight with operational intent id {flight_opint} created".format(flight_opint = str(operation_id)))
+                
                 r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
                 r.expire(name = flight_opint, time = opint_subscription_end_time)
 
                 # Store the details of the operational intent reference
                 flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(operation_id=str(operation_id), operational_intent_id=op_int_submission.operational_intent_id)
                 
-                opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id                
+                opint_flightref = 'opint_flightref.' + op_int_submission.operational_intent_id      
+                
                 r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
                 r.expire(name = opint_flightref, time = opint_subscription_end_time)
                 
@@ -257,10 +279,11 @@ def SCDAuthTest(request, operation_id):
             #     return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
             
             try: 
-                injection_response = asdict(planned_test_injection_response)  
-                    
+                injection_response = asdict(planned_test_injection_response)
+                
                 return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-            except KeyError as ke:            
+            except KeyError as ke:   
+                
                 injection_response = asdict(failed_test_injection_response)            
                 return Response(json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_400_BAD_REQUEST)
 
@@ -278,7 +301,7 @@ def SCDAuthTest(request, operation_id):
             ovn_opint = {'ovn_id':ovn,'opint_id':opint_id}              
             logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
             my_scd_dss_helper.delete_operational_intent(dss_operational_intent_ref_id=opint_id, ovn= ovn)
-            r.delete(op_int_details_key)
+            # r.delete(op_int_details_key)
 
             delete_flight_response = DeleteFlightResponse(result="Closed", notes="The flight was closed successfully by the USS and is now out of the UTM system.")
         else:
