@@ -355,12 +355,14 @@ def SCDAuthTest(request, operation_id):
                 volume=volume3D, time_start=time_start, time_end=time_end
             )
             all_volumes.append(volume4D)
+        test_state = operational_intent["state"] 
 
+        test_state = 'Accepted' if test_state == 'Activated' else test_state
         operational_intent_data = OperationalIntentTestInjection(
             volumes=all_volumes,
             priority=operational_intent["priority"],
             off_nominal_volumes=operational_intent["off_nominal_volumes"],
-            state=operational_intent["state"],
+            state=test_state,
         )
 
         my_operational_intent_validator = dss_scd_helper.OperationalIntentValidator(
@@ -371,6 +373,9 @@ def SCDAuthTest(request, operation_id):
         )
 
         if not operational_intent_valid:
+            print('1: rejected')
+            print(operational_intent['state'])
+            print('----------')
             return Response(
                 json.loads(
                     json.dumps(

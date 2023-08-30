@@ -98,6 +98,7 @@ class OperationalIntentValidator:
         state_off_nominals_ok = self.validate_operational_intent_state_off_nominals()
         operational_intent_test_data_ok.append(operational_intent_state_ok)
         operational_intent_test_data_ok.append(state_off_nominals_ok)
+        print(operational_intent_test_data_ok)
         return all(operational_intent_test_data_ok)
 
 
