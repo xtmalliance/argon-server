@@ -78,7 +78,7 @@ class OperationalIntentValidator:
 
     def validate_operational_intent_state(self):
         try:
-            assert self.operational_intent_data.state in ["Accepted", "Activated"]
+            assert self.operational_intent_data.state in ["Accepted"]
         except AssertionError as ae:
             return False
         else:
