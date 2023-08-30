@@ -126,8 +126,7 @@ def USSOpIntDetails(request, opint_id):
                 "operational_intent_reference"
             ]
             details_full = op_int_details["operational_intent_details"]
-            # Load existing opint details
-
+            # Load existing opint details            
             stored_operational_intent_id = reference_full["id"]
             stored_manager = reference_full["manager"]
             stored_uss_availability = reference_full["uss_availability"]
@@ -145,8 +144,14 @@ def USSOpIntDetails(request, opint_id):
                 format=reference_full["time_end"]["format"],
                 value=reference_full["time_end"]["value"],
             )
+            stored_volumes = details_full["volumes"]            
+            #TODO: Fix outline circle 
+            for v in stored_volumes:
+                if 'outline_circle' in v['volume'].keys():
+                    if not v['volume']['outline_circle']:
+                        v['volume'].pop('outline_circle')                    
 
-            stored_volumes = details_full["volumes"]
+
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
 
