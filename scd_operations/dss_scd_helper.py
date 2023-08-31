@@ -78,7 +78,7 @@ class OperationalIntentValidator:
 
     def validate_operational_intent_state(self):
         try:
-            assert self.operational_intent_data.state in ["Accepted"]
+            assert self.operational_intent_data.state in ["Accepted", "Activated"]
         except AssertionError as ae:
             return False
         else:
@@ -98,7 +98,6 @@ class OperationalIntentValidator:
         state_off_nominals_ok = self.validate_operational_intent_state_off_nominals()
         operational_intent_test_data_ok.append(operational_intent_state_ok)
         operational_intent_test_data_ok.append(state_off_nominals_ok)
-        print(operational_intent_test_data_ok)
         return all(operational_intent_test_data_ok)
 
 
@@ -465,9 +464,8 @@ class SCDOperations:
                         uss_base_url=o_i_r["uss_base_url"],
                         subscription_id=o_i_r["subscription_id"],
                     )
-                    if o_i_r_formatted.uss_base_url != blender_base_url:
-                        all_uss_operational_intent_details.append(o_i_r_formatted)
-
+                    # if o_i_r_formatted.uss_base_url != blender_base_url:
+                    all_uss_operational_intent_details.append(o_i_r_formatted)
             for (
                 current_uss_operational_intent_detail
             ) in all_uss_operational_intent_details:
@@ -475,175 +473,204 @@ class SCDOperations:
                 current_uss_base_url = (
                     current_uss_operational_intent_detail.uss_base_url
                 )
-                try:
-                    ext = tldextract.extract(current_uss_base_url)
-                except Exception as e:
-                    uss_audience = "localhost"
-                else:
-                    switch = {
-                        "localhost": "localhost",
-                        "internal": "host.docker.internal",
-                        "test": "local.test",
-                    }
-                    if ext.domain in [
-                        "localhost",
-                        "internal",
-                        "test",
-                    ]:  # for host.docker.internal type calls
-                        uss_audience = switch[ext.domain]
+
+                if current_uss_base_url == blender_base_url:
+                    # The opint is from Flight Blender itself
+                    # No need to query peer USS
+                    r = get_redis()
+                    opint_flightref = "opint_flightref." + str(
+                        current_uss_operational_intent_detail.id
+                    )
+                    opint_ref_raw = r.get(opint_flightref)
+                    opint_ref = json.loads(opint_ref_raw)
+                    opint_id = opint_ref["operation_id"]
+                    flight_opint = "flight_opint." + opint_id
+
+                    if r.exists(flight_opint):
+                        op_int_details_raw = r.get(flight_opint)
+                        op_int_details = json.loads(op_int_details_raw)
+                        op_int_ref = op_int_details["success_response"][
+                            "operational_intent_reference"
+                        ]
+                        op_int_det = op_int_details["operational_intent_details"]
+                    op_int_details_retrieved = True
+
+                else:  # query peer USS
+                    try:
+                        ext = tldextract.extract(current_uss_base_url)
+                    except Exception as e:
+                        uss_audience = "localhost"
                     else:
-                        if ext.suffix in (""):
-                            uss_audience = ext.domain
+                        switch = {
+                            "localhost": "localhost",
+                            "internal": "host.docker.internal",
+                            "test": "local.test",
+                        }
+                        if ext.domain in [
+                            "localhost",
+                            "internal",
+                            "test",
+                        ]:  # for host.docker.internal type calls
+                            uss_audience = switch[ext.domain]
                         else:
-                            uss_audience = ".".join(
-                                ext[:3]
-                            )  # get the subdomain, domain and suffix and create a audience and get credentials
-                uss_auth_token = self.get_auth_token(audience=uss_audience)
+                            if ext.suffix in (""):
+                                uss_audience = ext.domain
+                            else:
+                                uss_audience = ".".join(
+                                    ext[:3]
+                                )  # get the subdomain, domain and suffix and create a audience and get credentials
+                    uss_auth_token = self.get_auth_token(audience=uss_audience)
 
-                uss_headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + uss_auth_token["access_token"],
-                }
-                uss_operational_intent_url = (
-                    current_uss_base_url
-                    + "/uss/v1/operational_intents/"
-                    + current_uss_operational_intent_detail.id
-                )
-
-                try:
-                    uss_operational_intent_request = requests.get(
-                        uss_operational_intent_url, headers=uss_headers
+                    uss_headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + uss_auth_token["access_token"],
+                    }
+                    uss_operational_intent_url = (
+                        current_uss_base_url
+                        + "/uss/v1/operational_intents/"
+                        + current_uss_operational_intent_detail.id
                     )
-                except Exception as e:
-                    logger.error(
-                        "Error in getting operational intent id {uss_op_int_id} details from uss".format(
-                            uss_op_int_id=current_uss_operational_intent_detail.id
+
+                    try:
+                        uss_operational_intent_request = requests.get(
+                            uss_operational_intent_url, headers=uss_headers
                         )
-                    )
-                    logger.error("Error details %s " % e)
-                else:
-                    operational_intent_details_json = (
-                        uss_operational_intent_request.json()
-                    )
-
-                    if uss_operational_intent_request.status_code == 200:
-                        outline_polygon = None
-                        outline_circle = None
-
-                        op_int_det = operational_intent_details_json[
-                            "operational_intent"
-                        ]["details"]
-                        op_int_ref = operational_intent_details_json[
-                            "operational_intent"
-                        ]["reference"]
-                        op_int_reference: OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
-                            operational_intent_reference=op_int_ref
+                    except Exception as e:
+                        logger.error(
+                            "Error in getting operational intent id {uss_op_int_id} details from uss".format(
+                                uss_op_int_id=current_uss_operational_intent_detail.id
+                            )
+                        )
+                        op_int_details_retrieved = False
+                        logger.error("Error details %s " % e)
+                    else:
+                        # This needs to be moved back one block
+                        operational_intent_details_json = (
+                            uss_operational_intent_request.json()
                         )
 
-                        all_volumes = op_int_det["volumes"]
-                        all_v4d = []
-                        for cur_volume in all_volumes:
-                            if "outline_polygon" in cur_volume["volume"].keys():
-                                all_vertices = cur_volume["volume"]["outline_polygon"][
-                                    "vertices"
-                                ]
-                                polygon_verticies = []
-                                for vertex in all_vertices:
-                                    v = LatLngPoint(
-                                        lat=vertex["lat"], lng=vertex["lng"]
-                                    )
-                                    polygon_verticies.append(v)
+                        if uss_operational_intent_request.status_code == 200:
+                            op_int_details_retrieved = True
+                            outline_polygon = None
+                            outline_circle = None
 
-                                outline_polygon = Plgn(vertices=polygon_verticies)
+                            op_int_det = operational_intent_details_json[
+                                "operational_intent"
+                            ]["details"]
+                            op_int_ref = operational_intent_details_json[
+                                "operational_intent"
+                            ]["reference"]
 
-                            if "outline_circle" in cur_volume["volume"].keys():
+                if op_int_details_retrieved:
+                    op_int_reference: OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
+                        operational_intent_reference=op_int_ref
+                    )
+
+                    all_volumes = op_int_det["volumes"]
+                    all_v4d = []
+                    for cur_volume in all_volumes:
+                        if "outline_polygon" in cur_volume["volume"].keys():
+                            all_vertices = cur_volume["volume"]["outline_polygon"][
+                                "vertices"
+                            ]
+                            polygon_verticies = []
+                            for vertex in all_vertices:
+                                v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
+                                polygon_verticies.append(v)
+
+                            outline_polygon = Plgn(vertices=polygon_verticies)
+
+                        if "outline_circle" in cur_volume["volume"].keys():
+                            if cur_volume["volume"]["outline_circle"] is not None:
                                 circle_center = LatLngPoint(
-                                    lat=cur_volume["volume"]["outline_circle"][
-                                        "center"
-                                    ]["lat"],
-                                    lng=cur_volume["volume"]["outline_circle"][
-                                        "center"
-                                    ]["lng"],
+                                    lat=cur_volume["volume"]["outline_circle"]["center"][
+                                        "lat"
+                                    ],
+                                    lng=cur_volume["volume"]["outline_circle"]["center"][
+                                        "lng"
+                                    ],
                                 )
                                 circle_radius = Radius(
-                                    value=cur_volume["volume"]["outline_circle"][
-                                        "radius"
-                                    ]["value"],
-                                    units=cur_volume["volume"]["outline_circle"][
-                                        "radius"
-                                    ]["units"],
+                                    value=cur_volume["volume"]["outline_circle"]["radius"][
+                                        "value"
+                                    ],
+                                    units=cur_volume["volume"]["outline_circle"]["radius"][
+                                        "units"
+                                    ],
                                 )
 
                                 outline_circle = Circle(
                                     center=circle_center, radius=circle_radius
                                 )
+                            else:
+                                outline_circle = None
 
-                            altitude_lower = Altitude(
-                                value=cur_volume["volume"]["altitude_lower"]["value"],
-                                reference=cur_volume["volume"]["altitude_lower"][
-                                    "reference"
-                                ],
-                                units=cur_volume["volume"]["altitude_lower"]["units"],
-                            )
-                            altitude_upper = Altitude(
-                                value=cur_volume["volume"]["altitude_upper"]["value"],
-                                reference=cur_volume["volume"]["altitude_upper"][
-                                    "reference"
-                                ],
-                                units=cur_volume["volume"]["altitude_upper"]["units"],
-                            )
-                            volume3D = Volume3D(
-                                outline_circle=outline_circle,
-                                outline_polygon=outline_polygon,
-                                altitude_lower=altitude_lower,
-                                altitude_upper=altitude_upper,
-                            )
-
-                            time_start = Time(
-                                format=cur_volume["time_start"]["format"],
-                                value=cur_volume["time_start"]["value"],
-                            )
-                            time_end = Time(
-                                format=cur_volume["time_end"]["format"],
-                                value=cur_volume["time_end"]["value"],
-                            )
-
-                            cur_v4d = Volume4D(
-                                volume=volume3D,
-                                time_start=time_start,
-                                time_end=time_end,
-                            )
-
-                            all_v4d.append(cur_v4d)
-
-                        op_int_detail = OperationalIntentUSSDetails(
-                            volumes=all_v4d,
-                            priority=op_int_det["priority"],
-                            off_nominal_volumes=op_int_det["off_nominal_volumes"],
+                        altitude_lower = Altitude(
+                            value=cur_volume["volume"]["altitude_lower"]["value"],
+                            reference=cur_volume["volume"]["altitude_lower"][
+                                "reference"
+                            ],
+                            units=cur_volume["volume"]["altitude_lower"]["units"],
+                        )
+                        altitude_upper = Altitude(
+                            value=cur_volume["volume"]["altitude_upper"]["value"],
+                            reference=cur_volume["volume"]["altitude_upper"][
+                                "reference"
+                            ],
+                            units=cur_volume["volume"]["altitude_upper"]["units"],
+                        )
+                        volume3D = Volume3D(
+                            outline_circle=outline_circle,
+                            outline_polygon=outline_polygon,
+                            altitude_lower=altitude_lower,
+                            altitude_upper=altitude_upper,
                         )
 
-                        uss_op_int_details = OperationalIntentDetailsUSSResponse(
-                            reference=op_int_reference, details=op_int_detail
+                        time_start = Time(
+                            format=cur_volume["time_start"]["format"],
+                            value=cur_volume["time_start"]["value"],
+                        )
+                        time_end = Time(
+                            format=cur_volume["time_end"]["format"],
+                            value=cur_volume["time_end"]["value"],
                         )
 
-                        operational_intent_volumes = op_int_detail.volumes
-                        my_volume_converter = VolumesConverter()
-                        my_volume_converter.convert_volumes_to_geojson(
-                            volumes=operational_intent_volumes
+                        cur_v4d = Volume4D(
+                            volume=volume3D,
+                            time_start=time_start,
+                            time_end=time_end,
                         )
-                        minimum_rotated_rect = (
-                            my_volume_converter.get_minimum_rotated_rectangle()
-                        )
-                        cur_op_int_details = OpInttoCheckDetails(
-                            shape=minimum_rotated_rect, ovn=op_int_ref["ovn"]
-                        )
-                        all_opints_to_check.append(cur_op_int_details)
 
-                    else:
-                        logger.error(
-                            "Could not retrieve flight details from USS %s"
-                            % uss_operational_intent_request.json()
-                        )
+                        all_v4d.append(cur_v4d)
+
+                    op_int_detail = OperationalIntentUSSDetails(
+                        volumes=all_v4d,
+                        priority=op_int_det["priority"],
+                        off_nominal_volumes=op_int_det["off_nominal_volumes"],
+                    )
+
+                    uss_op_int_details = OperationalIntentDetailsUSSResponse(
+                        reference=op_int_reference, details=op_int_detail
+                    )
+
+                    operational_intent_volumes = op_int_detail.volumes
+                    my_volume_converter = VolumesConverter()
+                    my_volume_converter.convert_volumes_to_geojson(
+                        volumes=operational_intent_volumes
+                    )
+                    minimum_rotated_rect = (
+                        my_volume_converter.get_minimum_rotated_rectangle()
+                    )
+                    cur_op_int_details = OpInttoCheckDetails(
+                        shape=minimum_rotated_rect, ovn=op_int_ref["ovn"]
+                    )
+                    all_opints_to_check.append(cur_op_int_details)
+
+                else:
+                    logger.error(
+                        "Could not retrieve flight details from USS %s"
+                        % uss_operational_intent_request.json()
+                    )
 
         return all_opints_to_check
 
@@ -857,7 +884,7 @@ class SCDOperations:
                     airspace_keys.append(cur_op_int_detail.ovn)
                 deconflicted = True
             else:
-                airspace_keys.append(management_key)
+                airspace_keys.append(management_key)                
                 is_conflicted = rtree_helper.check_polygon_intersection(
                     op_int_details=all_existing_operational_intent_details,
                     polygon_to_check=ind_volumes_polygon,

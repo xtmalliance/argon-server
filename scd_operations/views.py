@@ -373,9 +373,6 @@ def SCDAuthTest(request, operation_id):
         )
 
         if not operational_intent_valid:
-            print('1: rejected')
-            print(operational_intent['state'])
-            print('----------')
             return Response(
                 json.loads(
                     json.dumps(
