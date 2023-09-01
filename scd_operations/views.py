@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 import json
 import arrow
+from typing import List
 from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
@@ -223,8 +224,15 @@ def SCDClearAreaRequest(request):
 @api_view(["PUT", "DELETE"])
 @requires_scopes(["utm.inject_test_data"])
 def SCDAuthTest(request, operation_id):
+    # This view implementes the automated verification of SCD capabilities
     r = get_redis()
     if request.method == "PUT":
+        my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
+        my_scd_dss_helper = dss_scd_helper.SCDOperations()
+        my_geo_json_converter = dss_scd_helper.VolumesConverter()
+        my_volumes_validator = dss_scd_helper.VolumesValidator()
+        
+        # Set the responses to be used
         failed_test_injection_response = TestInjectionResult(
             result="Failed",
             notes="Processing of operational intent has failed",
@@ -250,8 +258,9 @@ def SCDAuthTest(request, operation_id):
             notes="Processing of operational intent has failed, flight not deconflicted",
             operational_intent_id="",
         )
-
+        # Get the test data
         scd_test_data = request.data
+        # Prase the flight authorization data set
         try:
             flight_authorization_data = scd_test_data["flight_authorisation"]
             f_a = FlightAuthorizationDataPayload(
@@ -277,23 +286,28 @@ def SCDAuthTest(request, operation_id):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
+        # Set up initial data
         now = arrow.now()
-
+        # Create a index and see what is already in Blender
         my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(
             index_name=INDEX_NAME
         )
+        # Create a index of existing opints
         my_rtree_helper.generate_operational_intents_index(pattern="flight_opint.*")
-
+        # Initial data for subscriptions
         one_minute_from_now = now.shift(minutes=1)
         one_minute_from_now_str = one_minute_from_now.isoformat()
         two_minutes_from_now = now.shift(minutes=2)
         two_minutes_from_now_str = two_minutes_from_now.isoformat()
         opint_subscription_end_time = timedelta(seconds=180)
         # TODO use ImplicitDict for this
+        # Parse the operational intent
         try:
             operational_intent = scd_test_data["operational_intent"]
             operational_intent_volumes = operational_intent["volumes"]
+            operational_intent_off_nominal_volumes = operational_intent[
+                "off_nominal_volumes"
+            ]
         except KeyError as ke:
             return Response(
                 {
@@ -302,69 +316,30 @@ def SCDAuthTest(request, operation_id):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        all_volumes = []
+        
+        # Create a list of Volume4D objects
+        all_volumes: List[Volume4D] = []
         for volume in operational_intent_volumes:
-            outline_polygon = None
-            outline_circle = None
-            if "outline_polygon" in volume["volume"].keys():
-                all_vertices = volume["volume"]["outline_polygon"]["vertices"]
-                polygon_verticies = []
-                for vertex in all_vertices:
-                    v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
-                    polygon_verticies.append(v)
-                outline_polygon = Polygon(vertices=polygon_verticies)
+            v4D = my_operational_intent_parser.parse_volume_to_volume4D(volume = volume)
+            all_volumes.append(v4D)
 
-            if "outline_circle" in volume["volume"].keys():
-                circle_center = LatLngPoint(
-                    lat=volume["volume"]["outline_circle"]["center"]["lat"],
-                    lng=volume["volume"]["outline_circle"]["center"]["lng"],
-                )
-                circle_radius = Radius(
-                    value=volume["volume"]["outline_circle"]["radius"]["value"],
-                    units=volume["volume"]["outline_circle"]["radius"]["units"],
-                )
-                outline_circle = Circle(center=circle_center, radius=circle_radius)
+        # Create a list of Volume4D objects
+        all_off_nominal_volumes: List[Volume4D] = []
+        for off_nominal_volume in operational_intent_off_nominal_volumes:
+            v4D = my_operational_intent_parser.parse_volume_to_volume4D(volume = off_nominal_volume)
+            all_off_nominal_volumes.append(v4D)
 
-            altitude_lower = Altitude(
-                value=volume["volume"]["altitude_lower"]["value"],
-                reference=volume["volume"]["altitude_lower"]["reference"],
-                units=volume["volume"]["altitude_lower"]["units"],
-            )
-            altitude_upper = Altitude(
-                value=volume["volume"]["altitude_upper"]["value"],
-                reference=volume["volume"]["altitude_upper"]["reference"],
-                units=volume["volume"]["altitude_upper"]["units"],
-            )
-            volume3D = Volume3D(
-                outline_circle=outline_circle,
-                outline_polygon=outline_polygon,
-                altitude_lower=altitude_lower,
-                altitude_upper=altitude_upper,
-            )
-
-            time_start = Time(
-                format=volume["time_start"]["format"],
-                value=volume["time_start"]["value"],
-            )
-            time_end = Time(
-                format=volume["time_end"]["format"], value=volume["time_end"]["value"]
-            )
-
-            volume4D = Volume4D(
-                volume=volume3D, time_start=time_start, time_end=time_end
-            )
-            all_volumes.append(volume4D)
-        test_state = operational_intent["state"] 
-
-        test_state = 'Accepted' if test_state == 'Activated' else test_state
+        # Get THe state of the test data is coming in
+        test_state = operational_intent["state"]
+        # Parse the intent data and
         operational_intent_data = OperationalIntentTestInjection(
             volumes=all_volumes,
             priority=operational_intent["priority"],
-            off_nominal_volumes=operational_intent["off_nominal_volumes"],
+            off_nominal_volumes=all_off_nominal_volumes,
             state=test_state,
         )
-
+        # End parse the operational intent
+        # Begin validation of operational intent
         my_operational_intent_validator = dss_scd_helper.OperationalIntentValidator(
             operational_intent_data=operational_intent_data
         )
@@ -381,15 +356,14 @@ def SCDAuthTest(request, operation_id):
                 ),
                 status=status.HTTP_200_OK,
             )
-
+        # End validation of operational intent
+        # Set the object for SCD Test Injection
         test_injection_data = SCDTestInjectionDataPayload(
             operational_intent=operational_intent_data, flight_authorisation=f_a
         )
-
-        my_scd_dss_helper = dss_scd_helper.SCDOperations()
-        my_geo_json_converter = dss_scd_helper.VolumesConverter()
-        my_volumes_validator = dss_scd_helper.VolumesValidator()
-        volumes_valid = my_volumes_validator.validate_volumes(volumes=[volume4D])
+        volumes_valid = my_volumes_validator.validate_volumes(
+            volumes=test_injection_data.operational_intent.volumes
+        )
 
         if not volumes_valid:
             return Response(
@@ -403,10 +377,10 @@ def SCDAuthTest(request, operation_id):
 
         # Check flight auth data first before going to DSS
         my_serial_number_validator = UAVSerialNumberValidator(
-            serial_number=flight_authorization_data["uas_serial_number"]
+            serial_number=test_injection_data.flight_authorisation.uas_serial_number
         )
         my_reg_number_validator = OperatorRegistrationNumberValidator(
-            operator_registration_number=flight_authorization_data["operator_id"]
+            operator_registration_number=test_injection_data.flight_authorisation.operator_id
         )
 
         is_serial_number_valid = my_serial_number_validator.is_valid()
@@ -428,9 +402,11 @@ def SCDAuthTest(request, operation_id):
 
         my_geo_json_converter.convert_volumes_to_geojson(volumes=all_volumes)
         view_rect_bounds = my_geo_json_converter.get_bounds()
-
+        # End check flight authorization
         auth_token = my_scd_dss_helper.get_auth_token()
-        if "error" in auth_token:
+        try:
+            assert "error" not in auth_token
+        except AssertionError as e:
             logging.error(
                 "Error in retrieving auth_token, check if the auth server is running properly, error details below"
             )
@@ -442,111 +418,100 @@ def SCDAuthTest(request, operation_id):
                 ),
                 status=status.HTTP_200_OK,
             )
+        # Operational intents valid and now send to DSS
+        op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(
+            state=test_injection_data.operational_intent.state,
+            volumes=test_injection_data.operational_intent.volumes,
+            off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
+            priority=test_injection_data.operational_intent.priority,
+        )
 
-        else:
-            op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(
-                state=test_injection_data.operational_intent.state,
-                volumes=test_injection_data.operational_intent.volumes,
-                off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
-                priority=test_injection_data.operational_intent.priority,
+        if op_int_submission.status == "success":
+            # Successfully submitted to the DSS, save the operational intent in Redis
+            view_r_bounds = ",".join(map(str, view_rect_bounds))
+            operational_intent_full_details = OperationalIntentStorage(
+                bounds=view_r_bounds,
+                start_time=one_minute_from_now_str,
+                end_time=two_minutes_from_now_str,
+                alt_max=50,
+                alt_min=25,
+                success_response=op_int_submission.dss_response,
+                operational_intent_details=test_injection_data.operational_intent,
+            )
+            # Store flight DSS response and operational intent reference
+            flight_opint = "flight_opint." + str(operation_id)
+            logging.info(
+                "Flight with operational intent id {flight_opint} created".format(
+                    flight_opint=str(operation_id)
+                )
+            )
+            r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
+            r.expire(name=flight_opint, time=opint_subscription_end_time)
+
+            # Store the details of the operational intent reference
+            flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(
+                operation_id=str(operation_id),
+                operational_intent_id=op_int_submission.operational_intent_id,
+            )
+            opint_flightref = (
+                "opint_flightref." + op_int_submission.operational_intent_id
             )
 
-            if op_int_submission.status == "success":
-                view_r_bounds = ",".join(map(str, view_rect_bounds))
-                operational_intent_full_details = OperationalIntentStorage(
-                    bounds=view_r_bounds,
-                    start_time=one_minute_from_now_str,
-                    end_time=two_minutes_from_now_str,
-                    alt_max=50,
-                    alt_min=25,
-                    success_response=op_int_submission.dss_response,
-                    operational_intent_details=test_injection_data.operational_intent,
-                )
-                # Store flight ID
-                flight_opint = "flight_opint." + str(operation_id)
+            r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
+            r.expire(name=opint_flightref, time=opint_subscription_end_time)
+            # End store flight DSS
 
-                logging.info(
-                    "Flight with operational intent id {flight_opint} created".format(
-                        flight_opint=str(operation_id)
+            planned_test_injection_response.operational_intent_id = (
+                op_int_submission.operational_intent_id
+            )
+
+        elif op_int_submission.status == "conflict_with_flight":
+            # If conflict with flight is generated then no need to save response
+            conflict_with_flight_test_injection_response.operational_intent_id = (
+                op_int_submission.operational_intent_id
+            )
+            return Response(
+                json.loads(
+                    json.dumps(
+                        conflict_with_flight_test_injection_response,
+                        cls=EnhancedJSONEncoder,
                     )
-                )
+                ),
+                status=status.HTTP_200_OK,
+            )
+        else:
+            # If conflict with flight is generated then no need to save response
+            failed_test_injection_response.operational_intent_id = (
+                op_int_submission.operational_intent_id
+            )
+            return Response(
+                json.loads(
+                    json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)
+                ),
+                status=status.HTTP_200_OK,
+            )
 
-                r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
-                r.expire(name=flight_opint, time=opint_subscription_end_time)
+        if test_injection_data.operational_intent.state == "Activated":
+            return Response(
+                json.loads(
+                    json.dumps(ready_to_fly_injection_response, cls=EnhancedJSONEncoder)
+                ),
+                status=status.HTTP_200_OK,
+            )
+        else:
+            try:
+                injection_response = asdict(planned_test_injection_response)
 
-                # Store the details of the operational intent reference
-                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(
-                    operation_id=str(operation_id),
-                    operational_intent_id=op_int_submission.operational_intent_id,
-                )
-
-                opint_flightref = (
-                    "opint_flightref." + op_int_submission.operational_intent_id
-                )
-
-                r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
-                r.expire(name=opint_flightref, time=opint_subscription_end_time)
-
-                planned_test_injection_response.operational_intent_id = (
-                    op_int_submission.operational_intent_id
-                )
-            elif op_int_submission.status == "conflict_with_flight":
-                conflict_with_flight_test_injection_response.operational_intent_id = (
-                    op_int_submission.operational_intent_id
-                )
                 return Response(
-                    json.loads(
-                        json.dumps(
-                            conflict_with_flight_test_injection_response,
-                            cls=EnhancedJSONEncoder,
-                        )
-                    ),
+                    json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
                     status=status.HTTP_200_OK,
                 )
-            else:
-                failed_test_injection_response.operational_intent_id = (
-                    op_int_submission.operational_intent_id
-                )
+            except KeyError as ke:
+                injection_response = asdict(failed_test_injection_response)
                 return Response(
-                    json.loads(
-                        json.dumps(
-                            failed_test_injection_response, cls=EnhancedJSONEncoder
-                        )
-                    ),
-                    status=status.HTTP_200_OK,
+                    json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-            # else:
-            #     tmp_operational_intent_id = str(uuid.uuid4())
-            #     rejected_test_injection_response.operational_intent_id = tmp_operational_intent_id
-            #     return Response(json.loads(json.dumps(rejected_test_injection_response, cls=EnhancedJSONEncoder)), status = status.HTTP_200_OK)
-
-            if test_injection_data.operational_intent.state == "Activated":
-                return Response(
-                    json.loads(
-                        json.dumps(
-                            ready_to_fly_injection_response, cls=EnhancedJSONEncoder
-                        )
-                    ),
-                    status=status.HTTP_200_OK,
-                )
-            else:
-                try:
-                    injection_response = asdict(planned_test_injection_response)
-
-                    return Response(
-                        json.loads(
-                            json.dumps(injection_response, cls=EnhancedJSONEncoder)
-                        ),
-                        status=status.HTTP_200_OK,
-                    )
-                except KeyError as ke:
-                    injection_response = asdict(failed_test_injection_response)
-                    return Response(
-                        json.loads(
-                            json.dumps(injection_response, cls=EnhancedJSONEncoder)
-                        ),
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
 
     elif request.method == "DELETE":
         op_int_details_key = "flight_opint." + str(operation_id)

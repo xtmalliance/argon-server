@@ -245,67 +245,76 @@ class OperationalIntentReferenceHelper:
     """
     A class to parse Operational Intent References into Dataclass objects
     """
+    def parse_volume_to_volume4D(self, volume) -> Volume4D:
+        outline_polygon = None
+        outline_circle = None
+        if "outline_polygon" in volume["volume"].keys():
+            all_vertices = volume["volume"]["outline_polygon"]["vertices"]
+            polygon_verticies = []
+            for vertex in all_vertices:
+                v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
+                polygon_verticies.append(v)
+            outline_polygon = Polygon(vertices=polygon_verticies)
+
+        if "outline_circle" in volume["volume"].keys():
+            circle_center = LatLngPoint(
+                lat=volume["volume"]["outline_circle"]["center"]["lat"],
+                lng=volume["volume"]["outline_circle"]["center"]["lng"],
+            )
+            circle_radius = Radius(
+                value=volume["volume"]["outline_circle"]["radius"]["value"],
+                units=volume["volume"]["outline_circle"]["radius"]["units"],
+            )
+            outline_circle = Circle(center=circle_center, radius=circle_radius)
+
+        altitude_lower = Altitude(
+            value=volume["volume"]["altitude_lower"]["value"],
+            reference=volume["volume"]["altitude_lower"]["reference"],
+            units=volume["volume"]["altitude_lower"]["units"],
+        )
+        altitude_upper = Altitude(
+            value=volume["volume"]["altitude_upper"]["value"],
+            reference=volume["volume"]["altitude_upper"]["reference"],
+            units=volume["volume"]["altitude_upper"]["units"],
+        )
+        volume3D = Volume3D(
+            outline_circle=outline_circle,
+            outline_polygon=outline_polygon,
+            altitude_lower=altitude_lower,
+            altitude_upper=altitude_upper,
+        )
+
+        time_start = Time(
+            format=volume["time_start"]["format"],
+            value=volume["time_start"]["value"],
+        )
+        time_end = Time(
+            format=volume["time_end"]["format"], value=volume["time_end"]["value"]
+        )
+
+        volume4D = Volume4D(
+            volume=volume3D, time_start=time_start, time_end=time_end
+        )
+        return volume4D
 
     def parse_operational_intent_details(
         self, operational_intent_details, priority: int, off_nominal_volumes=None
     ) -> OperationalIntentUSSDetails:
         volumes = operational_intent_details["volumes"]
-        all_volumes = []
+        all_volumes : List[Volume4D] = []
+        all_off_nominal_volumes : List[Volume4D]  = []
         for volume in volumes:
-            outline_polygon = None
-            outline_circle = None
-            if "outline_polygon" in volume["volume"].keys():
-                all_vertices = volume["volume"]["outline_polygon"]["vertices"]
-                polygon_verticies = []
-                for vertex in all_vertices:
-                    v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
-                    polygon_verticies.append(v)
-                outline_polygon = Polygon(vertices=polygon_verticies)
+            volume4D = self.parse_volume_to_volume4D(volume = volume)
+            all_volumes.append(volume4D)
 
-            if "outline_circle" in volume["volume"].keys():
-                circle_center = LatLngPoint(
-                    lat=volume["volume"]["outline_circle"]["center"]["lat"],
-                    lng=volume["volume"]["outline_circle"]["center"]["lng"],
-                )
-                circle_radius = Radius(
-                    value=volume["volume"]["outline_circle"]["radius"]["value"],
-                    units=volume["volume"]["outline_circle"]["radius"]["units"],
-                )
-                outline_circle = Circle(center=circle_center, radius=circle_radius)
+        for off_nominal_volume in off_nominal_volumes:
+            off_nominal_volume4D =  self.parse_volume_to_volume4D(volume = off_nominal_volume)
+            all_off_nominal_volumes.append(off_nominal_volume4D)
 
-            altitude_lower = Altitude(
-                value=volume["volume"]["altitude_lower"]["value"],
-                reference=volume["volume"]["altitude_lower"]["reference"],
-                units=volume["volume"]["altitude_lower"]["units"],
-            )
-            altitude_upper = Altitude(
-                value=volume["volume"]["altitude_upper"]["value"],
-                reference=volume["volume"]["altitude_upper"]["reference"],
-                units=volume["volume"]["altitude_upper"]["units"],
-            )
-            volume3D = Volume3D(
-                outline_circle=outline_circle,
-                outline_polygon=outline_polygon,
-                altitude_lower=altitude_lower,
-                altitude_upper=altitude_upper,
-            )
-
-            time_start = Time(
-                format=volume["time_start"]["format"],
-                value=volume["time_start"]["value"],
-            )
-            time_end = Time(
-                format=volume["time_end"]["format"], value=volume["time_end"]["value"]
-            )
-
-            volume4D = Volume4D(
-                volume=volume3D, time_start=time_start, time_end=time_end
-            )
-            all_volumes.append(volume)
         o_i_d = OperationalIntentUSSDetails(
             volumes=all_volumes,
             priority=priority,
-            off_nominal_volumes=off_nominal_volumes,
+            off_nominal_volumes=all_off_nominal_volumes,
         )
         return o_i_d
 
@@ -677,88 +686,23 @@ class SCDOperations:
                     op_int_reference: OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
                         operational_intent_reference=op_int_ref
                     )
-
+                    my_opint_ref_helper = OperationalIntentReferenceHelper()
                     all_volumes = op_int_det["volumes"]
                     all_v4d = []
                     for cur_volume in all_volumes:
-                        if "outline_polygon" in cur_volume["volume"].keys():
-                            all_vertices = cur_volume["volume"]["outline_polygon"][
-                                "vertices"
-                            ]
-                            polygon_verticies = []
-                            for vertex in all_vertices:
-                                v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
-                                polygon_verticies.append(v)
-
-                            outline_polygon = Plgn(vertices=polygon_verticies)
-
-                        if "outline_circle" in cur_volume["volume"].keys():
-                            if cur_volume["volume"]["outline_circle"] is not None:
-                                circle_center = LatLngPoint(
-                                    lat=cur_volume["volume"]["outline_circle"][
-                                        "center"
-                                    ]["lat"],
-                                    lng=cur_volume["volume"]["outline_circle"][
-                                        "center"
-                                    ]["lng"],
-                                )
-                                circle_radius = Radius(
-                                    value=cur_volume["volume"]["outline_circle"][
-                                        "radius"
-                                    ]["value"],
-                                    units=cur_volume["volume"]["outline_circle"][
-                                        "radius"
-                                    ]["units"],
-                                )
-
-                                outline_circle = Circle(
-                                    center=circle_center, radius=circle_radius
-                                )
-                            else:
-                                outline_circle = None
-
-                        altitude_lower = Altitude(
-                            value=cur_volume["volume"]["altitude_lower"]["value"],
-                            reference=cur_volume["volume"]["altitude_lower"][
-                                "reference"
-                            ],
-                            units=cur_volume["volume"]["altitude_lower"]["units"],
-                        )
-                        altitude_upper = Altitude(
-                            value=cur_volume["volume"]["altitude_upper"]["value"],
-                            reference=cur_volume["volume"]["altitude_upper"][
-                                "reference"
-                            ],
-                            units=cur_volume["volume"]["altitude_upper"]["units"],
-                        )
-                        volume3D = Volume3D(
-                            outline_circle=outline_circle,
-                            outline_polygon=outline_polygon,
-                            altitude_lower=altitude_lower,
-                            altitude_upper=altitude_upper,
-                        )
-
-                        time_start = Time(
-                            format=cur_volume["time_start"]["format"],
-                            value=cur_volume["time_start"]["value"],
-                        )
-                        time_end = Time(
-                            format=cur_volume["time_end"]["format"],
-                            value=cur_volume["time_end"]["value"],
-                        )
-
-                        cur_v4d = Volume4D(
-                            volume=volume3D,
-                            time_start=time_start,
-                            time_end=time_end,
-                        )
-
+                        cur_v4d = my_opint_ref_helper.parse_volume_to_volume4D(volume=cur_volume)
                         all_v4d.append(cur_v4d)
+
+                    all_off_nominal_volumes = op_int_det["off_nominal_volumes"]
+                    all_off_nominal_v4d = []
+                    for cur_off_nominal_volume in all_off_nominal_volumes:
+                        cur_off_nominal_v4d = my_opint_ref_helper.parse_volume_to_volume4D(volume=cur_off_nominal_volume)
+                        all_off_nominal_v4d.append(cur_off_nominal_v4d)
 
                     op_int_detail = OperationalIntentUSSDetails(
                         volumes=all_v4d,
                         priority=op_int_det["priority"],
-                        off_nominal_volumes=op_int_det["off_nominal_volumes"],
+                        off_nominal_volumes=all_off_nominal_v4d,
                     )
 
                     uss_op_int_details = OperationalIntentDetailsUSSResponse(
@@ -979,7 +923,6 @@ class SCDOperations:
         all_existing_operational_intent_details = self.get_latest_airspace_volumes(
             volumes=volumes
         )
-
         if all_existing_operational_intent_details:
             logging.info(
                 "Checking deconfliction status with {num_existing_op_ints} operational intent details".format(
