@@ -246,6 +246,69 @@ class OperationalIntentReferenceHelper:
     A class to parse Operational Intent References into Dataclass objects
     """
 
+    def parse_operational_intent_details(
+        self, operational_intent_details, priority: int, off_nominal_volumes=None
+    ) -> OperationalIntentUSSDetails:
+        volumes = operational_intent_details["volumes"]
+        all_volumes = []
+        for volume in volumes:
+            outline_polygon = None
+            outline_circle = None
+            if "outline_polygon" in volume["volume"].keys():
+                all_vertices = volume["volume"]["outline_polygon"]["vertices"]
+                polygon_verticies = []
+                for vertex in all_vertices:
+                    v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
+                    polygon_verticies.append(v)
+                outline_polygon = Polygon(vertices=polygon_verticies)
+
+            if "outline_circle" in volume["volume"].keys():
+                circle_center = LatLngPoint(
+                    lat=volume["volume"]["outline_circle"]["center"]["lat"],
+                    lng=volume["volume"]["outline_circle"]["center"]["lng"],
+                )
+                circle_radius = Radius(
+                    value=volume["volume"]["outline_circle"]["radius"]["value"],
+                    units=volume["volume"]["outline_circle"]["radius"]["units"],
+                )
+                outline_circle = Circle(center=circle_center, radius=circle_radius)
+
+            altitude_lower = Altitude(
+                value=volume["volume"]["altitude_lower"]["value"],
+                reference=volume["volume"]["altitude_lower"]["reference"],
+                units=volume["volume"]["altitude_lower"]["units"],
+            )
+            altitude_upper = Altitude(
+                value=volume["volume"]["altitude_upper"]["value"],
+                reference=volume["volume"]["altitude_upper"]["reference"],
+                units=volume["volume"]["altitude_upper"]["units"],
+            )
+            volume3D = Volume3D(
+                outline_circle=outline_circle,
+                outline_polygon=outline_polygon,
+                altitude_lower=altitude_lower,
+                altitude_upper=altitude_upper,
+            )
+
+            time_start = Time(
+                format=volume["time_start"]["format"],
+                value=volume["time_start"]["value"],
+            )
+            time_end = Time(
+                format=volume["time_end"]["format"], value=volume["time_end"]["value"]
+            )
+
+            volume4D = Volume4D(
+                volume=volume3D, time_start=time_start, time_end=time_end
+            )
+            all_volumes.append(volume)
+        o_i_d = OperationalIntentUSSDetails(
+            volumes=all_volumes,
+            priority=priority,
+            off_nominal_volumes=off_nominal_volumes,
+        )
+        return o_i_d
+
     def parse_operational_intent_reference_from_dss(
         self, operational_intent_reference
     ) -> OperationalIntentReferenceDSSResponse:
@@ -273,6 +336,55 @@ class OperationalIntentReferenceHelper:
         )
 
         return op_int_reference
+
+
+class SCDTestHarnessHelper:
+    """This class is used in the SCD Test harness to include transformations"""
+
+    def __init__(self):
+        self.my_operational_intent_helper = OperationalIntentReferenceHelper()
+        self.r = get_redis()
+        self.my_volumes_converter = VolumesConverter()
+        self.my_operational_intent_comparator = rtree_helper.OperationalIntentComparisonFactory()
+        
+    def check_if_same_operational_intent_exists_in_blender(self, volumes: List[Volume4D]) -> bool:
+        all_checks: List[bool] = []
+        self.my_volumes_converter.convert_volumes_to_geojson(volumes=volumes)
+        polygon_to_check = self.my_volumes_converter.get_minimum_rotated_rectangle()
+              
+        # Get the volume to check        
+        all_opints = self.r.keys(pattern="flight_opint.*")
+        for flight_opint in all_opints:
+            stored_opint_volumes_converter = VolumesConverter()
+            op_int_details_raw = self.r.get(flight_opint)
+            op_int_details = json.loads(op_int_details_raw)
+
+            reference_full = op_int_details["success_response"][
+                "operational_intent_reference"
+            ]
+            details_full = op_int_details["operational_intent_details"]
+            # Load existing opint details
+            operational_intent_reference = self.my_operational_intent_helper.parse_operational_intent_reference_from_dss(
+                operational_intent_reference=reference_full
+            )
+            stored_priority = details_full["priority"]
+            stored_off_nominal_volumes = details_full["off_nominal_volumes"]
+            operational_intent_details = (
+                self.my_operational_intent_helper.parse_operational_intent_details(
+                    operational_intent_details=details_full,
+                    priority=stored_priority,
+                    off_nominal_volumes=stored_off_nominal_volumes,
+                )
+            )
+            stored_volumes = operational_intent_details.volumes
+            stored_opint_volumes_converter.convert_volumes_to_geojson(volumes=stored_volumes)
+            stored_volume_polygon = stored_opint_volumes_converter.get_minimum_rotated_rectangle()
+            are_polygons_same = self.my_operational_intent_comparator.check_volume_geometry_same(polygon_a= polygon_to_check, polygon_b=stored_volume_polygon)                
+            # Check if start and end times are equal
+            # Check if altitude is equal
+            all_checks.append(are_polygons_same)
+
+        return all(all_checks)
 
 
 class SCDOperations:
@@ -583,20 +695,20 @@ class SCDOperations:
                         if "outline_circle" in cur_volume["volume"].keys():
                             if cur_volume["volume"]["outline_circle"] is not None:
                                 circle_center = LatLngPoint(
-                                    lat=cur_volume["volume"]["outline_circle"]["center"][
-                                        "lat"
-                                    ],
-                                    lng=cur_volume["volume"]["outline_circle"]["center"][
-                                        "lng"
-                                    ],
+                                    lat=cur_volume["volume"]["outline_circle"][
+                                        "center"
+                                    ]["lat"],
+                                    lng=cur_volume["volume"]["outline_circle"][
+                                        "center"
+                                    ]["lng"],
                                 )
                                 circle_radius = Radius(
-                                    value=cur_volume["volume"]["outline_circle"]["radius"][
-                                        "value"
-                                    ],
-                                    units=cur_volume["volume"]["outline_circle"]["radius"][
-                                        "units"
-                                    ],
+                                    value=cur_volume["volume"]["outline_circle"][
+                                        "radius"
+                                    ]["value"],
+                                    units=cur_volume["volume"]["outline_circle"][
+                                        "radius"
+                                    ]["units"],
                                 )
 
                                 outline_circle = Circle(
@@ -862,7 +974,7 @@ class SCDOperations:
         )
         # Query other USSes for operational intent
         # Check if there are conflicts (or not)
-        logging.info("Checking flight deconfliction status")
+        logging.info("Checking flight deconfliction status...")
         # Get all operational intents in the area
         all_existing_operational_intent_details = self.get_latest_airspace_volumes(
             volumes=volumes
@@ -884,7 +996,7 @@ class SCDOperations:
                     airspace_keys.append(cur_op_int_detail.ovn)
                 deconflicted = True
             else:
-                airspace_keys.append(management_key)                
+                airspace_keys.append(management_key)
                 is_conflicted = rtree_helper.check_polygon_intersection(
                     op_int_details=all_existing_operational_intent_details,
                     polygon_to_check=ind_volumes_polygon,

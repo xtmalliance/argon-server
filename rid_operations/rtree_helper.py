@@ -4,8 +4,22 @@ from auth_helper.common import get_redis
 import json 
 from shapely.geometry import Polygon
 from rtree import index
-from scd_operations.scd_data_definitions import OpInttoCheckDetails
+from scd_operations.scd_data_definitions import OpInttoCheckDetails, Time, Altitude
 import hashlib
+
+class OperationalIntentComparisonFactory():
+    """ A method to check if two operational intents are same in geometry / time and altitude. """
+
+    def check_volume_geometry_same(self, polygon_a: Polygon, polygon_b: Polygon)->bool:
+        return polygon_a.equals(polygon_b) # Also has exact_equals and almost_equals method
+
+    def check_volume_start_end_time_same(self, time_a:Time, time_b:Time)->bool:
+        # TODO: Implement checking of two times
+        return True
+
+    def check_volume_(self, altitude_a:Altitude, altitude_b:Altitude)->bool:
+        # TODO: Implement checking of two altitudes
+        return True
 
 
 class OperationalIntentsIndexFactory():
@@ -87,7 +101,6 @@ def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon
                 does_intersect.append(False)
 
         return all(does_intersect)
-
-
     else: 
         return False
+    
