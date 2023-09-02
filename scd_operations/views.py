@@ -7,6 +7,9 @@ from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
+from scd_operations.data_definitions import FlightDeclarationCreationPayload
+from itertools import chain
+from common.data_definitions import OPERATION_STATES_LOOKUP
 from .scd_test_harness_helper import (
     conflict_with_flight_test_injection_response,
     planned_test_injection_response,
@@ -33,6 +36,7 @@ from .scd_data_definitions import (
     ClearAreaResponse,
     ClearAreaResponseOutcome,
     SuccessfulOperationalIntentFlightIDStorage,
+    OperationalIntentStorageVolumes
 )
 from . import dss_scd_helper
 from rid_operations import rtree_helper
@@ -40,10 +44,12 @@ from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
 from auth_helper.common import get_redis
 import logging
+from common.database_operations import BlenderDatabaseWriter
 from uuid import UUID
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 from auth_helper.common import RedisHelper
+from .scd_test_harness_helper import SCDTestHarnessHelper
 
 load_dotenv(find_dotenv())
 INDEX_NAME = "opint_proc"
@@ -186,6 +192,7 @@ def SCDClearAreaRequest(request):
 def SCDAuthTest(request, operation_id):
     # This view implementes the automated verification of SCD capabilities
     r = get_redis()
+    operation_id_str = str(operation_id)
     if request.method == "PUT":
         my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
@@ -340,6 +347,7 @@ def SCDAuthTest(request, operation_id):
 
         my_geo_json_converter.convert_volumes_to_geojson(volumes=all_volumes)
         view_rect_bounds = my_geo_json_converter.get_bounds()
+        view_rect_bounds_storage = ",".join([str(i) for i in view_rect_bounds])
 
         auth_token = my_scd_dss_helper.get_auth_token()
         try:
@@ -356,106 +364,135 @@ def SCDAuthTest(request, operation_id):
                 ),
                 status=status.HTTP_200_OK,
             )
-        print('+++++++++++++++++++++++++++++++++')
-        print(scd_test_data['operational_intent']['state'])
-        print('+++++++++++++++++++++++++++++++++')
-        # Operational intents valid and now send to DSS
-        op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(
-            state=test_injection_data.operational_intent.state,
-            volumes=test_injection_data.operational_intent.volumes,
-            off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
-            priority=test_injection_data.operational_intent.priority,
+
+        # Check if the operational intent is updated, if it is then update the intent
+        my_test_harness_helper = SCDTestHarnessHelper()
+        same_operational_intent_exists_in_blender = (
+            my_test_harness_helper.check_if_same_flight_id_exists(
+                operation_id=operation_id_str
+            )
         )
 
-        if op_int_submission.status == "success":
-            # Successfully submitted to the DSS, save the operational intent in Redis
-            view_r_bounds = ",".join(map(str, view_rect_bounds))
-            operational_intent_full_details = OperationalIntentStorage(
-                bounds=view_r_bounds,
-                start_time=one_minute_from_now_str,
-                end_time=two_minutes_from_now_str,
-                alt_max=50,
-                alt_min=25,
-                success_response=op_int_submission.dss_response,
-                operational_intent_details=test_injection_data.operational_intent,
-            )
-            # Store flight DSS response and operational intent reference
-            flight_opint = "flight_opint." + str(operation_id)
-            logging.info(
-                "Flight with operational intent id {flight_opint} created".format(
-                    flight_opint=str(operation_id)
-                )
-            )
-            r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
-            r.expire(name=flight_opint, time=opint_subscription_end_time)
+        # Create a flight declaration with operation id
+        my_database_writer = BlenderDatabaseWriter()
+        volumes_to_store = OperationalIntentStorageVolumes(volumes= operational_intent_data.volumes)
+                
+        flight_declaration_creation_payload = FlightDeclarationCreationPayload(id= operation_id_str, operational_intent=json.dumps(asdict(volumes_to_store)), flight_declaration_raw_geojson=json.dumps(my_geo_json_converter.geo_json), bounds = view_rect_bounds_storage, state=OPERATION_STATES_LOOKUP[test_state], aircraft_id='0000')
 
-            # Store the details of the operational intent reference
-            flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(
-                operation_id=str(operation_id),
-                operational_intent_id=op_int_submission.operational_intent_id,
-            )
-            opint_flightref = (
-                "opint_flightref." + op_int_submission.operational_intent_id
-            )
+        my_database_writer.create_flight_declaration(flight_declaration_creation=flight_declaration_creation_payload)
+        # End create flight dectiarion 
 
-            r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
-            r.expire(name=opint_flightref, time=opint_subscription_end_time)
-            # End store flight DSS
-
-            planned_test_injection_response.operational_intent_id = (
-                op_int_submission.operational_intent_id
-            )
-
-        elif op_int_submission.status == "conflict_with_flight":
-            # If conflict with flight is generated then no need to save response
-            conflict_with_flight_test_injection_response.operational_intent_id = (
-                op_int_submission.operational_intent_id
-            )
+        return Response(
+            json.loads(json.dumps(asdict(failed_test_injection_response), cls=EnhancedJSONEncoder)),
+            status=status.HTTP_200_OK,
+        )
+        if same_operational_intent_exists_in_blender and test_state =='Activated':
+            # Update the operational intent
+            # Send the update Operational Intent command to DSS
+            op_int_update_submission = my_scd_dss_helper.update_specified_operational_intent_reference()
             return Response(
                 json.loads(
                     json.dumps(
-                        conflict_with_flight_test_injection_response,
-                        cls=EnhancedJSONEncoder,
+                        ready_to_fly_injection_response, cls=EnhancedJSONEncoder
                     )
                 ),
                 status=status.HTTP_200_OK,
             )
-        else:
-            # If conflict with flight is generated then no need to save response
-            failed_test_injection_response.operational_intent_id = (
-                op_int_submission.operational_intent_id
-            )
-            return Response(
-                json.loads(
-                    json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)
-                ),
-                status=status.HTTP_200_OK,
+        else: 
+            # Operational intents valid and now send to DSS
+            op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(
+                state=test_injection_data.operational_intent.state,
+                volumes=test_injection_data.operational_intent.volumes,
+                off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
+                priority=test_injection_data.operational_intent.priority,
             )
 
-        if test_injection_data.operational_intent.state == "Activated":
-            return Response(
-                json.loads(
-                    json.dumps(ready_to_fly_injection_response, cls=EnhancedJSONEncoder)
-                ),
-                status=status.HTTP_200_OK,
-            )
-        else:
-            try:
-                injection_response = asdict(planned_test_injection_response)
+            if op_int_submission.status == "success":
+                # Successfully submitted to the DSS, save the operational intent in Redis
+                view_r_bounds = ",".join(map(str, view_rect_bounds))
+                operational_intent_full_details = OperationalIntentStorage(
+                    bounds=view_r_bounds,
+                    start_time=one_minute_from_now_str,
+                    end_time=two_minutes_from_now_str,
+                    alt_max=50,
+                    alt_min=25,
+                    success_response=op_int_submission.dss_response,
+                    operational_intent_details=test_injection_data.operational_intent,
+                )
+                # Store flight DSS response and operational intent reference
+                flight_opint = "flight_opint." + operation_id_str
+                logging.info(
+                    "Flight with operational intent id {flight_opint} created".format(
+                        flight_opint=operation_id_str
+                    )
+                )
+                r.set(flight_opint, json.dumps(asdict(operational_intent_full_details)))
+                r.expire(name=flight_opint, time=opint_subscription_end_time)
 
+                # Store the details of the operational intent reference
+                flight_op_int_storage = SuccessfulOperationalIntentFlightIDStorage(
+                    operation_id=operation_id_str,
+                    operational_intent_id=op_int_submission.operational_intent_id,
+                )
+                opint_flightref = (
+                    "opint_flightref." + op_int_submission.operational_intent_id
+                )
+
+                r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
+                r.expire(name=opint_flightref, time=opint_subscription_end_time)
+                # End store flight DSS
+
+                planned_test_injection_response.operational_intent_id = (
+                    op_int_submission.operational_intent_id
+                )
+
+            elif op_int_submission.status == "conflict_with_flight":
+                # If conflict with flight is generated then no need to save response
+                conflict_with_flight_test_injection_response.operational_intent_id = (
+                    op_int_submission.operational_intent_id
+                )
                 return Response(
-                    json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
+                    json.loads(
+                        json.dumps(
+                            conflict_with_flight_test_injection_response,
+                            cls=EnhancedJSONEncoder,
+                        )
+                    ),
                     status=status.HTTP_200_OK,
                 )
-            except KeyError as ke:
-                injection_response = asdict(failed_test_injection_response)
+            else:
+                # If conflict with flight is generated then no need to save response
+                failed_test_injection_response.operational_intent_id = (
+                    op_int_submission.operational_intent_id
+                )
                 return Response(
-                    json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
-                    status=status.HTTP_400_BAD_REQUEST,
+                    json.loads(
+                        json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)
+                    ),
+                    status=status.HTTP_200_OK,
                 )
 
+            if test_injection_data.operational_intent.state == "Activated":
+                return Response(
+                    json.loads(
+                        json.dumps(ready_to_fly_injection_response, cls=EnhancedJSONEncoder)
+                    ),
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                try:
+                    return Response(
+                        json.loads(json.dumps(asdict(planned_test_injection_response), cls=EnhancedJSONEncoder)),
+                        status=status.HTTP_200_OK,
+                    )
+                except KeyError as ke:                    
+                    return Response(
+                        json.loads(json.dumps(asdict(failed_test_injection_response), cls=EnhancedJSONEncoder)),
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
     elif request.method == "DELETE":
-        op_int_details_key = "flight_opint." + str(operation_id)
+        op_int_details_key = "flight_opint." + operation_id_str
         op_int_detail_raw = r.get(op_int_details_key)
 
         if op_int_detail_raw:
@@ -487,7 +524,7 @@ def SCDAuthTest(request, operation_id):
             delete_flight_response = DeleteFlightResponse(
                 result="Failed",
                 notes="The flight was not found in the USS, please check your flight ID %s"
-                % operation_id,
+                % operation_id_str,
             )
 
         return Response(

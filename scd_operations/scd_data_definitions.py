@@ -71,6 +71,10 @@ class Volume4D:
     time_end: StringBasedDateTime
 
 @dataclass
+class OperationalIntentStorageVolumes: 
+    volumes: List[Volume4D]
+
+@dataclass
 class OperationalIntentTestInjection:
     """Class for keeping track of an operational intent test injections"""
     volumes: List[Volume4D]

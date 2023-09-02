@@ -5,6 +5,7 @@ from uuid import uuid4
 import arrow
 from django.db.utils import IntegrityError
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from scd_operations.data_definitions import FlightDeclarationCreationPayload
 import os
 import json
 import logging
@@ -78,6 +79,15 @@ class BlenderDatabaseReader():
         
 
 class BlenderDatabaseWriter():    
+    
+    def create_flight_declaration(self, flight_declaration_creation:FlightDeclarationCreationPayload) ->bool:    
+        try:
+            flight_declaration = FlightDeclaration(id= flight_declaration_creation.id, operational_intent = flight_declaration_creation.operational_intent, flight_declaration_raw_geojson = flight_declaration_creation.flight_declaration_raw_geojson, bounds = flight_declaration_creation.bounds, aircraft_id= flight_declaration_creation.aircraft_id, state= flight_declaration_creation.state)
+            flight_declaration.save()
+            return True
+        
+        except IntegrityError as ie:
+            return False
 
     def create_flight_authorization(self, flight_declaration_id:str) ->bool:    
         try:

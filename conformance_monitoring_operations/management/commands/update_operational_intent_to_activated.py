@@ -142,7 +142,6 @@ class Command(BaseCommand):
                             subscription_id = s["subscription_id"]
                             break
                 # Create a new subscription to the airspace
-
                 operational_update_response = (
                     my_scd_dss_helper.update_specified_operational_intent_reference(
                         subscription_id=subscription_id,

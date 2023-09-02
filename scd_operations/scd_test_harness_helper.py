@@ -47,6 +47,13 @@ class SCDTestHarnessHelper:
         self.my_operational_intent_comparator = (
             rtree_helper.OperationalIntentComparisonFactory()
         )
+    def check_if_same_flight_id_exists(self, operation_id:str)-> bool:
+        r = get_redis()
+        flight_opint = "flight_opint." + operation_id
+        if r.exists(flight_opint):
+            return True
+        else: return False
+        
 
     def check_if_same_operational_intent_exists_in_blender(
         self, volumes: List[Volume4D]
@@ -94,5 +101,5 @@ class SCDTestHarnessHelper:
             # Check if start and end times are equal
             # Check if altitude is equal
             all_checks.append(are_polygons_same)
-
+        
         return all(all_checks)
