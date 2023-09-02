@@ -56,6 +56,6 @@ class RedisHelper():
         else:
             r = redis.Redis(host=self.redis_host, port=self.redis_port, charset="utf-8",decode_responses=True)
 
-        all_opints = r.keys(pattern='flight_optint.*')
+        all_opints = r.keys(pattern='flight_opint.*')        
         for opint in all_opints:
             r.delete(opint)

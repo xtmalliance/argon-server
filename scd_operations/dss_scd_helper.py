@@ -245,6 +245,7 @@ class OperationalIntentReferenceHelper:
     """
     A class to parse Operational Intent References into Dataclass objects
     """
+
     def parse_volume_to_volume4D(self, volume) -> Volume4D:
         outline_polygon = None
         outline_circle = None
@@ -254,9 +255,9 @@ class OperationalIntentReferenceHelper:
             for vertex in all_vertices:
                 v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
                 polygon_verticies.append(v)
-            outline_polygon = Polygon(vertices=polygon_verticies)
+            outline_polygon = Plgn(vertices=polygon_verticies)
 
-        if "outline_circle" in volume["volume"].keys():
+        if "outline_circle" in volume["volume"].keys() and volume["volume"]['outline_circle']:
             circle_center = LatLngPoint(
                 lat=volume["volume"]["outline_circle"]["center"]["lat"],
                 lng=volume["volume"]["outline_circle"]["center"]["lng"],
@@ -292,23 +293,23 @@ class OperationalIntentReferenceHelper:
             format=volume["time_end"]["format"], value=volume["time_end"]["value"]
         )
 
-        volume4D = Volume4D(
-            volume=volume3D, time_start=time_start, time_end=time_end
-        )
+        volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
         return volume4D
 
     def parse_operational_intent_details(
         self, operational_intent_details, priority: int, off_nominal_volumes=None
     ) -> OperationalIntentUSSDetails:
         volumes = operational_intent_details["volumes"]
-        all_volumes : List[Volume4D] = []
-        all_off_nominal_volumes : List[Volume4D]  = []
+        all_volumes: List[Volume4D] = []
+        all_off_nominal_volumes: List[Volume4D] = []
         for volume in volumes:
-            volume4D = self.parse_volume_to_volume4D(volume = volume)
+            volume4D = self.parse_volume_to_volume4D(volume=volume)
             all_volumes.append(volume4D)
 
         for off_nominal_volume in off_nominal_volumes:
-            off_nominal_volume4D =  self.parse_volume_to_volume4D(volume = off_nominal_volume)
+            off_nominal_volume4D = self.parse_volume_to_volume4D(
+                volume=off_nominal_volume
+            )
             all_off_nominal_volumes.append(off_nominal_volume4D)
 
         o_i_d = OperationalIntentUSSDetails(
@@ -345,55 +346,6 @@ class OperationalIntentReferenceHelper:
         )
 
         return op_int_reference
-
-
-class SCDTestHarnessHelper:
-    """This class is used in the SCD Test harness to include transformations"""
-
-    def __init__(self):
-        self.my_operational_intent_helper = OperationalIntentReferenceHelper()
-        self.r = get_redis()
-        self.my_volumes_converter = VolumesConverter()
-        self.my_operational_intent_comparator = rtree_helper.OperationalIntentComparisonFactory()
-        
-    def check_if_same_operational_intent_exists_in_blender(self, volumes: List[Volume4D]) -> bool:
-        all_checks: List[bool] = []
-        self.my_volumes_converter.convert_volumes_to_geojson(volumes=volumes)
-        polygon_to_check = self.my_volumes_converter.get_minimum_rotated_rectangle()
-              
-        # Get the volume to check        
-        all_opints = self.r.keys(pattern="flight_opint.*")
-        for flight_opint in all_opints:
-            stored_opint_volumes_converter = VolumesConverter()
-            op_int_details_raw = self.r.get(flight_opint)
-            op_int_details = json.loads(op_int_details_raw)
-
-            reference_full = op_int_details["success_response"][
-                "operational_intent_reference"
-            ]
-            details_full = op_int_details["operational_intent_details"]
-            # Load existing opint details
-            operational_intent_reference = self.my_operational_intent_helper.parse_operational_intent_reference_from_dss(
-                operational_intent_reference=reference_full
-            )
-            stored_priority = details_full["priority"]
-            stored_off_nominal_volumes = details_full["off_nominal_volumes"]
-            operational_intent_details = (
-                self.my_operational_intent_helper.parse_operational_intent_details(
-                    operational_intent_details=details_full,
-                    priority=stored_priority,
-                    off_nominal_volumes=stored_off_nominal_volumes,
-                )
-            )
-            stored_volumes = operational_intent_details.volumes
-            stored_opint_volumes_converter.convert_volumes_to_geojson(volumes=stored_volumes)
-            stored_volume_polygon = stored_opint_volumes_converter.get_minimum_rotated_rectangle()
-            are_polygons_same = self.my_operational_intent_comparator.check_volume_geometry_same(polygon_a= polygon_to_check, polygon_b=stored_volume_polygon)                
-            # Check if start and end times are equal
-            # Check if altitude is equal
-            all_checks.append(are_polygons_same)
-
-        return all(all_checks)
 
 
 class SCDOperations:
@@ -690,13 +642,19 @@ class SCDOperations:
                     all_volumes = op_int_det["volumes"]
                     all_v4d = []
                     for cur_volume in all_volumes:
-                        cur_v4d = my_opint_ref_helper.parse_volume_to_volume4D(volume=cur_volume)
+                        cur_v4d = my_opint_ref_helper.parse_volume_to_volume4D(
+                            volume=cur_volume
+                        )
                         all_v4d.append(cur_v4d)
 
                     all_off_nominal_volumes = op_int_det["off_nominal_volumes"]
                     all_off_nominal_v4d = []
                     for cur_off_nominal_volume in all_off_nominal_volumes:
-                        cur_off_nominal_v4d = my_opint_ref_helper.parse_volume_to_volume4D(volume=cur_off_nominal_volume)
+                        cur_off_nominal_v4d = (
+                            my_opint_ref_helper.parse_volume_to_volume4D(
+                                volume=cur_off_nominal_volume
+                            )
+                        )
                         all_off_nominal_v4d.append(cur_off_nominal_v4d)
 
                     op_int_detail = OperationalIntentUSSDetails(
