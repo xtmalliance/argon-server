@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
 from scd_operations.data_definitions import FlightDeclarationCreationPayload
-from itertools import chain
+from django.core import management
 from common.data_definitions import OPERATION_STATES_LOOKUP
 from .scd_test_harness_helper import (
     conflict_with_flight_test_injection_response,
@@ -373,23 +373,10 @@ def SCDAuthTest(request, operation_id):
             )
         )
 
-        # Create a flight declaration with operation id
-        my_database_writer = BlenderDatabaseWriter()
-        volumes_to_store = OperationalIntentStorageVolumes(volumes= operational_intent_data.volumes)
-                
-        flight_declaration_creation_payload = FlightDeclarationCreationPayload(id= operation_id_str, operational_intent=json.dumps(asdict(volumes_to_store)), flight_declaration_raw_geojson=json.dumps(my_geo_json_converter.geo_json), bounds = view_rect_bounds_storage, state=OPERATION_STATES_LOOKUP[test_state], aircraft_id='0000')
-
-        my_database_writer.create_flight_declaration(flight_declaration_creation=flight_declaration_creation_payload)
-        # End create flight dectiarion 
-
-        return Response(
-            json.loads(json.dumps(asdict(failed_test_injection_response), cls=EnhancedJSONEncoder)),
-            status=status.HTTP_200_OK,
-        )
         if same_operational_intent_exists_in_blender and test_state =='Activated':
             # Update the operational intent
             # Send the update Operational Intent command to DSS
-            op_int_update_submission = my_scd_dss_helper.update_specified_operational_intent_reference()
+            op_int_update_submission = management.call_command('update_operational_intent_to_activated', flight_declaration_id= operation_id_str, dry_run = '0')
             return Response(
                 json.loads(
                     json.dumps(
@@ -445,6 +432,16 @@ def SCDAuthTest(request, operation_id):
                 planned_test_injection_response.operational_intent_id = (
                     op_int_submission.operational_intent_id
                 )
+
+                # Create a flight declaration with operation id
+                my_database_writer = BlenderDatabaseWriter()
+                volumes_to_store = OperationalIntentStorageVolumes(volumes= operational_intent_data.volumes)
+                        
+                flight_declaration_creation_payload = FlightDeclarationCreationPayload(id= operation_id_str, operational_intent=json.dumps(asdict(volumes_to_store)), flight_declaration_raw_geojson=json.dumps(my_geo_json_converter.geo_json), bounds = view_rect_bounds_storage, state=OPERATION_STATES_LOOKUP[test_state], aircraft_id='0000')
+
+                my_database_writer.create_flight_declaration(flight_declaration_creation=flight_declaration_creation_payload)
+                # End create flight dectiarion 
+
 
             elif op_int_submission.status == "conflict_with_flight":
                 # If conflict with flight is generated then no need to save response
