@@ -85,7 +85,7 @@ class OperationalIntentValidator:
             return True
 
     def validate_operational_intent_state_off_nominals(self):
-        if self.operational_intent_data.state == "Accepted" and bool(
+        if self.operational_intent_data.state in ["Accepted", "Activated"] and bool(
             self.operational_intent_data.off_nominal_volumes
         ):
             return False

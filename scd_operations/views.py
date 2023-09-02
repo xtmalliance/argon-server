@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 import json
 import arrow
+import time
 from typing import List
 from auth_helper.utils import requires_scopes
 from rest_framework.response import Response
@@ -36,7 +37,7 @@ from .scd_data_definitions import (
     ClearAreaResponse,
     ClearAreaResponseOutcome,
     SuccessfulOperationalIntentFlightIDStorage,
-    OperationalIntentStorageVolumes
+    OperationalIntentStorageVolumes,
 )
 from . import dss_scd_helper
 from rid_operations import rtree_helper
@@ -44,7 +45,7 @@ from .utils import UAVSerialNumberValidator, OperatorRegistrationNumberValidator
 from django.http import JsonResponse
 from auth_helper.common import get_redis
 import logging
-from common.database_operations import BlenderDatabaseWriter
+from common.database_operations import BlenderDatabaseWriter, BlenderDatabaseReader
 from uuid import UUID
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -199,6 +200,8 @@ def SCDAuthTest(request, operation_id):
         my_geo_json_converter = dss_scd_helper.VolumesConverter()
         my_volumes_validator = dss_scd_helper.VolumesValidator()
 
+        my_database_writer = BlenderDatabaseWriter()
+        my_database_reader = BlenderDatabaseReader()
         # Get the test data
         scd_test_data = request.data
         # Prase the flight authorization data set
@@ -373,19 +376,26 @@ def SCDAuthTest(request, operation_id):
             )
         )
 
-        if same_operational_intent_exists_in_blender and test_state =='Activated':
+        if same_operational_intent_exists_in_blender and test_state == "Activated":
             # Update the operational intent
             # Send the update Operational Intent command to DSS
-            op_int_update_submission = management.call_command('update_operational_intent_to_activated', flight_declaration_id= operation_id_str, dry_run = '0')
+            management.call_command(
+                "update_operational_intent_to_activated",
+                flight_declaration_id=operation_id_str,
+                dry_run="0",
+            )
+            time.sleep(2)
+            flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id_str)
+            flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=flight_declaration)
+            dss_operational_intent_id = flight_authorization.dss_operational_intent_id
+            ready_to_fly_injection_response.operational_intent_id = dss_operational_intent_id
             return Response(
                 json.loads(
-                    json.dumps(
-                        ready_to_fly_injection_response, cls=EnhancedJSONEncoder
-                    )
+                    json.dumps(ready_to_fly_injection_response, cls=EnhancedJSONEncoder)
                 ),
                 status=status.HTTP_200_OK,
             )
-        else: 
+        else:
             # Operational intents valid and now send to DSS
             op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(
                 state=test_injection_data.operational_intent.state,
@@ -434,14 +444,27 @@ def SCDAuthTest(request, operation_id):
                 )
 
                 # Create a flight declaration with operation id
-                my_database_writer = BlenderDatabaseWriter()
-                volumes_to_store = OperationalIntentStorageVolumes(volumes= operational_intent_data.volumes)
-                        
-                flight_declaration_creation_payload = FlightDeclarationCreationPayload(id= operation_id_str, operational_intent=json.dumps(asdict(volumes_to_store)), flight_declaration_raw_geojson=json.dumps(my_geo_json_converter.geo_json), bounds = view_rect_bounds_storage, state=OPERATION_STATES_LOOKUP[test_state], aircraft_id='0000')
+                volumes_to_store = OperationalIntentStorageVolumes(
+                    volumes=operational_intent_data.volumes
+                )
 
-                my_database_writer.create_flight_declaration(flight_declaration_creation=flight_declaration_creation_payload)
-                # End create flight dectiarion 
+                flight_declaration_creation_payload = FlightDeclarationCreationPayload(
+                    id=operation_id_str,
+                    operational_intent=json.dumps(asdict(volumes_to_store)),
+                    flight_declaration_raw_geojson=json.dumps(
+                        my_geo_json_converter.geo_json
+                    ),
+                    bounds=view_rect_bounds_storage,
+                    state=OPERATION_STATES_LOOKUP[test_state],
+                    aircraft_id="0000",
+                )
 
+                my_database_writer.create_flight_declaration(
+                    flight_declaration_creation=flight_declaration_creation_payload
+                )
+                flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id_str)
+                flight_authorization = my_database_writer.create_flight_authorization_with_submitted_operational_intent(flight_declaration=flight_declaration, dss_operational_intent_id=op_int_submission.operational_intent_id)
+                # End create flight dectiarion
 
             elif op_int_submission.status == "conflict_with_flight":
                 # If conflict with flight is generated then no need to save response
@@ -464,7 +487,9 @@ def SCDAuthTest(request, operation_id):
                 )
                 return Response(
                     json.loads(
-                        json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)
+                        json.dumps(
+                            failed_test_injection_response, cls=EnhancedJSONEncoder
+                        )
                     ),
                     status=status.HTTP_200_OK,
                 )
@@ -472,19 +497,31 @@ def SCDAuthTest(request, operation_id):
             if test_injection_data.operational_intent.state == "Activated":
                 return Response(
                     json.loads(
-                        json.dumps(ready_to_fly_injection_response, cls=EnhancedJSONEncoder)
+                        json.dumps(
+                            ready_to_fly_injection_response, cls=EnhancedJSONEncoder
+                        )
                     ),
                     status=status.HTTP_200_OK,
                 )
             else:
                 try:
                     return Response(
-                        json.loads(json.dumps(asdict(planned_test_injection_response), cls=EnhancedJSONEncoder)),
+                        json.loads(
+                            json.dumps(
+                                asdict(planned_test_injection_response),
+                                cls=EnhancedJSONEncoder,
+                            )
+                        ),
                         status=status.HTTP_200_OK,
                     )
-                except KeyError as ke:                    
+                except KeyError as ke:
                     return Response(
-                        json.loads(json.dumps(asdict(failed_test_injection_response), cls=EnhancedJSONEncoder)),
+                        json.loads(
+                            json.dumps(
+                                asdict(failed_test_injection_response),
+                                cls=EnhancedJSONEncoder,
+                            )
+                        ),
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 

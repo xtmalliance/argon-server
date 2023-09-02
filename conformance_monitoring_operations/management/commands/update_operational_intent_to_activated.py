@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand, CommandError
 from os import environ as env
 from common.database_operations import BlenderDatabaseReader
 from common.data_definitions import OPERATION_STATES
-import arrow
 from dotenv import load_dotenv, find_dotenv
 import logging
 from auth_helper.common import get_redis
@@ -14,15 +13,11 @@ from scd_operations.scd_data_definitions import (
     ImplicitSubscriptionParameters,
 )
 
-
 load_dotenv(find_dotenv())
-
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
-
 logger = logging.getLogger("django")
-
 
 class Command(BaseCommand):
     help = "This command clears the operation in the DSS after the state has been set to ended."
@@ -61,7 +56,6 @@ class Command(BaseCommand):
         # Get the flight declaration
 
         my_database_reader = BlenderDatabaseReader()
-        now = arrow.now().isoformat()
 
         flight_declaration = my_database_reader.get_flight_declaration_by_id(
             flight_declaration_id=flight_declaration_id

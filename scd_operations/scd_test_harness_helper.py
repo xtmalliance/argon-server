@@ -31,11 +31,10 @@ conflict_with_flight_test_injection_response = TestInjectionResult(
     operational_intent_id="",
 )
 ready_to_fly_injection_response = TestInjectionResult(
-    result="ReadToFly",
-    notes="Processing of operational intent has failed, flight not deconflicted",
+    result="ReadyToFly",
+    notes="Processing of operational intent succeeded, flight is activated",
     operational_intent_id="",
 )
-
 
 class SCDTestHarnessHelper:
     """This class is used in the SCD Test harness to include transformations"""
