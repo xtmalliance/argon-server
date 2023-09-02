@@ -18,13 +18,12 @@ from .uss_data_definitions import (
     OperatorDetailsSuccessResponse,
     FlightDetailsNotFoundMessage,
     UpdateChangedOpIntDetailsPost,
-)
-from scd_operations.scd_data_definitions import (
     OperationalIntentDetailsUSSResponse,
     OperationalIntentUSSDetails,
     OperationalIntentReferenceDSSResponse,
-    Time,
+    Time
 )
+
 from rid_operations.rid_utils import (
     RIDAuthData,
     RIDAircraftPosition,
@@ -70,18 +69,14 @@ def USSUpdateOpIntDetails(request):
     # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
 
     op_int_update_details_data = request.data
-
+    r = get_redis()    
     op_int_update_detail = from_dict(
         data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data
     )
-
     # Write the operational Intent
-    opint_id = op_int_update_detail.operationaal_intent_id
-
-    opint_flightref = "opint_flightref." + str(opint_id)
-
+    operation_id_str = op_int_update_detail.operational_intent_id
+    op_int_details_key = "flight_opint." + operation_id_str
     # Read the new operational intent
-
     # Store the opint, see what other operations conflict the opint
 
     updated_success = UpdateOperationalIntent(

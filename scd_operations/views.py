@@ -89,6 +89,7 @@ def SCDTestCapabilities(request):
         capabilities=[
             "BasicStrategicConflictDetection",
             "FlightAuthorisationValidation",
+            "HighPriorityFlights"
         ]
     )
     return JsonResponse(
@@ -528,7 +529,7 @@ def SCDAuthTest(request, operation_id):
     elif request.method == "DELETE":
         op_int_details_key = "flight_opint." + operation_id_str
         op_int_detail_raw = r.get(op_int_details_key)
-
+        my_database_writer = BlenderDatabaseWriter()
         if op_int_detail_raw:
             my_scd_dss_helper = dss_scd_helper.SCDOperations()
             op_int_detail = json.loads(op_int_detail_raw)
@@ -548,7 +549,8 @@ def SCDAuthTest(request, operation_id):
             my_scd_dss_helper.delete_operational_intent(
                 dss_operational_intent_ref_id=opint_id, ovn=ovn
             )
-            # r.delete(op_int_details_key)
+            r.delete(op_int_details_key)
+            my_database_writer.delete_flight_declaration(flight_declaration_id=operation_id_str)
 
             delete_flight_response = DeleteFlightResponse(
                 result="Closed",

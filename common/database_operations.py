@@ -79,7 +79,16 @@ class BlenderDatabaseReader():
         
 
 class BlenderDatabaseWriter():    
-    
+    def delete_flight_declaration(self, flight_declaration_id: str)->bool:
+        try:
+            flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
+            flight_declaration.delete()
+            return True
+        except FlightDeclaration.DoesNotExist: 
+            return False
+        except IntegrityError as ie:
+            return False
+
     def create_flight_declaration(self, flight_declaration_creation:FlightDeclarationCreationPayload) ->bool:    
         try:
             flight_declaration = FlightDeclaration(id= flight_declaration_creation.id, operational_intent = flight_declaration_creation.operational_intent, flight_declaration_raw_geojson = flight_declaration_creation.flight_declaration_raw_geojson, bounds = flight_declaration_creation.bounds, aircraft_id= flight_declaration_creation.aircraft_id, state= flight_declaration_creation.state)

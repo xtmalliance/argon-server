@@ -162,7 +162,7 @@ class SCDTestStatusResponse:
 
 @dataclass
 class CapabilitiesResponse:
-    capabilities: List[Literal[USSCapabilitiesResponseEnum.BasicStrategicConflictDetection, USSCapabilitiesResponseEnum.FlightAuthorisationValidation]]
+    capabilities: List[Literal[USSCapabilitiesResponseEnum.BasicStrategicConflictDetection, USSCapabilitiesResponseEnum.FlightAuthorisationValidation,USSCapabilitiesResponseEnum.HighPriorityFlights]]
     
 
 @dataclass
@@ -221,7 +221,7 @@ class OperationalIntentReferenceDSSResponse:
     uss_availability: str
     version: int
     state: Literal[OperationalIntentState.Accepted,OperationalIntentState.Activated,OperationalIntentState.Nonconforming,OperationalIntentState.Contingent]
-    ovn: uuid4 
+    ovn: str 
     time_start: Time
     time_end: Time
     uss_base_url: str
