@@ -380,31 +380,44 @@ def SCDAuthTest(request, operation_id):
         if same_operational_intent_exists_in_blender and test_state == "Activated":
             # Update the operational intent
             # Send the update Operational Intent command to DSS
-            management.call_command(
-                "update_operational_intent_to_activated",
-                flight_declaration_id=operation_id_str,
-                dry_run="0",
-            )
-            time.sleep(2)
+            # Check updated airspace for flight that is accepted before activated
+
+            # Get the detail of the existing / stored operational intent 
+
+            # management.call_command(
+            #     "update_operational_intent_to_activated",
+            #     flight_declaration_id=operation_id_str,
+            #     dry_run="0",
+            # )
+            # time.sleep(2)
             flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id_str)
             flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=flight_declaration)
             dss_operational_intent_id = flight_authorization.dss_operational_intent_id
+            stored_operational_intent_details = my_operational_intent_parser.parse_and_load_stored_flight_opint(operation_id= operation_id_str)
+            print(stored_operational_intent_details)
+            update_operational_intent = my_scd_dss_helper.update_specified_operational_intent_reference(operational_intent_ref_id=stored_operational_intent_details.reference.id, extents = test_injection_data.operational_intent.volumes, new_state=test_state,ovn = stored_operational_intent_details.reference.ovn, subscription_id=None, get_airspace_keys=True )
+
             ready_to_fly_injection_response.operational_intent_id = dss_operational_intent_id
-            return Response(
-                json.loads(
-                    json.dumps(ready_to_fly_injection_response, cls=EnhancedJSONEncoder)
-                ),
-                status=status.HTTP_200_OK,
-            )
+            print('***************************')   
+            print(update_operational_intent)             
+            print('---------------------------')   
+            if update_operational_intent.status in [200, 200]:
+                return Response(
+                    json.loads(
+                        json.dumps(ready_to_fly_injection_response, cls=EnhancedJSONEncoder)
+                    ),
+                    status=status.HTTP_200_OK,
+                )
         else:
             # Operational intents valid and now send to DSS
+
             op_int_submission = my_scd_dss_helper.create_and_submit_operational_intent_reference(
                 state=test_injection_data.operational_intent.state,
                 volumes=test_injection_data.operational_intent.volumes,
                 off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
                 priority=test_injection_data.operational_intent.priority,
             )
-
+            
             if op_int_submission.status == "success":
                 # Successfully submitted to the DSS, save the operational intent in Redis
                 view_r_bounds = ",".join(map(str, view_rect_bounds))
@@ -496,6 +509,8 @@ def SCDAuthTest(request, operation_id):
                 )
 
             if test_injection_data.operational_intent.state == "Activated":
+                print('&&&&&&&&&&&&&&&&&&&&&')                
+                
                 return Response(
                     json.loads(
                         json.dumps(
