@@ -65,3 +65,7 @@ services:
 volumes:
   app:
   db_data:
+
+networks:
+  interop_ecosystem_network:
+    external: true
