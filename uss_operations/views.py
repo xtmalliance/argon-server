@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from auth_helper.utils import requires_scopes
 from dataclasses import asdict, is_dataclass
 import rid_operations.view_port_ops as view_port_ops
-
+from datetime import timedelta
 # Create your views here.
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -23,6 +23,7 @@ from .uss_data_definitions import (
     OperationalIntentReferenceDSSResponse,
     Time
 )
+from scd_operations.scd_data_definitions import OperationalIntentStorage
 
 from rid_operations.rid_utils import (
     RIDAuthData,
@@ -67,7 +68,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 def USSUpdateOpIntDetails(request):
     # TODO: Process changing of updated operational intent
     # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
-
+    opint_subscription_end_time = timedelta(seconds=180)
     op_int_update_details_data = request.data
     r = get_redis()    
     op_int_update_detail = from_dict(
@@ -76,6 +77,22 @@ def USSUpdateOpIntDetails(request):
     # Write the operational Intent
     operation_id_str = op_int_update_detail.operational_intent_id
     op_int_details_key = "flight_opint." + operation_id_str
+
+
+
+    # operational_intent_full_details = OperationalIntentStorage(
+    #     bounds=view_r_bounds,
+    #     start_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[0].time_start)),
+    #     end_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[0].time_end)),
+    #     alt_max=50,
+    #     alt_min=25,
+    #     success_response=op_int_submission.dss_response,
+    #     operational_intent_details=op_int_update_detail.operational_intent,
+    # )
+    
+    # r.set(op_int_details_key, json.dumps(asdict(operational_intent_full_details)))
+    # r.expire(name=op_int_details_key, time=opint_subscription_end_time)
+
     # Read the new operational intent
     # Store the opint, see what other operations conflict the opint
     

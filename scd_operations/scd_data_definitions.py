@@ -365,3 +365,4 @@ class SuccessfulOperationalIntentFlightIDStorage:
 class OpInttoCheckDetails:
     ovn: str
     shape: Polygon
+    id: str
