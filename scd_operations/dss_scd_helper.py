@@ -2,6 +2,7 @@ import uuid
 from auth_helper.common import get_redis
 import json
 import requests
+import arrow
 import logging
 from dataclasses import asdict
 from typing import List, Optional
@@ -45,6 +46,7 @@ from .scd_data_definitions import (
     NotifyPeerUSSPostPayload,
     USSNotificationResponse,
     OperationalIntentUpdateErrorResponse,
+    OperationalIntentTestInjection,
 )
 from .scd_data_definitions import Polygon as Plgn
 import tldextract
@@ -68,6 +70,71 @@ def is_time_within_time_period(
     else:
         # Over midnight:
         return time_to_check >= start_time or time_to_check <= end_time
+
+
+class OperationalIntentValidator:
+    def __init__(self, operational_intent_data: OperationalIntentTestInjection):
+        self.operational_intent_data = operational_intent_data
+
+    def validate_operational_intent_state(self):
+        try:
+            assert self.operational_intent_data.state in ["Accepted", "Activated"]
+        except AssertionError as ae:
+            return False
+        else:
+            return True
+
+    def validate_operational_intent_state_off_nominals(self):
+        if self.operational_intent_data.state in ["Accepted", "Activated"] and bool(
+            self.operational_intent_data.off_nominal_volumes
+        ):
+            return False
+        else:
+            return True
+
+    def validate_operational_intent_test_data(self) -> bool:
+        operational_intent_test_data_ok = []
+        operational_intent_state_ok = self.validate_operational_intent_state()
+        state_off_nominals_ok = self.validate_operational_intent_state_off_nominals()
+        operational_intent_test_data_ok.append(operational_intent_state_ok)
+        operational_intent_test_data_ok.append(state_off_nominals_ok)
+        return all(operational_intent_test_data_ok)
+
+
+class VolumesValidator:
+    def validate_volume_start_end_date(self, volume: Volume4D) -> bool:
+        now = arrow.now()
+        thirty_days_from_now = now.shift(days=30)
+        volume_start_datetime = arrow.get(volume.time_start.value)
+        # volume_end_datetime = arrow.get(volume.time_end)
+
+        if volume_start_datetime > thirty_days_from_now:
+            return False
+        else:
+            return True
+
+    def validate_polygon_vertices(self, volume: Volume4D) -> bool:
+        v = asdict(volume)
+        cur_volume = v["volume"]
+        if "outline_polygon" in cur_volume.keys():
+            outline_polygon = cur_volume["outline_polygon"]
+            if outline_polygon:
+                total_vertices = len(outline_polygon["vertices"])
+                # Check the vertices is at least 3
+                if total_vertices < 3:
+                    return False
+        return True
+
+    def validate_volumes(self, volumes: List[Volume4D]) -> bool:
+        all_volumes_ok = []
+        for volume in volumes:
+            volume_validated = self.validate_polygon_vertices(volume)
+            volume_start_end_time_validated = self.validate_volume_start_end_date(
+                volume
+            )
+            all_volumes_ok.append(volume_validated)
+            all_volumes_ok.append(volume_start_end_time_validated)
+        return all(all_volumes_ok)
 
 
 class VolumesConverter:
@@ -132,7 +199,6 @@ class VolumesConverter:
         v = asdict(volume)
         cur_volume = v["volume"]
         geo_json_features = []
-
         if "outline_polygon" in cur_volume.keys():
             outline_polygon = cur_volume["outline_polygon"]
             if outline_polygon:
@@ -179,6 +245,154 @@ class OperationalIntentReferenceHelper:
     """
     A class to parse Operational Intent References into Dataclass objects
     """
+
+    def parse_and_load_stored_flight_opint(
+        self, operation_id: str
+    ) -> Optional[OperationalIntentDetailsUSSResponse]:
+        """
+        Given a stored flight operational intent, get the details of the operational intent
+        """
+        r = get_redis()
+        flight_opint = "flight_opint." + str(operation_id)
+        if r.exists(flight_opint):
+            op_int_details_raw = r.get(flight_opint)
+            op_int_details = json.loads(op_int_details_raw)
+            reference_full = op_int_details["success_response"][
+                "operational_intent_reference"
+            ]
+            # dss_response_subscribers = op_int_details["success_response"]["subscribers"]
+            # blender_base_url = env.get("BLENDER_FQDN", 0)
+        
+            # for subscriber in dss_response_subscribers:
+            #     subscriptions = subscriber["subscriptions"]
+            #     uss_base_url = subscriber["uss_base_url"]
+            #     if blender_base_url == uss_base_url:
+            #         for s in subscriptions:
+            #             subscription_id = s["subscription_id"]
+            #             break
+            details_full = op_int_details["operational_intent_details"]
+            # Load existing opint details
+
+            stored_operational_intent_id = reference_full["id"]
+            stored_manager = reference_full["manager"]
+            stored_uss_availability = reference_full["uss_availability"]
+            stored_version = reference_full["version"]
+            stored_state = reference_full["state"]
+            stored_ovn = reference_full["ovn"]
+            stored_uss_base_url = reference_full["uss_base_url"]
+            stored_subscription_id = reference_full["subscription_id"]
+
+            stored_time_start = Time(
+                format=reference_full["time_start"]["format"],
+                value=reference_full["time_start"]["value"],
+            )
+            stored_time_end = Time(
+                format=reference_full["time_end"]["format"],
+                value=reference_full["time_end"]["value"],
+            )
+
+            stored_priority = details_full["priority"]
+            stored_off_nominal_volumes = details_full["off_nominal_volumes"]
+
+            details = self.parse_operational_intent_details(
+                operational_intent_details=details_full,
+                priority=stored_priority,
+                off_nominal_volumes=stored_off_nominal_volumes,
+            )
+
+            reference = OperationalIntentReferenceDSSResponse(
+                id=stored_operational_intent_id,
+                manager=stored_manager,
+                uss_availability=stored_uss_availability,
+                version=stored_version,
+                state=stored_state,
+                ovn=stored_ovn,
+                time_start=stored_time_start,
+                time_end=stored_time_end,
+                uss_base_url=stored_uss_base_url,
+                subscription_id=stored_subscription_id,
+            )
+            return OperationalIntentDetailsUSSResponse(
+                details=details, reference=reference
+            )
+
+        return None
+
+    def parse_volume_to_volume4D(self, volume) -> Volume4D:
+        outline_polygon = None
+        outline_circle = None
+        if "outline_polygon" in volume["volume"].keys():
+            all_vertices = volume["volume"]["outline_polygon"]["vertices"]
+            polygon_verticies = []
+            for vertex in all_vertices:
+                v = LatLngPoint(lat=vertex["lat"], lng=vertex["lng"])
+                polygon_verticies.append(v)
+            outline_polygon = Plgn(vertices=polygon_verticies)
+
+        if (
+            "outline_circle" in volume["volume"].keys()
+            and volume["volume"]["outline_circle"]
+        ):
+            circle_center = LatLngPoint(
+                lat=volume["volume"]["outline_circle"]["center"]["lat"],
+                lng=volume["volume"]["outline_circle"]["center"]["lng"],
+            )
+            circle_radius = Radius(
+                value=volume["volume"]["outline_circle"]["radius"]["value"],
+                units=volume["volume"]["outline_circle"]["radius"]["units"],
+            )
+            outline_circle = Circle(center=circle_center, radius=circle_radius)
+
+        altitude_lower = Altitude(
+            value=volume["volume"]["altitude_lower"]["value"],
+            reference=volume["volume"]["altitude_lower"]["reference"],
+            units=volume["volume"]["altitude_lower"]["units"],
+        )
+        altitude_upper = Altitude(
+            value=volume["volume"]["altitude_upper"]["value"],
+            reference=volume["volume"]["altitude_upper"]["reference"],
+            units=volume["volume"]["altitude_upper"]["units"],
+        )
+        volume3D = Volume3D(
+            outline_circle=outline_circle,
+            outline_polygon=outline_polygon,
+            altitude_lower=altitude_lower,
+            altitude_upper=altitude_upper,
+        )
+
+        time_start = Time(
+            format=volume["time_start"]["format"],
+            value=volume["time_start"]["value"],
+        )
+        time_end = Time(
+            format=volume["time_end"]["format"], value=volume["time_end"]["value"]
+        )
+
+        volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
+        return volume4D
+
+    def parse_operational_intent_details(
+        self, operational_intent_details, priority: int, off_nominal_volumes=None
+    ) -> OperationalIntentUSSDetails:
+        volumes = operational_intent_details["volumes"]
+        all_volumes: List[Volume4D] = []
+        all_off_nominal_volumes: List[Volume4D] = []
+        for volume in volumes:
+            volume4D = self.parse_volume_to_volume4D(volume=volume)
+            all_volumes.append(volume4D)
+
+        for off_nominal_volume in off_nominal_volumes:
+            off_nominal_volume4D = self.parse_volume_to_volume4D(
+                volume=off_nominal_volume
+            )
+            all_off_nominal_volumes.append(off_nominal_volume4D)
+
+        o_i_d = OperationalIntentUSSDetails(
+            volumes=all_volumes,
+            priority=priority,
+            off_nominal_volumes=all_off_nominal_volumes,
+        )
+        return o_i_d
 
     def parse_operational_intent_reference_from_dss(
         self, operational_intent_reference
@@ -398,9 +612,8 @@ class SCDOperations:
                         uss_base_url=o_i_r["uss_base_url"],
                         subscription_id=o_i_r["subscription_id"],
                     )
-                    if o_i_r_formatted.uss_base_url != blender_base_url:
-                        all_uss_operational_intent_details.append(o_i_r_formatted)
-
+                    # if o_i_r_formatted.uss_base_url != blender_base_url:
+                    all_uss_operational_intent_details.append(o_i_r_formatted)
             for (
                 current_uss_operational_intent_detail
             ) in all_uss_operational_intent_details:
@@ -408,176 +621,145 @@ class SCDOperations:
                 current_uss_base_url = (
                     current_uss_operational_intent_detail.uss_base_url
                 )
-                try:
-                    ext = tldextract.extract(current_uss_base_url)
-                except Exception as e:
-                    uss_audience = "localhost"
-                else:
-                    switch = {
-                        "localhost": "localhost",
-                        "internal": "host.docker.internal",
-                        "test": "local.test",
-                    }
-                    if ext.domain in [
-                        "localhost",
-                        "internal",
-                        "test",
-                    ]:  # for host.docker.internal type calls
-                        uss_audience = switch[ext.domain]
+
+                if current_uss_base_url == blender_base_url:
+                    # The opint is from Flight Blender itself
+                    # No need to query peer USS
+                    r = get_redis()
+                    opint_flightref = "opint_flightref." + str(
+                        current_uss_operational_intent_detail.id
+                    )
+                    opint_ref_raw = r.get(opint_flightref)
+                    opint_ref = json.loads(opint_ref_raw)
+                    opint_id = opint_ref["operation_id"]
+                    flight_opint = "flight_opint." + opint_id
+
+                    if r.exists(flight_opint):
+                        op_int_details_raw = r.get(flight_opint)
+                        op_int_details = json.loads(op_int_details_raw)
+                        op_int_ref = op_int_details["success_response"][
+                            "operational_intent_reference"
+                        ]
+                        op_int_det = op_int_details["operational_intent_details"]
+                    op_int_details_retrieved = True
+
+                else:  # query peer USS
+                    try:
+                        ext = tldextract.extract(current_uss_base_url)
+                    except Exception as e:
+                        uss_audience = "localhost"
                     else:
-                        if ext.suffix in (""):
-                            uss_audience = ext.domain
+                        switch = {
+                            "localhost": "localhost",
+                            "internal": "host.docker.internal",
+                            "test": "local.test",
+                        }
+                        if ext.domain in [
+                            "localhost",
+                            "internal",
+                            "test",
+                        ]:  # for host.docker.internal type calls
+                            uss_audience = switch[ext.domain]
                         else:
-                            uss_audience = ".".join(
-                                ext[:3]
-                            )  # get the subdomain, domain and suffix and create a audience and get credentials
-                uss_auth_token = self.get_auth_token(audience=uss_audience)
+                            if ext.suffix in (""):
+                                uss_audience = ext.domain
+                            else:
+                                uss_audience = ".".join(
+                                    ext[:3]
+                                )  # get the subdomain, domain and suffix and create a audience and get credentials
+                    uss_auth_token = self.get_auth_token(audience=uss_audience)
 
-                uss_headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + uss_auth_token["access_token"],
-                }
-                uss_operational_intent_url = (
-                    current_uss_base_url
-                    + "/uss/v1/operational_intents/"
-                    + current_uss_operational_intent_detail.id
-                )
-
-                try:
-                    uss_operational_intent_request = requests.get(
-                        uss_operational_intent_url, headers=uss_headers
-                    )
-                except Exception as e:
-                    logger.error(
-                        "Error in getting operational intent id {uss_op_int_id} details from uss".format(
-                            uss_op_int_id=current_uss_operational_intent_detail.id
-                        )
-                    )
-                    logger.error("Error details %s " % e)
-                else:
-                    operational_intent_details_json = (
-                        uss_operational_intent_request.json()
+                    uss_headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + uss_auth_token["access_token"],
+                    }
+                    uss_operational_intent_url = (
+                        current_uss_base_url
+                        + "/uss/v1/operational_intents/"
+                        + current_uss_operational_intent_detail.id
                     )
 
-                    if uss_operational_intent_request.status_code == 200:
-                        outline_polygon = None
-                        outline_circle = None
-
-                        op_int_det = operational_intent_details_json[
-                            "operational_intent"
-                        ]["details"]
-                        op_int_ref = operational_intent_details_json[
-                            "operational_intent"
-                        ]["reference"]
-                        op_int_reference: OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
-                            operational_intent_reference=op_int_ref
+                    try:
+                        uss_operational_intent_request = requests.get(
+                            uss_operational_intent_url, headers=uss_headers
                         )
-
-                        all_volumes = op_int_det["volumes"]
-                        all_v4d = []
-                        for cur_volume in all_volumes:
-                            if "outline_polygon" in cur_volume["volume"].keys():
-                                all_vertices = cur_volume["volume"]["outline_polygon"][
-                                    "vertices"
-                                ]
-                                polygon_verticies = []
-                                for vertex in all_vertices:
-                                    v = LatLngPoint(
-                                        lat=vertex["lat"], lng=vertex["lng"]
-                                    )
-                                    polygon_verticies.append(v)
-
-                                outline_polygon = Plgn(vertices=polygon_verticies)
-
-                            if "outline_circle" in cur_volume["volume"].keys():
-                                circle_center = LatLngPoint(
-                                    lat=cur_volume["volume"]["outline_circle"][
-                                        "center"
-                                    ]["lat"],
-                                    lng=cur_volume["volume"]["outline_circle"][
-                                        "center"
-                                    ]["lng"],
-                                )
-                                circle_radius = Radius(
-                                    value=cur_volume["volume"]["outline_circle"][
-                                        "radius"
-                                    ]["value"],
-                                    units=cur_volume["volume"]["outline_circle"][
-                                        "radius"
-                                    ]["units"],
-                                )
-
-                                outline_circle = Circle(
-                                    center=circle_center, radius=circle_radius
-                                )
-
-                            altitude_lower = Altitude(
-                                value=cur_volume["volume"]["altitude_lower"]["value"],
-                                reference=cur_volume["volume"]["altitude_lower"][
-                                    "reference"
-                                ],
-                                units=cur_volume["volume"]["altitude_lower"]["units"],
-                            )
-                            altitude_upper = Altitude(
-                                value=cur_volume["volume"]["altitude_upper"]["value"],
-                                reference=cur_volume["volume"]["altitude_upper"][
-                                    "reference"
-                                ],
-                                units=cur_volume["volume"]["altitude_upper"]["units"],
-                            )
-                            volume3D = Volume3D(
-                                outline_circle=outline_circle,
-                                outline_polygon=outline_polygon,
-                                altitude_lower=altitude_lower,
-                                altitude_upper=altitude_upper,
-                            )
-
-                            time_start = Time(
-                                format=cur_volume["time_start"]["format"],
-                                value=cur_volume["time_start"]["value"],
-                            )
-                            time_end = Time(
-                                format=cur_volume["time_end"]["format"],
-                                value=cur_volume["time_end"]["value"],
-                            )
-
-                            cur_v4d = Volume4D(
-                                volume=volume3D,
-                                time_start=time_start,
-                                time_end=time_end,
-                            )
-
-                            all_v4d.append(cur_v4d)
-
-                        op_int_detail = OperationalIntentUSSDetails(
-                            volumes=all_v4d,
-                            priority=op_int_det["priority"],
-                            off_nominal_volumes=op_int_det["off_nominal_volumes"],
-                        )
-
-                        uss_op_int_details = OperationalIntentDetailsUSSResponse(
-                            reference=op_int_reference, details=op_int_detail
-                        )
-
-                        operational_intent_volumes = op_int_detail.volumes
-                        my_volume_converter = VolumesConverter()
-
-                        my_volume_converter.convert_volumes_to_geojson(
-                            volumes=operational_intent_volumes
-                        )
-                        minimum_rotated_rect = (
-                            my_volume_converter.get_minimum_rotated_rectangle()
-                        )
-                        cur_op_int_details = OpInttoCheckDetails(
-                            shape=minimum_rotated_rect, ovn=op_int_ref["ovn"]
-                        )
-                        all_opints_to_check.append(cur_op_int_details)
-
-                    else:
+                    except Exception as e:
                         logger.error(
-                            "Could not retrieve flight details from USS %s"
-                            % uss_operational_intent_request.json()
+                            "Error in getting operational intent id {uss_op_int_id} details from uss".format(
+                                uss_op_int_id=current_uss_operational_intent_detail.id
+                            )
                         )
+                        op_int_details_retrieved = False
+                        logger.error("Error details %s " % e)
+                    else:
+                        # This needs to be moved back one block
+                        operational_intent_details_json = (
+                            uss_operational_intent_request.json()
+                        )
+
+                        if uss_operational_intent_request.status_code == 200:
+                            op_int_details_retrieved = True
+                            outline_polygon = None
+                            outline_circle = None
+
+                            op_int_det = operational_intent_details_json[
+                                "operational_intent"
+                            ]["details"]
+                            op_int_ref = operational_intent_details_json[
+                                "operational_intent"
+                            ]["reference"]
+
+                if op_int_details_retrieved:
+                    op_int_reference: OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
+                        operational_intent_reference=op_int_ref
+                    )
+                    my_opint_ref_helper = OperationalIntentReferenceHelper()
+                    all_volumes = op_int_det["volumes"]
+                    all_v4d = []
+                    for cur_volume in all_volumes:
+                        cur_v4d = my_opint_ref_helper.parse_volume_to_volume4D(
+                            volume=cur_volume
+                        )
+                        all_v4d.append(cur_v4d)
+
+                    all_off_nominal_volumes = op_int_det["off_nominal_volumes"]
+                    all_off_nominal_v4d = []
+                    for cur_off_nominal_volume in all_off_nominal_volumes:
+                        cur_off_nominal_v4d = (
+                            my_opint_ref_helper.parse_volume_to_volume4D(
+                                volume=cur_off_nominal_volume
+                            )
+                        )
+                        all_off_nominal_v4d.append(cur_off_nominal_v4d)
+
+                    op_int_detail = OperationalIntentUSSDetails(
+                        volumes=all_v4d,
+                        priority=op_int_det["priority"],
+                        off_nominal_volumes=all_off_nominal_v4d,
+                    )
+
+                    uss_op_int_details = OperationalIntentDetailsUSSResponse(
+                        reference=op_int_reference, details=op_int_detail
+                    )
+
+                    operational_intent_volumes = op_int_detail.volumes
+                    my_volume_converter = VolumesConverter()
+                    my_volume_converter.convert_volumes_to_geojson(
+                        volumes=operational_intent_volumes
+                    )
+                    minimum_rotated_rect = (
+                        my_volume_converter.get_minimum_rotated_rectangle()
+                    )
+                    cur_op_int_details = OpInttoCheckDetails(
+                        shape=minimum_rotated_rect, ovn=op_int_ref["ovn"]
+                    )
+                    all_opints_to_check.append(cur_op_int_details)
+
+                else:
+                    logger.error(
+                        "Could not retrieve flight details from USS %s"
+                        % uss_operational_intent_request.json()
+                    )
 
         return all_opints_to_check
 
@@ -588,7 +770,7 @@ class SCDOperations:
         audience: str,
     ):
         """This method posts operaitonal intent details to peer USS via a POST request to /uss/v1/operational_intents"""
-        notification_url = self.uss_base_url + "uss/v1/operational_intents"
+        notification_url = uss_base_url + "uss/v1/operational_intents"
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
@@ -623,12 +805,13 @@ class SCDOperations:
         ovn: str,
         subscription_id: str,
         get_airspace_keys=False,
+        priority: int = 0,
     ) -> Optional[OperationalIntentUpdateResponse]:
         """This method updates a operational intent from one state to other"""
         auth_token = self.get_auth_token()
         blender_base_url = env.get("BLENDER_FQDN", 0)
-        airspace_keys = []
-
+        airspace_keys = [ovn] if ovn else []
+        # Initialize the update request with empty airspace key
         operational_intent_update = OperationalIntentUpdateRequest(
             extents=extents,
             state=new_state,
@@ -642,6 +825,7 @@ class SCDOperations:
             all_existing_operational_intent_details = self.get_latest_airspace_volumes(
                 volumes=extents
             )
+            # Airspace checked, prepare the keys for updating.
             if all_existing_operational_intent_details:
                 logging.info(
                     "Getting ovn / airspace keys from {num_existing_op_ints} operational intent details".format(
@@ -653,9 +837,30 @@ class SCDOperations:
                 for cur_op_int_detail in all_existing_operational_intent_details:
                     airspace_keys.append(cur_op_int_detail.ovn)
             logging.info("Airspace keys: %s" % airspace_keys)
-
+            my_ind_volumes_converter = VolumesConverter()
+            my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
+            ind_volumes_polygon = (
+                my_ind_volumes_converter.get_minimum_rotated_rectangle()
+            )
+            # our priority is 100 there is no need to deconflight the flight.
+            if priority == 100:
+                for cur_op_int_detail in all_existing_operational_intent_details:
+                    airspace_keys.append(cur_op_int_detail.ovn)
+                deconflicted = True
+            else:
+                is_conflicted = rtree_helper.check_polygon_intersection(
+                    op_int_details=all_existing_operational_intent_details,
+                    polygon_to_check=ind_volumes_polygon,
+                )
+                deconflicted = False if is_conflicted else True
+        else:
+            deconflicted = True
+            logging.info(
+                "No existing operational intents in the DSS, deconfliction status: %s"
+                % deconflicted
+            )
             operational_intent_update.keys = airspace_keys
-
+        # Send the update request to the DSS
         dss_opint_update_url = (
             self.dss_base_url
             + "dss/v1/operational_intent_references/"
@@ -669,59 +874,69 @@ class SCDOperations:
         }
         logging.info("Checking flight deconfliction status")
 
-        dss_r = requests.put(
-            dss_opint_update_url,
-            json=json.loads(json.dumps(asdict(operational_intent_update))),
-            headers=headers,
-        )
-        dss_response = dss_r.json()
-        dss_r_status_code = dss_r.status_code
+        if deconflicted:
+            dss_r = requests.put(
+                dss_opint_update_url,
+                json=json.loads(json.dumps(asdict(operational_intent_update))),
+                headers=headers,
+            )
+            dss_response = dss_r.json()
+            print('*****************')
+            print(dss_response)
+            print('*****************')
+            dss_r_status_code = dss_r.status_code
 
-        if dss_r_status_code in [200, 201]:
-            # Update request was successful
-            subscribers = dss_response["subscribers"]
-            all_subscribers = []
-            for subscriber in subscribers:
-                subscriptions = subscriber["subscriptions"]
-                uss_base_url = subscriber["uss_base_url"]
-                all_subscription_states: List[SubscriptionState] = []
-                for subscription in subscriptions:
-                    s_state = SubscriptionState(
-                        subscription_id=subscription["subscription_id"],
-                        notification_index=subscription["notification_index"],
+            if dss_r_status_code in [200, 201]:
+                # Update request was successful, notify the subscribers
+                subscribers = dss_response["subscribers"]
+                all_subscribers = []
+                for subscriber in subscribers:
+                    subscriptions = subscriber["subscriptions"]
+                    uss_base_url = subscriber["uss_base_url"]
+                    all_subscription_states: List[SubscriptionState] = []
+                    for subscription in subscriptions:
+                        s_state = SubscriptionState(
+                            subscription_id=subscription["subscription_id"],
+                            notification_index=subscription["notification_index"],
+                        )
+                        all_subscription_states.append(s_state)
+                    subscriber_obj = SubscriberToNotify(
+                        subscriptions=all_subscribers, uss_base_url=uss_base_url
                     )
-                    all_subscription_states.append(s_state)
-                subscriber_obj = SubscriberToNotify(
-                    subscriptions=all_subscribers, uss_base_url=uss_base_url
+                    all_subscribers.append(subscriber_obj)
+
+                my_op_int_ref_helper = OperationalIntentReferenceHelper()
+                operational_intent_reference: OperationalIntentReferenceDSSResponse = (
+                    my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
+                        operational_intent_reference=dss_response[
+                            "operational_intent_reference"
+                        ]
+                    )
                 )
-                all_subscribers.append(subscriber_obj)
-
-            my_op_int_ref_helper = OperationalIntentReferenceHelper()
-            operational_intent_reference: OperationalIntentReferenceDSSResponse = (
-                my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
-                    operational_intent_reference=dss_response[
-                        "operational_intent_reference"
-                    ]
+                # A subscribers
+                d_r = OperationalIntentUpdateSuccessResponse(
+                    subscribers=all_subscribers,
+                    operational_intent_reference=operational_intent_reference,
                 )
-            )
+                logging.info("Updated Operational Intent in the DSS Successfully")
 
-            d_r = OperationalIntentUpdateSuccessResponse(
-                subscribers=all_subscribers,
-                operational_intent_reference=operational_intent_reference,
-            )
-            logging.info("Updated Operational Intent in the DSS Successfully")
+                message = CommonDSS4xxResponse(
+                    message="Successfully updated operational intent"
+                )
+                # error in deletion
 
-            message = CommonDSS4xxResponse(
-                message="Successfully updated operational intent"
-            )
-            # error in deletion
-
+            else:
+                # Update unsuccessful
+                d_r = OperationalIntentUpdateErrorResponse(
+                    message=dss_response["message"]
+                )
+                message = CommonDSS4xxResponse(
+                    message="Error in updating operational intent in the DSS"
+                )
         else:
-            # Update unsuccessful
-            d_r = OperationalIntentUpdateErrorResponse(message=dss_response["message"])
-            message = CommonDSS4xxResponse(
-                message="Error in updating operational intent in the DSS"
-            )
+            d_r = None
+            dss_r_status_code = 409
+            message = "Flight not deconflicted"
 
         opint_update_result = OperationalIntentUpdateResponse(
             dss_response=d_r, status=dss_r_status_code, message=message
@@ -769,12 +984,11 @@ class SCDOperations:
         )
         # Query other USSes for operational intent
         # Check if there are conflicts (or not)
-        logging.info("Checking flight deconfliction status")
+        logging.info("Checking flight deconfliction status...")
         # Get all operational intents in the area
         all_existing_operational_intent_details = self.get_latest_airspace_volumes(
             volumes=volumes
         )
-
         if all_existing_operational_intent_details:
             logging.info(
                 "Checking deconfliction status with {num_existing_op_ints} operational intent details".format(

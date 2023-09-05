@@ -71,6 +71,10 @@ class Volume4D:
     time_end: StringBasedDateTime
 
 @dataclass
+class OperationalIntentStorageVolumes: 
+    volumes: List[Volume4D]
+
+@dataclass
 class OperationalIntentTestInjection:
     """Class for keeping track of an operational intent test injections"""
     volumes: List[Volume4D]
@@ -101,6 +105,7 @@ class TestInjectionResultState(str, enum.Enum):
     Planned = 'Planned'
     Rejected = 'Rejected'
     ConflictWithFlight = 'ConflictWithFlight'
+    ReadyToFly = 'ReadyToFly'
     Failed = 'Failed'
     
 class IDTechnology(str, enum.Enum):
@@ -157,7 +162,7 @@ class SCDTestStatusResponse:
 
 @dataclass
 class CapabilitiesResponse:
-    capabilities: List[Literal[USSCapabilitiesResponseEnum.BasicStrategicConflictDetection, USSCapabilitiesResponseEnum.FlightAuthorisationValidation, USSCapabilitiesResponseEnum.HighPriorityFlights]]
+    capabilities: List[Literal[USSCapabilitiesResponseEnum.BasicStrategicConflictDetection, USSCapabilitiesResponseEnum.FlightAuthorisationValidation,USSCapabilitiesResponseEnum.HighPriorityFlights]]
     
 
 @dataclass
@@ -166,12 +171,16 @@ class DeleteFlightResponse:
     result: Literal[DeleteFlightStatusResponseEnum.Failed, DeleteFlightStatusResponseEnum.Closed]
     notes: str
 
-@dataclass 
-class ClearAreaResponse:
+@dataclass
+class ClearAreaResponseOutcome: 
     ''' Response after clearing flights in an area '''
     success: bool
     message: str
     timestamp: StringBasedDateTime
+
+@dataclass 
+class ClearAreaResponse:
+    outcome: ClearAreaResponseOutcome
 
 @dataclass 
 class ClearAreaRequestData:
@@ -212,7 +221,7 @@ class OperationalIntentReferenceDSSResponse:
     uss_availability: str
     version: int
     state: Literal[OperationalIntentState.Accepted,OperationalIntentState.Activated,OperationalIntentState.Nonconforming,OperationalIntentState.Contingent]
-    ovn: uuid4 
+    ovn: str 
     time_start: Time
     time_end: Time
     uss_base_url: str
@@ -344,7 +353,8 @@ class QueryOperationalIntentPayload:
 
 @dataclass
 class OperationalIntentReferenceDSSDetails:
-    operational_intent_refrence: OperationalIntentReferenceDSSResponse
+    operational_intent_reference: OperationalIntentReferenceDSSResponse
+    operational_intent_id:str
 
 @dataclass
 class SuccessfulOperationalIntentFlightIDStorage:

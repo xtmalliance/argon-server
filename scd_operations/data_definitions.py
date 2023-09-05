@@ -2,6 +2,16 @@ from dataclasses import dataclass
 from typing import List, Optional, Literal
 
 @dataclass
+class FlightDeclarationCreationPayload: 
+    id:str
+    operational_intent:str
+    flight_declaration_raw_geojson: str
+    bounds: str
+    aircraft_id: str
+    state: int
+
+
+@dataclass
 class SCDLatLngPoint:
     """A class to hold information about a location as Latitude / Longitude pair"""
 

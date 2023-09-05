@@ -18,13 +18,12 @@ from .uss_data_definitions import (
     OperatorDetailsSuccessResponse,
     FlightDetailsNotFoundMessage,
     UpdateChangedOpIntDetailsPost,
-)
-from scd_operations.scd_data_definitions import (
     OperationalIntentDetailsUSSResponse,
     OperationalIntentUSSDetails,
     OperationalIntentReferenceDSSResponse,
-    Time,
+    Time
 )
+
 from rid_operations.rid_utils import (
     RIDAuthData,
     RIDAircraftPosition,
@@ -70,20 +69,16 @@ def USSUpdateOpIntDetails(request):
     # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
 
     op_int_update_details_data = request.data
-
+    r = get_redis()    
     op_int_update_detail = from_dict(
         data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data
     )
-
     # Write the operational Intent
-    opint_id = op_int_update_detail.operationaal_intent_id
-
-    opint_flightref = "opint_flightref." + str(opint_id)
-
+    operation_id_str = op_int_update_detail.operational_intent_id
+    op_int_details_key = "flight_opint." + operation_id_str
     # Read the new operational intent
-
     # Store the opint, see what other operations conflict the opint
-
+    
     updated_success = UpdateOperationalIntent(
         message="New or updated full operational intent information received successfully "
     )
@@ -110,14 +105,13 @@ def USSOpIntDetailTelemetry(request, entity_id):
 @requires_scopes(["utm.strategic_coordination"])
 def USSOpIntDetails(request, opint_id):
     r = get_redis()
-
     opint_flightref = "opint_flightref." + str(opint_id)
 
     if r.exists(opint_flightref):
         opint_ref_raw = r.get(opint_flightref)
         opint_ref = json.loads(opint_ref_raw)
-        flight_id = opint_ref["flight_id"]
-        flight_opint = "flight_opint." + flight_id
+        opint_id = opint_ref["operation_id"]
+        flight_opint = "flight_opint." + opint_id
 
         if r.exists(flight_opint):
             op_int_details_raw = r.get(flight_opint)
@@ -127,8 +121,7 @@ def USSOpIntDetails(request, opint_id):
                 "operational_intent_reference"
             ]
             details_full = op_int_details["operational_intent_details"]
-            # Load existing opint details
-
+            # Load existing opint details            
             stored_operational_intent_id = reference_full["id"]
             stored_manager = reference_full["manager"]
             stored_uss_availability = reference_full["uss_availability"]
@@ -146,8 +139,14 @@ def USSOpIntDetails(request, opint_id):
                 format=reference_full["time_end"]["format"],
                 value=reference_full["time_end"]["value"],
             )
+            stored_volumes = details_full["volumes"]            
+            #TODO: Fix outline circle 
+            for v in stored_volumes:
+                if 'outline_circle' in v['volume'].keys():
+                    if not v['volume']['outline_circle']:
+                        v['volume'].pop('outline_circle')                    
 
-            stored_volumes = details_full["volumes"]
+
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
 
