@@ -1084,6 +1084,18 @@ paths:
             format: date
           description: >
             The end date for the report. Must be used together with `start_date`.
+        - name: page
+          in: query
+          schema:
+            type: number
+          description: >
+            Page to fetch.
+        - name: page_size
+          in: query
+          schema:
+            type: number
+          description: >
+            Amount of results per page.
       responses:
         '200':
           description: Get a list of declared operations, `start_date`,`end_date` and `view` parameters are optional, if they are not provided all declared operations for the past month are displayed.
@@ -1584,6 +1596,18 @@ paths:
             format: date
           description: >
             The end date for the report. Must be used together with `start_date`.
+        - name: page
+          in: query
+          schema:
+            type: number
+          description: >
+            Page to fetch.
+        - name: page_size
+          in: query
+          schema:
+            type: number
+          description: >
+            Amount of results per page.
       responses:
         '200':
           description: Get a list of submitted geo fence, `start_date`+`end_date` are optional, by default geo fences for today displayed.
