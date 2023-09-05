@@ -78,9 +78,7 @@ def USSUpdateOpIntDetails(request):
     op_int_details_key = "flight_opint." + operation_id_str
     # Read the new operational intent
     # Store the opint, see what other operations conflict the opint
-    print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-    print(operation_id_str)
-    print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+    
     updated_success = UpdateOperationalIntent(
         message="New or updated full operational intent information received successfully "
     )
