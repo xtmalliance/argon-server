@@ -384,12 +384,6 @@ def SCDAuthTest(request, operation_id):
 
             # Get the detail of the existing / stored operational intent
 
-            # management.call_command(
-            #     "update_operational_intent_to_activated",
-            #     flight_declaration_id=operation_id_str,
-            #     dry_run="0",
-            # )
-            # time.sleep(2)
             flight_declaration = my_database_reader.get_flight_declaration_by_id(
                 flight_declaration_id=operation_id_str
             )
@@ -410,16 +404,14 @@ def SCDAuthTest(request, operation_id):
                 extents=test_injection_data.operational_intent.volumes,
                 new_state=test_state,
                 ovn=stored_operational_intent_details.reference.ovn,
-                subscription_id=None,
-                get_airspace_keys=True,
+                subscription_id=stored_operational_intent_details.reference.subscription_id,
+                get_airspace_keys=False,
             )
-
+            
             ready_to_fly_injection_response.operational_intent_id = (
                 dss_operational_intent_id
             )
-            print("***************************")
-            print(update_operational_intent)
-            print("---------------------------")
+            
             if update_operational_intent.status in [200, 200]:
                 return Response(
                     json.loads(

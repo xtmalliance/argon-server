@@ -260,7 +260,16 @@ class OperationalIntentReferenceHelper:
             reference_full = op_int_details["success_response"][
                 "operational_intent_reference"
             ]
-            dss_response_subscribers = op_int_details["success_response"]["subscribers"]
+            # dss_response_subscribers = op_int_details["success_response"]["subscribers"]
+            # blender_base_url = env.get("BLENDER_FQDN", 0)
+        
+            # for subscriber in dss_response_subscribers:
+            #     subscriptions = subscriber["subscriptions"]
+            #     uss_base_url = subscriber["uss_base_url"]
+            #     if blender_base_url == uss_base_url:
+            #         for s in subscriptions:
+            #             subscription_id = s["subscription_id"]
+            #             break
             details_full = op_int_details["operational_intent_details"]
             # Load existing opint details
 
@@ -801,7 +810,7 @@ class SCDOperations:
         """This method updates a operational intent from one state to other"""
         auth_token = self.get_auth_token()
         blender_base_url = env.get("BLENDER_FQDN", 0)
-        airspace_keys = []
+        airspace_keys = [ovn] if ovn else []
         # Initialize the update request with empty airspace key
         operational_intent_update = OperationalIntentUpdateRequest(
             extents=extents,
@@ -872,6 +881,9 @@ class SCDOperations:
                 headers=headers,
             )
             dss_response = dss_r.json()
+            print('*****************')
+            print(dss_response)
+            print('*****************')
             dss_r_status_code = dss_r.status_code
 
             if dss_r_status_code in [200, 201]:
