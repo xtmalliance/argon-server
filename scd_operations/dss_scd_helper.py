@@ -881,9 +881,6 @@ class SCDOperations:
                 headers=headers,
             )
             dss_response = dss_r.json()
-            print('*****************')
-            print(dss_response)
-            print('*****************')
             dss_r_status_code = dss_r.status_code
 
             if dss_r_status_code in [200, 201]:
