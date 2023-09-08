@@ -128,7 +128,7 @@ def stream_rid_data_v22(rid_telemetry_observations):
             icao_address = flight_details_id
 
             so = SingleRIDObservation(lat_dd= lat_dd, lon_dd=lon_dd, altitude_mm=altitude_mm, traffic_source= traffic_source, source_type= source_type, icao_address=icao_address, metadata= json.dumps(asdict(observation_and_metadata)))                    
-            msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+            msgid = write_incoming_air_traffic_data(json.dumps(asdict(so)))  # Send a job to the task queue
             logger.debug("Submitted observation..")                    
             logger.debug("...")
 
