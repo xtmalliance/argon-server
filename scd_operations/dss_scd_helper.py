@@ -753,7 +753,7 @@ class SCDOperations:
                         reference=op_int_reference, details=op_int_detail
                     )
 
-                    operational_intent_volumes = op_int_detail.volumes
+                    operational_intent_volumes = uss_op_int_details.details.volumes
                     my_volume_converter = VolumesConverter()
                     my_volume_converter.convert_volumes_to_geojson(
                         volumes=operational_intent_volumes
@@ -768,11 +768,6 @@ class SCDOperations:
                     )
                     all_opints_to_check.append(cur_op_int_details)
 
-                else:
-                    logger.error(
-                        "Could not retrieve flight details from USS %s"
-                        % uss_operational_intent_request.json()
-                    )
         return all_opints_to_check
 
     def notify_peer_uss_of_created_updated_operational_intent(
@@ -809,6 +804,7 @@ class SCDOperations:
 
         return notification_result
 
+
     def update_specified_operational_intent_reference(
         self,
         operational_intent_ref_id: str,
@@ -844,7 +840,6 @@ class SCDOperations:
 
         for current_opint_details in relevant_op_int_id:
             ovn = current_opint_details.ovn
-
         all_existing_operational_intent_details = list(
             filter(
                 lambda op_int_to_check: op_int_to_check.id != operational_intent_ref_id,
@@ -852,22 +847,9 @@ class SCDOperations:
             )
         )
 
-        # Airspace checked, prepare the keys for updating.
-        logging.info(
-            "Getting ovn / airspace keys from {num_existing_op_ints} operational intent details".format(
-                num_existing_op_ints=len(all_existing_operational_intent_details_full)
-            )
-        )
         for cur_op_int_detail in all_existing_operational_intent_details_full:
             airspace_keys.append(cur_op_int_detail.ovn)
-        logging.info("Airspace keys: %s" % airspace_keys)
-        my_ind_volumes_converter = VolumesConverter()
-        my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
-        ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()
-        # Update airspace keys
-        for cur_op_int_detail in all_existing_operational_intent_details_full:
-            airspace_keys.append(cur_op_int_detail.ovn)
-
+            
         operational_intent_update.keys = airspace_keys
 
         deconflicted = True
@@ -876,6 +858,9 @@ class SCDOperations:
             if priority == 100:
                 deconflicted = True
             else:
+                my_ind_volumes_converter = VolumesConverter()
+                my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
+                ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()
                 is_conflicted = rtree_helper.check_polygon_intersection(
                     op_int_details=all_existing_operational_intent_details,
                     polygon_to_check=ind_volumes_polygon,
@@ -894,10 +879,8 @@ class SCDOperations:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
-        print('^^^^')
-        print(dss_opint_update_url)
         
-
+        
         if deconflicted:
             blender_base_url = env.get("BLENDER_FQDN", 0)
             dss_r = requests.put(
@@ -907,8 +890,6 @@ class SCDOperations:
             )
             dss_response = dss_r.json()
             dss_r_status_code = dss_r.status_code
-
-            print(dss_response)
 
             if dss_r_status_code in [200, 201]:
                 # Update request was successful, notify the subscribers

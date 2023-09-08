@@ -268,7 +268,10 @@ def SCDAuthTest(request, operation_id):
         for volume in operational_intent_volumes:
             v4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=volume)
             all_volumes.append(v4D)
-
+        print('+++++++++++++++++')
+        print('incoming volumes')
+        print(all_volumes)
+        print('+++++++++++++++++')
         # Create a list of Volume4D objects
         all_off_nominal_volumes: List[Volume4D] = []
         for off_nominal_volume in operational_intent_off_nominal_volumes:
@@ -408,11 +411,8 @@ def SCDAuthTest(request, operation_id):
                 deconfliction_check=deconfliction_check,
                 priority=operational_intent_data.priority,
             )
-            print('xxxxxxxxxxxxxxxxxxxxxxx')
-            print(update_operational_intent)
-            print('xxxxxxxxxxxxxxxxxxxxxxx')
+            
             if update_operational_intent.status in [200, 201]:
-                    
                 ready_to_fly_injection_response.operational_intent_id = (
                     dss_operational_intent_id
                 )
@@ -459,7 +459,7 @@ def SCDAuthTest(request, operation_id):
                 off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
                 priority=test_injection_data.operational_intent.priority,
             )
-            print(op_int_submission)
+            
 
             if op_int_submission.status == "success":
                 # Successfully submitted to the DSS, save the operational intent in Redis
