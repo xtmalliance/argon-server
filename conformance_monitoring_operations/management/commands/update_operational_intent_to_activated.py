@@ -143,7 +143,7 @@ class Command(BaseCommand):
                         extents=stored_volumes,
                         new_state=str(new_state),
                         ovn=reference.ovn,
-                        get_airspace_keys=True,
+                        deconfliction_check=True,
                     )
                 )
 

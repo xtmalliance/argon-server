@@ -154,7 +154,7 @@ class Command(BaseCommand):
                         extents=stored_volumes,
                         new_state=str(contingent_state),
                         ovn=reference.ovn,
-                        get_airspace_keys=False,
+                        deconfliction_check=False,
                     )
                 )
 
@@ -315,7 +315,7 @@ class Command(BaseCommand):
                             extents=stored_volumes,
                             new_state="Contingent",
                             ovn=reference.ovn,
-                            get_airspace_keys=True,
+                            deconfliction_check=True,
                         )
 
                         if operational_update_response.status == 200:

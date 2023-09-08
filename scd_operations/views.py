@@ -385,6 +385,7 @@ def SCDAuthTest(request, operation_id):
             flight_declaration = my_database_reader.get_flight_declaration_by_id(
                 flight_declaration_id=operation_id_str
             )
+            current_state = flight_declaration.state
             flight_authorization = (
                 my_database_reader.get_flight_authorization_by_flight_declaration_obj(
                     flight_declaration=flight_declaration
@@ -396,21 +397,29 @@ def SCDAuthTest(request, operation_id):
                     operation_id=operation_id_str
                 )
             )
-
+            
+            deconfliction_check = False if current_state == 2 else True # If the flight is activated then no need to deconflict (this has happened prior)
             update_operational_intent = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
                 extents=test_injection_data.operational_intent.volumes,
                 new_state=test_state,
                 ovn=stored_operational_intent_details.reference.ovn,
                 subscription_id=stored_operational_intent_details.reference.subscription_id,
-                get_airspace_keys=True,
+                deconfliction_check=deconfliction_check,
                 priority=operational_intent_data.priority,
             )
-            ready_to_fly_injection_response.operational_intent_id = (
-                dss_operational_intent_id
-            )
+            print('xxxxxxxxxxxxxxxxxxxxxxx')
+            print(update_operational_intent)
+            print('xxxxxxxxxxxxxxxxxxxxxxx')
+            if update_operational_intent.status in [200, 201]:
+                    
+                ready_to_fly_injection_response.operational_intent_id = (
+                    dss_operational_intent_id
+                )
+                
+                # update the state to Activated 
+                my_database_writer.update_flight_operation_state(flight_declaration_id=operation_id_str, state =2)
 
-            if update_operational_intent.status in [200, 200]:
                 return Response(
                     json.loads(
                         json.dumps(

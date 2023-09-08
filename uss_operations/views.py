@@ -79,7 +79,6 @@ def USSUpdateOpIntDetails(request):
     op_int_details_key = "flight_opint." + operation_id_str
 
 
-
     # operational_intent_full_details = OperationalIntentStorage(
     #     bounds=view_r_bounds,
     #     start_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[0].time_start)),
