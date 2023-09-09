@@ -198,7 +198,6 @@ def SCDAuthTest(request, operation_id):
     operation_id_str = str(operation_id)
     print("*********************")
     print(operation_id_str)
-    print("*********************")
     if request.method == "PUT":
         my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
@@ -268,10 +267,10 @@ def SCDAuthTest(request, operation_id):
         for volume in operational_intent_volumes:
             v4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=volume)
             all_volumes.append(v4D)
-        print('+++++++++++++++++')
-        print('incoming volumes')
-        print(all_volumes)
-        print('+++++++++++++++++')
+
+        # print("incoming volumes")
+        # print(all_volumes)
+        # print("+++++++++++++++++")
         # Create a list of Volume4D objects
         all_off_nominal_volumes: List[Volume4D] = []
         for off_nominal_volume in operational_intent_off_nominal_volumes:
@@ -354,6 +353,7 @@ def SCDAuthTest(request, operation_id):
         my_geo_json_converter.convert_volumes_to_geojson(volumes=all_volumes)
         view_rect_bounds = my_geo_json_converter.get_bounds()
         view_rect_bounds_storage = ",".join([str(i) for i in view_rect_bounds])
+        view_r_bounds = ",".join(map(str, view_rect_bounds))
 
         auth_token = my_scd_dss_helper.get_auth_token()
         try:
@@ -400,9 +400,11 @@ def SCDAuthTest(request, operation_id):
                     operation_id=operation_id_str
                 )
             )
-            
-            deconfliction_check = False if current_state == 2 else True # If the flight is activated then no need to deconflict (this has happened prior)
-            update_operational_intent = my_scd_dss_helper.update_specified_operational_intent_reference(
+
+            deconfliction_check = (
+                False if current_state == 2 else True
+            )  # If the flight is activated then no need to deconflict (this has happened prior)
+            update_operational_intent_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
                 extents=test_injection_data.operational_intent.volumes,
                 new_state=test_state,
@@ -411,14 +413,56 @@ def SCDAuthTest(request, operation_id):
                 deconfliction_check=deconfliction_check,
                 priority=operational_intent_data.priority,
             )
-            
-            if update_operational_intent.status in [200, 201]:
+
+            if update_operational_intent_job.status in [200, 201]:
                 ready_to_fly_injection_response.operational_intent_id = (
                     dss_operational_intent_id
                 )
-                
-                # update the state to Activated 
-                my_database_writer.update_flight_operation_state(flight_declaration_id=operation_id_str, state =2)
+
+                # update the state to Activated
+                my_database_writer.update_flight_operation_state(
+                    flight_declaration_id=operation_id_str, state=2
+                )
+                # TODO: Update flight declaration object
+
+                # Update the redis storage for operational intent details
+                flight_opint_key = "flight_opint." + operation_id_str
+                if r.exists(flight_opint_key):
+                    op_int_details_raw = r.get(flight_opint_key)
+                    op_int_details = json.loads(op_int_details_raw)
+                    # stored_reference_full = op_int_details["success_response"]["operational_intent_reference"]
+                    # stored_details_full = op_int_details["operational_intent_details"]
+
+                    # new_details_full = json.loads(
+                    #     json.dumps(asdict(test_injection_data.operational_intent))
+                    # )
+                    new_operational_intent_full_details = OperationalIntentStorage(
+                        bounds=view_r_bounds,
+                        start_time=json.dumps(
+                            asdict(
+                                test_injection_data.operational_intent.volumes[
+                                    0
+                                ].time_start
+                            )
+                        ),
+                        end_time=json.dumps(
+                            asdict(
+                                test_injection_data.operational_intent.volumes[
+                                    0
+                                ].time_end
+                            )
+                        ),
+                        alt_max=50,
+                        alt_min=25,
+                        success_response=asdict(update_operational_intent_job.dss_response),
+                        operational_intent_details=asdict(test_injection_data.operational_intent),
+                    )
+                    print(new_operational_intent_full_details)
+                    r.set(
+                        flight_opint_key,
+                        json.dumps(new_operational_intent_full_details)
+                    )
+                    r.expire(name=flight_opint_key, time=opint_subscription_end_time)
 
                 return Response(
                     json.loads(
@@ -429,7 +473,7 @@ def SCDAuthTest(request, operation_id):
                     status=status.HTTP_200_OK,
                 )
 
-            elif update_operational_intent.status == 409:
+            elif update_operational_intent_job.status == 409:
                 # Flight is not deconflicted
                 logging.info("Flight not deconflicted...")
                 return Response(
@@ -459,11 +503,9 @@ def SCDAuthTest(request, operation_id):
                 off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
                 priority=test_injection_data.operational_intent.priority,
             )
-            
 
             if op_int_submission.status == "success":
                 # Successfully submitted to the DSS, save the operational intent in Redis
-                view_r_bounds = ",".join(map(str, view_rect_bounds))
                 operational_intent_full_details = OperationalIntentStorage(
                     bounds=view_r_bounds,
                     start_time=json.dumps(

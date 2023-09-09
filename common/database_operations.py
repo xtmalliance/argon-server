@@ -8,7 +8,10 @@ from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from scd_operations.data_definitions import FlightDeclarationCreationPayload
 import os
 import json
+from dataclasses import asdict
 import logging
+from scd_operations.scd_data_definitions import (    
+    PartialCreateOperationalIntentReference)
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -136,6 +139,16 @@ class BlenderDatabaseWriter():
         except Exception as e: 
             return False
         
+    def update_flight_operation_operational_intent(self,flight_declaration_id:str, operational_intent:PartialCreateOperationalIntentReference) -> bool:
+        try: 
+            flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)
+            flight_declaration.operational_intent = json.dumps(asdict(operational_intent))
+            # TODO: Convert the updated operational intent to GeoJSON
+            flight_declaration.save()
+            return True
+        except Exception as e: 
+            return False
+
     def update_flight_operation_state(self,flight_declaration_id:str, state:int) -> bool:
         try: 
             flight_declaration = FlightDeclaration.objects.get(id = flight_declaration_id)

@@ -2,7 +2,6 @@
 # Create your views here.
 import json
 import logging
-from dataclasses import asdict
 from typing import List
 import arrow
 from django.http import HttpResponse, JsonResponse

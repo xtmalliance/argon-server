@@ -618,7 +618,7 @@ class SCDOperations:
                         subscription_id=o_i_r["subscription_id"],
                     )
                     # if o_i_r_formatted.uss_base_url != blender_base_url:
-                    59570
+                    
                     all_uss_operational_intent_details.append(o_i_r_formatted)
 
             for (
