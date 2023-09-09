@@ -425,11 +425,11 @@ def SCDAuthTest(request, operation_id):
                 )
                 # TODO: Update flight declaration object
 
-                # Update the redis storage for operational intent details
+                # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
                 flight_opint_key = "flight_opint." + operation_id_str
                 if r.exists(flight_opint_key):
-                    op_int_details_raw = r.get(flight_opint_key)
-                    op_int_details = json.loads(op_int_details_raw)
+                    # op_int_details_raw = r.get(flight_opint_key)
+                    # op_int_details = json.loads(op_int_details_raw)
                     # stored_reference_full = op_int_details["success_response"]["operational_intent_reference"]
                     # stored_details_full = op_int_details["operational_intent_details"]
 
@@ -438,29 +438,21 @@ def SCDAuthTest(request, operation_id):
                     # )
                     new_operational_intent_full_details = OperationalIntentStorage(
                         bounds=view_r_bounds,
-                        start_time=json.dumps(
-                            asdict(
-                                test_injection_data.operational_intent.volumes[
-                                    0
-                                ].time_start
-                            )
-                        ),
-                        end_time=json.dumps(
-                            asdict(
-                                test_injection_data.operational_intent.volumes[
-                                    0
-                                ].time_end
-                            )
-                        ),
+                        start_time=test_injection_data.operational_intent.volumes[
+                            0
+                        ].time_start,
+                        end_time=test_injection_data.operational_intent.volumes[
+                            0
+                        ].time_end,
                         alt_max=50,
                         alt_min=25,
-                        success_response=asdict(update_operational_intent_job.dss_response),
-                        operational_intent_details=asdict(test_injection_data.operational_intent),
+                        success_response=update_operational_intent_job.dss_response,
+                        operational_intent_details=test_injection_data.operational_intent,
                     )
-                    print(new_operational_intent_full_details)
+                    
                     r.set(
                         flight_opint_key,
-                        json.dumps(new_operational_intent_full_details)
+                        json.dumps(asdict(new_operational_intent_full_details)),
                     )
                     r.expire(name=flight_opint_key, time=opint_subscription_end_time)
 
@@ -508,16 +500,8 @@ def SCDAuthTest(request, operation_id):
                 # Successfully submitted to the DSS, save the operational intent in Redis
                 operational_intent_full_details = OperationalIntentStorage(
                     bounds=view_r_bounds,
-                    start_time=json.dumps(
-                        asdict(
-                            test_injection_data.operational_intent.volumes[0].time_start
-                        )
-                    ),
-                    end_time=json.dumps(
-                        asdict(
-                            test_injection_data.operational_intent.volumes[0].time_end
-                        )
-                    ),
+                    start_time=test_injection_data.operational_intent.volumes[0].time_start,
+                    end_time=test_injection_data.operational_intent.volumes[0].time_end,
                     alt_max=50,
                     alt_min=25,
                     success_response=op_int_submission.dss_response,
