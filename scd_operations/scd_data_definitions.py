@@ -316,7 +316,7 @@ class SubscriberToNotify:
 
 @dataclass
 class OperationalIntentUpdateSuccessResponse:
-    subscribers: List[SubscriberToNotify]
+    subscribers: List[str]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
 
 @dataclass

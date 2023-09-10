@@ -924,9 +924,9 @@ class SCDOperations:
                         ]
                     )
                 )
-                # A subscribers
+                # TODO: Subscribers is not a dataclass but needs to be
                 d_r = OperationalIntentUpdateSuccessResponse(
-                    subscribers=all_subscribers,
+                    subscribers=subscribers,
                     operational_intent_reference=operational_intent_reference,
                 )
                 logging.info("Updated Operational Intent in the DSS Successfully")

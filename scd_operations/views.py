@@ -428,28 +428,19 @@ def SCDAuthTest(request, operation_id):
                 # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
                 flight_opint_key = "flight_opint." + operation_id_str
                 if r.exists(flight_opint_key):
-                    # op_int_details_raw = r.get(flight_opint_key)
-                    # op_int_details = json.loads(op_int_details_raw)
-                    # stored_reference_full = op_int_details["success_response"]["operational_intent_reference"]
-                    # stored_details_full = op_int_details["operational_intent_details"]
-
-                    # new_details_full = json.loads(
-                    #     json.dumps(asdict(test_injection_data.operational_intent))
-                    # )
                     new_operational_intent_full_details = OperationalIntentStorage(
                         bounds=view_r_bounds,
-                        start_time=test_injection_data.operational_intent.volumes[
+                        start_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[
                             0
-                        ].time_start,
-                        end_time=test_injection_data.operational_intent.volumes[
+                        ].time_start)),
+                        end_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[
                             0
-                        ].time_end,
+                        ].time_end)),
                         alt_max=50,
                         alt_min=25,
-                        success_response=update_operational_intent_job.dss_response,
-                        operational_intent_details=test_injection_data.operational_intent,
-                    )
-                    
+                        success_response=asdict(update_operational_intent_job.dss_response),
+                        operational_intent_details=asdict(test_injection_data.operational_intent),
+                    )                    
                     r.set(
                         flight_opint_key,
                         json.dumps(asdict(new_operational_intent_full_details)),
