@@ -189,7 +189,7 @@ class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
         all_fences_within_timelimits = GeoFence.objects.filter(
             start_datetime__gte=s_date.isoformat(), end_datetime__lte=e_date.isoformat()
         )
-        logging.info("Found %s geofences" % len(all_fences_within_timelimits))
+        logger.info("Found %s geofences" % len(all_fences_within_timelimits))
 
         if view_port:
             INDEX_NAME = "geofence_idx"

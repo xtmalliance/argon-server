@@ -359,10 +359,10 @@ def SCDAuthTest(request, operation_id):
         try:
             assert "error" not in auth_token
         except AssertionError as e:
-            logging.error(
+            logger.error(
                 "Error in retrieving auth_token, check if the auth server is running properly, error details below"
             )
-            logging.error(auth_token["error"])
+            logger.error(auth_token["error"])
             return Response(
                 json.loads(
                     json.dumps(failed_test_injection_response, cls=EnhancedJSONEncoder)
@@ -403,9 +403,9 @@ def SCDAuthTest(request, operation_id):
                 )
             )
 
-            deconfliction_check = (
-                False if current_state == 2 else True
-            )  # If the flight is activated then no need to deconflict (this has happened prior)
+            # deconfliction_check = (
+            #     False if current_state == 2 else True
+            # )  # If the flight is activated then no need to deconflict (this has happened prior)
             update_operational_intent_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
                 extents=test_injection_data.operational_intent.volumes,
@@ -413,7 +413,7 @@ def SCDAuthTest(request, operation_id):
                 current_state=current_state_str,
                 ovn=stored_operational_intent_details.reference.ovn,
                 subscription_id=stored_operational_intent_details.reference.subscription_id,
-                deconfliction_check=deconfliction_check,
+                deconfliction_check=True,
                 priority=operational_intent_data.priority,
             )
 
@@ -473,7 +473,7 @@ def SCDAuthTest(request, operation_id):
 
             elif update_operational_intent_job.status == 409:
                 # Flight is not deconflicted
-                logging.info("Flight not deconflicted...")
+                logger.info("Flight not deconflicted...")
                 return Response(
                     json.loads(
                         json.dumps(
@@ -484,7 +484,7 @@ def SCDAuthTest(request, operation_id):
                     status=status.HTTP_200_OK,
                 )
             else:
-                logging.info("Updating of Operational intent failed...")
+                logger.info("Updating of Operational intent failed...")
                 return Response(
                     json.loads(
                         json.dumps(
@@ -517,7 +517,7 @@ def SCDAuthTest(request, operation_id):
                 )
                 # Store flight DSS response and operational intent reference
                 flight_opint = "flight_opint." + operation_id_str
-                logging.info(
+                logger.info(
                     "Flight with operational intent id {flight_opint} created".format(
                         flight_opint=operation_id_str
                     )

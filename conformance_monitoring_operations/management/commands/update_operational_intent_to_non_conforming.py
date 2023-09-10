@@ -108,10 +108,10 @@ class Command(BaseCommand):
                     r.set(flight_opint, json.dumps(op_int_details))
                     r.expire(name = flight_opint, time = opint_subscription_end_time)
 
-                    logging.info("Successfully updated operational intent status for {operational_intent_id} on the DSS".format(operational_intent_id = operational_intent_id))
+                    logger.info("Successfully updated operational intent status for {operational_intent_id} on the DSS".format(operational_intent_id = operational_intent_id))
 
                 else: 
-                    logging.info("Error in updating operational intent on the DSS")
+                    logger.info("Error in updating operational intent on the DSS")
 
             else: 
-                logging.info("Dry run, not submitting to the DSS")
+                logger.info("Dry run, not submitting to the DSS")

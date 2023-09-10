@@ -559,7 +559,7 @@ class SCDOperations:
         for volume in volumes:
             operational_intent_references = []
             area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)
-            logging.info("Querying DSS for operational intents in the area..")
+            logger.info("Querying DSS for operational intents in the area..")
             try:
                 operational_intent_ref_response = requests.post(
                     query_op_int_url,
@@ -578,14 +578,14 @@ class SCDOperations:
                     "operational_intent_references"
                 ]
 
-            if operational_intent_references:
-                logger.info(
-                    "{num_intents} existing operational intent references found in the area".format(
-                        num_intents=len(operational_intent_references)
-                    )
-                )
-            else:
-                logger.info("No operational intent references found in the area")
+            # if operational_intent_references:
+            #     logger.info(
+            #         "{num_intents} existing operational intent references found in the area".format(
+            #             num_intents=len(operational_intent_references)
+            #         )
+            #     )
+            # else:
+            #     logger.info("No operational intent references found in the area")
 
             # Query the operational intent reference
             for operational_intent_reference_detail in operational_intent_references:
@@ -854,6 +854,8 @@ class SCDOperations:
         operational_intent_update.keys = airspace_keys
 
         deconflicted = True
+        print('___')
+        print(current_state, new_state)
         if deconfliction_check:
             # our priority is 100 there is no need to deconflight the flight.
             if priority == 100:
@@ -868,8 +870,11 @@ class SCDOperations:
                     op_int_details=all_existing_operational_intent_details,
                     polygon_to_check=ind_volumes_polygon,
                 )
-                deconflicted = False if is_conflicted else True
+                
 
+                deconflicted = False if is_conflicted else True
+        print(deconflicted)
+        print('___')
         # Send the update request to the DSS
         dss_opint_update_url = (
             self.dss_base_url
@@ -931,7 +936,7 @@ class SCDOperations:
                     subscribers=subscribers,
                     operational_intent_reference=operational_intent_reference,
                 )
-                logging.info("Updated Operational Intent in the DSS Successfully")
+                logger.info("Updated Operational Intent in the DSS Successfully")
 
                 message = CommonDSS4xxResponse(
                     message="Successfully updated operational intent"
@@ -997,13 +1002,13 @@ class SCDOperations:
         )
         # Query other USSes for operational intent
         # Check if there are conflicts (or not)
-        logging.info("Checking flight deconfliction status...")
+        logger.info("Checking flight deconfliction status...")
         # Get all operational intents in the area
         all_existing_operational_intent_details = self.get_latest_airspace_volumes(
             volumes=volumes
         )
         if all_existing_operational_intent_details:
-            logging.info(
+            logger.info(
                 "Checking deconfliction status with {num_existing_op_ints} operational intent details".format(
                     num_existing_op_ints=len(all_existing_operational_intent_details)
                 )
@@ -1028,14 +1033,14 @@ class SCDOperations:
                 deconflicted = False if is_conflicted else True
         else:
             deconflicted = True
-            logging.info(
+            logger.info(
                 "No existing operational intents in the DSS, deconfliction status: %s"
                 % deconflicted
             )
-        logging.info("Airspace keys: %s" % airspace_keys)
+        logger.info("Airspace keys: %s" % airspace_keys)
         operational_intent_reference.keys = airspace_keys
-        logging.info("Deconfliction status: %s" % deconflicted)
-        logging.info("Flight deconfliction status checked")
+        logger.info("Deconfliction status: %s" % deconflicted)
+        logger.info("Flight deconfliction status checked")
         opint_creation_payload = json.loads(
             json.dumps(asdict(operational_intent_reference))
         )

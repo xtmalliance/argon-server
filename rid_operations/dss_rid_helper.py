@@ -254,7 +254,7 @@ class RemoteIDOperations():
         
         authority_credentials = dss_auth_helper.AuthorityCredentialsGetter()        
         all_flights_urls_string = flights_dict['all_flights_url']        
-        logging.debug("Flight url list : %s" % all_flights_urls_string)
+        logger.debug("Flight url list : %s" % all_flights_urls_string)
         all_flights_url = all_flights_urls_string.split()        
         for cur_flight_url in all_flights_url:
             try:

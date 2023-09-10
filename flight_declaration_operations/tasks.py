@@ -120,7 +120,7 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
         logger.info("Details of the submission status %s" % opint_submission_result.message)
 
     else:
-        logging.error(
+        logger.error(
             "Flight Declaration start / end times are not valid, please check the submitted declaration, this operation will not be sent to the DSS for strategic deconfliction"
         )
         if amqp_connection_url:

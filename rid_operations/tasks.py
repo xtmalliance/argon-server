@@ -39,7 +39,7 @@ def submit_dss_subscription(view , vertex_list, request_uuid):
 @app.task(name="run_ussp_polling_for_rid")
 def run_ussp_polling_for_rid():
     """ This method is a wrapper for repeated polling of UTMSPs for Network RID information """
-    logging.debug("Starting USSP polling.. ")
+    logger.debug("Starting USSP polling.. ")
     # Define start and end time 
 
     async_polling_lock = 'async_polling_lock'  # This 
@@ -59,7 +59,7 @@ def run_ussp_polling_for_rid():
     
         r.delete(async_polling_lock)
         
-    logging.debug("Finishing USSP polling..")
+    logger.debug("Finishing USSP polling..")
     
 
 
@@ -192,7 +192,7 @@ def stream_rid_test_data(requested_flights):
                 formatted_timestamp = arrow.get(provided_telemetry['timestamp'])
                 
             except ParserError as pe: 
-                logging.info("Error in parsing telemetry timestamp")
+                logger.info("Error in parsing telemetry timestamp")
             else:                
                 t = RIDAircraftState(timestamp=provided_telemetry['timestamp'], timestamp_accuracy=provided_telemetry['timestamp_accuracy'], operational_status=provided_telemetry['operational_status'], position=position, track=provided_telemetry['track'], speed=provided_telemetry['speed'], speed_accuracy=provided_telemetry['speed_accuracy'], vertical_speed=provided_telemetry['vertical_speed'], height=height)
                 
@@ -214,16 +214,16 @@ def stream_rid_test_data(requested_flights):
     end_time_of_injection_list = r.zrevrange(flight_injection_sorted_set,0,0,withscores=True)
     end_time_of_injections = arrow.get(end_time_of_injection_list[0][1]) 
 
-    logging.info("Provided Telemetry Starts at %s" % start_time_of_injections)
-    logging.info("Provided Telemetry Ends at %s" % end_time_of_injections)
+    logger.info("Provided Telemetry Starts at %s" % start_time_of_injections)
+    logger.info("Provided Telemetry Ends at %s" % end_time_of_injections)
 
     isa_start_time = start_time_of_injections
     # isa_end_time =  end_time_of_injections
     provided_telemetry_item_length = r.zcard(flight_injection_sorted_set)
-    logging.info("Provided Telemetry Item Count: %s" % provided_telemetry_item_length)
+    logger.info("Provided Telemetry Item Count: %s" % provided_telemetry_item_length)
 
     provided_telemetry_duration_seconds = (end_time_of_injections - start_time_of_injections).total_seconds()
-    logging.info("Provided Telemetry Duration in seconds: %s" % provided_telemetry_duration_seconds)
+    logger.info("Provided Telemetry Duration in seconds: %s" % provided_telemetry_duration_seconds)
     ASTM_TIME_SHIFT_SECS = 65 # Enable querying for upto sixty seconds after end time. 
     astm_rid_standard_end_time = end_time_of_injections.shift(seconds= ASTM_TIME_SHIFT_SECS) 
     
@@ -273,7 +273,7 @@ def stream_rid_test_data(requested_flights):
     def _stream_data(query_time:arrow.arrow.Arrow):        
         closest_observations = r.zrangebyscore(flight_injection_sorted_set, query_time.int_timestamp, query_time.int_timestamp)
         obs_query_dict = {"closest_observation_count":len(closest_observations), "q_time": query_time.isoformat()}        
-        logging.info("Closest observations: {closest_observation_count} found, at query time {q_time}".format(**obs_query_dict))
+        logger.info("Closest observations: {closest_observation_count} found, at query time {q_time}".format(**obs_query_dict))
         for closest_observation in closest_observations:
             c_o = json.loads(closest_observation)
             single_telemetry_data = c_o['flight_state']
@@ -298,14 +298,14 @@ def stream_rid_test_data(requested_flights):
         now = arrow.now()         
         if now > astm_rid_standard_end_time:
             should_continue = False
-            logging.info("End streaming ... %s" % arrow.now().isoformat())
+            logger.info("End streaming ... %s" % arrow.now().isoformat())
 
         elif now > end_time_of_injections:
             # the current time is more than the end time for flight injection, we must provide closest observation
             seconds_now_after_end_of_injections = (now - end_time_of_injections).total_seconds()
             q_index = provided_telemetry_item_length + seconds_now_after_end_of_injections            
             query_time = arrow.get(query_time_lookup[int(q_index)])            
-            logging.info("Exceeded normal end time of injections, looking up iteration, query time: %s" % query_time.isoformat())
+            logger.info("Exceeded normal end time of injections, looking up iteration, query time: %s" % query_time.isoformat())
         else: 
             query_time = now
         _stream_data(query_time = query_time)
@@ -362,7 +362,7 @@ def stream_rid_test_data_v22(requested_flights):
                 formatted_timestamp = arrow.get(provided_telemetry['timestamp'])
                 
             except arrow.parser.ParserError as pe: 
-                logging.info("Error in parsing telemetry timestamp")
+                logger.info("Error in parsing telemetry timestamp")
             else:                
                 t = my_telemetry_validator.parse_validate_current_state(current_state=provided_telemetry)
                 
@@ -384,16 +384,16 @@ def stream_rid_test_data_v22(requested_flights):
     end_time_of_injection_list = r.zrevrange(flight_injection_sorted_set,0,0,withscores=True)
     end_time_of_injections = arrow.get(end_time_of_injection_list[0][1]) 
 
-    logging.info("Provided Telemetry Starts at %s" % start_time_of_injections)
-    logging.info("Provided Telemetry Ends at %s" % end_time_of_injections)
+    logger.info("Provided Telemetry Starts at %s" % start_time_of_injections)
+    logger.info("Provided Telemetry Ends at %s" % end_time_of_injections)
 
     isa_start_time = start_time_of_injections
     # isa_end_time =  end_time_of_injections
     provided_telemetry_item_length = r.zcard(flight_injection_sorted_set)
-    logging.info("Provided Telemetry Item Count: %s" % provided_telemetry_item_length)
+    logger.info("Provided Telemetry Item Count: %s" % provided_telemetry_item_length)
 
     provided_telemetry_duration_seconds = (end_time_of_injections - start_time_of_injections).total_seconds()
-    logging.info("Provided Telemetry Duration in seconds: %s" % provided_telemetry_duration_seconds)
+    logger.info("Provided Telemetry Duration in seconds: %s" % provided_telemetry_duration_seconds)
     ASTM_TIME_SHIFT_SECS = 65 # Enable querying for upto sixty seconds after end time. 
     astm_rid_standard_end_time = end_time_of_injections.shift(seconds= ASTM_TIME_SHIFT_SECS) 
     
@@ -443,7 +443,7 @@ def stream_rid_test_data_v22(requested_flights):
     def _stream_data(query_time:arrow.arrow.Arrow):        
         closest_observations = r.zrangebyscore(flight_injection_sorted_set, query_time.int_timestamp, query_time.int_timestamp)
         obs_query_dict = {"closest_observation_count":len(closest_observations), "q_time": query_time.isoformat()}        
-        logging.info("Closest observations: {closest_observation_count} found, at query time {q_time}".format(**obs_query_dict))
+        logger.info("Closest observations: {closest_observation_count} found, at query time {q_time}".format(**obs_query_dict))
         for closest_observation in closest_observations:
             c_o = json.loads(closest_observation)
             single_telemetry_data = c_o['flight_state']
@@ -468,14 +468,14 @@ def stream_rid_test_data_v22(requested_flights):
         now = arrow.now()         
         if now > astm_rid_standard_end_time:
             should_continue = False
-            logging.info("End streaming ... %s" % arrow.now().isoformat())
+            logger.info("End streaming ... %s" % arrow.now().isoformat())
 
         elif now > end_time_of_injections:
             # the current time is more than the end time for flight injection, we must provide closest observation
             seconds_now_after_end_of_injections = (now - end_time_of_injections).total_seconds()
             q_index = provided_telemetry_item_length + seconds_now_after_end_of_injections            
             query_time = arrow.get(query_time_lookup[int(q_index)])            
-            logging.info("Exceeded normal end time of injections, looking up iteration, query time: %s" % query_time.isoformat())
+            logger.info("Exceeded normal end time of injections, looking up iteration, query time: %s" % query_time.isoformat())
         else: 
             query_time = now
         _stream_data(query_time = query_time)

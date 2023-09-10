@@ -293,7 +293,7 @@ def get_uss_flights(request):
             lng = float(message.data["lon_dd"])
             point = Point(lat, lng)
             point_in_polygon = view_box.contains(point)
-            # logging.debug(point_in_polygon)
+            # logger.debug(point_in_polygon)
             if point_in_polygon:
                 unique_flights.append(
                     {
@@ -304,7 +304,7 @@ def get_uss_flights(request):
                     }
                 )
             else:
-                logging.info("Point not in polygon %s " % view_box)
+                logger.info("Point not in polygon %s " % view_box)
     # sort by date
     unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
 

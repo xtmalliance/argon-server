@@ -20,9 +20,9 @@ class OperationConformanceNotification:
             )
         else:
             # If no AMQP is specified then
-            logging.error(
+            logger.error(
                 "Conformance Notification for {operation_id}".format(
                     operation_id=self.flight_declaration_id
                 )
             )
-            logging.error(message)
+            logger.error(message)

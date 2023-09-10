@@ -230,7 +230,7 @@ class BlenderDatabaseWriter:
             p_task.start()
             return True
         except Exception as e:
-            logging.error()
+            logger.error()
             return False
 
     def remove_conformance_monitoring_periodic_task(

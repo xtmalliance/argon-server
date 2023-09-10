@@ -47,7 +47,7 @@ if __name__ == '__main__':
     try:
         response = requests.post(securl, json = payload, headers = headers)        
     except Exception as e:
-        logging.error("Error in posting data to Spotlight")
-        logging.error(e.json())
+        logger.error("Error in posting data to Spotlight")
+        logger.error(e.json())
     else:
         response.json()

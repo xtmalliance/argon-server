@@ -33,7 +33,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
         invalid_aircraft_id_msg = "The aircraft ID provided in telemetry for operation {flight_declaration_id}, does not match the declared / authorized aircraft, you must stop operation. C4 Check failed.".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(invalid_aircraft_id_msg)
+        logger.error(invalid_aircraft_id_msg)
         my_operation_notification.send_conformance_status_notification(
             message=invalid_aircraft_id_msg, level="error"
         )
@@ -44,7 +44,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
         flight_state_not_correct_msg = "The Operation state for operation {flight_declaration_id}, is not one of 'Accepted' or 'Activated', your authorization is invalid. C4+C5 Check failed.".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(flight_state_not_correct_msg)
+        logger.error(flight_state_not_correct_msg)
         my_operation_notification.send_conformance_status_notification(
             message=flight_state_not_correct_msg, level="error"
         )
@@ -55,7 +55,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
         telemetry_timestamp_not_within_op_start_end_msg = "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the start / end time for an operation. C6 Check failed.".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(telemetry_timestamp_not_within_op_start_end_msg)
+        logger.error(telemetry_timestamp_not_within_op_start_end_msg)
         my_operation_notification.send_conformance_status_notification(
             message=telemetry_timestamp_not_within_op_start_end_msg, level="error"
         )
@@ -66,7 +66,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
         aircraft_altitude_nonconformant_msg = "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the altitude bounds C7a check failed.".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(aircraft_altitude_nonconformant_msg)
+        logger.error(aircraft_altitude_nonconformant_msg)
         my_operation_notification.send_conformance_status_notification(
             message=aircraft_altitude_nonconformant_msg, level="error"
         )
@@ -77,7 +77,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
         aircraft_bounds_nonconformant_msg = "The telemetry location provided for operation {flight_declaration_id}, is not within the declared bounds for an operation. C7b check failed.".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(aircraft_bounds_nonconformant_msg)
+        logger.error(aircraft_bounds_nonconformant_msg)
         my_operation_notification.send_conformance_status_notification(
             message=aircraft_bounds_nonconformant_msg, level="error"
         )
@@ -132,7 +132,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         telemetry_never_received_error_msg = "The telemetry for operation {flight_declaration_id}, has never been received. Check C9b Failed".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(telemetry_never_received_error_msg)
+        logger.error(telemetry_never_received_error_msg)
         my_operation_notification.send_conformance_status_notification(
             message=telemetry_never_received_error_msg, level="error"
         )
@@ -144,7 +144,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         flight_state_not_conformant = "The state for operation {flight_declaration_id}, has not been is not one of 'Activated', 'Nonconforming' or 'Contingent'. Check C10 failed' ".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(flight_state_not_conformant)
+        logger.error(flight_state_not_conformant)
         my_operation_notification.send_conformance_status_notification(
             message=flight_state_not_conformant, level="error"
         )
@@ -154,7 +154,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         authorization_not_granted_message = "There is no flight authorization for operation with ID {flight_declaration_id}. Check C11 Failed".format(
             flight_declaration_id=flight_declaration_id
         )
-        logging.error(flight_state_not_conformant)
+        logger.error(flight_state_not_conformant)
 
         new_state = 4
         my_operation_notification.send_conformance_status_notification(

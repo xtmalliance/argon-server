@@ -75,10 +75,10 @@ class DSSOperationalIntentsCreator:
         auth_token = my_scd_dss_helper.get_auth_token()
 
         if "error" in auth_token:
-            logging.error(
+            logger.error(
                 "Error in retrieving auth_token, check if the auth server is running properly, error details displayed above"
             )
-            logging.error(auth_token["error"])
+            logger.error(auth_token["error"])
             op_int_submission = OperationalIntentSubmissionStatus(
                 status="auth_server_error",
                 status_code=500,

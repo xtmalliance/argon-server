@@ -37,12 +37,12 @@ def write_geo_fence(geo_fence):
         assert 'error' not in gf_credentials # Credentials dictionary is populated
     except AssertionError as ae: 
         # Error in getting a Geofence credentials getting
-        logging.error('Error in getting Geofence Token')
-        logging.error(ae)
+        logger.error('Error in getting Geofence Token')
+        logger.error(ae)
     else:
         my_uploader = geo_fence_rw_helper.GeoFenceUploader(credentials = gf_credentials)
         upload_status = my_uploader.upload_to_server(gf=geo_fence)
-        logging.info(upload_status)
+        logger.info(upload_status)
 
 @app.task(name="download_geozone_source")
 def download_geozone_source(geo_zone_url:str, geozone_source_id:str):    
@@ -51,8 +51,8 @@ def download_geozone_source(geo_zone_url:str, geozone_source_id:str):
     try:
         geo_zone_request = requests.get(geo_zone_url)
     except ConnectionError as ce:
-        logging.error('Error in downloading data from Geofence url')
-        logging.error(ce)        
+        logger.error('Error in downloading data from Geofence url')
+        logger.error(ce)        
         test_status_storage = GeoAwarenessTestStatus(result="Error", message="Error in downloading data")
     else:
 
@@ -99,7 +99,7 @@ def write_geo_zone(geo_zone: str, test_harness_datasource:str = '0'):
                     lng = ed_269_geometry['horizontalProjection']['center'][0]
                     radius = ed_269_geometry['horizontalProjection']['radius']
                 except KeyError as ke: 
-                    logging.info("Error in parsing points provided in the ED 269 file %s" %ke)
+                    logger.info("Error in parsing points provided in the ED 269 file %s" %ke)
                     
                     parse_error = True
                 else:
@@ -107,8 +107,8 @@ def write_geo_zone(geo_zone: str, test_harness_datasource:str = '0'):
                     buf = geodesic_point_buffer(lat, lng, r)
                     b = mapping(buf)                
                     fc = {"type":"FeatureCollection","features":[ {"type": "Feature", "properties": {}, "geometry":b}]}
-                    logging.info("Converting point to circle")
-                    # logging.info(json.dumps(fc))
+                    logger.info("Converting point to circle")
+                    # logger.info(json.dumps(fc))
                     ed_269_geometry['horizontalProjection'] = b
             if not parse_error: 
                 horizontal_projection = ImplicitDict.parse(ed_269_geometry['horizontalProjection'], HorizontalProjection)    
@@ -119,7 +119,7 @@ def write_geo_zone(geo_zone: str, test_harness_datasource:str = '0'):
         
         geo_zone_feature = GeoZoneFeature(identifier= _geo_zone_feature['identifier'], country= _geo_zone_feature['country'],name= _geo_zone_feature['name'],type= _geo_zone_feature['type'], restriction=_geo_zone_feature['restriction'] ,restrictionConditions=_geo_zone_feature['restrictionConditions'], region=_geo_zone_feature['region'], reason = _geo_zone_feature['reason'], otherReasonInfo=_geo_zone_feature['otherReasonInfo'] ,regulationExemption=_geo_zone_feature['regulationExemption'], uSpaceClass=_geo_zone_feature['uSpaceClass'], message =_geo_zone_feature['message'] , applicability=_geo_zone_feature['applicability'], zoneAuthority = all_zone_authorities , geometry = ed_269_geometries)
         processed_geo_zone_features.append(geo_zone_feature)
-    logging.info("Processing %s geozone features.." %len(processed_geo_zone_features) )
+    logger.info("Processing %s geozone features.." %len(processed_geo_zone_features) )
     for geo_zone_feature in processed_geo_zone_features:
         all_feat_geoms = geo_zone_feature.geometry
 
@@ -135,8 +135,8 @@ def write_geo_zone(geo_zone: str, test_harness_datasource:str = '0'):
         bounds = u.bounds
         bounds_str = ','.join([str(x) for x in bounds])
         
-        logging.debug("Bounding box for shape..")
-        logging.debug(bounds)
+        logger.debug("Bounding box for shape..")
+        logger.debug(bounds)
         geo_zone = GeoZone(title= geo_zone['title'], description = geo_zone['description'],  features = geo_zone_feature)
         name = geo_zone_feature.name 
         start_time = arrow.now()
@@ -146,4 +146,4 @@ def write_geo_zone(geo_zone: str, test_harness_datasource:str = '0'):
         geo_f = GeoFence(geozone = json.dumps(geo_zone_feature),raw_geo_fence= json.dumps(fc), start_datetime = start_time.isoformat(), end_datetime = end_time.isoformat(), upper_limit=upper_limit, lower_limit=lower_limit, bounds= bounds_str, name= name, is_test_dataset = test_harness_datasource)
         geo_f.save()
 
-        logging.info("Saved Geofence to database ..")
+        logger.info("Saved Geofence to database ..")

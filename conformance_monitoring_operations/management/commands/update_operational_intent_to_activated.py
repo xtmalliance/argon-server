@@ -148,19 +148,19 @@ class Command(BaseCommand):
                 )
 
                 if operational_update_response.status == 200:
-                    logging.info(
+                    logger.info(
                         "Successfully updated operational intent status for {operational_intent_id} on the DSS".format(
                             operational_intent_id=operational_intent_id
                         )
                     )
                 else:
-                    logging.info("Error in updating operational intent on the DSS")
+                    logger.info("Error in updating operational intent on the DSS")
 
             else:
-                logging.info("Dry run, not submitting to the DSS")
+                logger.info("Dry run, not submitting to the DSS")
 
         else:
-            logging.info(
+            logger.info(
                 "Operational intent with {flight_declaration_id} does not exist...".format(
                     flight_declaration_id=flight_declaration_id
                 )
