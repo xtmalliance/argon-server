@@ -817,6 +817,7 @@ class SCDOperations:
     ) -> Optional[OperationalIntentUpdateResponse]:
         """This method updates a operational intent from one state to other"""
         auth_token = self.get_auth_token()
+        logger.info("Updating operational intent...")
         blender_base_url = env.get("BLENDER_FQDN", 0)
         airspace_keys = []
         # Initialize the update request with empty airspace key
@@ -853,29 +854,39 @@ class SCDOperations:
 
         operational_intent_update.keys = airspace_keys
 
-        deconflicted = True
-        print('___')
-        print(current_state, new_state)
-        if deconfliction_check:
-            # our priority is 100 there is no need to deconflight the flight.
-            if priority == 100:
-                deconflicted = True
-            else:
-                my_ind_volumes_converter = VolumesConverter()
-                my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
-                ind_volumes_polygon = (
-                    my_ind_volumes_converter.get_minimum_rotated_rectangle()
-                )
-                is_conflicted = rtree_helper.check_polygon_intersection(
-                    op_int_details=all_existing_operational_intent_details,
-                    polygon_to_check=ind_volumes_polygon,
-                )
-                
+        # our priority is 100 there is no need to deconflight the flight.
+        if priority == 100:
+            deconflicted = True
+        else:
+            my_ind_volumes_converter = VolumesConverter()
+            my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
+            ind_volumes_polygon = (
+                my_ind_volumes_converter.get_minimum_rotated_rectangle()
+            )
+            is_conflicted = rtree_helper.check_polygon_intersection(
+                op_int_details=all_existing_operational_intent_details,
+                polygon_to_check=ind_volumes_polygon,
+            )
+            deconflicted = False if is_conflicted else True
+            
+        if current_state == new_state:            
+            print("___")
+            print(operational_intent_ref_id)
+            print(all_existing_operational_intent_details_full)
+            print(current_state, new_state)            
+            print(deconflicted)
+            print("___")
 
-                deconflicted = False if is_conflicted else True
-        print(deconflicted)
-        print('___')
-        # Send the update request to the DSS
+        if not deconflicted:
+            d_r = None
+            dss_r_status_code = 999
+            message = "Flight not deconflicted, will not be submitting to DSS"
+            opint_update_result = OperationalIntentUpdateResponse(
+                dss_response=d_r, status=dss_r_status_code, message=message
+            )
+
+            return opint_update_result
+
         dss_opint_update_url = (
             self.dss_base_url
             + "dss/v1/operational_intent_references/"
@@ -888,79 +899,73 @@ class SCDOperations:
             "Authorization": "Bearer " + auth_token["access_token"],
         }
 
-        if deconflicted:
-            blender_base_url = env.get("BLENDER_FQDN", 0)
-            dss_r = requests.put(
-                dss_opint_update_url,
-                json=json.loads(json.dumps(asdict(operational_intent_update))),
-                headers=headers,
-            )
-            dss_response = dss_r.json()
-            dss_r_status_code = dss_r.status_code
-
-            if dss_r_status_code in [200, 201]:
-                # Update request was successful, notify the subscribers
-                subscribers = dss_response["subscribers"]
-                all_subscribers = []
-                for subscriber in subscribers:
-                    subscriptions = subscriber["subscriptions"]
-                    uss_base_url = subscriber["uss_base_url"]
-                    if uss_base_url != blender_base_url:
-                        all_subscription_states: List[SubscriptionState] = []
-                        for subscription in subscriptions:
-                            s_state = SubscriptionState(
-                                subscription_id=subscription["subscription_id"],
-                                notification_index=subscription["notification_index"],
-                            )
-                            all_subscription_states.append(s_state)
-                        subscriber_obj = SubscriberToNotify(
-                            subscriptions=all_subscribers, uss_base_url=uss_base_url
-                        )
-                        all_subscribers.append(subscriber_obj)
-
-                # TODO:Notify subscribers
-                # for subscriber in all_subscribers:
-                #     notification_payload = NotifyPeerUSSPostPayload(operational_intent_ref_id, operational_intent=OperationalIntentDetailsUSSResponse())
-                #     self.notify_peer_uss_of_created_updated_operational_intent(uss_base_url=subscriber.uss_base_url, notification_payload=)
-
-                my_op_int_ref_helper = OperationalIntentReferenceHelper()
-                operational_intent_reference: OperationalIntentReferenceDSSResponse = (
-                    my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
-                        operational_intent_reference=dss_response[
-                            "operational_intent_reference"
-                        ]
-                    )
-                )
-                # TODO: Subscribers is not a dataclass but needs to be
-                d_r = OperationalIntentUpdateSuccessResponse(
-                    subscribers=subscribers,
-                    operational_intent_reference=operational_intent_reference,
-                )
-                logger.info("Updated Operational Intent in the DSS Successfully")
-
-                message = CommonDSS4xxResponse(
-                    message="Successfully updated operational intent"
-                )
-                # error in deletion
-
-            else:
-                # Update unsuccessful
-                d_r = OperationalIntentUpdateErrorResponse(
-                    message=dss_response["message"]
-                )
-                message = CommonDSS4xxResponse(
-                    message="Error in updating operational intent in the DSS"
-                )
-        else:
-            d_r = None
-            dss_r_status_code = 409
-            message = "Error in updating operational intent, flight not deconflicted"
-
-        opint_update_result = OperationalIntentUpdateResponse(
-            dss_response=d_r, status=dss_r_status_code, message=message
+        blender_base_url = env.get("BLENDER_FQDN", 0)
+        dss_r = requests.put(
+            dss_opint_update_url,
+            json=json.loads(json.dumps(asdict(operational_intent_update))),
+            headers=headers,
         )
+        dss_response = dss_r.json()
+        dss_r_status_code = dss_r.status_code
 
-        return opint_update_result
+        if dss_r_status_code in [200, 201]:
+            # Update request was successful, notify the subscribers
+            subscribers = dss_response["subscribers"]
+            all_subscribers = []
+            for subscriber in subscribers:
+                subscriptions = subscriber["subscriptions"]
+                uss_base_url = subscriber["uss_base_url"]
+                if uss_base_url != blender_base_url:
+                    all_subscription_states: List[SubscriptionState] = []
+                    for subscription in subscriptions:
+                        s_state = SubscriptionState(
+                            subscription_id=subscription["subscription_id"],
+                            notification_index=subscription["notification_index"],
+                        )
+                        all_subscription_states.append(s_state)
+                    subscriber_obj = SubscriberToNotify(
+                        subscriptions=all_subscribers, uss_base_url=uss_base_url
+                    )
+                    all_subscribers.append(subscriber_obj)
+
+            # TODO:Notify subscribers
+            # for subscriber in all_subscribers:
+            #     notification_payload = NotifyPeerUSSPostPayload(operational_intent_ref_id, operational_intent=OperationalIntentDetailsUSSResponse())
+            #     self.notify_peer_uss_of_created_updated_operational_intent(uss_base_url=subscriber.uss_base_url, notification_payload=)
+
+            my_op_int_ref_helper = OperationalIntentReferenceHelper()
+            operational_intent_reference: OperationalIntentReferenceDSSResponse = (
+                my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
+                    operational_intent_reference=dss_response[
+                        "operational_intent_reference"
+                    ]
+                )
+            )
+            # TODO: Subscribers is not a dataclass but needs to be
+            d_r = OperationalIntentUpdateSuccessResponse(
+                subscribers=subscribers,
+                operational_intent_reference=operational_intent_reference,
+            )
+            logger.info("Updated Operational Intent in the DSS Successfully")
+
+            message = CommonDSS4xxResponse(
+                message="Successfully updated operational intent"
+            )
+            opint_update_result = OperationalIntentUpdateResponse(
+                dss_response=d_r, status=dss_r_status_code, message=message
+            )
+            return opint_update_result
+
+        else:
+            # Update unsuccessful
+            d_r = OperationalIntentUpdateErrorResponse(message=dss_response["message"])
+            message = CommonDSS4xxResponse(
+                message="Error in updating operational intent in the DSS"
+            )
+            opint_update_result = OperationalIntentUpdateResponse(
+                dss_response=d_r, status=dss_r_status_code, message=message
+            )
+            return opint_update_result
 
     def create_and_submit_operational_intent_reference(
         self,
@@ -970,6 +975,7 @@ class SCDOperations:
         off_nominal_volumes: List[Volume4D],
     ) -> OperationalIntentSubmissionStatus:
         auth_token = self.get_auth_token()
+        logger.info("Creating new operational intent...")
 
         # A token from authority was received, we can now submit the operational intent
         new_entity_id = str(uuid.uuid4())
@@ -1013,6 +1019,7 @@ class SCDOperations:
                     num_existing_op_ints=len(all_existing_operational_intent_details)
                 )
             )
+            logger.info(all_existing_operational_intent_details)
             my_ind_volumes_converter = VolumesConverter()
             my_ind_volumes_converter.convert_volumes_to_geojson(volumes=volumes)
             ind_volumes_polygon = (
@@ -1037,10 +1044,10 @@ class SCDOperations:
                 "No existing operational intents in the DSS, deconfliction status: %s"
                 % deconflicted
             )
-        logger.info("Airspace keys: %s" % airspace_keys)
+        # logger.info("Airspace keys: %s" % airspace_keys)
         operational_intent_reference.keys = airspace_keys
-        logger.info("Deconfliction status: %s" % deconflicted)
-        logger.info("Flight deconfliction status checked")
+        # logger.info("Deconfliction status: %s" % deconflicted)
+        # logger.info("Flight deconfliction status checked")
         opint_creation_payload = json.loads(
             json.dumps(asdict(operational_intent_reference))
         )

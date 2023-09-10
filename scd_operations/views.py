@@ -471,7 +471,7 @@ def SCDAuthTest(request, operation_id):
                     status=status.HTTP_200_OK,
                 )
 
-            elif update_operational_intent_job.status == 409:
+            elif update_operational_intent_job.status == 999:
                 # Flight is not deconflicted
                 logger.info("Flight not deconflicted...")
                 return Response(
