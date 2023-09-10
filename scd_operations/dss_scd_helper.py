@@ -618,7 +618,7 @@ class SCDOperations:
                         subscription_id=o_i_r["subscription_id"],
                     )
                     # if o_i_r_formatted.uss_base_url != blender_base_url:
-                    
+
                     all_uss_operational_intent_details.append(o_i_r_formatted)
 
             for (
@@ -804,11 +804,11 @@ class SCDOperations:
 
         return notification_result
 
-
     def update_specified_operational_intent_reference(
         self,
         operational_intent_ref_id: str,
         extents: List[Volume4D],
+        current_state: str,
         new_state: str,
         ovn: str,
         subscription_id: str,
@@ -840,6 +840,7 @@ class SCDOperations:
 
         for current_opint_details in relevant_op_int_id:
             ovn = current_opint_details.ovn
+
         all_existing_operational_intent_details = list(
             filter(
                 lambda op_int_to_check: op_int_to_check.id != operational_intent_ref_id,
@@ -849,7 +850,7 @@ class SCDOperations:
 
         for cur_op_int_detail in all_existing_operational_intent_details_full:
             airspace_keys.append(cur_op_int_detail.ovn)
-            
+
         operational_intent_update.keys = airspace_keys
 
         deconflicted = True
@@ -860,7 +861,9 @@ class SCDOperations:
             else:
                 my_ind_volumes_converter = VolumesConverter()
                 my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
-                ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()
+                ind_volumes_polygon = (
+                    my_ind_volumes_converter.get_minimum_rotated_rectangle()
+                )
                 is_conflicted = rtree_helper.check_polygon_intersection(
                     op_int_details=all_existing_operational_intent_details,
                     polygon_to_check=ind_volumes_polygon,
@@ -879,8 +882,7 @@ class SCDOperations:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
-        
-        
+
         if deconflicted:
             blender_base_url = env.get("BLENDER_FQDN", 0)
             dss_r = requests.put(
@@ -1038,6 +1040,7 @@ class SCDOperations:
             json.dumps(asdict(operational_intent_reference))
         )
         dss_response = {}
+
         if deconflicted:
             try:
                 dss_r = requests.put(

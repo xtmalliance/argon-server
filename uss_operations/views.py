@@ -4,7 +4,8 @@ from dataclasses import asdict, is_dataclass
 import rid_operations.view_port_ops as view_port_ops
 from datetime import timedelta
 from scd_operations import dss_scd_helper
-from typing import List 
+from typing import List
+
 # Create your views here.
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -23,8 +24,8 @@ from .uss_data_definitions import (
     OperationalIntentDetailsUSSResponse,
     OperationalIntentUSSDetails,
     OperationalIntentReferenceDSSResponse,
-    Time, 
-    Volume4D
+    Time,
+    Volume4D,
 )
 from scd_operations.scd_data_definitions import OperationalIntentStorage
 
@@ -74,7 +75,7 @@ def USSUpdateOpIntDetails(request):
     opint_subscription_end_time = timedelta(seconds=180)
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
     op_int_update_details_data = request.data
-    r = get_redis()    
+    r = get_redis()
     op_int_update_detail = from_dict(
         data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data
     )
@@ -105,13 +106,13 @@ def USSUpdateOpIntDetails(request):
     #     success_response=op_int_submission.dss_response,
     #     operational_intent_details=op_int_update_detail.operational_intent,
     # )
-    
+
     # r.set(op_int_details_key, json.dumps(asdict(operational_intent_full_details)))
     # r.expire(name=op_int_details_key, time=opint_subscription_end_time)
 
     # # Read the new operational intent
     # Store the opint, see what other operations conflict the opint
-    
+
     updated_success = UpdateOperationalIntent(
         message="New or updated full operational intent information received successfully "
     )
@@ -154,7 +155,7 @@ def USSOpIntDetails(request, opint_id):
                 "operational_intent_reference"
             ]
             details_full = op_int_details["operational_intent_details"]
-            # Load existing opint details            
+            # Load existing opint details
             stored_operational_intent_id = reference_full["id"]
             stored_manager = reference_full["manager"]
             stored_uss_availability = reference_full["uss_availability"]
@@ -172,13 +173,12 @@ def USSOpIntDetails(request, opint_id):
                 format=reference_full["time_end"]["format"],
                 value=reference_full["time_end"]["value"],
             )
-            stored_volumes = details_full["volumes"]            
-            #TODO: Fix outline circle 
+            stored_volumes = details_full["volumes"]
+            # TODO: Fix outline circle
             for v in stored_volumes:
-                if 'outline_circle' in v['volume'].keys():
-                    if not v['volume']['outline_circle']:
-                        v['volume'].pop('outline_circle')                    
-
+                if "outline_circle" in v["volume"].keys():
+                    if not v["volume"]["outline_circle"]:
+                        v["volume"].pop("outline_circle")
 
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]

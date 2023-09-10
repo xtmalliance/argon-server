@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
 from scd_operations.data_definitions import FlightDeclarationCreationPayload
-from common.data_definitions import OPERATION_STATES_LOOKUP
+from common.data_definitions import OPERATION_STATES_LOOKUP, OPERATION_STATES
 from .scd_test_harness_helper import (
     conflict_with_flight_test_injection_response,
     planned_test_injection_response,
@@ -389,6 +389,8 @@ def SCDAuthTest(request, operation_id):
                 flight_declaration_id=operation_id_str
             )
             current_state = flight_declaration.state
+            current_state_str = OPERATION_STATES[current_state][1]
+
             flight_authorization = (
                 my_database_reader.get_flight_authorization_by_flight_declaration_obj(
                     flight_declaration=flight_declaration
@@ -408,6 +410,7 @@ def SCDAuthTest(request, operation_id):
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
                 extents=test_injection_data.operational_intent.volumes,
                 new_state=test_state,
+                current_state=current_state_str,
                 ovn=stored_operational_intent_details.reference.ovn,
                 subscription_id=stored_operational_intent_details.reference.subscription_id,
                 deconfliction_check=deconfliction_check,
@@ -430,17 +433,29 @@ def SCDAuthTest(request, operation_id):
                 if r.exists(flight_opint_key):
                     new_operational_intent_full_details = OperationalIntentStorage(
                         bounds=view_r_bounds,
-                        start_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[
-                            0
-                        ].time_start)),
-                        end_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[
-                            0
-                        ].time_end)),
+                        start_time=json.dumps(
+                            asdict(
+                                test_injection_data.operational_intent.volumes[
+                                    0
+                                ].time_start
+                            )
+                        ),
+                        end_time=json.dumps(
+                            asdict(
+                                test_injection_data.operational_intent.volumes[
+                                    0
+                                ].time_end
+                            )
+                        ),
                         alt_max=50,
                         alt_min=25,
-                        success_response=asdict(update_operational_intent_job.dss_response),
-                        operational_intent_details=asdict(test_injection_data.operational_intent),
-                    )                    
+                        success_response=asdict(
+                            update_operational_intent_job.dss_response
+                        ),
+                        operational_intent_details=asdict(
+                            test_injection_data.operational_intent
+                        ),
+                    )
                     r.set(
                         flight_opint_key,
                         json.dumps(asdict(new_operational_intent_full_details)),
@@ -491,7 +506,9 @@ def SCDAuthTest(request, operation_id):
                 # Successfully submitted to the DSS, save the operational intent in Redis
                 operational_intent_full_details = OperationalIntentStorage(
                     bounds=view_r_bounds,
-                    start_time=test_injection_data.operational_intent.volumes[0].time_start,
+                    start_time=test_injection_data.operational_intent.volumes[
+                        0
+                    ].time_start,
                     end_time=test_injection_data.operational_intent.volumes[0].time_end,
                     alt_max=50,
                     alt_min=25,
