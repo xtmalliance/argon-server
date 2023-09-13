@@ -91,6 +91,12 @@ def ping(request):
     return JsonResponse({"message": "pong"}, status=200)
 
 
+@api_view(['GET'])
+@requires_scopes(['blender.read'])
+def ping_with_auth(request):
+    return JsonResponse({"message":"pong with auth"}, status=200)
+
+
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
 def set_air_traffic(request):
