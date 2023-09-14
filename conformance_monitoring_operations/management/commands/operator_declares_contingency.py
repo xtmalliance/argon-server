@@ -154,7 +154,7 @@ class Command(BaseCommand):
                         extents=stored_volumes,
                         new_state=str(contingent_state),
                         ovn=reference.ovn,
-                        get_airspace_keys=False,
+                        deconfliction_check=False,
                     )
                 )
 
@@ -315,22 +315,22 @@ class Command(BaseCommand):
                             extents=stored_volumes,
                             new_state="Contingent",
                             ovn=reference.ovn,
-                            get_airspace_keys=True,
+                            deconfliction_check=True,
                         )
 
                         if operational_update_response.status == 200:
-                            logging.info(
+                            logger.info(
                                 "Successfully updated operational intent status for {operational_intent_id} on the DSS".format(
                                     operational_intent_id=stored_operational_intent_id
                                 )
                             )
                         else:
-                            logging.info(
+                            logger.info(
                                 "Error in updating operational intent on the DSS"
                             )
 
                     else:
-                        logging.info("Dry run, not submitting to the DSS")
+                        logger.info("Dry run, not submitting to the DSS")
 
                 # Update the volume
 

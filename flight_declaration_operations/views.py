@@ -2,7 +2,6 @@
 # Create your views here.
 import json
 import logging
-from dataclasses import asdict
 from typing import List
 import arrow
 from django.http import HttpResponse, JsonResponse
@@ -198,7 +197,7 @@ def set_flight_declaration(request):
 
     bounds = my_operational_intent_converter.get_geo_json_bounds()
 
-    logging.info("Checking intersections with Geofences..")
+    logger.info("Checking intersections with Geofences..")
     view_box = [float(i) for i in bounds.split(",")]
 
     fence_within_timelimits = GeoFence.objects.filter(
@@ -222,7 +221,7 @@ def set_flight_declaration(request):
             relevant_id_set.append(i["geo_fence_id"])
 
         my_rtree_helper.clear_rtree_index()
-        logging.info(
+        logger.info(
             "Geofence intersections checked, found {num_intersections} fences"
             % {"num_intersections": len(relevant_id_set)}
         )
@@ -250,7 +249,7 @@ def set_flight_declaration(request):
         for i in all_relevant_declarations:
             relevant_id_set.append(i["flight_declaration_id"])
         my_fd_rtree_helper.clear_rtree_index()
-        logging.info(
+        logger.info(
             "Flight Declaration intersections checked, found {num_intersections} declarations"
             % {"all_relevant_declarations": len(relevant_id_set)}
         )
@@ -373,7 +372,7 @@ class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):
             start_datetime__gte=s_date.isoformat(), end_datetime__lte=e_date.isoformat()
         )
 
-        logging.info("Found %s flight declarations" % len(all_fd_within_timelimits))
+        logger.info("Found %s flight declarations" % len(all_fd_within_timelimits))
         if view_port:
             INDEX_NAME = "opint_idx"
             my_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)

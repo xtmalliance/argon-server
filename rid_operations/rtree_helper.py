@@ -94,7 +94,7 @@ def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon
     if op_ints_of_interest_ids: 
         for op_ints_of_interest_id in op_ints_of_interest_ids:
             existing_op_int = op_int_details[op_ints_of_interest_id]            
-            intersects = polygon_to_check.intersects(existing_op_int.shape)
+            intersects = polygon_to_check.intersects(existing_op_int.shape)            
             if intersects:
                 does_intersect.append(True)
             else: 

@@ -262,7 +262,7 @@ class OperationalIntentReferenceHelper:
             ]
             # dss_response_subscribers = op_int_details["success_response"]["subscribers"]
             # blender_base_url = env.get("BLENDER_FQDN", 0)
-        
+
             # for subscriber in dss_response_subscribers:
             #     subscriptions = subscriber["subscriptions"]
             #     uss_base_url = subscriber["uss_base_url"]
@@ -393,6 +393,9 @@ class OperationalIntentReferenceHelper:
             off_nominal_volumes=all_off_nominal_volumes,
         )
         return o_i_d
+
+    def update_ovn_in_stored_opint_ref(self):
+        pass
 
     def parse_operational_intent_reference_from_dss(
         self, operational_intent_reference
@@ -552,10 +555,11 @@ class SCDOperations:
         blender_base_url = env.get("BLENDER_FQDN", 0)
         my_op_int_ref_helper = OperationalIntentReferenceHelper()
         all_uss_operational_intent_details = []
+
         for volume in volumes:
             operational_intent_references = []
             area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)
-            logging.info("Querying DSS for operational intents in the area..")
+            logger.info("Querying DSS for operational intents in the area..")
             try:
                 operational_intent_ref_response = requests.post(
                     query_op_int_url,
@@ -574,14 +578,15 @@ class SCDOperations:
                     "operational_intent_references"
                 ]
 
-            if operational_intent_references:
-                logger.info(
-                    "{num_intents} existing operational intent references found in the area".format(
-                        num_intents=len(operational_intent_references)
-                    )
-                )
-            else:
-                logger.info("No operational intent references found in the area")
+            # if operational_intent_references:
+            #     logger.info(
+            #         "{num_intents} existing operational intent references found in the area".format(
+            #             num_intents=len(operational_intent_references)
+            #         )
+            #     )
+            # else:
+            #     logger.info("No operational intent references found in the area")
+
             # Query the operational intent reference
             for operational_intent_reference_detail in operational_intent_references:
                 # Get the USS URL endpoint
@@ -613,7 +618,9 @@ class SCDOperations:
                         subscription_id=o_i_r["subscription_id"],
                     )
                     # if o_i_r_formatted.uss_base_url != blender_base_url:
+
                     all_uss_operational_intent_details.append(o_i_r_formatted)
+
             for (
                 current_uss_operational_intent_detail
             ) in all_uss_operational_intent_details:
@@ -624,7 +631,7 @@ class SCDOperations:
 
                 if current_uss_base_url == blender_base_url:
                     # The opint is from Flight Blender itself
-                    # No need to query peer USS
+                    # No need to query peer USS, just update the ovn
                     r = get_redis()
                     opint_flightref = "opint_flightref." + str(
                         current_uss_operational_intent_detail.id
@@ -641,6 +648,11 @@ class SCDOperations:
                             "operational_intent_reference"
                         ]
                         op_int_det = op_int_details["operational_intent_details"]
+                        # Update the ovn
+                        op_int_ref["ovn"] = current_uss_operational_intent_detail.ovn
+
+                        # TODO: Update flight opint object in Redis
+
                     op_int_details_retrieved = True
 
                 else:  # query peer USS
@@ -692,7 +704,6 @@ class SCDOperations:
                         op_int_details_retrieved = False
                         logger.error("Error details %s " % e)
                     else:
-                        # This needs to be moved back one block
                         operational_intent_details_json = (
                             uss_operational_intent_request.json()
                         )
@@ -742,7 +753,7 @@ class SCDOperations:
                         reference=op_int_reference, details=op_int_detail
                     )
 
-                    operational_intent_volumes = op_int_detail.volumes
+                    operational_intent_volumes = uss_op_int_details.details.volumes
                     my_volume_converter = VolumesConverter()
                     my_volume_converter.convert_volumes_to_geojson(
                         volumes=operational_intent_volumes
@@ -751,15 +762,11 @@ class SCDOperations:
                         my_volume_converter.get_minimum_rotated_rectangle()
                     )
                     cur_op_int_details = OpInttoCheckDetails(
-                        shape=minimum_rotated_rect, ovn=op_int_ref["ovn"]
+                        shape=minimum_rotated_rect,
+                        ovn=op_int_reference.ovn,
+                        id=op_int_reference.id,
                     )
                     all_opints_to_check.append(cur_op_int_details)
-
-                else:
-                    logger.error(
-                        "Could not retrieve flight details from USS %s"
-                        % uss_operational_intent_request.json()
-                    )
 
         return all_opints_to_check
 
@@ -801,16 +808,18 @@ class SCDOperations:
         self,
         operational_intent_ref_id: str,
         extents: List[Volume4D],
+        current_state: str,
         new_state: str,
         ovn: str,
         subscription_id: str,
-        get_airspace_keys=False,
+        deconfliction_check=False,
         priority: int = 0,
     ) -> Optional[OperationalIntentUpdateResponse]:
         """This method updates a operational intent from one state to other"""
         auth_token = self.get_auth_token()
+        logger.info("Updating operational intent...")
         blender_base_url = env.get("BLENDER_FQDN", 0)
-        airspace_keys = [ovn] if ovn else []
+        airspace_keys = []
         # Initialize the update request with empty airspace key
         operational_intent_update = OperationalIntentUpdateRequest(
             extents=extents,
@@ -819,48 +828,57 @@ class SCDOperations:
             subscription_id=subscription_id,
             key=airspace_keys,
         )
-        if (
-            get_airspace_keys
-        ):  # this is a update request for Nonconforming / contingent state so we dont need keys.
-            all_existing_operational_intent_details = self.get_latest_airspace_volumes(
-                volumes=extents
+        all_existing_operational_intent_details_full = self.get_latest_airspace_volumes(
+            volumes=extents
+        )
+        # Remove the check for operation ID that we are updating.
+        # If the ovn is updated, overwrite with the new ovn.
+        relevant_op_int_id = [
+            x
+            for x in all_existing_operational_intent_details_full
+            if x.id == operational_intent_ref_id
+        ]
+
+        for current_opint_details in relevant_op_int_id:
+            ovn = current_opint_details.ovn
+
+        all_existing_operational_intent_details = list(
+            filter(
+                lambda op_int_to_check: op_int_to_check.id != operational_intent_ref_id,
+                all_existing_operational_intent_details_full,
             )
-            # Airspace checked, prepare the keys for updating.
-            if all_existing_operational_intent_details:
-                logging.info(
-                    "Getting ovn / airspace keys from {num_existing_op_ints} operational intent details".format(
-                        num_existing_op_ints=len(
-                            all_existing_operational_intent_details
-                        )
-                    )
-                )
-                for cur_op_int_detail in all_existing_operational_intent_details:
-                    airspace_keys.append(cur_op_int_detail.ovn)
-            logging.info("Airspace keys: %s" % airspace_keys)
+        )
+
+        for cur_op_int_detail in all_existing_operational_intent_details_full:
+            airspace_keys.append(cur_op_int_detail.ovn)
+
+        operational_intent_update.keys = airspace_keys
+
+        # our priority is 100 there is no need to deconflight the flight.
+        if priority == 100:
+            deconflicted = True
+        else:
             my_ind_volumes_converter = VolumesConverter()
             my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
             ind_volumes_polygon = (
                 my_ind_volumes_converter.get_minimum_rotated_rectangle()
             )
-            # our priority is 100 there is no need to deconflight the flight.
-            if priority == 100:
-                for cur_op_int_detail in all_existing_operational_intent_details:
-                    airspace_keys.append(cur_op_int_detail.ovn)
-                deconflicted = True
-            else:
-                is_conflicted = rtree_helper.check_polygon_intersection(
-                    op_int_details=all_existing_operational_intent_details,
-                    polygon_to_check=ind_volumes_polygon,
-                )
-                deconflicted = False if is_conflicted else True
-        else:
-            deconflicted = True
-            logging.info(
-                "No existing operational intents in the DSS, deconfliction status: %s"
-                % deconflicted
+            is_conflicted = rtree_helper.check_polygon_intersection(
+                op_int_details=all_existing_operational_intent_details,
+                polygon_to_check=ind_volumes_polygon,
             )
-            operational_intent_update.keys = airspace_keys
-        # Send the update request to the DSS
+            deconflicted = False if is_conflicted else True
+            
+        if not deconflicted:
+            d_r = None
+            dss_r_status_code = 999
+            message = "Flight not deconflicted, will not be submitting to DSS"
+            opint_update_result = OperationalIntentUpdateResponse(
+                dss_response=d_r, status=dss_r_status_code, message=message
+            )
+
+            return opint_update_result
+
         dss_opint_update_url = (
             self.dss_base_url
             + "dss/v1/operational_intent_references/"
@@ -872,24 +890,25 @@ class SCDOperations:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
-        logging.info("Checking flight deconfliction status")
 
-        if deconflicted:
-            dss_r = requests.put(
-                dss_opint_update_url,
-                json=json.loads(json.dumps(asdict(operational_intent_update))),
-                headers=headers,
-            )
-            dss_response = dss_r.json()
-            dss_r_status_code = dss_r.status_code
 
-            if dss_r_status_code in [200, 201]:
-                # Update request was successful, notify the subscribers
-                subscribers = dss_response["subscribers"]
-                all_subscribers = []
-                for subscriber in subscribers:
-                    subscriptions = subscriber["subscriptions"]
-                    uss_base_url = subscriber["uss_base_url"]
+        blender_base_url = env.get("BLENDER_FQDN", 0)
+        dss_r = requests.put(
+            dss_opint_update_url,
+            json=json.loads(json.dumps(asdict(operational_intent_update))),
+            headers=headers,
+        )
+        dss_response = dss_r.json()
+        dss_r_status_code = dss_r.status_code
+
+        if dss_r_status_code in [200, 201]:
+            # Update request was successful, notify the subscribers
+            subscribers = dss_response["subscribers"]
+            all_subscribers = []
+            for subscriber in subscribers:
+                subscriptions = subscriber["subscriptions"]
+                uss_base_url = subscriber["uss_base_url"]
+                if uss_base_url != blender_base_url:
                     all_subscription_states: List[SubscriptionState] = []
                     for subscription in subscriptions:
                         s_state = SubscriptionState(
@@ -902,44 +921,44 @@ class SCDOperations:
                     )
                     all_subscribers.append(subscriber_obj)
 
-                my_op_int_ref_helper = OperationalIntentReferenceHelper()
-                operational_intent_reference: OperationalIntentReferenceDSSResponse = (
-                    my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
-                        operational_intent_reference=dss_response[
-                            "operational_intent_reference"
-                        ]
-                    )
-                )
-                # A subscribers
-                d_r = OperationalIntentUpdateSuccessResponse(
-                    subscribers=all_subscribers,
-                    operational_intent_reference=operational_intent_reference,
-                )
-                logging.info("Updated Operational Intent in the DSS Successfully")
+            # TODO:Notify subscribers
+            # for subscriber in all_subscribers:
+            #     notification_payload = NotifyPeerUSSPostPayload(operational_intent_ref_id, operational_intent=OperationalIntentDetailsUSSResponse())
+            #     self.notify_peer_uss_of_created_updated_operational_intent(uss_base_url=subscriber.uss_base_url, notification_payload=)
 
-                message = CommonDSS4xxResponse(
-                    message="Successfully updated operational intent"
+            my_op_int_ref_helper = OperationalIntentReferenceHelper()
+            operational_intent_reference: OperationalIntentReferenceDSSResponse = (
+                my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
+                    operational_intent_reference=dss_response[
+                        "operational_intent_reference"
+                    ]
                 )
-                # error in deletion
+            )
+            # TODO: Subscribers is not a dataclass but needs to be
+            d_r = OperationalIntentUpdateSuccessResponse(
+                subscribers=subscribers,
+                operational_intent_reference=operational_intent_reference,
+            )
+            logger.info("Updated Operational Intent in the DSS Successfully")
 
-            else:
-                # Update unsuccessful
-                d_r = OperationalIntentUpdateErrorResponse(
-                    message=dss_response["message"]
-                )
-                message = CommonDSS4xxResponse(
-                    message="Error in updating operational intent in the DSS"
-                )
+            message = CommonDSS4xxResponse(
+                message="Successfully updated operational intent"
+            )
+            opint_update_result = OperationalIntentUpdateResponse(
+                dss_response=d_r, status=dss_r_status_code, message=message
+            )
+            return opint_update_result
+
         else:
-            d_r = None
-            dss_r_status_code = 409
-            message = "Flight not deconflicted"
-
-        opint_update_result = OperationalIntentUpdateResponse(
-            dss_response=d_r, status=dss_r_status_code, message=message
-        )
-
-        return opint_update_result
+            # Update unsuccessful
+            d_r = OperationalIntentUpdateErrorResponse(message=dss_response["message"])
+            message = CommonDSS4xxResponse(
+                message="Error in updating operational intent in the DSS"
+            )
+            opint_update_result = OperationalIntentUpdateResponse(
+                dss_response=d_r, status=dss_r_status_code, message=message
+            )
+            return opint_update_result
 
     def create_and_submit_operational_intent_reference(
         self,
@@ -949,6 +968,7 @@ class SCDOperations:
         off_nominal_volumes: List[Volume4D],
     ) -> OperationalIntentSubmissionStatus:
         auth_token = self.get_auth_token()
+        logger.info("Creating new operational intent...")
 
         # A token from authority was received, we can now submit the operational intent
         new_entity_id = str(uuid.uuid4())
@@ -981,25 +1001,28 @@ class SCDOperations:
         )
         # Query other USSes for operational intent
         # Check if there are conflicts (or not)
-        logging.info("Checking flight deconfliction status...")
+        logger.info("Checking flight deconfliction status...")
         # Get all operational intents in the area
         all_existing_operational_intent_details = self.get_latest_airspace_volumes(
             volumes=volumes
         )
         if all_existing_operational_intent_details:
-            logging.info(
+            logger.info(
                 "Checking deconfliction status with {num_existing_op_ints} operational intent details".format(
                     num_existing_op_ints=len(all_existing_operational_intent_details)
                 )
             )
+            logger.info(all_existing_operational_intent_details)
             my_ind_volumes_converter = VolumesConverter()
             my_ind_volumes_converter.convert_volumes_to_geojson(volumes=volumes)
             ind_volumes_polygon = (
                 my_ind_volumes_converter.get_minimum_rotated_rectangle()
             )
+
+            for cur_op_int_detail in all_existing_operational_intent_details:
+                airspace_keys.append(cur_op_int_detail.ovn)
+
             if priority == 100:
-                for cur_op_int_detail in all_existing_operational_intent_details:
-                    airspace_keys.append(cur_op_int_detail.ovn)
                 deconflicted = True
             else:
                 airspace_keys.append(management_key)
@@ -1010,18 +1033,19 @@ class SCDOperations:
                 deconflicted = False if is_conflicted else True
         else:
             deconflicted = True
-            logging.info(
+            logger.info(
                 "No existing operational intents in the DSS, deconfliction status: %s"
                 % deconflicted
             )
-        logging.info("Airspace keys: %s" % airspace_keys)
+        # logger.info("Airspace keys: %s" % airspace_keys)
         operational_intent_reference.keys = airspace_keys
-        logging.info("Deconfliction status: %s" % deconflicted)
-        logging.info("Flight deconfliction status checked")
+        # logger.info("Deconfliction status: %s" % deconflicted)
+        # logger.info("Flight deconfliction status checked")
         opint_creation_payload = json.loads(
             json.dumps(asdict(operational_intent_reference))
         )
         dss_response = {}
+
         if deconflicted:
             try:
                 dss_r = requests.put(

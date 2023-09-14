@@ -188,7 +188,7 @@ def dss_isa_callback(request, subscription_id):
         subscription_view = r.get(subscription_view_key)       
 
         all_flights_url = flights_dict['all_flights_url']
-        logging.info(all_flights_url)
+        logger.info(all_flights_url)
         for new_flight in service_areas:
             all_flights_url += new_flight['flights_url'] + \
                 '?view=' + subscription_view + " "

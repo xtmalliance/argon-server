@@ -2,6 +2,9 @@ from rest_framework.decorators import api_view
 from auth_helper.utils import requires_scopes
 from dataclasses import asdict, is_dataclass
 import rid_operations.view_port_ops as view_port_ops
+from datetime import timedelta
+from scd_operations import dss_scd_helper
+from typing import List
 
 # Create your views here.
 from os import environ as env
@@ -21,8 +24,10 @@ from .uss_data_definitions import (
     OperationalIntentDetailsUSSResponse,
     OperationalIntentUSSDetails,
     OperationalIntentReferenceDSSResponse,
-    Time
+    Time,
+    Volume4D,
 )
+from scd_operations.scd_data_definitions import OperationalIntentStorage
 
 from rid_operations.rid_utils import (
     RIDAuthData,
@@ -67,18 +72,47 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 def USSUpdateOpIntDetails(request):
     # TODO: Process changing of updated operational intent
     # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
-
+    opint_subscription_end_time = timedelta(seconds=180)
+    my_geo_json_converter = dss_scd_helper.VolumesConverter()
     op_int_update_details_data = request.data
-    r = get_redis()    
+    r = get_redis()
     op_int_update_detail = from_dict(
         data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data
     )
+    my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
     # Write the operational Intent
     operation_id_str = op_int_update_detail.operational_intent_id
     op_int_details_key = "flight_opint." + operation_id_str
-    # Read the new operational intent
+    # print('incoming...')
+    # print(op_int_update_detail)
+    # operational_intent_reference = op_int_update_detail.operational_intent.reference
+    # operational_intent_details = op_int_update_detail.operational_intent.details
+    # volumes = operational_intent_details.volumes
+
+    # all_volumes: List[Volume4D] = []
+    # for volume in volumes:
+    #     v4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=volume)
+    #     all_volumes.append(v4D)
+
+    # my_geo_json_converter.convert_volumes_to_geojson(volumes=all_volumes)
+    # view_rect_bounds = my_geo_json_converter.get_bounds()
+    # success_response = OpenS
+    # operational_intent_full_details = OperationalIntentStorage(
+    #     bounds=view_rect_bounds,
+    #     start_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[0].time_start)),
+    #     end_time=json.dumps(asdict(test_injection_data.operational_intent.volumes[0].time_end)),
+    #     alt_max=50,
+    #     alt_min=25,
+    #     success_response=op_int_submission.dss_response,
+    #     operational_intent_details=op_int_update_detail.operational_intent,
+    # )
+
+    # r.set(op_int_details_key, json.dumps(asdict(operational_intent_full_details)))
+    # r.expire(name=op_int_details_key, time=opint_subscription_end_time)
+
+    # # Read the new operational intent
     # Store the opint, see what other operations conflict the opint
-    
+
     updated_success = UpdateOperationalIntent(
         message="New or updated full operational intent information received successfully "
     )
@@ -121,7 +155,7 @@ def USSOpIntDetails(request, opint_id):
                 "operational_intent_reference"
             ]
             details_full = op_int_details["operational_intent_details"]
-            # Load existing opint details            
+            # Load existing opint details
             stored_operational_intent_id = reference_full["id"]
             stored_manager = reference_full["manager"]
             stored_uss_availability = reference_full["uss_availability"]
@@ -139,13 +173,12 @@ def USSOpIntDetails(request, opint_id):
                 format=reference_full["time_end"]["format"],
                 value=reference_full["time_end"]["value"],
             )
-            stored_volumes = details_full["volumes"]            
-            #TODO: Fix outline circle 
+            stored_volumes = details_full["volumes"]
+            # TODO: Fix outline circle
             for v in stored_volumes:
-                if 'outline_circle' in v['volume'].keys():
-                    if not v['volume']['outline_circle']:
-                        v['volume'].pop('outline_circle')                    
-
+                if "outline_circle" in v["volume"].keys():
+                    if not v["volume"]["outline_circle"]:
+                        v["volume"].pop("outline_circle")
 
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
@@ -260,7 +293,7 @@ def get_uss_flights(request):
             lng = float(message.data["lon_dd"])
             point = Point(lat, lng)
             point_in_polygon = view_box.contains(point)
-            # logging.debug(point_in_polygon)
+            # logger.debug(point_in_polygon)
             if point_in_polygon:
                 unique_flights.append(
                     {
@@ -271,7 +304,7 @@ def get_uss_flights(request):
                     }
                 )
             else:
-                logging.info("Point not in polygon %s " % view_box)
+                logger.info("Point not in polygon %s " % view_box)
     # sort by date
     unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
 

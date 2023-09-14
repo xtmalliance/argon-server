@@ -115,16 +115,16 @@ class Command(BaseCommand):
                     ovn=stored_ovn,
                 )
                 if operation_removal_status.status == 200:
-                    logging.info(
+                    logger.info(
                         "Successfully removed operational intent {dss_operational_intent_ref_id} from DSS".format(
                             dss_operational_intent_ref_id=dss_operational_intent_ref_id
                         )
                     )
                 else:
-                    logging.info("Error in deleting operational intent from DSS")
+                    logger.info("Error in deleting operational intent from DSS")
 
             else:
-                logging.info(
+                logger.info(
                     "Error in removing {flight_declaration_id} reference  from DSS".format(
                         flight_declaration_id=flight_declaration_id
                     )

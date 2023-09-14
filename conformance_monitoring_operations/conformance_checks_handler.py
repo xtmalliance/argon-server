@@ -40,13 +40,13 @@ class FlightOperationConformanceHelper:
         This class updates the state of a flight operation.
         """
         my_operation_state_machine = FlightOperationStateMachine(state=original_state)
-        logging.info("Current Operation State %s" % my_operation_state_machine.state)
+        logger.info("Current Operation State %s" % my_operation_state_machine.state)
 
         my_operation_state_machine.on_event(event)
         new_state = get_status(my_operation_state_machine.state)
         if original_state == new_state:
             ## The event cannot trigger a change of state, flight state is not updated
-            logging.info("State change verification failed")
+            logger.info("State change verification failed")
             return False
         else:
             return True
@@ -138,13 +138,13 @@ class FlightOperationConformanceHelper:
                         flight_declaration=self.flight_declaration
                     )
                     if conformance_monitoring_job:
-                        logging.info(
+                        logger.info(
                             "Created conformance monitoring job for {flight_declaration_id}".format(
                                 flight_declaration_id=self.flight_declaration_id
                             )
                         )
                     else:
-                        logging.info(
+                        logger.info(
                             "Error in creating conformance monitoring job for {flight_declaration_id}".format(
                                 flight_declaration_id=self.flight_declaration_id
                             )
