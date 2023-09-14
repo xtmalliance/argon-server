@@ -196,8 +196,8 @@ def SCDAuthTest(request, operation_id):
     r = get_redis()
 
     operation_id_str = str(operation_id)
-    print("*********************")
-    print(operation_id_str)
+    logger.info("*********************")
+    logger.info(operation_id_str)
     if request.method == "PUT":
         my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
@@ -268,9 +268,6 @@ def SCDAuthTest(request, operation_id):
             v4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=volume)
             all_volumes.append(v4D)
 
-        # print("incoming volumes")
-        # print(all_volumes)
-        # print("+++++++++++++++++")
         # Create a list of Volume4D objects
         all_off_nominal_volumes: List[Volume4D] = []
         for off_nominal_volume in operational_intent_off_nominal_volumes:

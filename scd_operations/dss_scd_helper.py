@@ -869,14 +869,6 @@ class SCDOperations:
             )
             deconflicted = False if is_conflicted else True
             
-        if current_state == new_state:            
-            print("___")
-            print(operational_intent_ref_id)
-            print(all_existing_operational_intent_details_full)
-            print(current_state, new_state)            
-            print(deconflicted)
-            print("___")
-
         if not deconflicted:
             d_r = None
             dss_r_status_code = 999
