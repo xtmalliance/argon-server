@@ -231,11 +231,11 @@ def set_flight_declaration(request):
 
     all_relevant_declarations = []
     existing_declaration_within_timelimits = FlightDeclaration.objects.filter(
-        start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+        start_datetime__lte=end_datetime, end_datetime__gte=start_datetime
     ).exists()
     if existing_declaration_within_timelimits:
         all_declarations_within_timelimits = FlightDeclaration.objects.filter(
-            start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+          start_datetime__lte=end_datetime, end_datetime__gte=start_datetime
         )
         INDEX_NAME = "flight_declaration_idx"
         my_fd_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)
