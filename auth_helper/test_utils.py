@@ -7,6 +7,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from conftest import get_oauth2_token
+
 
 class RequiresScopesTests(APITestCase):
     def setUp(self):
@@ -30,12 +32,12 @@ class RequiresScopesTests(APITestCase):
         )
 
     def test_valid_auth_token(self):
-        valid_jwt = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0ZmxpZ2h0LmZsaWdodGJsZW5kZXIuY29tIiwiY2xpZW50X2lkIjoidXNzX25vYXV0aCIsImV4cCI6MTY4Nzc4Mjk0OCwiaXNzIjoiTm9BdXRoIiwianRpIjoiODI0OWI5ODgtZjlkZi00YmNhLWI2YTctODVhZGFiZjFhMTUwIiwibmJmIjoxNjg3Nzc5MzQ3LCJzY29wZSI6ImJsZW5kZXIucmVhZCIsInN1YiI6InVzc19ub2F1dGgifQ.b63qZWs08Cp1cgfRCtbQfLom6QQyFpqUaFDNZ9ZdAjSM690StACij6FiriSFhOfFiRBv9rE0DePJzElUSwv1r1bI0IpKMtEJYsJY4DXy7ZImiJ3rSten1nnb1LLAELcDIxMZM2D1ek43EFW35al4si640JfMcSmt62bEP1b4Msc"
-        self.client.defaults["HTTP_AUTHORIZATION"] = valid_jwt
+        token = get_oauth2_token()
+        self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
         response = self.client.get(self.api_url, content_type="application/json")
         response_json = {"message": "pong with auth"}
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), response_json)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_no_auth_token(self):
         response = self.client.get(self.api_url, content_type="application/json")
@@ -83,6 +85,7 @@ class RequiresScopesTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.json(), response_json)
 
+    @pytest.mark.usefixtures("mock_env_passport_url")
     def test_kid_claim_no_pub_key_server_auth_token(self):
         EPOCH = datetime.utcfromtimestamp(0)
         EXPIRATION_SECONDS = 1000
@@ -95,7 +98,6 @@ class RequiresScopesTests(APITestCase):
                 "scope": " ".join("blender.read"),
                 "aud": "alpha.flightblender.com",
                 "iss": "NoAuth",
-                "kid": "1234",
                 "nbf": timestamp - 1,
                 "exp": timestamp + EXPIRATION_SECONDS,
                 "jti": str(uuid.uuid4()),
@@ -106,6 +108,7 @@ class RequiresScopesTests(APITestCase):
         jwt_token = jwt_token.serialize()
 
         self.client.defaults["HTTP_AUTHORIZATION"] = "Bearer " + jwt_token
+
         response = self.client.get(self.api_url, content_type="application/json")
         response_json = {
             "detail": "Public Key Server to validate the token could not be reached"
