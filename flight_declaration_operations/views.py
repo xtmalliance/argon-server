@@ -173,7 +173,8 @@ def set_flight_declaration(request):
             meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"]
         )
 
-    declaration_state = 0  # Default state is Processed
+    # Default state is Processing if working with a DSS, otherwise it is Accepted
+    declaration_state = 0 if USSP_NETWORK_ENABLED else 1
 
     flight_declaration = FlightDeclarationRequest(
         features=all_features,
