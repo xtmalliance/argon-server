@@ -172,7 +172,8 @@ def set_flight_declaration(request):
             meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"]
         )
 
-    declaration_state = 0  # Default state is Processed
+    # Default state is Processing if working with a DSS, otherwise it is Accepted
+    declaration_state = 0 if USSP_NETWORK_ENABLED else 1
 
     flight_declaration = FlightDeclarationRequest(
         features=all_features,
@@ -230,11 +231,11 @@ def set_flight_declaration(request):
 
     all_relevant_declarations = []
     existing_declaration_within_timelimits = FlightDeclaration.objects.filter(
-        start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+        start_datetime__lte=end_datetime, end_datetime__gte=start_datetime
     ).exists()
     if existing_declaration_within_timelimits:
         all_declarations_within_timelimits = FlightDeclaration.objects.filter(
-            start_datetime__lte=start_datetime, end_datetime__gte=end_datetime
+          start_datetime__lte=end_datetime, end_datetime__gte=start_datetime
         )
         INDEX_NAME = "flight_declaration_idx"
         my_fd_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)
