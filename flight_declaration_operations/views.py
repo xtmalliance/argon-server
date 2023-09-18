@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from .models import FlightDeclaration
 from rest_framework.decorators import api_view
 from auth_helper.utils import requires_scopes
-from common.database_operations import BlenderDatabaseWriter
+from common.database_operations import BlenderDatabaseReader
 from dataclasses import asdict
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
@@ -18,14 +18,17 @@ from .data_definitions import (
     FlightDeclarationRequest,
     Altitude,
     FlightDeclarationCreateResponse,
+    HTTP404Response,
+    HTTP400Response,
 )
-from rest_framework import mixins, generics, status
-from rest_framework.response import Response
+from rest_framework import mixins, generics
+
 from .serializers import (
     FlightDeclarationSerializer,
     FlightDeclarationApprovalSerializer,
     FlightDeclarationStateSerializer,
 )
+from scd_operations.dss_scd_helper import SCDOperations, OperationalIntentReferenceHelper
 from django.utils.decorators import method_decorator
 from .utils import OperationalIntentsConverter
 from .tasks import (
@@ -235,7 +238,7 @@ def set_flight_declaration(request):
     ).exists()
     if existing_declaration_within_timelimits:
         all_declarations_within_timelimits = FlightDeclaration.objects.filter(
-          start_datetime__lte=end_datetime, end_datetime__gte=start_datetime
+            start_datetime__lte=end_datetime, end_datetime__gte=start_datetime
         )
         INDEX_NAME = "flight_declaration_idx"
         my_fd_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)
@@ -351,22 +354,49 @@ class FlightDeclarationDetail(mixins.RetrieveModelMixin, generics.GenericAPIView
         return self.retrieve(request, *args, **kwargs)
 
 
-
 @api_view(["GET"])
 @requires_scopes(["blender.read"])
-def network_flight_declaration_details(request):
-    def get(self, request, flight_declaration_id):
+def network_flight_declaration_details(request,flight_declaration_id):
+    my_database_reader = BlenderDatabaseReader()
+    # Check if the flight declaration exists
+    my_operational_intent_parser = OperationalIntentReferenceHelper()
+    my_scd_helper = SCDOperations()
+    flight_declaration_exists = my_database_reader.check_flight_declaration_exists(
+        flight_declaration_id=flight_declaration_id
+    )
+    if not flight_declaration_exists:
+        not_found_response = HTTP404Response(
+            message="Flight Declaration with ID {flight_declaration_id} not found".format(
+                flight_declaration_id=flight_declaration_id
+            )
+        )
+        op = json.dumps(asdict(not_found_response))
+        return HttpResponse(op, status=404, content_type="application/json")
+    flight_declaration = my_database_reader.get_flight_declaration_by_id(
+        flight_declaration_id=flight_declaration_id
+    )
 
-        # Check if the flight declaration exists
+    current_state = flight_declaration.state
+    # Check if the status is not rejected
+    if current_state not in [0, 1, 2, 3, 4]: # If the state is not Ended, Withdrawn, Cancelled, Rejected
+        incorrect_state_response = HTTP400Response(
+            message="USSP network can only be queried for "
+        )
+        op = json.dumps(asdict(incorrect_state_response))
+        return HttpResponse(op, status=404, content_type="application/json")
+    operational_intent_volumes_raw = json.loads(flight_declaration.operational_intent)
+    all_volumes = []
+    operational_intent_volumes = operational_intent_volumes_raw['volumes']
+    for operational_intent_volume in operational_intent_volumes: 
 
-        # Check if the status is rejected 
+        volume4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=operational_intent_volume)
+        all_volumes.append(volume4D)
+    # Check redis for opints and generate geojson
+    operational_intent_geojson = my_scd_helper.get_nearby_operational_intents(volumes =all_volumes)
 
-        # Check redis for opints 
-        
-        # return opints 
+    # return opints as GeoJSON
+    return HttpResponse(json.dumps(operational_intent_geojson), status=200, content_type="application/json")
 
-        
-        return JsonResponse({})
 
 @method_decorator(requires_scopes(["blender.read"]), name="dispatch")
 class FlightDeclarationList(mixins.ListModelMixin, generics.GenericAPIView):

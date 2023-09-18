@@ -48,3 +48,11 @@ class FlightDeclarationCreateResponse:
     message: str
     is_approved: int
     state: int
+
+@dataclass
+class HTTP404Response: 
+    message: str
+
+@dataclass
+class HTTP400Response: 
+    message: str

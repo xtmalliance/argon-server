@@ -430,6 +430,12 @@ class SCDOperations:
     def __init__(self):
         self.dss_base_url = env.get("DSS_BASE_URL")
         self.r = get_redis()
+    
+    def get_nearby_operational_intents(self, volumes: List[Volume4D]):
+        """
+        This method checks the airspace and generates a GeoJSON object
+        """
+        return {"type":"FeatureCollection","features":[]}
 
     def get_auth_token(self, audience: str = None):
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
