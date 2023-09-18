@@ -6,6 +6,7 @@ import requests
 from rest_framework import status
 
 from flight_declaration_operations import models as fdo_models
+from flight_feed_operations import models as ffo_models
 from non_repudiation import models as nr_models
 
 

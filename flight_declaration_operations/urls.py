@@ -24,13 +24,15 @@ urlpatterns = [
         flight_declaration_views.set_flight_declaration,
         name="set_flight_declaration",
     ),
-        path(
+    path(
         "set_signed_flight_declaration",
         flight_declaration_views.set_signed_flight_declaration,
         name="set_signed_flight_declaration",
     ),
     path(
-        "flight_declaration", flight_declaration_views.FlightDeclarationList.as_view(),name="flight_declaration"
+        "flight_declaration",
+        flight_declaration_views.FlightDeclarationList.as_view(),
+        name="flight_declaration",
     ),
     path(
         "flight_declaration/<uuid:pk>",

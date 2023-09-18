@@ -17,6 +17,7 @@ from rest_framework.parsers import JSONParser
 from shapely.geometry import shape
 
 from auth_helper.utils import requires_scopes
+from security import signing
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
 
@@ -298,10 +299,83 @@ def set_flight_declaration(request: HttpRequest):
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
 def set_signed_flight_declaration(request: HttpRequest):
+    stream = io.BytesIO(request.body)
+    json_payload = JSONParser().parse(stream)
+
+    payload_verifier = signing.MessageVerifier()
+    payload_verified = payload_verifier.verify_message(request)
+    if not payload_verified:
+        return HttpResponse(
+            json.dumps(
+                {
+                    "message": "Could not verify against public keys setup in Flight Blender"
+                }
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+            content_type="application/json",
+        )
+
+    try:
+        assert request.headers["Content-Type"] == "application/json"
+    except AssertionError:
+        msg = {"message": "Unsupported Media Type"}
+        return HttpResponse(
+            json.dumps(msg),
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            content_type="application/json",
+        )
+
+    # Validate the JSON payload
+    parsed_fd_request, parse_error = _parse_flight_declaration_request(json_payload)
+
+    if parse_error:
+        return HttpResponse(
+            json.dumps(parse_error),
+            status=status.HTTP_400_BAD_REQUEST,
+            content_type="application/json",
+        )
+
+    default_state = 1  # Default state is Accepted
+    (
+        partial_op_int_ref,
+        bounds,
+        all_relevant_fences,
+        all_relevant_declarations,
+        is_approved,
+    ) = _get_operational_intent(parsed_fd_request)
+
+    fo = FlightDeclaration(
+        operational_intent=json.loads(json.dumps(asdict(partial_op_int_ref))),
+        bounds=bounds,
+        type_of_operation=parsed_fd_request.type_of_operation,
+        submitted_by=parsed_fd_request.submitted_by,
+        is_approved=is_approved,
+        start_datetime=parsed_fd_request.start_datetime,
+        end_datetime=parsed_fd_request.end_datetime,
+        originating_party=parsed_fd_request.originating_party,
+        flight_declaration_raw_geojson=json.dumps(
+            parsed_fd_request.flight_declaration_geo_json
+        ),
+        state=default_state,
+    )
+    fo.save()
+
+    # Send flight creation notifications
+    flight_declaration_id = str(fo.id)
+    _send_fd_creation_notifications(
+        flight_declaration_id, all_relevant_fences, all_relevant_declarations
+    )
+
+    creation_response = FlightDeclarationCreateResponse(
+        id=flight_declaration_id,
+        message="Submitted Flight Declaration",
+        is_approved=is_approved,
+        state=default_state,
+    )
+
+    op = json.dumps(asdict(creation_response))
     return HttpResponse(
-        json.dumps({"status": "_TO_BE_IMPLEMENTED_"}),
-        status=status.HTTP_200_OK,
-        content_type="application/json",
+        op, status=status.HTTP_201_CREATED, content_type="application/json"
     )
 
 
