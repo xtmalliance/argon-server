@@ -358,7 +358,15 @@ class FlightDeclarationDetail(mixins.RetrieveModelMixin, generics.GenericAPIView
 @requires_scopes(["blender.read"])
 def network_flight_declaration_details(request,flight_declaration_id):
     my_database_reader = BlenderDatabaseReader()
+    USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
     # Check if the flight declaration exists
+    if not USSP_NETWORK_ENABLED:        
+        network_not_enabled = HTTP400Response(
+            message="USSP network can only be queried since it is not enabled in Flight Blender"
+        )
+        op = json.dumps(asdict(network_not_enabled))
+        return HttpResponse(op, status=400, content_type="application/json")
+
     my_operational_intent_parser = OperationalIntentReferenceHelper()
     my_scd_helper = SCDOperations()
     flight_declaration_exists = my_database_reader.check_flight_declaration_exists(
@@ -380,7 +388,7 @@ def network_flight_declaration_details(request,flight_declaration_id):
     # Check if the status is not rejected
     if current_state not in [0, 1, 2, 3, 4]: # If the state is not Ended, Withdrawn, Cancelled, Rejected
         incorrect_state_response = HTTP400Response(
-            message="USSP network can only be queried for "
+            message="USSP network can only be queried for operational intent since the state is not  "
         )
         op = json.dumps(asdict(incorrect_state_response))
         return HttpResponse(op, status=404, content_type="application/json")
