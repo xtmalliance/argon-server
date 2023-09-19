@@ -431,115 +431,12 @@ class SCDOperations:
         self.dss_base_url = env.get("DSS_BASE_URL")
         self.r = get_redis()
 
-    def get_auth_token(self, audience: str = None):
-        my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
-        if audience is None:
-            audience = env.get("DSS_SELF_AUDIENCE", 0)
-        try:
-            assert audience
-        except AssertionError as ae:
-            logger.error(
-                "Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment"
-            )
-        auth_token = {}
-        try:
-            auth_token = my_authorization_helper.get_cached_credentials(
-                audience=audience, token_type="scd"
-            )
-        except Exception as e:
-            logger.error("Error in getting Authority Access Token %s " % e)
-            logger.error("Auth server error {error}".format(error=e))
-            auth_token["error"] = "Error in getting access token"
-        else:
-            error = auth_token.get("error", None)
-            if error:
-                logger.error(
-                    "Authority server provided the following error during token request %s "
-                    % error
-                )
-
-        return auth_token
-
-    def delete_operational_intent(
-        self, dss_operational_intent_ref_id: str, ovn: str
-    ) -> Optional[DeleteOperationalIntentResponse]:
-        auth_token = self.get_auth_token()
-
-        dss_opint_delete_url = (
-            self.dss_base_url
-            + "dss/v1/operational_intent_references/"
-            + dss_operational_intent_ref_id
-            + "/"
-            + ovn
-        )
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + auth_token["access_token"],
-        }
-        delete_payload = DeleteOperationalIntentConstuctor(
-            entity_id=dss_operational_intent_ref_id, ovn=ovn
-        )
-
-        dss_r = requests.delete(
-            dss_opint_delete_url,
-            json=json.loads(json.dumps(asdict(delete_payload))),
-            headers=headers,
-        )
-
-        dss_response = dss_r.json()
-        dss_r_status_code = dss_r.status_code
-
-        if dss_r_status_code == 200:
-            common_200_response = CommonDSS2xxResponse(
-                message="Successfully deleted operational intent id %s"
-                % dss_operational_intent_ref_id
-            )
-            dss_response_formatted = DeleteOperationalIntentResponseSuccess(
-                subscribers=dss_response["subscribers"],
-                operational_intent_reference=dss_response[
-                    "operational_intent_reference"
-                ],
-            )
-            delete_op_int_status = DeleteOperationalIntentResponse(
-                dss_response=dss_response_formatted,
-                status=200,
-                message=common_200_response,
-            )
-        elif dss_r_status_code == 404:
-            common_400_response = CommonDSS4xxResponse(message="URL endpoint not found")
-            delete_op_int_status = DeleteOperationalIntentResponse(
-                dss_response=dss_response, status=404, message=common_400_response
-            )
-
-        elif dss_r_status_code == 409:
-            common_400_response = CommonDSS4xxResponse(
-                message="The provided ovn does not match the current version of existing operational intent"
-            )
-            delete_op_int_status = DeleteOperationalIntentResponse(
-                dss_response=dss_response, status=409, message=common_400_response
-            )
-
-        elif dss_r_status_code == 412:
-            common_400_response = CommonDSS4xxResponse(
-                message="The client attempted to delete the operational intent while marked as Down in the DSS"
-            )
-            delete_op_int_status = DeleteOperationalIntentResponse(
-                dss_response=dss_response, status=412, message=common_400_response
-            )
-        else:
-            common_400_response = CommonDSS4xxResponse(
-                message="A errror occured while deleting the operational intent"
-            )
-            delete_op_int_status = DeleteOperationalIntentResponse(
-                dss_response=dss_response, status=500, message=common_400_response
-            )
-        return delete_op_int_status
-
-    def get_latest_airspace_volumes(
+    def get_nearby_operational_intents(
         self, volumes: List[Volume4D]
-    ) -> List[OpInttoCheckDetails]:
-        # This method checks if a flight volume has conflicts with any other volume in the airspace
+    ) -> List[OperationalIntentDetailsUSSResponse]:
+
+        # This method checks the USS network for any other volume in the airspace
+        all_uss_op_int_details = []
         auth_token = self.get_auth_token()
         # Query the DSS for operational intentns
         query_op_int_url = (
@@ -549,14 +446,13 @@ class SCDOperations:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
-
-        all_opints_to_check = []
-
+        
         blender_base_url = env.get("BLENDER_FQDN", 0)
         my_op_int_ref_helper = OperationalIntentReferenceHelper()
         all_uss_operational_intent_details = []
 
         for volume in volumes:
+            op_int_details_retrieved = False
             operational_intent_references = []
             area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)
             logger.info("Querying DSS for operational intents in the area..")
@@ -577,15 +473,6 @@ class SCDOperations:
                 operational_intent_references = dss_operational_intent_references[
                     "operational_intent_references"
                 ]
-
-            # if operational_intent_references:
-            #     logger.info(
-            #         "{num_intents} existing operational intent references found in the area".format(
-            #             num_intents=len(operational_intent_references)
-            #         )
-            #     )
-            # else:
-            #     logger.info("No operational intent references found in the area")
 
             # Query the operational intent reference
             for operational_intent_reference_detail in operational_intent_references:
@@ -752,21 +639,150 @@ class SCDOperations:
                     uss_op_int_details = OperationalIntentDetailsUSSResponse(
                         reference=op_int_reference, details=op_int_detail
                     )
+                    all_uss_op_int_details.append(uss_op_int_details)
 
-                    operational_intent_volumes = uss_op_int_details.details.volumes
-                    my_volume_converter = VolumesConverter()
-                    my_volume_converter.convert_volumes_to_geojson(
-                        volumes=operational_intent_volumes
-                    )
-                    minimum_rotated_rect = (
-                        my_volume_converter.get_minimum_rotated_rectangle()
-                    )
-                    cur_op_int_details = OpInttoCheckDetails(
-                        shape=minimum_rotated_rect,
-                        ovn=op_int_reference.ovn,
-                        id=op_int_reference.id,
-                    )
-                    all_opints_to_check.append(cur_op_int_details)
+        return all_uss_op_int_details
+
+    def get_auth_token(self, audience: str = None):
+        my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
+        if audience is None:
+            audience = env.get("DSS_SELF_AUDIENCE", 0)
+        try:
+            assert audience
+        except AssertionError as ae:
+            logger.error(
+                "Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment"
+            )
+        auth_token = {}
+        try:
+            auth_token = my_authorization_helper.get_cached_credentials(
+                audience=audience, token_type="scd"
+            )
+        except Exception as e:
+            logger.error("Error in getting Authority Access Token %s " % e)
+            logger.error("Auth server error {error}".format(error=e))
+            auth_token["error"] = "Error in getting access token"
+        else:
+            error = auth_token.get("error", None)
+            if error:
+                logger.error(
+                    "Authority server provided the following error during token request %s "
+                    % error
+                )
+
+        return auth_token
+
+    def delete_operational_intent(
+        self, dss_operational_intent_ref_id: str, ovn: str
+    ) -> Optional[DeleteOperationalIntentResponse]:
+        auth_token = self.get_auth_token()
+
+        dss_opint_delete_url = (
+            self.dss_base_url
+            + "dss/v1/operational_intent_references/"
+            + dss_operational_intent_ref_id
+            + "/"
+            + ovn
+        )
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + auth_token["access_token"],
+        }
+        delete_payload = DeleteOperationalIntentConstuctor(
+            entity_id=dss_operational_intent_ref_id, ovn=ovn
+        )
+
+        dss_r = requests.delete(
+            dss_opint_delete_url,
+            json=json.loads(json.dumps(asdict(delete_payload))),
+            headers=headers,
+        )
+
+        dss_response = dss_r.json()
+        dss_r_status_code = dss_r.status_code
+
+        if dss_r_status_code == 200:
+            common_200_response = CommonDSS2xxResponse(
+                message="Successfully deleted operational intent id %s"
+                % dss_operational_intent_ref_id
+            )
+            dss_response_formatted = DeleteOperationalIntentResponseSuccess(
+                subscribers=dss_response["subscribers"],
+                operational_intent_reference=dss_response[
+                    "operational_intent_reference"
+                ],
+            )
+            delete_op_int_status = DeleteOperationalIntentResponse(
+                dss_response=dss_response_formatted,
+                status=200,
+                message=common_200_response,
+            )
+        elif dss_r_status_code == 404:
+            common_400_response = CommonDSS4xxResponse(message="URL endpoint not found")
+            delete_op_int_status = DeleteOperationalIntentResponse(
+                dss_response=dss_response, status=404, message=common_400_response
+            )
+
+        elif dss_r_status_code == 409:
+            common_400_response = CommonDSS4xxResponse(
+                message="The provided ovn does not match the current version of existing operational intent"
+            )
+            delete_op_int_status = DeleteOperationalIntentResponse(
+                dss_response=dss_response, status=409, message=common_400_response
+            )
+
+        elif dss_r_status_code == 412:
+            common_400_response = CommonDSS4xxResponse(
+                message="The client attempted to delete the operational intent while marked as Down in the DSS"
+            )
+            delete_op_int_status = DeleteOperationalIntentResponse(
+                dss_response=dss_response, status=412, message=common_400_response
+            )
+        else:
+            common_400_response = CommonDSS4xxResponse(
+                message="A errror occured while deleting the operational intent"
+            )
+            delete_op_int_status = DeleteOperationalIntentResponse(
+                dss_response=dss_response, status=500, message=common_400_response
+            )
+        return delete_op_int_status
+
+    def get_and_process_nearby_operational_intents(self, volumes: List[Volume4D]):
+        """This method processes the"""
+        feat_collection = {"type": "FeatureCollection", "features": []}
+        all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        for uss_op_int_detail in all_uss_op_int_details:
+            operational_intent_volumes = uss_op_int_detail.details.volumes
+            my_volume_converter = VolumesConverter()
+            my_volume_converter.convert_volumes_to_geojson(
+                volumes=operational_intent_volumes
+            )
+            for f in my_volume_converter.geo_json["features"]:
+                feat_collection["features"].append(f)
+
+        return feat_collection
+
+    def get_latest_airspace_volumes(
+        self, volumes: List[Volume4D]
+    ) -> List[OpInttoCheckDetails]:
+        # This method checks if a flight volume has conflicts with any other volume in the airspace
+        all_opints_to_check = []
+        all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+
+        for uss_op_int_detail in all_uss_op_int_details:
+            operational_intent_volumes = uss_op_int_detail.details.volumes
+            my_volume_converter = VolumesConverter()
+            my_volume_converter.convert_volumes_to_geojson(
+                volumes=operational_intent_volumes
+            )
+            minimum_rotated_rect = my_volume_converter.get_minimum_rotated_rectangle()
+            cur_op_int_details = OpInttoCheckDetails(
+                shape=minimum_rotated_rect,
+                ovn=uss_op_int_detail.reference.ovn,
+                id=uss_op_int_detail.reference.id,
+            )
+            all_opints_to_check.append(cur_op_int_details)
 
         return all_opints_to_check
 
@@ -868,7 +884,7 @@ class SCDOperations:
                 polygon_to_check=ind_volumes_polygon,
             )
             deconflicted = False if is_conflicted else True
-            
+
         if not deconflicted:
             d_r = None
             dss_r_status_code = 999
@@ -890,7 +906,6 @@ class SCDOperations:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
-
 
         blender_base_url = env.get("BLENDER_FQDN", 0)
         dss_r = requests.put(
