@@ -7,6 +7,7 @@ import http_sfv
 import jwt
 import requests
 from django.core.signing import Signer
+from django.http import HttpRequest
 from dotenv import find_dotenv, load_dotenv
 from http_message_signatures import (
     HTTPMessageVerifier,
@@ -70,7 +71,7 @@ class MessageVerifier:
             public_keys[current_kid] = key
         return public_keys
 
-    def verify_message(self, request) -> bool:
+    def verify_message(self, request: HttpRequest) -> bool:
         stored_public_keys = self.get_public_keys()
         if bool(not stored_public_keys):
             return False
