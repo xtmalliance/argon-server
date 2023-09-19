@@ -42,7 +42,6 @@ def generate_unsigned_rid_telemetry_objects(telemetry_request: List[SignedUnSign
 class BlenderTelemetryValidator():
 
     def parse_validate_current_state(self, current_state) -> RIDAircraftState:
-
         timestamp = Time(value = current_state['timestamp']['value'], format = current_state['timestamp']['format'])
         operational_status = RIDOperationalStatus(current_state['operational_status'])
         _state_position = current_state['position']
@@ -97,11 +96,12 @@ class BlenderTelemetryValidator():
                 operator_location = OperatorLocation(position=LatLngPoint(lat ="", lng= ""))
         else:
             operator_location = OperatorLocation(position=LatLngPoint(lat ="", lng= ""))        
+            
+        auth_data = RIDAuthData(format="",data="")
         if 'auth_data' in rid_flight_details.keys():
-            auth_data = RIDAuthData(format="",data="")
             if rid_flight_details['auth_data'] is not None: 
-                auth_data = RIDAuthData(format=rid_flight_details['auth_data']['format'],data=rid_flight_details['auth_data']['data'])            
-
+                auth_data = RIDAuthData(format=rid_flight_details['auth_data']['format'],data=rid_flight_details['auth_data']['data'])    
+        
         f_details = RIDFlightDetails(id = rid_flight_details['id'], eu_classification = eu_classification, uas_id = uas_id, operator_location = operator_location, operator_id =rid_flight_details['operator_id'], operation_description =rid_flight_details['operation_description'] , auth_data = auth_data)
     
         return f_details

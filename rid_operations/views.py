@@ -10,8 +10,8 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint, RIDCapabilitiesResponse
-from uss_operations.uss_data_definitions import FlightDetailsNotFoundMessage
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint, RIDCapabilitiesResponse, RIDOperatorDetails
+from uss_operations.uss_data_definitions import FlightDetailsNotFoundMessage, OperatorDetailsSuccessResponse
 
 import shapely.geometry
 import hashlib
@@ -19,7 +19,7 @@ from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
-from .tasks import stream_rid_test_data_v22,stream_rid_test_data, run_ussp_polling_for_rid
+from .tasks import stream_rid_test_data_v22, stream_rid_test_data, run_ussp_polling_for_rid
 import time
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())

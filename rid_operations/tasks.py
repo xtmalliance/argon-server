@@ -357,7 +357,6 @@ def stream_rid_test_data_v22(requested_flights):
             all_positions.append(llp)
             position = RIDAircraftPosition(lat=pos['lat'], lng=pos['lng'],alt=pos['alt'],accuracy_h=pos['accuracy_h'], accuracy_v=pos['accuracy_v'], extrapolated=extrapolated,pressure_altitude=pressure_altitude)
             
-            height = RIDHeight(distance=provided_telemetry['height']['distance'], reference=provided_telemetry['height']['reference'])
             try: 
                 formatted_timestamp = arrow.get(provided_telemetry['timestamp'])
                 

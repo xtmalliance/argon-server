@@ -307,7 +307,9 @@ def get_uss_flights(request):
                 logger.info("Point not in polygon %s " % view_box)
     # sort by date
     unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
-
+    print('----------------------')
+    print(unique_flights)
+    print('----------------------')
     now = arrow.now().isoformat()
     if unique_flights:
         # Keep only the latest message
