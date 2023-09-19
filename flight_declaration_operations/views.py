@@ -400,7 +400,7 @@ def network_flight_declaration_details(request,flight_declaration_id):
         volume4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=operational_intent_volume)
         all_volumes.append(volume4D)
     # Check redis for opints and generate geojson
-    operational_intent_geojson = my_scd_helper.get_nearby_operational_intents(volumes =all_volumes)
+    operational_intent_geojson = my_scd_helper.get_and_process_nearby_operational_intents(volumes =all_volumes)
 
     # return opints as GeoJSON
     return HttpResponse(json.dumps(operational_intent_geojson), status=200, content_type="application/json")
