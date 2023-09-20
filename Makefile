@@ -1,14 +1,18 @@
+# Define the Docker Compose command based on user input
+DOCKER_COMPOSE_CMD ?= docker-compose
+
 # Building commands
 build:
-	docker-compose build
+	$(DOCKER_COMPOSE_CMD) build
 
 rebuild:
-	docker-compose build --no-cache
+	$(DOCKER_COMPOSE_CMD) build --no-cache
 
 up:
-	docker-compose up -d
+	$(DOCKER_COMPOSE_CMD) up -d
+
 down:
-	docker-compose down
+	$(DOCKER_COMPOSE_CMD) down
 
 # Linting commands
 lint:
