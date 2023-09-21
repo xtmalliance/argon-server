@@ -258,6 +258,15 @@ def get_uss_flights(request):
     if view_port_valid:
         view_box = view_port_ops.build_view_port_box(view_port_coords=view_port)
         view_port_area = view_port_ops.get_view_port_area(view_box=view_box)
+        view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(view_port_coords=view_port)
+        
+        if (view_port_diagonal) > 7:
+            view_port_too_large_msg = GenericErrorResponseMessage(
+                message="The requested view %s rectangle is too large" % view
+            )
+            return JsonResponse(
+                json.loads(json.dumps(asdict(view_port_too_large_msg))), status=413
+            )
 
         if (view_port_area) < 250000 and (view_port_area) > 90000:
             view_port_too_large_msg = GenericErrorResponseMessage(
