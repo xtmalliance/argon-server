@@ -53,10 +53,10 @@ class AuthorityCredentialsGetter():
         
         if audience in ['localhost','host.docker.internal']:
             # Test instance of DSS
-            payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'dss.read.identification_service_areas dss.write.identification_service_areas', "issuer":issuer}       
+            payload = {"grant_type":"client_credentials","intended_audience":env.get('DSS_SELF_AUDIENCE'),"scope": 'rid.service_provider', "issuer":issuer}       
             
         else: 
-            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"intended_audience":audience,"scope": 'dss.read.identification_service_areas dss.write.identification_service_areas'}    
+            payload = {"grant_type":"client_credentials","client_id": env.get('AUTH_DSS_CLIENT_ID'),"client_secret": env.get('AUTH_DSS_CLIENT_SECRET'),"intended_audience":audience,"scope": 'rid.service_provider'}    
       
         url = env.get('DSS_AUTH_URL') + env.get('DSS_AUTH_TOKEN_ENDPOINT')        
         

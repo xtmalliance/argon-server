@@ -18,6 +18,7 @@ class GenericErrorResponseMessage:
 @dataclass
 class SummaryFlightsOnly:
   number_of_flights:int
+  timestamp:str
 
 
 @dataclass

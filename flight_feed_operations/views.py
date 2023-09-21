@@ -12,7 +12,7 @@ from typing import List
 from django.views.generic import TemplateView
 import shapely.geometry
 from rid_operations import view_port_ops
-from rid_operations.tasks import stream_rid_data_v22
+from rid_operations.tasks import stream_rid_telemetry_data
 from rid_operations.data_definitions import SignedTelemetryRequest, RIDAircraftState, SignedUnSignedTelemetryObservations, RIDFlightDetails
 from . import flight_stream_helper
 logger = logging.getLogger('django')
@@ -250,7 +250,7 @@ def set_signed_telemetry(request):
                 flight_operation = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id)
 
                 if flight_operation.state in [2,3,4]: # Activated, Contingent, Non-conforming 
-                    stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
+                    stream_rid_telemetry_data.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
                 else: 
                     operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submissin will be ignored, please change the state first.".format(operation_id = operation_id)}
                     return JsonResponse(operation_state_incorrect_msg, status=400, content_type='application/json')     
@@ -320,7 +320,7 @@ def set_telemetry(request):
             flight_operation = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id)
 
             if flight_operation.state in [2,3,4]: # Activated, Contingent, Non-conforming 
-                stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
+                stream_rid_telemetry_data.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
             else: 
                 operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submission will be ignored, please change the state first.".format(operation_id = operation_id)}
                 return JsonResponse(operation_state_incorrect_msg, status=400, content_type='application/json')     
