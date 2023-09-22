@@ -45,6 +45,22 @@ def mock_env_passport_url():
     env["PASSPORT_URL"] = original_passport_url
 
 
+@pytest.fixture(scope="function")
+def mock_env_secret_key():
+    # Set the environment variable SECRET_KEY to the mocked value
+    original_secret_key = env.get("SECRET_KEY", "")
+
+    with open("security/test_keys/001.key", "r") as key_file:
+        private_key = key_file.read()
+    env["SECRET_KEY"] = private_key
+
+    # Yield control back to the test
+    yield
+
+    # Restore the environment variable: PASSPORT_URL to its original value
+    env["SECRET_KEY"] = original_secret_key
+
+
 @pytest.mark.django_db
 @pytest.fixture(scope="function")
 def create_flight_plan(db) -> None:

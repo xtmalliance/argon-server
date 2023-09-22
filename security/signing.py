@@ -92,18 +92,18 @@ class MessageVerifier:
         return True
 
 
-class ResponseSigningOperations:
+class ResponseSigner:
     def __init__(self):
         self.signing_url = env.get("FLIGHT_PASSPORT_SIGNING_URL", None)
         self.signing_client_id = env.get("FLIGHT_PASSPORT_SIGNING_CLIENT_ID")
         self.signing_client_secret = env.get("FLIGHT_PASSPORT_SIGNING_CLIENT_SECRET")
-        self.jose_signing_algorithm = "RS256"
+        self.jose_signing_algorithm = "PS512"
 
     def generate_content_digest(self, payload):
         payload_str = json.dumps(payload)
         return str(
             http_sfv.Dictionary(
-                {"sha-256": hashlib.sha256(payload_str.encode("utf-8")).digest()}
+                {"sha-512": hashlib.sha512(payload_str.encode("utf-8")).digest()}
             )
         )
 
@@ -139,8 +139,9 @@ class ResponseSigningOperations:
             sig = jws_token.serialize()
             s = json.loads(sig)
 
-            return {
+            signed_response = {
                 "signature": s["protected"] + "." + s["payload"] + "." + s["signature"]
             }
+            return signed_response
         else:
             return {}

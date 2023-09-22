@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch
 
 import http_sfv
+import pytest
 import requests
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.test import TestCase
@@ -11,9 +12,10 @@ from http_message_signatures import (
     HTTPSignatureKeyResolver,
     algorithms,
 )
+from jwcrypto import jwk, jws
 
 import security.helper as helper
-from security.signing import MessageVerifier
+from security.signing import MessageVerifier, ResponseSigner
 
 
 class _MyHTTPSignatureKeyResolver(HTTPSignatureKeyResolver):
@@ -82,3 +84,39 @@ class MessageVerifierTests(TestCase):
         is_verified = verifier.verify_message(django_request)
 
         assert is_verified
+
+
+class ResponseSigningTests(TestCase):
+    def setUp(self):
+        self.response = {
+            "id": "0e036233-903b-49ab-8664-a35df14d7afa",
+            "message": "Submitted Flight Declaration",
+            "is_approved": False,
+            "state": 1,
+        }
+        self.key_id = "001"
+
+    def test_generate_content_digest(self):
+        signer = ResponseSigner()
+        actual = signer.generate_content_digest(payload=self.response)
+        expected = "sha-512=:zplLMOJcNFs9REL0ZyRsobnKwMs7HtqbNTycHmS6nx33x2IcUjqJVxm7u9u1vH8Ry46uUxZ9jvyiXPqHun/IEQ==:"
+        assert actual == expected
+
+    @pytest.mark.usefixtures("mock_env_secret_key")
+    def test_sign_json_via_jose(self):
+        signer = ResponseSigner()
+        signed_response = signer.sign_json_via_jose(payload=self.response)
+
+        with open(f"security/test_keys/{self.key_id}.pem", "rb") as public_key_file:
+            public_key_pem = public_key_file.read()
+
+        public_key = jwk.JWK.from_pem(public_key_pem)
+        # Verify the response json signed with JOSE by using hte Public key
+        token = signed_response["signature"]
+        jws_token = jws.JWS()
+        jws_token.deserialize(token)
+        jws_token.verify(public_key)
+
+        verified_payload_str = jws_token.payload.decode("utf-8")
+        verified_payload_json = json.loads(verified_payload_str)
+        assert verified_payload_json == self.response
