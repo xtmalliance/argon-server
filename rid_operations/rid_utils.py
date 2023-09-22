@@ -162,7 +162,7 @@ class RIDOperatorDetails:
   auth_data: Optional[RIDAuthData]
   serial_number: Optional[str]
   registration_number: Optional[str]
-  aircraft_type: Optional[str]
+  aircraft_type: Optional[str] = None
   eu_classification: Optional[UAClassificationEU] = None
   uas_id: Optional[UASID] = None
   

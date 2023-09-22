@@ -196,17 +196,25 @@ def stream_rid_test_data(requested_flights):
                     specific_session_id=fd["uas_id"]["specific_session_id"],
                     serial_number=fd["uas_id"]["serial_number"],
                     registration_id=fd["uas_id"]["registration_id"],
-                    utm_id=fd["uas_id"]["utm_id"],
+                    utm_id=fd["uas_id"]["utm_id"]
                 )
             else:
-                uas_id = None
+                uas_id = UASID(
+                    specific_session_id= "02-a1b2c3d4e5f60708",
+                    serial_number="MFR1C123456789ABC",
+                    utm_id="ae1fa066-6d68-4018-8274-af867966978e",
+                    registration_id="MFR1C123456789ABC"
+                )
             if "eu_classification" in fd.keys():
                 eu_classification = UAClassificationEU(
                     category=fd["eu_classification"]["category"],
-                    class_=fd["eu_classification"]["class"],
+                    class_=fd["eu_classification"]["class"]
                 )
             else:
-                eu_classification = None
+                eu_classification = UAClassificationEU(
+                    category="EUCategoryUndefined",
+                    class_="EUClassUndefined"
+                )
 
             flight_detail = RIDOperatorDetails(
                 id=requested_flight_detail_id,
@@ -227,6 +235,7 @@ def stream_rid_test_data(requested_flights):
             all_flight_details.append(pfd)
 
             flight_details_storage = "flight_details:" + requested_flight_detail_id
+            
             r.set(flight_details_storage, json.dumps(asdict(flight_detail)))
             # expire in 5
             r.expire(flight_details_storage, time=3000)

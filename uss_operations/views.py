@@ -38,6 +38,14 @@ from rid_operations.rid_utils import (
     LatLngPoint,
     RIDOperatorDetails,
     TelemetryFlightDetails,
+    AuthData,
+)
+from rid_operations.data_definitions import (
+    SignedUnsignedTelemetryObservation,
+    UAClassificationEU,
+    UASID,
+    OperatorLocation,
+    Altitude,
 )
 import arrow
 from dacite import from_dict
@@ -237,7 +245,7 @@ def USSOpIntDetails(request, opint_id):
 
 
 @api_view(["GET"])
-@requires_scopes(["dss.read.identification_service_areas"])
+@requires_scopes(["rid.display_provider"])
 def get_uss_flights(request):
     """This is the end point for the rid_qualifier to get details of a flight"""
     try:
@@ -256,28 +264,7 @@ def get_uss_flights(request):
         return JsonResponse(json.loads(json.dumps(incorrect_parameters)), status=400)
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
     view_port_area = 0
-    if view_port_valid:
-        view_box = view_port_ops.build_view_port_box(view_port_coords=view_port)
-        view_port_area = view_port_ops.get_view_port_area(view_box=view_box)
-        view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(
-            view_port_coords=view_port
-        )
-        if (view_port_diagonal) > 7:
-            view_port_too_large_msg = GenericErrorResponseMessage(
-                message="The requested view %s rectangle is too large" % view
-            )
-            return JsonResponse(
-                json.loads(json.dumps(asdict(view_port_too_large_msg))), status=413
-            )
-
-        if (view_port_area) < 250000 and (view_port_area) > 90000:
-            view_port_too_large_msg = GenericErrorResponseMessage(
-                message="The requested view %s rectangle is too large" % view
-            )
-            return JsonResponse(
-                json.loads(json.dumps(asdict(view_port_too_large_msg))), status=419
-            )
-    else:
+    if not view_port_valid:
         view_port_not_ok = GenericErrorResponseMessage(
             message="The requested view %s rectangle is not valid format: lat1,lng1,lat2,lng2"
             % view
@@ -285,7 +272,28 @@ def get_uss_flights(request):
         return JsonResponse(
             json.loads(json.dumps(asdict(view_port_not_ok))), status=419
         )
-    time.sleep(0.2)
+    view_box = view_port_ops.build_view_port_box(view_port_coords=view_port)
+    view_port_area = view_port_ops.get_view_port_area(view_box=view_box)
+    view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(
+        view_port_coords=view_port
+    )
+    if (view_port_diagonal) > 7:
+        view_port_too_large_msg = GenericErrorResponseMessage(
+            message="The requested view %s rectangle is too large" % view
+        )
+        return JsonResponse(
+            json.loads(json.dumps(asdict(view_port_too_large_msg))), status=413
+        )
+
+    if (view_port_area) < 250000 and (view_port_area) > 90000:
+        view_port_too_large_msg = GenericErrorResponseMessage(
+            message="The requested view %s rectangle is too large" % view
+        )
+        return JsonResponse(
+            json.loads(json.dumps(asdict(view_port_too_large_msg))), status=419
+        )
+
+    time.sleep(0.5)
 
     summary_information_only = True if view_port_area > 22500 else False
 
@@ -378,7 +386,7 @@ def get_uss_flights(request):
                     speed=telemetry_data_dict["speed"],
                     speed_accuracy=telemetry_data_dict["speed_accuracy"],
                     vertical_speed=telemetry_data_dict["vertical_speed"],
-                    height=height
+                    height=height,
                 )
 
                 operator_details = RIDOperatorDetails(
@@ -397,7 +405,7 @@ def get_uss_flights(request):
                         format=details_response_dict["auth_data"]["format"],
                         data=details_response_dict["auth_data"]["data"],
                     ),
-                    aircraft_type=details_response_dict["aircraft_type"]
+                    aircraft_type=details_response_dict["aircraft_type"],
                 )
 
                 current_flight = TelemetryFlightDetails(
@@ -429,26 +437,49 @@ def get_uss_flights(request):
 
 
 @api_view(["GET"])
-@requires_scopes(["dss.read.identification_service_areas"])
+@requires_scopes(["rid.display_provider"])
 def get_uss_flight_details(request, flight_id):
     """This is the end point for the rid_qualifier to get details of a flight"""
     r = get_redis()
     flight_details_storage = "flight_details:" + flight_id
     if r.exists(flight_details_storage):
-        flight_details = r.get(flight_details_storage)
-        location = LatLngPoint(
-            lat=flight_detail["location"]["lat"], lng=flight_detail["location"]["lng"]
+        flight_details_raw = r.get(flight_details_storage)
+        flight_details = json.loads(flight_details_raw)
+
+        operator_location = OperatorLocation(
+            position=LatLngPoint(
+                lat=flight_details["operator_location"]["lat"],
+                lng=flight_details["operator_location"]["lng"],
+            ),
+            altitude=Altitude(value=500, reference="W84", units="M"),
+            altitude_type="Takeoff",
         )
-        flight_detail = RIDOperatorDetails(
+
+        f_detail = RIDOperatorDetails(
             id=flight_details["id"],
-            operator_id=flight_detail["operator_id"],
-            operator_location=location,
-            operator_description=flight_details["operator_description"],
-            auth_data={},
-            serial_number=flight_detail["serial_number"],
-            registration_number=flight_detail["registration_number"],
+            operator_id=flight_details["operator_id"],
+            operator_location=operator_location,
+            operation_description=flight_details["operation_description"],
+            auth_data=AuthData(
+                format=flight_details["auth_data"]["format"],
+                data=flight_details["auth_data"]["data"],
+            ),
+            serial_number=flight_details["serial_number"],
+            registration_number=flight_details["registration_number"],
+            uas_id=UASID(
+                specific_session_id=flight_details["uas_id"]["specific_session_id"],
+                serial_number=flight_details["uas_id"]["serial_number"],
+                registration_id=flight_details["uas_id"]["registration_id"],
+                utm_id=flight_details["uas_id"]["utm_id"],
+            ),
+            eu_classification=UAClassificationEU(
+                category=flight_details["eu_classification"]["category"],
+                class_=flight_details["eu_classification"]["class_"],
+            ),
         )
-        flight_details_full = OperatorDetailsSuccessResponse(details=flight_detail)
+
+        flight_details_full = OperatorDetailsSuccessResponse(details=f_detail)
+
         return JsonResponse(
             json.loads(json.dumps(asdict(flight_details_full))), status=200
         )

@@ -332,7 +332,6 @@ def create_test(request, test_id):
     
     rid_qualifier_payload = request.data
     
-    
     try:
         requested_flights = rid_qualifier_payload['requested_flights']        
     except KeyError as ke:   
