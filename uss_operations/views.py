@@ -4,7 +4,8 @@ from dataclasses import asdict, is_dataclass
 import rid_operations.view_port_ops as view_port_ops
 from datetime import timedelta
 from scd_operations import dss_scd_helper
-import time 
+import time
+
 # Create your views here.
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -23,7 +24,7 @@ from .uss_data_definitions import (
     OperationalIntentDetailsUSSResponse,
     OperationalIntentUSSDetails,
     OperationalIntentReferenceDSSResponse,
-    Time
+    Time,
 )
 
 
@@ -258,8 +259,9 @@ def get_uss_flights(request):
     if view_port_valid:
         view_box = view_port_ops.build_view_port_box(view_port_coords=view_port)
         view_port_area = view_port_ops.get_view_port_area(view_box=view_box)
-        view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(view_port_coords=view_port)
-        
+        view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(
+            view_port_coords=view_port
+        )
         if (view_port_diagonal) > 7:
             view_port_too_large_msg = GenericErrorResponseMessage(
                 message="The requested view %s rectangle is too large" % view
@@ -283,7 +285,7 @@ def get_uss_flights(request):
         return JsonResponse(
             json.loads(json.dumps(asdict(view_port_not_ok))), status=419
         )
-    time.sleep(0.8)
+    time.sleep(0.2)
 
     summary_information_only = True if view_port_area > 22500 else False
 
@@ -315,7 +317,7 @@ def get_uss_flights(request):
                 logger.info("Point not in polygon %s " % view_box)
     # sort by date
     unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
-    
+
     now = arrow.now().isoformat()
     if unique_flights:
         # Keep only the latest message
@@ -365,7 +367,10 @@ def get_uss_flights(request):
                     reference=telemetry_data_dict["height"]["reference"],
                 )
                 current_state = RIDAircraftState(
-                    timestamp=Time(value=telemetry_data_dict["timestamp"]['value'],format=["timestamp"]['format']),
+                    timestamp=Time(
+                        value=telemetry_data_dict["timestamp"]["value"],
+                        format=telemetry_data_dict["timestamp"]["format"],
+                    ),
                     timestamp_accuracy=telemetry_data_dict["timestamp_accuracy"],
                     operational_status=telemetry_data_dict["operational_status"],
                     position=position,
@@ -373,11 +378,11 @@ def get_uss_flights(request):
                     speed=telemetry_data_dict["speed"],
                     speed_accuracy=telemetry_data_dict["speed_accuracy"],
                     vertical_speed=telemetry_data_dict["vertical_speed"],
-                    height=height,
+                    height=height
                 )
 
                 operator_details = RIDOperatorDetails(
-                    id= details_response_dict["id"],
+                    id=details_response_dict["id"],
                     operator_location=LatLngPoint(
                         lat=details_response_dict["operator_location"]["lat"],
                         lng=details_response_dict["operator_location"]["lng"],
@@ -387,14 +392,12 @@ def get_uss_flights(request):
                         "operation_description"
                     ],
                     serial_number=details_response_dict["serial_number"],
-                    registration_number=details_response_dict[
-                        "registration_number"
-                    ],
+                    registration_number=details_response_dict["registration_number"],
                     auth_data=RIDAuthData(
                         format=details_response_dict["auth_data"]["format"],
                         data=details_response_dict["auth_data"]["data"],
                     ),
-                    aircraft_type=details_response_dict["aircraft_type"],
+                    aircraft_type=details_response_dict["aircraft_type"]
                 )
 
                 current_flight = TelemetryFlightDetails(
@@ -410,7 +413,9 @@ def get_uss_flights(request):
                 # see if it matches the viewport
 
                 # show / add metadata it if it does
-                rid_response = RIDFlightResponse(timestamp=Time(value=now,format='RFC3339'), flights=rid_flights)
+                rid_response = RIDFlightResponse(
+                    timestamp=Time(value=now, format="RFC3339"), flights=rid_flights
+                )
 
                 return JsonResponse(
                     json.loads(json.dumps(asdict(rid_response))), status=200
