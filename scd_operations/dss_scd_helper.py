@@ -471,7 +471,7 @@ class SCDOperations:
                     operational_intent_ref_response.json()
                 )
                 operational_intent_references = dss_operational_intent_references[
-                    "operational_intent_references"
+                    "operational_intent_reference"
                 ]
 
             # Query the operational intent reference
