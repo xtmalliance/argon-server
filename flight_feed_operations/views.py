@@ -252,7 +252,7 @@ def set_signed_telemetry(request):
                 if flight_operation.state in [2,3,4]: # Activated, Contingent, Non-conforming 
                     stream_rid_data_v22.delay(rid_telemetry_observations= json.dumps(unsigned_telemetry_observations))
                 else: 
-                    operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submissin will be ignored, please change the state first.".format(operation_id = operation_id)}
+                    operation_state_incorrect_msg = {"message": "The operation ID: {operation_id} is not one of Activated, Contingent or Non-conforming states in Flight Blender, telemetry submission will be ignored, please change the state first.".format(operation_id = operation_id)}
                     return JsonResponse(operation_state_incorrect_msg, status=400, content_type='application/json')     
 
             else: 

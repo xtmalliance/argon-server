@@ -12,4 +12,4 @@ class SignedTelmetryPublicKey(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "Key :" + self.url
+        return "Key : " + self.url
