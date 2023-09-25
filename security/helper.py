@@ -3,12 +3,10 @@ import json
 from urllib.parse import urlparse
 
 import cryptography.hazmat.primitives.serialization as serialization
-import requests
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa, utils
+from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from django.http import HttpRequest
-
+from requests import Request
 
 def get_jwk_from_public_pem_key(path: str):
     # Load the public key in PEM format
@@ -63,7 +61,7 @@ def get_jwk_from_public_pem_key(path: str):
     return jwk_json
 
 
-def http_request_to_django_request(request: requests.Request) -> HttpRequest:
+def http_request_to_django_request(request: Request) -> HttpRequest:
     """
     Convert Request to Django Request object
     """
