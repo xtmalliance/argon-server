@@ -10,8 +10,8 @@ from datetime import timedelta
 import uuid
 import arrow
 from auth_helper.common import get_redis
-from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint, RIDCapabilitiesResponse
-from uss_operations.uss_data_definitions import FlightDetailsNotFoundMessage
+from .rid_utils import  RIDDisplayDataResponse, Position,RIDPositions, RIDFlight, CreateSubscriptionResponse, HTTPErrorResponse, CreateTestResponse,LatLngPoint, RIDCapabilitiesResponse, RIDOperatorDetails
+from uss_operations.uss_data_definitions import FlightDetailsNotFoundMessage, OperatorDetailsSuccessResponse
 
 import shapely.geometry
 import hashlib
@@ -19,7 +19,7 @@ from flight_feed_operations import flight_stream_helper
 from uuid import UUID
 import logging
 from typing import Any
-from .tasks import stream_rid_test_data_v22,stream_rid_test_data, run_ussp_polling_for_rid
+from .tasks import stream_rid_telemetry_data, stream_rid_test_data, run_ussp_polling_for_rid
 import time
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -167,9 +167,9 @@ def get_rid_data(request, subscription_id):
         obs_helper = flight_stream_helper.ObservationReadOperations()
         all_flights_rid_data = obs_helper.get_observations(push_cg)
 
-        return HTTPResponse(json.dumps(all_flights_rid_data), status=200, content_type='application/json')
+        return HttpResponse(json.dumps(all_flights_rid_data), status=200, content_type='application/json')
     else:
-        return HTTPResponse(json.dumps({}), status=404, content_type='application/json')
+        return HttpResponse(json.dumps({}), status=404, content_type='application/json')
 
 
 @api_view(['POST'])
@@ -332,7 +332,6 @@ def create_test(request, test_id):
     
     rid_qualifier_payload = request.data
     
-    
     try:
         requested_flights = rid_qualifier_payload['requested_flights']        
     except KeyError as ke:   
@@ -351,10 +350,10 @@ def create_test(request, test_id):
         # Create a ISA in the DSS
         now = arrow.now()
         r.set(test_id, json.dumps({'created_at':now.isoformat()}))
-        r.expire(test_id, timedelta(seconds=30))            
+        r.expire(test_id, timedelta(seconds=300))            
         # TODO process requested flights
         stream_rid_test_data.delay(requested_flights = json.dumps(requested_flights))  # Send a job to the task queue
-        # stream_rid_test_data_v22.delay(requested_flights = json.dumps(requested_flights))  # Send a job to the task queue
+        
         
    
     create_test_response = CreateTestResponse(injected_flights = requested_flights, version = 1)

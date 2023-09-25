@@ -4,7 +4,7 @@ from dataclasses import asdict, is_dataclass
 import rid_operations.view_port_ops as view_port_ops
 from datetime import timedelta
 from scd_operations import dss_scd_helper
-from typing import List
+import time
 
 # Create your views here.
 from os import environ as env
@@ -25,9 +25,8 @@ from .uss_data_definitions import (
     OperationalIntentUSSDetails,
     OperationalIntentReferenceDSSResponse,
     Time,
-    Volume4D,
 )
-from scd_operations.scd_data_definitions import OperationalIntentStorage
+
 
 from rid_operations.rid_utils import (
     RIDAuthData,
@@ -39,6 +38,14 @@ from rid_operations.rid_utils import (
     LatLngPoint,
     RIDOperatorDetails,
     TelemetryFlightDetails,
+    AuthData,
+)
+from rid_operations.data_definitions import (
+    SignedUnsignedTelemetryObservation,
+    UAClassificationEU,
+    UASID,
+    OperatorLocation,
+    Altitude,
 )
 import arrow
 from dacite import from_dict
@@ -238,7 +245,7 @@ def USSOpIntDetails(request, opint_id):
 
 
 @api_view(["GET"])
-@requires_scopes(["dss.read.identification_service_areas"])
+@requires_scopes(["rid.display_provider"])
 def get_uss_flights(request):
     """This is the end point for the rid_qualifier to get details of a flight"""
     try:
@@ -257,18 +264,7 @@ def get_uss_flights(request):
         return JsonResponse(json.loads(json.dumps(incorrect_parameters)), status=400)
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
     view_port_area = 0
-    if view_port_valid:
-        view_box = view_port_ops.build_view_port_box(view_port_coords=view_port)
-        view_port_area = view_port_ops.get_view_port_area(view_box=view_box)
-
-        if (view_port_area) < 250000 and (view_port_area) > 90000:
-            view_port_too_large_msg = GenericErrorResponseMessage(
-                message="The requested view %s rectangle is too large" % view
-            )
-            return JsonResponse(
-                json.loads(json.dumps(asdict(view_port_too_large_msg))), status=419
-            )
-    else:
+    if not view_port_valid:
         view_port_not_ok = GenericErrorResponseMessage(
             message="The requested view %s rectangle is not valid format: lat1,lng1,lat2,lng2"
             % view
@@ -276,6 +272,28 @@ def get_uss_flights(request):
         return JsonResponse(
             json.loads(json.dumps(asdict(view_port_not_ok))), status=419
         )
+    view_box = view_port_ops.build_view_port_box(view_port_coords=view_port)
+    view_port_area = view_port_ops.get_view_port_area(view_box=view_box)
+    view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(
+        view_port_coords=view_port
+    )
+    if (view_port_diagonal) > 7:
+        view_port_too_large_msg = GenericErrorResponseMessage(
+            message="The requested view %s rectangle is too large" % view
+        )
+        return JsonResponse(
+            json.loads(json.dumps(asdict(view_port_too_large_msg))), status=413
+        )
+
+    if (view_port_area) < 250000 and (view_port_area) > 90000:
+        view_port_too_large_msg = GenericErrorResponseMessage(
+            message="The requested view %s rectangle is too large" % view
+        )
+        return JsonResponse(
+            json.loads(json.dumps(asdict(view_port_too_large_msg))), status=419
+        )
+
+    time.sleep(0.5)
 
     summary_information_only = True if view_port_area > 22500 else False
 
@@ -319,94 +337,97 @@ def get_uss_flights(request):
         #     return JsonResponse(json.loads(json.dumps(asdict(error_msg))), status=500)
 
         for all_observations_messages in distinct_messages:
-            if summary_information_only:
-                summary = SummaryFlightsOnly(number_of_flights=len(distinct_messages))
-                return JsonResponse(json.loads(json.dumps(asdict(summary))), status=200)
+            # if summary_information_only:
+            #     summary = SummaryFlightsOnly(number_of_flights=len(distinct_messages), timestamp=now)
+            #     return JsonResponse(json.loads(json.dumps(asdict(summary))), status=200)
+            # else:
+            rid_flights = []
+            try:
+                observation_data = all_observations_messages["msg_data"]
+            except KeyError as ke:
+                logger.error("Error in data in the stream %s" % ke)
             else:
-                rid_flights = []
                 try:
-                    observation_data = all_observations_messages["msg_data"]
+                    observation_metadata = observation_data["metadata"]
+                    observation_data_dict = json.loads(observation_metadata)
                 except KeyError as ke:
-                    logger.error("Error in data in the stream %s" % ke)
-                else:
-                    try:
-                        observation_metadata = observation_data["metadata"]
-                        observation_data_dict = json.loads(observation_metadata)
-                    except KeyError as ke:
-                        logger.error("Error in metadata data in the stream %s" % ke)
+                    logger.error("Error in metadata data in the stream %s" % ke)
 
-                    telemetry_data_dict = observation_data_dict["telemetry"]
+                telemetry_data_dict = observation_data_dict["telemetry"]
 
-                    details_response_dict = observation_data_dict["details_response"][
-                        "details"
-                    ]
+                details_response_dict = observation_data_dict["details_response"][
+                    "details"
+                ]
 
-                    position = RIDAircraftPosition(
-                        lat=telemetry_data_dict["position"]["lat"],
-                        lng=telemetry_data_dict["position"]["lng"],
-                        alt=telemetry_data_dict["position"]["alt"],
-                        accuracy_h=telemetry_data_dict["position"]["accuracy_h"],
-                        accuracy_v=telemetry_data_dict["position"]["accuracy_v"],
-                        extrapolated=telemetry_data_dict["position"]["extrapolated"],
-                        pressure_altitude=telemetry_data_dict["position"][
-                            "pressure_altitude"
-                        ],
-                    )
-                    height = RIDHeight(
-                        distance=telemetry_data_dict["height"]["distance"],
-                        reference=telemetry_data_dict["height"]["reference"],
-                    )
-                    current_state = RIDAircraftState(
-                        timestamp=telemetry_data_dict["timestamp"],
-                        timestamp_accuracy=telemetry_data_dict["timestamp_accuracy"],
-                        operational_status=telemetry_data_dict["operational_status"],
-                        position=position,
-                        track=telemetry_data_dict["track"],
-                        speed=telemetry_data_dict["speed"],
-                        speed_accuracy=telemetry_data_dict["speed_accuracy"],
-                        vertical_speed=telemetry_data_dict["vertical_speed"],
-                        height=height,
-                    )
+                position = RIDAircraftPosition(
+                    lat=telemetry_data_dict["position"]["lat"],
+                    lng=telemetry_data_dict["position"]["lng"],
+                    alt=telemetry_data_dict["position"]["alt"],
+                    accuracy_h=telemetry_data_dict["position"]["accuracy_h"],
+                    accuracy_v=telemetry_data_dict["position"]["accuracy_v"],
+                    extrapolated=telemetry_data_dict["position"]["extrapolated"],
+                    pressure_altitude=telemetry_data_dict["position"][
+                        "pressure_altitude"
+                    ],
+                )
+                height = RIDHeight(
+                    distance=telemetry_data_dict["height"]["distance"],
+                    reference=telemetry_data_dict["height"]["reference"],
+                )
+                current_state = RIDAircraftState(
+                    timestamp=Time(
+                        value=telemetry_data_dict["timestamp"]["value"],
+                        format=telemetry_data_dict["timestamp"]["format"],
+                    ),
+                    timestamp_accuracy=telemetry_data_dict["timestamp_accuracy"],
+                    operational_status=telemetry_data_dict["operational_status"],
+                    position=position,
+                    track=telemetry_data_dict["track"],
+                    speed=telemetry_data_dict["speed"],
+                    speed_accuracy=telemetry_data_dict["speed_accuracy"],
+                    vertical_speed=telemetry_data_dict["vertical_speed"],
+                    height=height,
+                )
 
-                    operator_details = RIDOperatorDetails(
-                        id=details_response_dict["id"],
-                        operator_location=LatLngPoint(
-                            lat=details_response_dict["operator_location"]["lat"],
-                            lng=details_response_dict["operator_location"]["lng"],
-                        ),
-                        operator_id=details_response_dict["operator_id"],
-                        operation_description=details_response_dict[
-                            "operation_description"
-                        ],
-                        serial_number=details_response_dict["serial_number"],
-                        registration_number=details_response_dict[
-                            "registration_number"
-                        ],
-                        auth_data=RIDAuthData(
-                            format=details_response_dict["auth_data"]["format"],
-                            data=details_response_dict["auth_data"]["data"],
-                        ),
-                        aircraft_type=details_response_dict["aircraft_type"],
-                    )
+                operator_details = RIDOperatorDetails(
+                    id=details_response_dict["id"],
+                    operator_location=LatLngPoint(
+                        lat=details_response_dict["operator_location"]["lat"],
+                        lng=details_response_dict["operator_location"]["lng"],
+                    ),
+                    operator_id=details_response_dict["operator_id"],
+                    operation_description=details_response_dict[
+                        "operation_description"
+                    ],
+                    serial_number=details_response_dict["serial_number"],
+                    registration_number=details_response_dict["registration_number"],
+                    auth_data=RIDAuthData(
+                        format=details_response_dict["auth_data"]["format"],
+                        data=details_response_dict["auth_data"]["data"],
+                    ),
+                    aircraft_type=details_response_dict["aircraft_type"],
+                )
 
-                    current_flight = TelemetryFlightDetails(
-                        operator_details=operator_details,
-                        id=details_response_dict["id"],
-                        aircraft_type="NotDeclared",
-                        current_state=current_state,
-                        simulated=True,
-                        recent_positions=[],
-                    )
+                current_flight = TelemetryFlightDetails(
+                    operator_details=operator_details,
+                    id=details_response_dict["id"],
+                    aircraft_type="NotDeclared",
+                    current_state=current_state,
+                    simulated=True,
+                    recent_positions=[],
+                )
 
-                    rid_flights.append(current_flight)
-                    # see if it matches the viewport
+                rid_flights.append(current_flight)
+                # see if it matches the viewport
 
-                    # show / add metadata it if it does
-                    rid_response = RIDFlightResponse(timestamp=now, flights=rid_flights)
+                # show / add metadata it if it does
+                rid_response = RIDFlightResponse(
+                    timestamp=Time(value=now, format="RFC3339"), flights=rid_flights
+                )
 
-                    return JsonResponse(
-                        json.loads(json.dumps(asdict(rid_response))), status=200
-                    )
+                return JsonResponse(
+                    json.loads(json.dumps(asdict(rid_response))), status=200
+                )
 
     else:
         # show / add metadata it if it does
@@ -416,26 +437,49 @@ def get_uss_flights(request):
 
 
 @api_view(["GET"])
-@requires_scopes(["dss.read.identification_service_areas"])
+@requires_scopes(["rid.display_provider"])
 def get_uss_flight_details(request, flight_id):
     """This is the end point for the rid_qualifier to get details of a flight"""
     r = get_redis()
     flight_details_storage = "flight_details:" + flight_id
     if r.exists(flight_details_storage):
-        flight_details = r.get(flight_details_storage)
-        location = LatLngPoint(
-            lat=flight_detail["location"]["lat"], lng=flight_detail["location"]["lng"]
+        flight_details_raw = r.get(flight_details_storage)
+        flight_details = json.loads(flight_details_raw)
+
+        operator_location = OperatorLocation(
+            position=LatLngPoint(
+                lat=flight_details["operator_location"]["lat"],
+                lng=flight_details["operator_location"]["lng"],
+            ),
+            altitude=Altitude(value=500, reference="W84", units="M"),
+            altitude_type="Takeoff",
         )
-        flight_detail = RIDOperatorDetails(
+
+        f_detail = RIDOperatorDetails(
             id=flight_details["id"],
-            operator_id=flight_detail["operator_id"],
-            operator_location=location,
-            operator_description=flight_details["operator_description"],
-            auth_data={},
-            serial_number=flight_detail["serial_number"],
-            registration_number=flight_detail["registration_number"],
+            operator_id=flight_details["operator_id"],
+            operator_location=operator_location,
+            operation_description=flight_details["operation_description"],
+            auth_data=AuthData(
+                format=flight_details["auth_data"]["format"],
+                data=flight_details["auth_data"]["data"],
+            ),
+            serial_number=flight_details["serial_number"],
+            registration_number=flight_details["registration_number"],
+            uas_id=UASID(
+                specific_session_id=flight_details["uas_id"]["specific_session_id"],
+                serial_number=flight_details["uas_id"]["serial_number"],
+                registration_id=flight_details["uas_id"]["registration_id"],
+                utm_id=flight_details["uas_id"]["utm_id"],
+            ),
+            eu_classification=UAClassificationEU(
+                category=flight_details["eu_classification"]["category"],
+                class_=flight_details["eu_classification"]["class_"],
+            ),
         )
-        flight_details_full = OperatorDetailsSuccessResponse(details=flight_detail)
+
+        flight_details_full = OperatorDetailsSuccessResponse(details=f_detail)
+
         return JsonResponse(
             json.loads(json.dumps(asdict(flight_details_full))), status=200
         )

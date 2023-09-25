@@ -4,7 +4,13 @@ from dataclasses import dataclass, field, asdict
 from scd_operations.scd_data_definitions import Volume4D
 from implicitdict import StringBasedDateTime
 import enum
-from typing import List, Literal
+from .data_definitions import UAClassificationEU, UASID
+from typing import List, Literal, Union
+
+@dataclass
+class RIDTime:
+  value:str
+  format: str
 
 class Position(NamedTuple):
     ''' A class to hold most recent position for remote id data '''
@@ -37,26 +43,35 @@ class SubscriptionResponse:
     dss_subscription_id: Optional[uuid.uuid4]
     notification_index: int
 
+
 @dataclass
-class RIDVertex:
+class RIDAltitude:
+    """A class to hold altitude"""
+
+    value: Union[int, float]
+    reference: str
+    units: str
+
+@dataclass
+class LatLngPoint:
   lat:float
   lng: float
 
 @dataclass
-class RIDFootprint:
-  vertices: List[RIDVertex]
+class RIDPolygon:
+  vertices: List[LatLngPoint]
 
 @dataclass
 class RIDVolume3D:
-  footprint: RIDFootprint
-  altitude_lo: int
-  altitude_high: int
+  outline_polygon: RIDPolygon
+  altitude_upper: RIDAltitude
+  altitude_lower: RIDAltitude
 
 @dataclass
 class RIDVolume4D:
-  spatial_volume: RIDVolume3D
-  time_start: str
-  time_end: str
+  volume: RIDVolume3D
+  time_start: RIDTime
+  time_end: RIDTime
 
 @dataclass
 class SubscriptionState:
@@ -72,11 +87,11 @@ class SubscriberToNotify:
 class ISACreationRequest:
     ''' A object to hold details of a request that indicates the DSS '''
     extents: Volume4D
-    flights_url: str
+    uss_base_url: str
 
 @dataclass
 class IdentificationServiceArea:  
-  flights_url: str
+  uss_base_url: str
   owner: str
   time_start: StringBasedDateTime
   time_end: StringBasedDateTime
@@ -132,18 +147,26 @@ class LatLngPoint:
 class RIDAuthData:
   format: str
   data: str
+@dataclass 
+class OperatorAltitude:
+   altitude:int
+   altitude_type: str
 
 @dataclass
 class RIDOperatorDetails:
   id: str
+      
   operator_id: Optional[str]
   operator_location: Optional[LatLngPoint]
   operation_description: Optional[str]
   auth_data: Optional[RIDAuthData]
   serial_number: Optional[str]
   registration_number: Optional[str]
-  aircraft_type: Optional[str]
-
+  aircraft_type: Optional[str] = None
+  eu_classification: Optional[UAClassificationEU] = None
+  uas_id: Optional[UASID] = None
+  
+  
 @dataclass
 class FlightState:     
   timestamp: StringBasedDateTime
@@ -283,8 +306,3 @@ class AuthData:
 class SingleObservationMetadata:
   details_response: RIDTestDetailsResponse
   telemetry: RIDAircraftState
-
-@dataclass
-class RIDTime:
-  value:str
-  format: str
