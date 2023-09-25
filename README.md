@@ -47,6 +47,17 @@ Take a look at sample data below to see the kind of data that can be submitted i
 
 ## Running with Makefile
 
+### Running the Makefile with "docker compose" instead of "docker-compose"
+In newer versions of docker and docker desktop it is possible to run "compose" as a docker tool, meaning you do not have to install docker-compose separately. If you prefer to install/use docker-compose as a standalone app, you can skip the following steps:
+- Make sure `docker compose` is available on your system
+- **docker compose version**
+  `Docker Compose version v2.20.2-desktop.1`
+- Set the following environment variable to force Makefile to use `docker compose`
+- **export DOCKER_COMPOSE_CMD="docker compose"** (add this to .profile if you do not want to run the command every time you login)
+- Run make build
+- **make build**
+
+
 ### Building and running the container
 - **make build** will build the container.
 - **make rebuild** will build the container by scratch
