@@ -2,16 +2,30 @@
 This file contains unit tests for the views functions in flight_declaration_operations
 """
 import datetime
+import hashlib
 import json
+from unittest.mock import patch
 
+import http_sfv
 import pytest
+import requests
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.urls import reverse
+from http_message_signatures import (HTTPMessageSigner,
+                                     HTTPSignatureKeyResolver, algorithms)
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from conftest import get_oauth2_token
+from security import helper
 
 JWT = get_oauth2_token()
+
+
+class _TestHTTPSignatureKeyResolver(HTTPSignatureKeyResolver):
+    def resolve_private_key(self, key_id: str):
+        with open(f"security/test_keys/{key_id}.key", "rb") as fh:
+            return load_pem_private_key(fh.read(), password=None)
 
 
 class FlightDeclarationPostTests(APITestCase):
@@ -203,6 +217,219 @@ class FlightDeclarationPostTests(APITestCase):
         )
         self.assertEqual(response.json()["message"], "Submitted Flight Declaration")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class FlightDeclarationSignedPostTests(APITestCase):
+    """
+    Contains tests for the function set_signed_flight_declaration in views.
+    """
+
+    def setUp(self):
+        self.key_id = "001"
+        self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {JWT}"
+        self.api_url = reverse("set_signed_flight_declaration")
+
+        _flight_time = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+        _flight_declaration_geo_json = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "id": "0",
+                        "start_datetime": "2023-02-03T16:29:08.842Z",
+                        "end_datetime": "2023-02-03T16:29:08.842Z",
+                        "max_altitude": {"meters": 152.4, "datum": "agl"},
+                        "min_altitude": {"meters": 102.4, "datum": "agl"},
+                    },
+                    "geometry": {
+                        "coordinates": [
+                            [15.776083042366338, 1.18379149158649],
+                            [15.799823306116707, 1.2159036290562142],
+                            [15.812391681043636, 1.2675614791659342],
+                            [15.822167083764754, 1.3024648511225934],
+                            [15.82635654207283, 1.3220105290909174],
+                        ],
+                        "type": "LineString",
+                    },
+                }
+            ],
+        }
+
+        _payload = {
+            "start_datetime": _flight_time,
+            "end_datetime": _flight_time,
+            "flight_declaration_geo_json": _flight_declaration_geo_json,
+        }
+
+        _request = requests.Request(
+            "POST",
+            "http://testserver/flight_declaration_ops/set_signed_flight_declaration",  # testserver is the @authority for pytest HTTP requests
+            json=_payload,
+        )
+        self.http_request = _request
+        self.valid_payload = _payload
+
+    def test_unsupported_media_type(self):
+        response = self.client.post(
+            self.api_url, content_type="text/plain", data="TEXT PAYLOAD"
+        )
+
+        self.assertEqual(response.json(), {"message": "Unsupported Media Type"})
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_invalid_signed_request(self):
+        response = self.client.post(
+            self.api_url,
+            content_type="application/json",
+            data=json.dumps(self.valid_payload),
+        )
+
+        self.assertEqual(
+            response.json()["message"],
+            "Could not verify against public keys setup in Flight Blender",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("security.signing.MessageVerifier.get_public_keys")
+    def test_valid_signed_request_but_incorrect_payload(self, mock_get_public_keys):
+        invalid_payload = {
+            "start_datetime": "2023-09-20T13:00:00.000",
+            "end_datetime": "2023-09-20T13:00:00.000",
+            "flight_declaration_geo_json": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "id": "0",
+                            "start_datetime": "2023-02-03T16:29:08.842Z",
+                            "end_datetime": "2023-02-03T16:29:08.842Z",
+                            "max_altitude": {"meters": 152.4, "datum": "agl"},
+                            "min_altitude": {"meters": 102.4, "datum": "agl"},
+                        },
+                        "geometry": {
+                            "coordinates": [
+                                [15.776083042366338, 1.18379149158649],
+                                [15.799823306116707, 1.2159036290562142],
+                                [15.812391681043636, 1.2675614791659342],
+                                [15.822167083764754, 1.3024648511225934],
+                                [15.82635654207283, 1.3220105290909174],
+                            ],
+                            "type": "LineString",
+                        },
+                    }
+                ],
+            },
+        }
+        # Sign the http request: This mocks the ussp_link's http request signing part.
+        data = json.dumps(invalid_payload, separators=(",", ":"))
+        content_digest = str(
+            http_sfv.Dictionary({"sha-512": hashlib.sha512(data.encode()).digest()})
+        )
+        request = self.http_request.prepare()
+        request.body = invalid_payload
+        request.headers["Content-Digest"] = content_digest
+        signer = HTTPMessageSigner(
+            signature_algorithm=algorithms.RSA_PSS_SHA512,
+            key_resolver=_TestHTTPSignatureKeyResolver(),
+        )
+        signer.sign(
+            request,
+            key_id=self.key_id,
+            covered_component_ids=(
+                "@method",
+                "@authority",
+                "@target-uri",
+                "content-digest",
+            ),
+            label="sig1",
+        )
+        assert request.headers.get("Content-Digest")
+        assert request.headers.get("Signature-Input")
+        assert request.headers.get("Signature")
+
+        headers = {
+            "HTTP_Content-Digest": request.headers.get("Content-Digest"),
+            "HTTP_Signature-Input": request.headers.get("Signature-Input"),
+            "HTTP_Signature": request.headers.get("Signature"),
+        }
+
+        # Mock public JWK retrieval
+        jwk = helper.get_jwk_from_public_pem_key(
+            path=f"/app/security/test_keys/{self.key_id}.pem"
+        )
+        mock_get_public_keys.return_value = {self.key_id: jwk}
+
+        response = self.client.post(
+            self.api_url,
+            content_type="application/json",
+            data=json.dumps(invalid_payload),
+            **headers,
+        )
+
+        self.assertEqual(
+            response.json()["message"],
+            "A flight declaration cannot have a start or end time in the past or after two days from current time.",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("security.signing.MessageVerifier.get_public_keys")
+    def test_valid_signed_request(self, mock_get_public_keys):
+        # Sign the http request: This mocks the ussp_link's http request signing part.
+        data = json.dumps(self.valid_payload, separators=(",", ":"))
+        content_digest = str(
+            http_sfv.Dictionary({"sha-512": hashlib.sha512(data.encode()).digest()})
+        )
+        request = self.http_request.prepare()
+        request.headers["Content-Digest"] = content_digest
+        signer = HTTPMessageSigner(
+            signature_algorithm=algorithms.RSA_PSS_SHA512,
+            key_resolver=_TestHTTPSignatureKeyResolver(),
+        )
+        signer.sign(
+            request,
+            key_id=self.key_id,
+            covered_component_ids=(
+                "@method",
+                "@authority",
+                "@target-uri",
+                "content-digest",
+            ),
+            label="sig1",
+        )
+        assert request.headers.get("Content-Digest")
+        assert request.headers.get("Signature-Input")
+        assert request.headers.get("Signature")
+
+        headers = {
+            "HTTP_Content-Digest": request.headers.get("Content-Digest"),
+            "HTTP_Signature-Input": request.headers.get("Signature-Input"),
+            "HTTP_Signature": request.headers.get("Signature"),
+        }
+
+        # Mock public JWK retrieval
+        jwk = helper.get_jwk_from_public_pem_key(
+            path=f"/app/security/test_keys/{self.key_id}.pem"
+        )
+        mock_get_public_keys.return_value = {self.key_id: jwk}
+
+        response = self.client.post(
+            self.api_url,
+            content_type="application/json",
+            data=json.dumps(self.valid_payload),
+            **headers,
+        )
+
+        self.assertEqual(response.json()["message"], "Submitted Flight Declaration")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Signed response should also have below headers
+        assert response.headers.get("Content-Digest")
+        assert response.headers.get("Signature-Input")
+        assert response.headers.get("Signature")
 
 
 @pytest.mark.usefixtures("create_flight_plan")

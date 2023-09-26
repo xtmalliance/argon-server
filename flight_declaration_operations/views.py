@@ -1,6 +1,5 @@
 # Create your views here.
 import io
-
 # Create your views here.
 import json
 import logging
@@ -17,21 +16,21 @@ from rest_framework.parsers import JSONParser
 from shapely.geometry import shape
 
 from auth_helper.utils import requires_scopes
-from security import signing
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
+from security import signing
 
 from .data_definitions import FlightDeclarationCreateResponse
-from .flight_declarations_rtree_helper import FlightDeclarationRTreeIndexFactory
+from .flight_declarations_rtree_helper import \
+    FlightDeclarationRTreeIndexFactory
 from .models import FlightDeclaration
 from .pagination import StandardResultsSetPagination
-from .serializers import (
-    FlightDeclarationApprovalSerializer,
-    FlightDeclarationRequestSerializer,
-    FlightDeclarationSerializer,
-    FlightDeclarationStateSerializer,
-)
-from .tasks import send_operational_update_message, submit_flight_declaration_to_dss
+from .serializers import (FlightDeclarationApprovalSerializer,
+                          FlightDeclarationRequestSerializer,
+                          FlightDeclarationSerializer,
+                          FlightDeclarationStateSerializer)
+from .tasks import (send_operational_update_message,
+                    submit_flight_declaration_to_dss)
 from .utils import OperationalIntentsConverter
 
 logger = logging.getLogger("django")
@@ -299,6 +298,16 @@ def set_flight_declaration(request: HttpRequest):
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
 def set_signed_flight_declaration(request: HttpRequest):
+    try:
+        assert request.headers["Content-Type"] == "application/json"
+    except AssertionError:
+        msg = {"message": "Unsupported Media Type"}
+        return HttpResponse(
+            json.dumps(msg),
+            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            content_type="application/json",
+        )
+
     stream = io.BytesIO(request.body)
     json_payload = JSONParser().parse(stream)
 
@@ -312,16 +321,6 @@ def set_signed_flight_declaration(request: HttpRequest):
                 }
             ),
             status=status.HTTP_400_BAD_REQUEST,
-            content_type="application/json",
-        )
-
-    try:
-        assert request.headers["Content-Type"] == "application/json"
-    except AssertionError:
-        msg = {"message": "Unsupported Media Type"}
-        return HttpResponse(
-            json.dumps(msg),
-            status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             content_type="application/json",
         )
 
@@ -374,9 +373,14 @@ def set_signed_flight_declaration(request: HttpRequest):
     )
 
     op = json.dumps(asdict(creation_response))
-    return HttpResponse(
-        op, status=status.HTTP_201_CREATED, content_type="application/json"
+
+    signer = signing.ResponseSigner()
+    signed_response = signer.sign_http_message_via_ietf(
+        json_payload=op, original_request=request
     )
+    signed_response.content = op
+    signed_response.status_code = status.HTTP_201_CREATED
+    return signed_response
 
 
 @method_decorator(requires_scopes(["blender.write"]), name="dispatch")
