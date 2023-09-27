@@ -112,7 +112,7 @@ class ResponseSigningOperations:
         self.signing_client_secret = env.get('FLIGHT_PASSPORT_SIGNING_CLIENT_SECRET')
 
         self.signing_key_id = env.get('IETF_SIGNING_KEY_ID', "temp_id")
-        self.signing_key_label = env.get('IETF_SIGNING_KEY_label', "temp_label") 
+        self.signing_key_label = env.get('IETF_SIGNING_KEY_LABEL', "temp_label") 
 
     def generate_content_digest(self, payload):
         payload_str = json.dumps(payload)
