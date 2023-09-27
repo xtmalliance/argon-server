@@ -184,4 +184,5 @@ class ResponseSigningOperations:
             ),
             label=self.signing_key_label,
         )
+        response.content = json_payload
         return response
