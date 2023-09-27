@@ -19,8 +19,8 @@ from http_message_signatures import (
 )
 from jwcrypto import jwk, jws
 from jwcrypto.common import json_encode
-
-from auth_helper.common import get_redis
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.backends import default_backend
 
 from .models import SignedTelmetryPublicKey
 
@@ -38,6 +38,14 @@ class MyHTTPSignatureKeyResolver(HTTPSignatureKeyResolver):
         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(self.jwk)
         return public_key
 
+    def resolve_private_key(self, key_id: str):
+        private_key_pem = env.get("IETF_SIGNING_KEY", "")
+        private_key = load_pem_private_key(
+            private_key_pem.encode("utf-8"),
+            password=None,
+            backend=default_backend(),
+        )
+        return private_key
 
 class MessageVerifier:
     def get_public_keys(self):
