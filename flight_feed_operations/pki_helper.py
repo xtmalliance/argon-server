@@ -159,9 +159,13 @@ class ResponseSigningOperations:
         else:
             return {}
         
-    def sign_http_message_via_ietf(
+    def sign_http_message(
         self, json_payload, original_request: HttpRequest
     ) -> HttpResponse:
+        """
+        Sign the http response message using IETF standard and returns a HttpResponse object.
+        Source: https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/
+        """
         response = HttpResponse()
         response.url = original_request.build_absolute_uri()
         response.request = original_request
