@@ -20,6 +20,7 @@ class FlightDeclarationRequest:
         start_datetime,
         end_datetime,
         type_of_operation,
+        vehicle_id,
         submitted_by,
         flight_declaration_geo_json,
     ):
@@ -27,6 +28,7 @@ class FlightDeclarationRequest:
         self.start_datetime = start_datetime
         self.end_datetime = end_datetime
         self.type_of_operation = type_of_operation
+        self.vehicle_id = vehicle_id
         self.submitted_by = submitted_by
         self.flight_declaration_geo_json = flight_declaration_geo_json
 
@@ -42,6 +44,7 @@ class FlightDeclarationRequestSerializer(serializers.Serializer):
     start_datetime = serializers.DateTimeField(required=False, default=None)
     end_datetime = serializers.DateTimeField(required=False,default=None)
     type_of_operation = serializers.IntegerField(required=False, default=0)
+    vehicle_id = serializers.CharField(required=False, default="000")
     submitted_by = serializers.CharField(required=False, default=None)
     flight_declaration_geo_json = serializers.DictField(
         error_messages={
@@ -84,6 +87,7 @@ class FlightDeclarationSerializer(serializers.ModelSerializer):
             "operational_intent",
             "originating_party",
             "type_of_operation",
+            "aircraft_id",
             "id",
             "state",
             "is_approved",

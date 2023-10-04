@@ -12,6 +12,7 @@ class FlightDeclaration(models.Model):
     operational_intent = models.JSONField()
     flight_declaration_raw_geojson = models.TextField(null=True, blank=True)
     type_of_operation = models.IntegerField(choices=OPERATION_TYPES, default=1, help_text="At the moment, only VLOS and BVLOS operations are supported, for other types of operations, please issue a pull-request")
+    aircraft_id = models.CharField(max_length=256,default="000",help_text="Specify the ID of the aircraft for this declaration")
     state = models.IntegerField(choices=OPERATION_STATE, default=0, help_text="Set the state of operation")
     bounds = models.CharField(max_length = 140)
 

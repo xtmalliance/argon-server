@@ -586,3 +586,20 @@ class FlightDeclarationGetTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["total"], 0)
+
+    def test_count_flight_plans_with_aircraft_ids(self):
+        flight_s_time = "2023-08-01 00:00:00"
+        flight_e_time = "2023-08-01 23:00:00"
+        response = self.client.get(
+            self.api_url
+            + "?start_date={flight_s_time}&end_date={flight_e_time}".format(
+                flight_s_time=flight_s_time, flight_e_time=flight_e_time
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 3)
+
+        self.assertEquals(response.json()["results"][0]["aircraft_id"], "334455")
+        self.assertEquals(response.json()["results"][1]["aircraft_id"], "000")
+        self.assertEquals(response.json()["results"][2]["aircraft_id"], "112233")

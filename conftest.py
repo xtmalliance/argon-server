@@ -118,6 +118,7 @@ def create_flight_plan(db) -> None:
         },
         bounds="",
         type_of_operation=1,
+        aircraft_id="112233",
         submitted_by="User 001",
         is_approved=False,
         state=1,
@@ -229,7 +230,7 @@ def create_flight_plan(db) -> None:
             }
         ),
     )
-    # Flight plan 2
+    # Flight plan 3
     max_alt = 100
     min_alt = 80
     flight_s_time = "2023-08-01T15:00:00+00:00"
@@ -283,6 +284,7 @@ def create_flight_plan(db) -> None:
         },
         bounds="",
         type_of_operation=1,
+        aircraft_id="334455",
         submitted_by="User 003",
         is_approved=False,
         state=3,
