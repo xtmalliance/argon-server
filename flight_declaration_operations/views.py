@@ -318,7 +318,7 @@ def set_signed_flight_declaration(request: HttpRequest):
         return HttpResponse(
             json.dumps(
                 {
-                    "message": "Could not verify against public keys setup in Flight Blender"
+                    "message": "Could not verify against public keys of USSP client(GCS) setup in Flight Blender"
                 }
             ),
             status=status.HTTP_400_BAD_REQUEST,

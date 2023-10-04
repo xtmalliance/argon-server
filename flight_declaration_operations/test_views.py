@@ -289,7 +289,7 @@ class FlightDeclarationSignedPostTests(APITestCase):
 
         self.assertEqual(
             response.json()["message"],
-            "Could not verify against public keys setup in Flight Blender",
+            "Could not verify against public keys of USSP client(GCS) setup in Flight Blender",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

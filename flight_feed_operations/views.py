@@ -38,9 +38,8 @@ from rest_framework.parsers import JSONParser
 
 from encoders import DateTimeEncoder
 
-from .data_definitions import MessageVerificationFailedResponse
 from .models import SignedTelmetryPublicKey
-from .pki_helper import MessageVerifier, ResponseSigningOperations
+from security.signing import MessageVerifier, ResponseSigner
 from .rid_telemetry_helper import (
     BlenderTelemetryValidator,
     NestedDict,
@@ -295,16 +294,17 @@ def start_opensky_feed(request):
 def set_signed_telemetry(request):
     # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securly send signed telemetry information into Blender, since the messages are signed, we turn off any auth requirements for tokens and validate against allowed public keys in Blender.
 
-    my_message_verifier = MessageVerifier()
-    my_response_signer = ResponseSigningOperations()
-    verified = my_message_verifier.verify_message(request)
+    message_verifier = MessageVerifier()
+    response_signer = ResponseSigner()
+    verified = message_verifier.verify_message(request)
 
     if not verified:
-        message_verification_failed_response = MessageVerificationFailedResponse(
-            message="Could not verify against public keys setup in Flight Blender"
-        )
         return JsonResponse(
-            asdict(message_verification_failed_response),
+            json.dumps(
+                {
+                    "message": "Could not verify against public keys of USSP client(GCS) setup in Flight Blender"
+                }
+            ),
             status=400,
             content_type="application/json",
         )
@@ -392,8 +392,8 @@ def set_signed_telemetry(request):
                 rid_telemetry_observations=json.dumps(unsigned_telemetry_observations)
             )
         submission_success = {"message": "Telemetry data successfully submitted"}
-        content_digest = my_response_signer.generate_content_digest(submission_success)
-        signed_data = my_response_signer.sign_json_via_django(submission_success)
+        content_digest = response_signer.generate_content_digest(submission_success)
+        signed_data = response_signer.sign_json_via_django(submission_success)
         submission_success["signed"] = signed_data
         response = JsonResponse(
             submission_success, status=201, content_type="application/json"

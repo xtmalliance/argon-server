@@ -32,7 +32,3 @@ class SingleAirtrafficObservation():
 class FlightObservationsProcessingResponse():
     message:str
     status: int
-
-@dataclass
-class MessageVerificationFailedResponse():
-    message: str    
