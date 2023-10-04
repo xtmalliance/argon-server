@@ -42,6 +42,7 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | POSTGRES_DB | string| You can name a appropriate name, see the sample file |
 | POSTGRES_HOST | string| You can name a appropriate name, see the sample file |
 | PGDATA | string | This is where the data is stored, you can use `/var/lib/postgresql/data/pgdata` here |
+| ENABLE_CONFORMANCE_MONITORING | int | (Optional) By default conformance monitoring is turned off, set this flag if you want to enable conformance monitoring. Conformance monitoring is a advanced UTM service so it is recommended that this service be turned off initially. |
 
 ### 2. Use Docker Compose to stand up Flight Blender 
 Once you have created and saved the .env file you can then use the [docker-compose.yaml](../docker-compose.yml) file to start the instance. Just run `docker compose up` and a running instance of Flight Blender will be available. 
