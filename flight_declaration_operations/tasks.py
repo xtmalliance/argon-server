@@ -1,32 +1,28 @@
 import logging
-from enum import Enum
 from os import environ as env
 
 import arrow
 from dotenv import find_dotenv, load_dotenv
-from flight_blender.celery import app
-from notification_operations.data_definitions import \
-    FlightDeclarationUpdateMessage
-from notification_operations.notification_helper import NotificationFactory
 from rest_framework import status
-from scd_operations.opint_helper import DSSOperationalIntentsCreator
 
+from flight_blender.celery import app
 from flight_declaration_operations.models import FlightDeclaration
+from notification_operations.data_definitions import (
+    NotificationLevel,
+    NotificationMessage,
+)
+from notification_operations.notification_helper import NotificationFactory
+from scd_operations.opint_helper import DSSOperationalIntentsCreator
 
 logger = logging.getLogger("django")
 load_dotenv(find_dotenv())
-
-
-class LogLevel(str, Enum):
-    INFO = "info"
-    ERROR = "error"
 
 
 @app.task(name="_send_flight_approved_message")
 def _send_flight_approved_message(
     flight_declaration_id: str,
     message_text: str,
-    level: str = LogLevel.INFO,
+    level: str = NotificationLevel.INFO,
     timestamp: str = None,
 ):
     amqp_connection_url = env.get("AMQP_URL", 0)
@@ -38,7 +34,7 @@ def _send_flight_approved_message(
         now = arrow.now()
         timestamp = now.isoformat()
 
-    update_message = FlightDeclarationUpdateMessage(
+    update_message = NotificationMessage(
         body=message_text, level=level, timestamp=timestamp
     )
 
@@ -57,7 +53,7 @@ def _send_flight_approved_message(
 def send_operational_update_message(
     flight_declaration_id: str,
     message_text: str,
-    level: str = LogLevel.INFO,
+    level: str = NotificationLevel.INFO,
     timestamp: str = None,
 ):
     amqp_connection_url = env.get("AMQP_URL", 0)
@@ -69,7 +65,7 @@ def send_operational_update_message(
         now = arrow.now()
         timestamp = now.isoformat()
 
-    update_message = FlightDeclarationUpdateMessage(
+    update_message = NotificationMessage(
         body=message_text, level=level, timestamp=timestamp
     )
 
@@ -95,7 +91,7 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
         _send_flight_approved_message.delay(
             flight_declaration_id=flight_declaration_id,
             message_text=message,
-            level=LogLevel.INFO,
+            level=NotificationLevel.INFO,
         )
         fo.save()
         return
@@ -117,7 +113,7 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
         send_operational_update_message.delay(
             flight_declaration_id=flight_declaration_id,
             message_text=validation_not_ok_msg,
-            level=LogLevel.ERROR,
+            level=NotificationLevel.ERROR,
         )
         return
 
@@ -127,7 +123,7 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
     send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
         message_text=validation_ok_msg,
-        level=LogLevel.INFO,
+        level=NotificationLevel.INFO,
     )
 
     opint_submission_result = my_dss_opint_creator.submit_flight_declaration_to_dss()
@@ -147,7 +143,7 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
         send_operational_update_message.delay(
             flight_declaration_id=flight_declaration_id,
             message_text=dss_submission_error_msg,
-            level=LogLevel.ERROR,
+            level=NotificationLevel.ERROR,
         )
         return
 
@@ -162,7 +158,7 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
     send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
         message_text=submission_success_msg,
-        level=LogLevel.INFO,
+        level=NotificationLevel.INFO,
     )
 
     fo = FlightDeclaration.objects.get(id=flight_declaration_id)
@@ -175,7 +171,7 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
     send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
         message_text=submission_state_updated_msg,
-        level=LogLevel.INFO,
+        level=NotificationLevel.INFO,
     )
     fo.save()
     logging.info(
