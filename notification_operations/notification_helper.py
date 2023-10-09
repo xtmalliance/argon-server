@@ -25,7 +25,7 @@ class NotificationFactory:
         self.flight_declaration_id = flight_declaration_id
 
     def send_message(self, message_details: NotificationMessage):
-        msg_details = json.dumps(asdict(message_details))
+        msg_details = json.dumps((message_details.to_dict()))
         self.channel.basic_publish(
             exchange=self.exchange,
             routing_key=self.flight_declaration_id,

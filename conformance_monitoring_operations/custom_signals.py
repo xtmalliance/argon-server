@@ -1,10 +1,11 @@
 import logging
 
 import django.dispatch
-import tasks
 from django.dispatch import receiver
 
 from common.database_operations import BlenderDatabaseReader
+from notification_operations import notification
+from notification_operations.data_definitions import NotificationLevel
 
 from .conformance_checks_handler import FlightOperationConformanceHelper
 from .conformance_state_helper import ConformanceChecksList
@@ -32,10 +33,11 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(invalid_aircraft_id_msg)
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=invalid_aircraft_id_msg,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Telemetry",
         )
 
         new_state = 4
@@ -46,10 +48,11 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(flight_state_not_correct_msg)
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=flight_state_not_correct_msg,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Telemetry",
         )
         event = "blender_confirms_contingent"
         new_state = 3
@@ -59,10 +62,11 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(telemetry_timestamp_not_within_op_start_end_msg)
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=telemetry_timestamp_not_within_op_start_end_msg,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Telemetry",
         )
         new_state = 3
         event = "ua_departs_early_late"
@@ -72,10 +76,11 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(aircraft_altitude_nonconformant_msg)
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=aircraft_altitude_nonconformant_msg,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Telemetry",
         )
         new_state = 3
         event = "ua_exits_coordinated_op_intent"
@@ -85,10 +90,11 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(aircraft_bounds_nonconformant_msg)
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=aircraft_bounds_nonconformant_msg,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Telemetry",
         )
         new_state = 3
         event = "ua_exits_coordinated_op_intent"
@@ -129,10 +135,11 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         telemetry_not_being_received_error_msg = "The telemetry for operation {flight_declaration_id}, has not been received in the past 15 seconds. Check C9a Failed".format(
             flight_declaration_id=flight_declaration_id
         )
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=telemetry_not_being_received_error_msg,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Flight Authorization",
         )
         event = "timeout"
         new_state = 4
@@ -142,10 +149,11 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(telemetry_never_received_error_msg)
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=telemetry_never_received_error_msg,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Flight Authorization",
         )
 
         event = "blender_confirms_contingent"
@@ -156,10 +164,11 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(flight_state_not_conformant)
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=flight_state_not_conformant,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Flight Authorization",
         )
         event = "blender_confirms_contingent"
         new_state = 4
@@ -170,10 +179,11 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         logger.error(authorization_not_granted_message)
 
         new_state = 4
-        tasks.send_operational_update_message(
+        notification.send_operational_update_message(
             flight_declaration_id=flight_declaration_id,
             message_text=authorization_not_granted_message,
-            level="error",
+            level=NotificationLevel.ERROR,
+            log_message="Non conformance message in Flight Authorization",
         )
         event = "blender_confirms_contingent"
     # The operation is non-conforming, need to update the operational intent in the dss and notify peer USSP

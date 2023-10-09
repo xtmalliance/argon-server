@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal
 
 
 class NotificationLevel(Enum):
@@ -16,11 +15,13 @@ class NotificationMessage:
     """This object will hold messages that will go to the operational Notifications"""
 
     body: str
-    level: Literal[
-        NotificationLevel.CRITICAL,
-        NotificationLevel.ERROR,
-        NotificationLevel.WARNING,
-        NotificationLevel.INFO,
-        NotificationLevel.DEBUG,
-    ]
+    level: NotificationLevel
     timestamp: str
+    
+    def to_dict(self):
+        # Convert the Enum to its string representation
+        return {
+            "body": self.body,
+            "level": self.level.value,
+            "timestamp": self.timestamp,
+        }

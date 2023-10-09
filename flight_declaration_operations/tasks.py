@@ -7,6 +7,7 @@ from rest_framework import status
 
 from flight_blender.celery import app
 from flight_declaration_operations.models import FlightDeclaration
+from notification_operations import notification
 from notification_operations.data_definitions import (
     NotificationLevel,
     NotificationMessage,
@@ -49,35 +50,6 @@ def _send_flight_approved_message(
     logger.info("Submitted Flight Declaration Approval")
 
 
-@app.task(name="send_operational_update_message")
-def send_operational_update_message(
-    flight_declaration_id: str,
-    message_text: str,
-    level: str = NotificationLevel.INFO,
-    timestamp: str = None,
-):
-    amqp_connection_url = env.get("AMQP_URL", 0)
-    if not amqp_connection_url:
-        logger.info("No AMQP URL specified")
-        return
-
-    if not timestamp:
-        now = arrow.now()
-        timestamp = now.isoformat()
-
-    update_message = NotificationMessage(
-        body=message_text, level=level, timestamp=timestamp
-    )
-
-    my_notification_helper = NotificationFactory(
-        flight_declaration_id=flight_declaration_id,
-        amqp_connection_url=amqp_connection_url,
-    )
-    my_notification_helper.declare_queue(queue_name=flight_declaration_id)
-    my_notification_helper.send_message(message_details=update_message)
-    logger.info("Submitted Flight Declaration Notification")
-
-
 @app.task(name="submit_flight_declaration_to_dss")
 def submit_flight_declaration_to_dss(flight_declaration_id: str):
     usingDss = env.get("DSS", "false")
@@ -110,20 +82,22 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
         validation_not_ok_msg = "Flight Operation with ID {operation_id} did not pass time validation, start and end time may not be ahead of two hours".format(
             operation_id=flight_declaration_id
         )
-        send_operational_update_message.delay(
+        notification.send_operational_update_message.delay(
             flight_declaration_id=flight_declaration_id,
             message_text=validation_not_ok_msg,
             level=NotificationLevel.ERROR,
+            log_message="Submitted Flight Declaration Notification",
         )
         return
 
     validation_ok_msg = "Flight Operation with ID {operation_id} validated for start and end time, submitting to DSS..".format(
         operation_id=flight_declaration_id
     )
-    send_operational_update_message.delay(
+    notification.send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
         message_text=validation_ok_msg,
         level=NotificationLevel.INFO,
+        log_message="Submitted Flight Declaration Notification",
     )
 
     opint_submission_result = my_dss_opint_creator.submit_flight_declaration_to_dss()
@@ -140,10 +114,11 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
         dss_submission_error_msg = "Flight Operation with ID {operation_id} could not be submitted to the DSS, check the Auth server and / or the DSS URL".format(
             operation_id=flight_declaration_id
         )
-        send_operational_update_message.delay(
+        notification.send_operational_update_message.delay(
             flight_declaration_id=flight_declaration_id,
             message_text=dss_submission_error_msg,
             level=NotificationLevel.ERROR,
+            log_message="Submitted Flight Declaration Notification",
         )
         return
 
@@ -155,10 +130,11 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
     submission_success_msg = "Flight Operation with ID {operation_id} submitted successfully to the DSS".format(
         operation_id=flight_declaration_id
     )
-    send_operational_update_message.delay(
+    notification.send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
         message_text=submission_success_msg,
         level=NotificationLevel.INFO,
+        log_message="Submitted Flight Declaration Notification",
     )
 
     fo = FlightDeclaration.objects.get(id=flight_declaration_id)
@@ -168,10 +144,11 @@ def submit_flight_declaration_to_dss(flight_declaration_id: str):
     submission_state_updated_msg = "Flight Operation with ID {operation_id} has a updated state: Accepted. ".format(
         operation_id=flight_declaration_id
     )
-    send_operational_update_message.delay(
+    notification.send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
         message_text=submission_state_updated_msg,
         level=NotificationLevel.INFO,
+        log_message="Submitted Flight Declaration Notification",
     )
     fo.save()
     logging.info(
