@@ -14,9 +14,9 @@ def get_redis():
     redis_password = env.get('REDIS_PASSWORD', None)
     
     if redis_password:
-        r = redis.Redis(host=redis_host, port=redis_port, password = redis_password, charset="utf-8",decode_responses=True)
+        r = redis.Redis(host=redis_host, port=redis_port, password = redis_password, encoding="utf-8",decode_responses=True)
     else:
-        r = redis.Redis(host=redis_host, port=redis_port, charset="utf-8",decode_responses=True)
+        r = redis.Redis(host=redis_host, port=redis_port, encoding="utf-8",decode_responses=True)
 
     return r
 

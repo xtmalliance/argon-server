@@ -600,6 +600,6 @@ class FlightDeclarationGetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["total"], 3)
 
-        self.assertEquals(response.json()["results"][0]["aircraft_id"], "334455")
-        self.assertEquals(response.json()["results"][1]["aircraft_id"], "000")
-        self.assertEquals(response.json()["results"][2]["aircraft_id"], "112233")
+        self.assertEqual(response.json()["results"][0]["aircraft_id"], "334455")
+        self.assertEqual(response.json()["results"][1]["aircraft_id"], "000")
+        self.assertEqual(response.json()["results"][2]["aircraft_id"], "112233")
