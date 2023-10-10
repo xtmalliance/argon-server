@@ -1,6 +1,5 @@
 import json
 import logging
-from dataclasses import asdict
 
 import pika
 from dotenv import find_dotenv, load_dotenv
@@ -76,3 +75,4 @@ class InitialNotificationFactory:
     def close(self):
         self.channel.close()
         self.connection.close()
+        logger.info(f"Trying to close connection...")
