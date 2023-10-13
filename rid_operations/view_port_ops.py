@@ -19,7 +19,7 @@ def get_view_port_diagonal_length_kms(view_port_coords)->float:
     lat1 = radians(min(view_port_coords[0], view_port_coords[2]))
     lon1 = radians(min(view_port_coords[1], view_port_coords[3]))
     lat2 = radians(max(view_port_coords[0], view_port_coords[2]))
-    lon2 = radians(min(view_port_coords[1], view_port_coords[3]))
+    lon2 = radians(max(view_port_coords[1], view_port_coords[3]))
 
     dlon = lon2 - lon1
     dlat = lat2 - lat1
@@ -38,7 +38,7 @@ def check_view_port(view_port_coords) -> bool:
     lat_min = min(view_port_coords[0], view_port_coords[2])
     lat_max = max(view_port_coords[0], view_port_coords[2])
     lng_min = min(view_port_coords[1], view_port_coords[3])
-    lng_max = min(view_port_coords[1], view_port_coords[3])
+    lng_max = max(view_port_coords[1], view_port_coords[3])
 
     if (lat_min < -90 or lat_min >= 90 or lat_max <= -90 or lat_max > 90 or lng_min < -180 or lng_min >= 360 or lng_max <= -180 or lng_max > 360):
         # return '"view" coordinates do not fall within the valid range of -90 <= lat <= 90 and -180 <= lng <= 360', 400                
