@@ -49,6 +49,7 @@ If you are working in stand-alone mode, recommended initially, the above environ
 | POSTGRES_HOST | string| You can name a appropriate name, see the sample file |
 | PGDATA | string | This is where the data is stored, you can use `/var/lib/postgresql/data/pgdata` here |
 | BLENDER_FQDN | string | This domain name of a Blender deployment e.g. `https://beta.flightblender.com` |
+
 For Advanced operations, the following two configurations are recommended:
 
 | Variable Key | Data Type | Description |
