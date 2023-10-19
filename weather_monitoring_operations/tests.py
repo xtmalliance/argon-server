@@ -10,4 +10,6 @@ class WeatherMonitoringOperationsTestCase(TestCase):
         
         assert response.status_code == 200
         
+        assert response['Content-Type'] == 'application/json'
+        
         
