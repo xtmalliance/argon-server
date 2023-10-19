@@ -1,3 +1,4 @@
-from django.shortcuts import render
+from django.http import HttpResponse
 
-# Create your views here.
+def get_weather_data(request):
+    return HttpResponse('Hello, world. You\'re at the weather_monitoring_operations index.')

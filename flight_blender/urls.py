@@ -31,4 +31,5 @@ urlpatterns = [
     path("geo_fence_ops/", include("geo_fence_operations.urls")),
     path("flight_declaration_ops/", include("flight_declaration_operations.urls")),
     path("non_repudiation/", include("non_repudiation.urls")),
+    path("weather_monitoring_ops/", include("weather_monitoring_operations.urls")),
 ]
