@@ -23,10 +23,17 @@ def requires_scopes(required_scopes):
     def require_scope(f):
         @wraps(f)
         def decorated(*args, **kwargs):       
-        
+            # Set the audience of the instance
+            API_IDENTIFIER = env.get('PASSPORT_AUDIENCE','testflight.flightblender.com')
+            # Check if the setting is Debug
+            IS_DEBUG = env.get('IS_DEBUG',0)
+            # Use the OAUTH 2.0 standard endpoint
+            PASSPORT_JWKS_URL = '{}/.well-known/jwks.json'.format(env.get('PASSPORT_URL','http://local.test:9000'))            
+            
+            # Get the authorization Metadata
             request = args[0]
             auth = request.META.get("HTTP_AUTHORIZATION", None)        
-            
+            # If no authorization data provided, then reject the request
             if auth:
                 parts = auth.split()
                 token = parts[1]            
@@ -34,98 +41,97 @@ def requires_scopes(required_scopes):
                 response = JsonResponse({'detail': 'Authentication credentials were not provided'})
                 response.status_code = 401
                 return response
-            
-            API_IDENTIFIER = env.get('PASSPORT_AUDIENCE','testflight.flightblender.com')
+            # If the token is not decoded properly, the token was provided but is incorrect, return a 401
             try:
                 unverified_token_headers = jwt.get_unverified_header(token)            
-            except jwt.exceptions.DecodeError as de: 
-                
+            except jwt.DecodeError as de:                 
                 response = JsonResponse({'detail': 'Bearer token could not be decoded properly'})
                 response.status_code = 401
                 return response
             
-
-            if 'kid' in unverified_token_headers:                   
-                PASSPORT_URL = '{}/.well-known/jwks.json'.format(env.get('PASSPORT_URL','http://local.test:9000'))    
+            if IS_DEBUG:
+                # Debug mode, no need to verify signatures 
                 try: 
-                    jwks_data = s.get(PASSPORT_URL).json()                 
-                except requests.exceptions.RequestException as err:   
-                    response = JsonResponse({'detail': 'Public Key Server to validate the token could not be reached'})
-                    response.status_code = 400
-                    return response
-
-                jwks = jwks_data
-                public_keys = {}                
-                for jwk in jwks['keys']:
-                    kid = jwk['kid']
-                    public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-                try:
-                    kid = unverified_token_headers['kid']                    
-                except (KeyError, ValueError) as ve:         
-                    response = JsonResponse({'detail': 'Invalid public key details in token / token cannot be verified'})
-                    response.status_code = 401
-                    return response
-                else:     
-                    try:               
-                        assert kid in public_keys
-                    except AssertionError as ae:
-                        response = JsonResponse({'detail': 'Invalid public key details in token / token cannot be verified'})
-                        response.status_code = 401
-                        return response
-                    else:
-                        public_key = public_keys[kid]
+                    unverified_token_details = jwt.decode(token,algorithms=['RS256'],options={"verify_signature": False})   
                     
-                                    
-                try:
-                    decoded = jwt.decode(token, public_key, audience=API_IDENTIFIER, algorithms=['RS256'])                    
-                except jwt.ImmatureSignatureError as es: 
-                    response = JsonResponse({'detail': 'Token Signature has is not valid'})
-                    response.status_code = 401
-                    return response
-                except jwt.ExpiredSignatureError as es: 
-                    response = JsonResponse({'detail': 'Token Signature has expired'})
-                    response.status_code = 401
-                    return response
-                except jwt.InvalidAudienceError as es: 
-                    response = JsonResponse({'detail': 'Invalid audience in token'})
-                    response.status_code = 401
-                    return response                
-                except jwt.InvalidIssuerError as es: 
-                    response = JsonResponse({'detail': 'Invalid issuer for token'})
-                    response.status_code = 401
-                    return response
-                except jwt.InvalidSignatureError as es:                     
-                    response = JsonResponse({'detail': 'Invalid signature in token'})
-                    response.status_code = 401
-                    return response
-                except jwt.DecodeError as es: 
-                    response = JsonResponse({'detail': 'Token canot be decoded'})
-                    response.status_code = 401
-                    return response
-                except Exception as e: 
-                    response = JsonResponse({'detail': 'Invalid token'})
-                    response.status_code = 401
-                    return response                
-
-                if decoded.get("scope"):
-                    token_scopes = decoded["scope"].split()
-                    token_scopes_set = set(token_scopes)   
-                    if set(required_scopes).issubset(token_scopes_set):
-                        return f(*args, **kwargs)
-                response = JsonResponse({'message': 'You don\'t have access to this resource'})
-                response.status_code = 403
-                return response
-
-            else:                
-                # This is for testing DSS locally
-                token_details = jwt.decode(token,algorithms=['RS256'], options={"verify_signature": False})        
-
-                if 'iss' in token_details.keys() and token_details['iss'] in  ['dummy','NoAuth']:          
-                    return f(*args, **kwargs)
-                else:
+                except jwt.DecodeError as de:    
                     response = JsonResponse({'detail': 'Invalid token provided'})
                     response.status_code = 401                    
                     return response
+                                                    
+                return f(*args, **kwargs)
+            # Get the Public key JWKS by making a request
+            try: 
+                jwks_data = s.get(PASSPORT_JWKS_URL).json()                 
+            except requests.exceptions.RequestException as err:   
+                response = JsonResponse({'detail': 'Public Key Server necessary to validate the token could not be reached'})
+                response.status_code = 400
+                return response
+            # This assumes JWKS (key set) / multiple keys, perhaps have a way to parse JWK only (single key)
+            jwks = jwks_data
+            public_keys = {}                
+            for jwk in jwks['keys']:
+                kid = jwk['kid']
+                public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+
+            # Check the token has a key id
+            try:
+                kid = unverified_token_headers['kid']                    
+            except (KeyError, ValueError) as ve:         
+                response = JsonResponse({'detail': 'There is no kid provided in the token headers / token cannot be verified'})
+                response.status_code = 401
+                return response
+            # Check the public key has the same kid
+            try:               
+                assert kid in public_keys
+            except AssertionError as ae:
+                response = JsonResponse({'detail': 'Error in parsing public keys, the signing key id {kid} is not present in JWKS'.format(kid= kid)})
+                response.status_code = 401
+                return response
+            else:
+                public_key = public_keys[kid]
+            
+            # Public key and unverified token headers processed, decode the token with verification
+            try:
+                decoded = jwt.decode(token, public_key, audience=API_IDENTIFIER, algorithms=['RS256'],options={"require": ["exp", "iss", "aud"]})
+            except jwt.ImmatureSignatureError as es: 
+                response = JsonResponse({'detail': 'Token Signature has is not valid'})
+                response.status_code = 401
+                return response
+            except jwt.ExpiredSignatureError as es: 
+                response = JsonResponse({'detail': 'Token Signature has expired'})
+                response.status_code = 401
+                return response
+            except jwt.InvalidAudienceError as es: 
+                response = JsonResponse({'detail': 'Invalid audience in token'})
+                response.status_code = 401
+                return response                
+            except jwt.InvalidIssuerError as es: 
+                response = JsonResponse({'detail': 'Invalid issuer for token'})
+                response.status_code = 401
+                return response
+            except jwt.InvalidSignatureError as es:                     
+                response = JsonResponse({'detail': 'Invalid signature in token'})
+                response.status_code = 401
+                return response
+            except jwt.DecodeError as es: 
+                response = JsonResponse({'detail': 'Token canot be decoded'})
+                response.status_code = 401
+                return response
+            except Exception as e: 
+                response = JsonResponse({'detail': 'Invalid token'})
+                response.status_code = 401
+                return response                
+
+            if decoded.get("scope"):
+                token_scopes = decoded["scope"].split()
+                token_scopes_set = set(token_scopes)   
+                if set(required_scopes).issubset(token_scopes_set):
+                    return f(*args, **kwargs)
+            response = JsonResponse({'message': 'You don\'t have access to this resource'})
+            response.status_code = 403
+            return response
+
 
         return decorated
 

@@ -25,7 +25,7 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | Variable Key | Data Type | Description |
 |--------------|--------------|:-----:|
 | SECRET_KEY | string |This is used in Django, it is recommended that you use a long SECRET Key as string here |
-| IS_DEBUG |integer | Set this as 0 if you are using it locally |
+| IS_DEBUG |integer | Set this as 1 if you are using it locally, **NOTE** Remove this field totally for any production deployments, it will by pass token verification |
 | ALLOWED_HOSTS | string | This is used in Django, it is recommended that if you are not using IS_DEBUG above, then this needs to be set as a the domain name, if you are using IS_DEBUG above, then the system automatically allows all hosts|
 | REDIS_HOST | string | Blender uses Redis as the backend, you can use localhost if you are running redis locally |
 | REDIS_PORT | integer | Normally Redis runs at port 6379, you can set it here, if you dont setup the REDIS Host and Port, Blender will use the default values |
