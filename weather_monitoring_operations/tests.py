@@ -10,6 +10,8 @@ class WeatherMonitoringOperationsTestCase(TestCase):
         
         response = c.get('/weather_monitoring_ops/weather/')
         
+        print(response.content)
+        
         assert response.status_code == 200
         
         assert response['Content-Type'] == 'application/json'
