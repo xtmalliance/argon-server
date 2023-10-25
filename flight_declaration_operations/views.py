@@ -107,21 +107,17 @@ def set_flight_declaration(request):
         else req["originating_party"]
     )
     now = arrow.now()
-    try:
-        start_datetime = (
-            now.isoformat()
-            if "start_datetime" not in req
-            else arrow.get(req["start_datetime"]).isoformat()
-        )
-        end_datetime = (
-            now.isoformat()
-            if "end_datetime" not in req
-            else arrow.get(req["end_datetime"]).isoformat()
-        )
-    except Exception as e:
-        ten_mins_from_now = now.shift(minutes=10)
-        start_datetime = now.isoformat()
-        end_datetime = ten_mins_from_now.isoformat()
+
+    start_datetime = (
+        now.isoformat()
+        if "start_datetime" not in req
+        else arrow.get(req["start_datetime"]).isoformat()
+    )
+    end_datetime = (
+        now.isoformat()
+        if "end_datetime" not in req
+        else arrow.get(req["end_datetime"]).isoformat()
+    )
 
     two_days_from_now = now.shift(days=2)
 
