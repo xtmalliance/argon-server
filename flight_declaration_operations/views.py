@@ -1,5 +1,4 @@
 # Create your views here.
-# Create your views here.
 import json
 import logging
 from typing import List
