@@ -26,7 +26,7 @@ def requires_scopes(required_scopes):
             # Set the audience of the instance
             API_IDENTIFIER = env.get('PASSPORT_AUDIENCE','testflight.flightblender.com')
             # Check if the setting is Debug
-            IS_DEBUG = env.get('IS_DEBUG',0)
+            BYPASS_AUTH_TOKEN_VERIFICATION = int(env.get('BYPASS_AUTH_TOKEN_VERIFICATION',0))
             # Use the OAUTH 2.0 standard endpoint
             PASSPORT_JWKS_URL = '{}/.well-known/jwks.json'.format(env.get('PASSPORT_URL','http://local.test:9000'))            
             
@@ -49,7 +49,7 @@ def requires_scopes(required_scopes):
                 response.status_code = 401
                 return response
             
-            if IS_DEBUG:
+            if BYPASS_AUTH_TOKEN_VERIFICATION:
                 # Debug mode, no need to verify signatures 
                 try: 
                     unverified_token_details = jwt.decode(token,algorithms=['RS256'],options={"verify_signature": False})   
