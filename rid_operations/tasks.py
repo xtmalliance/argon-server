@@ -168,12 +168,10 @@ def stream_rid_test_data(requested_flights):
 
     if r.exists(flight_injection_sorted_set):
         r.delete(flight_injection_sorted_set)
-    # Iterate over requested flights
-
+    # Iterate over requested flights and process for storage / querying
     all_altitudes = []
     for requested_flight in rf:
         all_telemetry = []
-
         all_flight_details = []
         provided_telemetries = requested_flight["telemetry"]
         provided_flight_details = requested_flight["details_responses"]
@@ -237,8 +235,9 @@ def stream_rid_test_data(requested_flights):
             flight_details_storage = "flight_details:" + requested_flight_detail_id
             
             r.set(flight_details_storage, json.dumps(asdict(flight_detail)))
-            # expire in 5
+            # expire in 5 mins
             r.expire(flight_details_storage, time=3000)
+
         # Iterate over telemetry details profided
         for telemetry_id, provided_telemetry in enumerate(provided_telemetries):
             pos = provided_telemetry["position"]
@@ -271,7 +270,6 @@ def stream_rid_test_data(requested_flights):
 
             try:
                 formatted_timestamp = arrow.get(provided_telemetry["timestamp"])
-
             except ParserError as pe:
                 logger.info("Error in parsing telemetry timestamp")
             else:
@@ -286,7 +284,7 @@ def stream_rid_test_data(requested_flights):
                     vertical_speed=provided_telemetry["vertical_speed"],
                     height=height,
                 )
-
+                # 
                 closest_details_response = min(
                     all_flight_details,
                     key=lambda d: abs(
@@ -344,8 +342,7 @@ def stream_rid_test_data(requested_flights):
         seconds=ASTM_TIME_SHIFT_SECS
     )
 
-    # Create a ISA in the DSS
-
+    # Create an ISA in the DSS
     position_list: List[Point] = []
     for position in all_positions:
         position_list.append((position.lng, position.lat))
@@ -391,7 +388,7 @@ def stream_rid_test_data(requested_flights):
     # # End create ISA in the DSS
 
     r.expire(flight_injection_sorted_set, time=3000)
-    time.sleep(2)  # Wait 5 seconds before starting mission
+    time.sleep(2)  # Wait 2 seconds before starting mission
     should_continue = True
     query_target = (
         provided_telemetry_item_length + ASTM_TIME_SHIFT_SECS
