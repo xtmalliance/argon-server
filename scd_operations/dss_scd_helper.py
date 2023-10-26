@@ -1083,7 +1083,7 @@ class SCDOperations:
                 dss_response = dss_r.json()
                 dss_r_status_code = dss_r.status_code
 
-            if dss_r_status_code in [200, 201]:
+            if dss_r_status_code == 201:
                 subscribers = dss_response["subscribers"]
                 o_i_r = dss_response["operational_intent_reference"]
                 my_op_int_ref_helper = OperationalIntentReferenceHelper()
@@ -1105,7 +1105,7 @@ class SCDOperations:
                     dss_response=dss_creation_response,
                     operational_intent_id=new_entity_id,
                 )
-            elif dss_r_status_code == 409:
+            elif dss_r_status_code in [400,401,403,409,43,429]:
                 dss_creation_response_error = OperationalIntentSubmissionError(
                     result=dss_response, notes=dss_r.text
                 )
@@ -1114,7 +1114,7 @@ class SCDOperations:
                 )
                 d_r = OperationalIntentSubmissionStatus(
                     status="failure",
-                    status_code=409,
+                    status_code=dss_r_status_code,
                     message=dss_r.text,
                     dss_response=dss_creation_response_error,
                     operational_intent_id=new_entity_id,
@@ -1127,7 +1127,8 @@ class SCDOperations:
                     "Error submitting operational intent to the DSS: %s" % dss_response
                 )
         else:
-            logger.info("Flight not deconflicted, there are other flights in the area")
+            # When flight is not deconflicted, Flight Blender assigns a error code of 500
+            logger.info("Flight not deconflicted, there are other flights in the area..")
             d_r = OperationalIntentSubmissionStatus(
                 status="conflict_with_flight",
                 status_code=500,

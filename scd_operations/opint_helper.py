@@ -96,20 +96,42 @@ class DSSOperationalIntentsCreator:
                 )
             )
 
-            # Update flight Authorization
-            if op_int_submission.status_code in [200, 201]:
+            # Update flight Authorization and Flight State
+            if op_int_submission.status_code == 201:
                 my_database_writer.update_flight_authorization_op_int(
                     flight_authorization=flight_authorization,
                     dss_operational_intent_id=op_int_submission.operational_intent_id,
                 )
-
-            elif (
-                op_int_submission.status_code == 500
-                and op_int_submission.message == "conflict_with_flight"
-            ):
                 # Update operation state
                 logger.info(
-                    "The state change transition to Accepted state from current state Created is valid.."
+                    "Updating state from Processing to Accepted..."
+                )
+                my_database_writer.update_flight_operation_state(
+                    flight_declaration_id=self.flight_declaration_id, state=1
+                )
+                flight_declaration.add_state_history_entry(
+                    new_state=1,
+                    original_state=current_state,
+                    notes="Operational Intent successfully submitted to DSS and is Accepted",
+                )
+            elif (
+                op_int_submission.status_code in [400,409,401,403,412,413,429]
+            ):
+                if op_int_submission.status_code == 400:
+                    notes = "Error during submission of operational intent, the DSS rejected becuase one or more parameters was missing"                
+                elif op_int_submission.status_code == 409:
+                    notes = "Error during submission of operational intent, the DSS rejected it with because the latest airspace keys was not present"
+                elif op_int_submission.status_code == 401:
+                    notes = "There was a error in submitting the operational intent to the DSS, the token was invalid"
+                elif op_int_submission.status_code == 403:
+                    notes = "There was a error in submitting the operational intent to the DSS, the appropriate scope was not present"
+                elif op_int_submission.status_code == 413:
+                    notes = "There was a error in submitting the operational intent to the DSS, the operational intent was too large"
+                elif op_int_submission.status_code == 429:
+                    notes = "There was a error in submitting the operational intent to the DSS, too many requests were submitted to the DSS"
+                # Update operation state, the DSS rejected our data
+                logger.info(
+                    "There was a error in submitting the operational intent to the DSS, the DSS rejected our submission with a {status_code} response code".format(status_code = op_int_submission.status_code)
                 )
                 my_database_writer.update_flight_operation_state(
                     flight_declaration_id=self.flight_declaration_id, state=8
@@ -117,7 +139,23 @@ class DSSOperationalIntentsCreator:
                 flight_declaration.add_state_history_entry(
                     new_state=8,
                     original_state=current_state,
-                    notes="Error during submission of flight, the deconfliction failed in the DSS",
+                    notes=notes,
+                )
+            elif (
+                op_int_submission.status_code == 500
+                and op_int_submission.message == "conflict_with_flight"
+            ):
+                # Update operation state, DSS responded with a error
+                logger.info(
+                    "Flight is not deconflicted, updating state from Processing to Rejected .."
+                )
+                my_database_writer.update_flight_operation_state(
+                    flight_declaration_id=self.flight_declaration_id, state=8
+                )
+                flight_declaration.add_state_history_entry(
+                    new_state=8,
+                    original_state=current_state,
+                    notes="Flight was not deconflicted correctly",
                 )
 
         return op_int_submission
