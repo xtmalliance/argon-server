@@ -51,13 +51,6 @@ If you are working in stand-alone mode, recommended initially, the above environ
 | PGDATA | string | This is where the data is stored, you can use `/var/lib/postgresql/data/pgdata` here |
 | BLENDER_FQDN | string | This is the domain name of a Blender deployment e.g. `https://beta.flightblender.com` |
 
-For Advanced operations, the following two configurations are recommended:
-
-| Variable Key | Data Type | Description |
-|--------------|--------------|:-----:|
-| AMQP_URL |string | (Optional) A full connection url to a AMQP server, when this is set, messages related to your operations are sent to it, your clients can subscribe to them. |
-| ENABLE_CONFORMANCE_MONITORING | int | (Optional) By default conformance monitoring is turned off, set this flag if you want to enable conformance monitoring. Conformance monitoring is a advanced UTM service so it is recommended that this service be turned off initially. |
-
 ### 2. Use Docker Compose to stand up Flight Blender 
 Once you have created and saved the .env file you can then use the [docker-compose.yaml](../docker-compose.yml) file to start the instance. Just run `docker compose up` and a running instance of Flight Blender will be available. 
 
@@ -80,3 +73,6 @@ A: Check existing Postgres port and / or shut down Postgres if you have it, Flig
 
 **Q: Where do I point my tools for Remote ID / Strategic Deconfliction APIs ?**
 A: Check the [API Specification](http://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/openskies-sh/flight-blender/master/api/flight-blender-1.0.0-resolved.yaml) to see the appropriate endpoints and / or download the [Postman Collection](../api/flight_blender_api.postman_collection.json) to see the endpoints. 
+
+**Q: Is there guide on how to configure Flight Passport can be configured to be used with Blender + Spotlight?**
+A: Yes there is a small [OAUTH Infrastructure](oauth_infrastructure.md) document.

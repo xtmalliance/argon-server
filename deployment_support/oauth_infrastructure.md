@@ -95,5 +95,14 @@ The section below deatils the environment file variables and a short comment on 
 USING_DOCKER_COMPOSE| Set this variable to use Docker Compose |
 DATABASE_URL| Set the URL of the Database so Docker compose can pick up the db, by default SQLite is the database. e.g. psql://mydatabaseuser:mypasswordd@myproject_db:5432/myproject_db |
 
+
+For Advanced operations, the following two configurations are recommended:
+
+| Variable Key | Data Type | Description |
+|--------------|--------------|:-----:|
+| AMQP_URL |string | (Optional) A full connection url to a AMQP server, when this is set, messages related to your operations are sent to it, your clients can subscribe to them. |
+| ENABLE_CONFORMANCE_MONITORING | int | (Optional) By default conformance monitoring is turned off, set this flag if you want to enable conformance monitoring. Conformance monitoring is a advanced UTM service so it is recommended that this service be turned off initially. |
+
+
 ### Running Flight Blender
 You can run Blender by running `docker compose up` and then go to `http://localhost:8000`
