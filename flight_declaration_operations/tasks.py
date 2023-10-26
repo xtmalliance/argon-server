@@ -66,7 +66,22 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
                 level="error",
             )
 
-        elif opint_submission_result.status_code in [200, 201]:
+        elif opint_submission_result.status_code in [400,409,401,412]:
+            logger.error(
+                "Error in submitting Flight Declaration to the DSS %s"
+                % opint_submission_result.status
+            )
+        
+            dss_submission_error_msg = "Flight Operation with ID {operation_id} was rejected by the DSS, there was a error in data submitted by Blender".format(
+                operation_id=flight_declaration_id
+            )
+            send_operational_update_message.delay(
+                flight_declaration_id=flight_declaration_id,
+                message_text=dss_submission_error_msg,
+                level="error",
+            )
+
+        elif opint_submission_result.status_code == 201:
 
             logger.info("Successfully submitted Flight Declaration to the DSS %s" % opint_submission_result.status)
 
