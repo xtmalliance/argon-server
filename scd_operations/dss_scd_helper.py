@@ -435,7 +435,8 @@ class SCDOperations:
         self, volumes: List[Volume4D]
     ) -> List[OperationalIntentDetailsUSSResponse]:
 
-        # This method checks the USS network for any other volume in the airspace
+        # This method checks the USS network for any other volume in the airspace and queries the individual USS for data
+
         all_uss_op_int_details = []
         auth_token = self.get_auth_token()
         # Query the DSS for operational intentns
@@ -467,6 +468,7 @@ class SCDOperations:
                     "Error in getting operational intent for the volume %s " % re
                 )
             else:
+                # The DSS returned operational intent references as a list
                 dss_operational_intent_references = (
                     operational_intent_ref_response.json()
                 )
@@ -474,7 +476,7 @@ class SCDOperations:
                     "operational_intent_references"
                 ]
 
-            # Query the operational intent reference
+            # Query the operational intent reference details
             for operational_intent_reference_detail in operational_intent_references:
                 # Get the USS URL endpoint
                 dss_op_int_details_url = (
@@ -511,14 +513,13 @@ class SCDOperations:
             for (
                 current_uss_operational_intent_detail
             ) in all_uss_operational_intent_details:
-                # check the USS for flight volume
+                # check the USS for flight volume by using the URL to see if this is stored in Blender, DSS will return all intent details including our own
                 current_uss_base_url = (
                     current_uss_operational_intent_detail.uss_base_url
                 )
-
                 if current_uss_base_url == blender_base_url:
                     # The opint is from Flight Blender itself
-                    # No need to query peer USS, just update the ovn
+                    # No need to query peer USS, just update the ovn and process the volume locally
                     r = get_redis()
                     opint_flightref = "opint_flightref." + str(
                         current_uss_operational_intent_detail.id
@@ -538,11 +539,9 @@ class SCDOperations:
                         # Update the ovn
                         op_int_ref["ovn"] = current_uss_operational_intent_detail.ovn
 
-                        # TODO: Update flight opint object in Redis
-
                     op_int_details_retrieved = True
 
-                else:  # query peer USS
+                else:  # This operational intent details is from a peer uss, need to query peer USS
                     try:
                         ext = tldextract.extract(current_uss_base_url)
                     except Exception as e:
@@ -584,17 +583,18 @@ class SCDOperations:
                         )
                     except Exception as e:
                         logger.error(
-                            "Error in getting operational intent id {uss_op_int_id} details from uss".format(
-                                uss_op_int_id=current_uss_operational_intent_detail.id
+                            "Error in getting operational intent id {uss_op_int_id} details from uss with base url {uss_base_url}".format(
+                                uss_op_int_id=current_uss_operational_intent_detail.id, uss_base_url = current_uss_base_url
                             )
                         )
                         op_int_details_retrieved = False
                         logger.error("Error details %s " % e)
                     else:
+                        # Request was successful
                         operational_intent_details_json = (
                             uss_operational_intent_request.json()
                         )
-
+                        # Verify status of the response from the USS
                         if uss_operational_intent_request.status_code == 200:
                             op_int_details_retrieved = True
                             outline_polygon = None
@@ -606,6 +606,14 @@ class SCDOperations:
                             op_int_ref = operational_intent_details_json[
                                 "operational_intent"
                             ]["reference"]
+                        # The attempt to get data from the USS in the network failed
+                        elif uss_operational_intent_request.status_code in [400, 404, 500]: 
+                            logger.error(
+                                "Error in querying peer USS about operational intent details from uss with base url {uss_base_url}".format(
+                                    uss_op_int_id=current_uss_operational_intent_detail.id, uss_base_url = current_uss_base_url
+                                )
+                            )
+
 
                 if op_int_details_retrieved:
                     op_int_reference: OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
@@ -689,6 +697,7 @@ class SCDOperations:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
+        # Send the entity ID and OVN
         delete_payload = DeleteOperationalIntentConstuctor(
             entity_id=dss_operational_intent_ref_id, ovn=ovn
         )
@@ -749,7 +758,7 @@ class SCDOperations:
         return delete_op_int_status
 
     def get_and_process_nearby_operational_intents(self, volumes: List[Volume4D]):
-        """This method processes the"""
+        """This method processes the downloaded operational intents in to a GeoJSON object"""
         feat_collection = {"type": "FeatureCollection", "features": []}
         all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
         for uss_op_int_detail in all_uss_op_int_details:

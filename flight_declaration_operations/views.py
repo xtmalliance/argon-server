@@ -362,13 +362,14 @@ def network_flight_declaration_details(request,flight_declaration_id):
     # Check if the flight declaration exists
     if not USSP_NETWORK_ENABLED:        
         network_not_enabled = HTTP400Response(
-            message="USSP network can only be queried since it is not enabled in Flight Blender"
+            message="USSP network can not be queried since it is not enabled in Flight Blender"
         )
         op = json.dumps(asdict(network_not_enabled))
         return HttpResponse(op, status=400, content_type="application/json")
 
     my_operational_intent_parser = OperationalIntentReferenceHelper()
     my_scd_helper = SCDOperations()
+
     flight_declaration_exists = my_database_reader.check_flight_declaration_exists(
         flight_declaration_id=flight_declaration_id
     )
@@ -380,6 +381,7 @@ def network_flight_declaration_details(request,flight_declaration_id):
         )
         op = json.dumps(asdict(not_found_response))
         return HttpResponse(op, status=404, content_type="application/json")
+    
     flight_declaration = my_database_reader.get_flight_declaration_by_id(
         flight_declaration_id=flight_declaration_id
     )
@@ -388,10 +390,11 @@ def network_flight_declaration_details(request,flight_declaration_id):
     # Check if the status is not rejected
     if current_state not in [0, 1, 2, 3, 4]: # If the state is not Ended, Withdrawn, Cancelled, Rejected
         incorrect_state_response = HTTP400Response(
-            message="USSP network can only be queried for operational intent since the state is not  "
+            message="USSP network can only be queried for operational intents that are active"
         )
         op = json.dumps(asdict(incorrect_state_response))
         return HttpResponse(op, status=404, content_type="application/json")
+    
     operational_intent_volumes_raw = json.loads(flight_declaration.operational_intent)
     all_volumes = []
     operational_intent_volumes = operational_intent_volumes_raw['volumes']
