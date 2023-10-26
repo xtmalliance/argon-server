@@ -70,7 +70,7 @@ class FlightDeclaration(models.Model):
         return distinct_states
         
 
-    def __unicode__(self):
+    def __unicode__(self):       
        return self.originating_party + ' ' + str(self.id)
 
     def __str__(self):
@@ -112,9 +112,9 @@ class FlightOperationTracking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
-       return self.flight_declaration
+    def __unicode__(self):       
+       return self.flight_declaration if self.flight_declaration else ''
 
     def __str__(self):
-        return self.flight_declaration
+        return str(self.flight_declaration) if self.flight_declaration else ''
         

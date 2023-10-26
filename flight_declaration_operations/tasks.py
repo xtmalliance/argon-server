@@ -16,7 +16,6 @@ from common.data_definitions import OPERATION_STATES
 import logging
 from os import environ as env
 import arrow
-
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -75,10 +74,11 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
             submission_success_msg = "Flight Operation with ID {operation_id} submitted successfully to the DSS".format(operation_id = flight_declaration_id)
             send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_success_msg, level = 'info')
 
-            ###### Change via new state check helper               
+            ###### Change via new state check helper        
+            
             fo = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
             fa = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=fo)
-
+            
             logger.info("Saving created operational intent details..")            
             created_opint = fa.dss_operational_intent_id
             view_r_bounds = fo.bounds
@@ -110,7 +110,7 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
 
             logger.info("Notifying subscribers..")
 
-            # TODO: Make it async             
+            # TODO: Make it async      
             # Notify subscribers of new operational intent 
             subscribers = opint_submission_result.dss_response.subscribers            
             if subscribers:

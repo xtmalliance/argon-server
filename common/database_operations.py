@@ -156,6 +156,16 @@ class BlenderDatabaseWriter:
         except IntegrityError as ie:
             return False
 
+    def create_flight_authorization_from_flight_declaration_obj(self, flight_declaration:FlightDeclaration) -> bool:
+        try:
+            flight_authorization = FlightAuthorization(declaration=flight_declaration)
+            flight_authorization.save()
+            return True
+        except FlightDeclaration.DoesNotExist:
+            return False
+        except IntegrityError as ie:
+            return False
+
     def create_flight_authorization(self, flight_declaration_id: str) -> bool:
         try:
             flight_declaration = FlightDeclaration.objects.get(id=flight_declaration_id)
