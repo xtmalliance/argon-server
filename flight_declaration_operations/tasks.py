@@ -16,7 +16,6 @@ from common.data_definitions import OPERATION_STATES
 import logging
 from os import environ as env
 import arrow
-
 logger = logging.getLogger('django')
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
@@ -32,10 +31,22 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
     start_end_time_validated = my_dss_opint_creator.validate_flight_declaration_start_end_time()
     
     logger.info("Flight Operation Validation status %s"% start_end_time_validated)
-    if start_end_time_validated:                    
-        if amqp_connection_url:        
-            validation_ok_msg = "Flight Operation with ID {operation_id} validated for start and end time, submitting to DSS..".format(operation_id = flight_declaration_id)
-            send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = validation_ok_msg, level = 'info')
+    
+    if not start_end_time_validated:     
+        logger.error(
+            "Flight Declaration start / end times are not valid, please check the submitted declaration, this operation will not be sent to the DSS for strategic deconfliction"
+        )
+        validation_not_ok_msg = "Flight Operation with ID {operation_id} did not pass time validation, start and end time may not be ahead of two hours".format(
+            operation_id=flight_declaration_id
+        )
+        send_operational_update_message.delay(
+            flight_declaration_id=flight_declaration_id,
+            message_text=validation_not_ok_msg,
+            level="error",
+        )  
+    else:
+        validation_ok_msg = "Flight Operation with ID {operation_id} validated for start and end time, submitting to DSS..".format(operation_id = flight_declaration_id)
+        send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = validation_ok_msg, level = 'info')
         logger.info("Submitting to DSS..")
 
         opint_submission_result = my_dss_opint_creator.submit_flight_declaration_to_dss()    
@@ -45,28 +56,29 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
                 "Error in submitting Flight Declaration to the DSS %s"
                 % opint_submission_result.status
             )
-            if amqp_connection_url:
-                dss_submission_error_msg = "Flight Operation with ID {operation_id} could not be submitted to the DSS, check the Auth server and / or the DSS URL".format(
-                    operation_id=flight_declaration_id
-                )
-                send_operational_update_message.delay(
-                    flight_declaration_id=flight_declaration_id,
-                    message_text=dss_submission_error_msg,
-                    level="error",
-                )
+        
+            dss_submission_error_msg = "Flight Operation with ID {operation_id} could not be submitted to the DSS, check the Auth server and / or the DSS URL".format(
+                operation_id=flight_declaration_id
+            )
+            send_operational_update_message.delay(
+                flight_declaration_id=flight_declaration_id,
+                message_text=dss_submission_error_msg,
+                level="error",
+            )
 
         elif opint_submission_result.status_code in [200, 201]:
 
             logger.info("Successfully submitted Flight Declaration to the DSS %s" % opint_submission_result.status)
 
-            if amqp_connection_url:        
-                submission_success_msg = "Flight Operation with ID {operation_id} submitted successfully to the DSS".format(operation_id = flight_declaration_id)
-                send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_success_msg, level = 'info')
+        
+            submission_success_msg = "Flight Operation with ID {operation_id} submitted successfully to the DSS".format(operation_id = flight_declaration_id)
+            send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_success_msg, level = 'info')
 
-            ###### Change via new state check helper               
+            ###### Change via new state check helper        
+            
             fo = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
             fa = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=fo)
-
+            
             logger.info("Saving created operational intent details..")            
             created_opint = fa.dss_operational_intent_id
             view_r_bounds = fo.bounds
@@ -92,14 +104,13 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
                 my_database_writer.update_flight_operation_state(flight_declaration_id=flight_declaration_id, state=accepted_state)                
                 logger.info("The state change transition to Accepted state from current state Created is valid..")
                 fo.add_state_history_entry(new_state=accepted_state, original_state = original_state,notes="Successfully submitted to the DSS")
-
-            if amqp_connection_url:        
-                submission_state_updated_msg = "Flight Operation with ID {operation_id} has a updated state: Accepted. ".format(operation_id = flight_declaration_id)
-                send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_state_updated_msg, level = 'info')
+    
+            submission_state_updated_msg = "Flight Operation with ID {operation_id} has a updated state: Accepted. ".format(operation_id = flight_declaration_id)
+            send_operational_update_message.delay(flight_declaration_id =flight_declaration_id , message_text = submission_state_updated_msg, level = 'info')
 
             logger.info("Notifying subscribers..")
 
-            # TODO: Make it async             
+            # TODO: Make it async      
             # Notify subscribers of new operational intent 
             subscribers = opint_submission_result.dss_response.subscribers            
             if subscribers:
@@ -119,19 +130,6 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id:str):
 
         logger.info("Details of the submission status %s" % opint_submission_result.message)
 
-    else:
-        logger.error(
-            "Flight Declaration start / end times are not valid, please check the submitted declaration, this operation will not be sent to the DSS for strategic deconfliction"
-        )
-        if amqp_connection_url:
-            validation_not_ok_msg = "Flight Operation with ID {operation_id} did not pass time validation, start and end time may not be ahead of two hours".format(
-                operation_id=flight_declaration_id
-            )
-            send_operational_update_message.delay(
-                flight_declaration_id=flight_declaration_id,
-                message_text=validation_not_ok_msg,
-                level="error",
-            )
 
 @app.task(name="send_operational_update_message")
 def send_operational_update_message(
@@ -157,4 +155,4 @@ def send_operational_update_message(
         my_notification_helper.send_message(message_details=update_message)
         logger.info("Submitted Flight Declaration Notification")
     else:
-        logger.info("No AMQP URL specified ")
+        logger.info("No AMQP URL specified..")

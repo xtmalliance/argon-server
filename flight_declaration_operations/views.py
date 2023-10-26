@@ -34,7 +34,7 @@ from .tasks import (
     submit_flight_declaration_to_dss_async,
     send_operational_update_message,
 )
-
+from common.database_operations import BlenderDatabaseWriter
 from .pagination import StandardResultsSetPagination
 from .serializers import (
     FlightDeclarationApprovalSerializer,
@@ -92,6 +92,7 @@ def set_flight_declaration(request):
         )
         return HttpResponse(msg, status=400)
 
+    my_database_writer = BlenderDatabaseWriter()
     USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
     aircraft_id = "000" if "vehicle_id" not in req else req["vehicle_id"]
     submitted_by = None if "submitted_by" not in req else req["submitted_by"]
@@ -106,21 +107,17 @@ def set_flight_declaration(request):
         else req["originating_party"]
     )
     now = arrow.now()
-    try:
-        start_datetime = (
-            now.isoformat()
-            if "start_datetime" not in req
-            else arrow.get(req["start_datetime"]).isoformat()
-        )
-        end_datetime = (
-            now.isoformat()
-            if "end_datetime" not in req
-            else arrow.get(req["end_datetime"]).isoformat()
-        )
-    except Exception as e:
-        ten_mins_from_now = now.shift(minutes=10)
-        start_datetime = now.isoformat()
-        end_datetime = ten_mins_from_now.isoformat()
+
+    start_datetime = (
+        now.isoformat()
+        if "start_datetime" not in req
+        else arrow.get(req["start_datetime"]).isoformat()
+    )
+    end_datetime = (
+        now.isoformat()
+        if "end_datetime" not in req
+        else arrow.get(req["end_datetime"]).isoformat()
+    )
 
     two_days_from_now = now.shift(days=2)
 
@@ -252,10 +249,10 @@ def set_flight_declaration(request):
             relevant_id_set.append(i["flight_declaration_id"])
         my_fd_rtree_helper.clear_rtree_index()
         logger.info(
-            "Flight Declaration intersections checked, found {num_intersections} declarations"
-            % {"all_relevant_declarations": len(relevant_id_set)}
+            "Flight Declaration intersections checked, found {all_relevant_declarations} declarations".format(all_relevant_declarations= len(relevant_id_set))
         )
         if all_relevant_declarations:
+            logger.info("Setting state as rejected...")
             is_approved = 0
             declaration_state = 8
 
@@ -273,6 +270,8 @@ def set_flight_declaration(request):
     )
 
     fo.save()
+    
+    my_database_writer.create_flight_authorization_from_flight_declaration_obj(flight_declaration=fo)
     fo.add_state_history_entry(
         new_state=0, original_state=None, notes="Created Declaration"
     )
@@ -311,7 +310,9 @@ def set_flight_declaration(request):
             "Self deconfliction success, this declaration will be sent to the DSS system, if a DSS URL is provided.."
         )
         # Only send it to the USSP network if the declaration is accepted and the network is available.
+        
         if declaration_state == 0 and USSP_NETWORK_ENABLED:
+
             submit_flight_declaration_to_dss_async.delay(
                 flight_declaration_id=flight_declaration_id
             )
