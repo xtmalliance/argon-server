@@ -275,11 +275,11 @@ def set_flight_declaration(request):
     fo.add_state_history_entry(
         new_state=0, original_state=None, notes="Created Declaration"
     )
-    if declaration_state != 0:
+    if declaration_state == 8:
         fo.add_state_history_entry(
             new_state=declaration_state,
             original_state=0,
-            notes="Rejected by Flight Blender becuase of conflicts",
+            notes="Rejected by Flight Blender becuase of  time / space conflicts with existing operations",
         )
 
     flight_declaration_id = str(fo.id)
