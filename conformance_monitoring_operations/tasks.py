@@ -96,15 +96,15 @@ def check_operation_telemetry_conformance(
                         altitude_m_wgs_84=float(altitude_m_wgs84),
                     )
                 )
-                logger.info(
-                    "Operation with {flight_operation_id} is not conformant via telemetry failed test {conformant_via_telemetry}...".format(
-                        flight_operation_id=flight_declaration_id,
-                        conformant_via_telemetry=conformant_via_telemetry,
-                    )
-                )
                 if conformant_via_telemetry:
                     pass
                 else:
+                    logger.info(
+                        "Operation with {flight_operation_id} is not conformant via telemetry failed test {conformant_via_telemetry}...".format(
+                            flight_operation_id=flight_declaration_id,
+                            conformant_via_telemetry=conformant_via_telemetry,
+                        )
+                    )
                     custom_signals.telemetry_non_conformance_signal.send(
                         sender="conformant_via_telemetry",
                         non_conformance_state=conformant_via_telemetry,
