@@ -27,6 +27,7 @@ def is_time_between(begin_time, end_time, check_time=None):
 
 
 class BlenderConformanceEngine:
+
     def is_operation_conformant_via_telemetry(
         self,
         flight_declaration_id: str,
@@ -193,10 +194,10 @@ class BlenderConformanceEngine:
                 <= latest_telemetry_datetime
                 <= fifteen_seconds_after_now
             ):
-                return ConformanceChecksList.C9a
+                return ConformanceChecksList.C9b
         else:
             # declare state as contingent
 
-            return ConformanceChecksList.C9b
+            return ConformanceChecksList.C9a
 
         return True
