@@ -14,7 +14,6 @@ from .data_definitions import (
 from dataclasses import asdict
 from shapely.geometry import shape, Point, mapping
 from functools import partial
-from . import ge
 import pyproj
 from requests.exceptions import ConnectionError
 import requests
