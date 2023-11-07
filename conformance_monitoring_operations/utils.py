@@ -78,7 +78,14 @@ class BlenderConformanceEngine:
 
         # C4, C5 check
         try:
-            assert flight_declaration.state in [1, 2]
+            # Check flight is not processing, ended, withdrawn, cancelled, rejected
+            assert flight_declaration.state not in [0,5,6,7,8]
+        except AssertionError as ae:
+            return ConformanceChecksList.C4
+
+        try:
+            # Check flight is activated, nonconforming contingent
+            assert flight_declaration.state in [2,3,4]
         except AssertionError as ae:
             return ConformanceChecksList.C5
 
