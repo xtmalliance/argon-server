@@ -147,11 +147,11 @@ class BlenderConformanceEngine:
         try:
             assert aircraft_altitude_conformant
         except AssertionError as ae:
-            return ConformanceChecksList.C7a
+            return ConformanceChecksList.C7b
         try:
             assert aircraft_bounds_conformant
         except AssertionError as ae:
-            return ConformanceChecksList.C7b
+            return ConformanceChecksList.C7a
 
         # C8 check Check if aircraft is not breaching any active Geofences
         # TODO

@@ -41,8 +41,8 @@ class StatusCode:
         for d in dir(cls):
             if d.startswith("_"):
                 continue
-            if d != d.upper():
-                continue
+            # if d != d.upper():
+            #     continue
 
             value = getattr(cls, d, None)
 
