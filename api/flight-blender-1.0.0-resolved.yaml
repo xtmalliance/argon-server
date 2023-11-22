@@ -1580,7 +1580,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GeoZone'
+              $ref: '#/components/schemas/GeoZoneSubmission'
 
       responses:
         '200':
@@ -3218,9 +3218,30 @@ components:
           type: string
           example: v0.0.1-445ad3
 
+    GeoZoneSubmission:
+      type: object
+      required: 
+        - title
+        - description
+        - zones
+      properties:
+        features:
+          type: array
+          description: A set of Geozones 
+          items:
+            $ref: '#/components/schemas/GeoZone'
+
+        title:
+          type: string
+          description: A text based title e.g. UASZoneVersion 2022-06-16
+        description:
+          type: string
+          description: A long form description of the Geozone
     #
     # ED-269 compliant GeoZone representation
     #
+
+
     GeoZone:
       type: object
       description: >-
