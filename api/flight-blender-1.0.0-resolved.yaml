@@ -3225,7 +3225,7 @@ components:
         - description
         - zones
       properties:
-        zones:
+        features:
           type: array
           description: A set of Geozones 
           items:
