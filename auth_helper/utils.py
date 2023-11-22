@@ -63,7 +63,7 @@ def requires_scopes(required_scopes):
                     assert 'aud' in unverified_token_details
                     assert unverified_token_details['aud'] != ""
                 except AssertionError as ae:
-                    response = JsonResponse({'detail': 'Invalid token provided, audience claim must be present and should and not empty'})
+                    response = JsonResponse({'detail': 'Incomplete token provided, audience claim must be present and should and not empty'})
                     response.status_code = 401                    
                     return response
 
