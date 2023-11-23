@@ -12,11 +12,12 @@ from auth_helper.common import get_redis
 import requests
 import hashlib
 import tldextract
-from os import environ as env
+from os import environ as env, error
 from dotenv import load_dotenv, find_dotenv
 from dataclasses import asdict
 from datetime import timedelta
 from .rid_utils import (
+    RIDVolume4D,
     SubscriberToNotify,
     SubscriptionState,
     Volume4D,
@@ -24,7 +25,7 @@ from .rid_utils import (
     ISACreationResponse,
     IdentificationServiceArea,
 )
-from typing import List
+from typing import List, Union
 
 logger = logging.getLogger("django")
 load_dotenv(find_dotenv())
@@ -36,12 +37,12 @@ if ENV_FILE:
 
 class RemoteIDOperations:
     def __init__(self):
-        self.dss_base_url = env.get("DSS_BASE_URL", 0)
+        self.dss_base_url = env.get("DSS_BASE_URL", '000')
         self.r = get_redis()
 
     def create_dss_isa(
         self,
-        flight_extents: Volume4D,
+        flight_extents: Union[RIDVolume4D,Volume4D],
         uss_base_url: str,
         expiration_time_seconds: int = 30,
     ) -> ISACreationResponse:
@@ -49,12 +50,12 @@ class RemoteIDOperations:
 
         # subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
         isa_creation_response = ISACreationResponse(
-            created=0, service_area=None, subscribers=[]
+            created=False, service_area=None, subscribers=[]
         )
         new_isa_id = str(uuid.uuid4())
 
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
-        audience = env.get("DSS_SELF_AUDIENCE", 0)
+        audience = env.get("DSS_SELF_AUDIENCE", '000')
         error = None
 
         try:
@@ -160,8 +161,6 @@ class RemoteIDOperations:
                                 ext[:3]
                             )  # get the subdomain, domain and suffix and create a audience and get credentials
 
-                    uss_auth_token = self.get_auth_token(audience=uss_audience)
-
                     # Notify subscribers
                     payload = {
                         "service_area": service_area,
@@ -209,11 +208,11 @@ class RemoteIDOperations:
 
         # subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
         subscription_response = SubscriptionResponse(
-            created=0, dss_subscription_id=None, notification_index=0
+            created=False, dss_subscription_id=None, notification_index=0
         )
 
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
-        audience = env.get("DSS_SELF_AUDIENCE", 0)
+        audience = env.get("DSS_SELF_AUDIENCE", '000')
         error = None
 
         try:
@@ -356,10 +355,12 @@ class RemoteIDOperations:
         logger.debug("Flight url list : %s" % all_flights_urls_string)
         all_flights_url = all_flights_urls_string.split()
         for cur_flight_url in all_flights_url:
+            
+            audience = "localhost"
             try:
                 ext = tldextract.extract(cur_flight_url)
             except Exception as e:
-                audience == "localhost"
+                logger.error("Error in extracting TLD {current_flight_url} domain: {error}".format(cur_flight_url = cur_flight_url, error = e))
             else:
                 if ext.domain in [
                     "localhost",

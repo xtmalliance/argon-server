@@ -188,7 +188,8 @@ def stream_rid_test_data(requested_flights):
                     format=fd["auth_data"]["format"], data=fd["auth_data"]["data"]
                 )
             else:
-                auth_data = AuthData(format=0, data="")
+                auth_data = AuthData(format=0, data="")      
+            serial_number = fd['serial_number'] if 'serial_number' in fd else  'MFR1C123456789ABC'
             if "uas_id" in fd.keys():
                 uas_id = UASID(
                     specific_session_id=fd["uas_id"]["specific_session_id"],
@@ -199,7 +200,7 @@ def stream_rid_test_data(requested_flights):
             else:
                 uas_id = UASID(
                     specific_session_id= "02-a1b2c3d4e5f60708",
-                    serial_number="MFR1C123456789ABC",
+                    serial_number=serial_number,
                     utm_id="ae1fa066-6d68-4018-8274-af867966978e",
                     registration_id="MFR1C123456789ABC"
                 )
@@ -217,7 +218,7 @@ def stream_rid_test_data(requested_flights):
             flight_detail = RIDOperatorDetails(
                 id=requested_flight_detail_id,
                 operation_description=fd["operation_description"],
-                serial_number=fd["serial_number"],
+                serial_number=serial_number,
                 registration_number=fd["registration_number"],
                 operator_location=op_location,
                 aircraft_type="NotDeclared",
@@ -303,7 +304,7 @@ def stream_rid_test_data(requested_flights):
                 r.zadd(flight_injection_sorted_set, zadd_struct)
                 all_telemetry.append(t)
 
-        requested_flight = RIDTestInjectionProcessing(
+        requested_flight = RIDTestInjection(
             injection_id=requested_flight["injection_id"],
             telemetry=all_telemetry,
             details_responses=all_flight_details,
@@ -451,6 +452,7 @@ def stream_rid_test_data(requested_flights):
 
     while should_continue:
         now = arrow.now()
+        query_time = now
         if now > astm_rid_standard_end_time:
             should_continue = False
             logger.info("End streaming ... %s" % arrow.now().isoformat())
@@ -468,8 +470,7 @@ def stream_rid_test_data(requested_flights):
                 "Exceeded normal end time of injections, looking up iteration, query time: %s"
                 % query_time.isoformat()
             )
-        else:
-            query_time = now
+            
         _stream_data(query_time=query_time)
-        # Sleep for 2 seconds before submitting the next iteration.
-        time.sleep(1)
+        # Sleep for .2 seconds before submitting the next iteration.
+        time.sleep(0.2)
