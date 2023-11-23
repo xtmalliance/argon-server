@@ -469,6 +469,7 @@ def SCDAuthTest(request, operation_id):
                 )
 
             elif update_operational_intent_job.status == 999:
+
                 # Flight is not deconflicted
                 logger.info("Flight not deconflicted...")
                 return Response(
@@ -581,11 +582,27 @@ def SCDAuthTest(request, operation_id):
                     ),
                     status=status.HTTP_200_OK,
                 )
+            
+            elif op_int_submission.status == "failure":
+                # The flight was rejected by the DSS we will make it a failure and report back
+                rejected_test_injection_response.operational_intent_id = (
+                    op_int_submission.operational_intent_id
+                )
+                return Response(
+                    json.loads(
+                        json.dumps(
+                            rejected_test_injection_response,
+                            cls=EnhancedJSONEncoder,
+                        )
+                    ),
+                    status=status.HTTP_200_OK,
+                )
+            
             else:
                 failed_test_injection_response.operational_intent_id = (
                     op_int_submission.operational_intent_id
                 )
-
+                
                 return Response(
                     json.loads(
                         json.dumps(

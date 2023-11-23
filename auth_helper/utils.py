@@ -52,8 +52,7 @@ def requires_scopes(required_scopes):
             if BYPASS_AUTH_TOKEN_VERIFICATION:
                 # Debug mode, no need to verify signatures 
                 try: 
-                    unverified_token_details = jwt.decode(token,algorithms=['RS256'],options={"verify_signature": False})   
-                    
+                    unverified_token_details = jwt.decode(token,algorithms=['RS256'],options={"verify_signature": False})                       
                     
                 except jwt.DecodeError as de:    
                     response = JsonResponse({'detail': 'Invalid token provided'})

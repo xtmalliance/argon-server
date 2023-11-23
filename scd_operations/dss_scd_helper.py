@@ -1030,13 +1030,14 @@ class SCDOperations:
         all_existing_operational_intent_details = self.get_latest_airspace_volumes(
             volumes=volumes
         )
+        logger.info("Found {all_existing_operational_intent_details} operational intent references in the DSS".format(all_existing_operational_intent_details=len(all_existing_operational_intent_details)))
+        
         if all_existing_operational_intent_details:
             logger.info(
                 "Checking deconfliction status with {num_existing_op_ints} operational intent details".format(
                     num_existing_op_ints=len(all_existing_operational_intent_details)
                 )
             )
-            logger.info(all_existing_operational_intent_details)
             my_ind_volumes_converter = VolumesConverter()
             my_ind_volumes_converter.convert_volumes_to_geojson(volumes=volumes)
             ind_volumes_polygon = (
