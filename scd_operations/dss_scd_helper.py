@@ -554,7 +554,7 @@ class SCDOperations:
                     uss_audience = generate_audience_from_base_url(base_url= current_uss_base_url)
                     
                     uss_auth_token = self.get_auth_token(audience=uss_audience)
-                    logger.info(
+                    logger.debug(
                         "Auth Token {uss_auth_token}".format(
                             uss_auth_token=uss_auth_token
                         )
