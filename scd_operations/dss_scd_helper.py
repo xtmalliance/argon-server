@@ -49,7 +49,7 @@ from .scd_data_definitions import (
     OperationalIntentTestInjection,
 )
 from .scd_data_definitions import Polygon as Plgn
-import tldextract
+from common.auth_token_audience_helper import generate_audience_from_base_url
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 
@@ -434,7 +434,6 @@ class SCDOperations:
     def get_nearby_operational_intents(
         self, volumes: List[Volume4D]
     ) -> List[OperationalIntentDetailsUSSResponse]:
-
         # This method checks the USS network for any other volume in the airspace and queries the individual USS for data
 
         all_uss_op_int_details = []
@@ -447,7 +446,7 @@ class SCDOperations:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
-        
+
         blender_base_url = env.get("BLENDER_FQDN", 0)
         my_op_int_ref_helper = OperationalIntentReferenceHelper()
         all_uss_operational_intent_details = []
@@ -457,6 +456,11 @@ class SCDOperations:
             operational_intent_references = []
             area_of_interest = QueryOperationalIntentPayload(area_of_interest=volume)
             logger.info("Querying DSS for operational intents in the area..")
+            logger.debug(
+                "Area of interest {area_of_interest}".format(
+                    area_of_interest=area_of_interest
+                )
+            )
             try:
                 operational_intent_ref_response = requests.post(
                     query_op_int_url,
@@ -471,6 +475,11 @@ class SCDOperations:
                 # The DSS returned operational intent references as a list
                 dss_operational_intent_references = (
                     operational_intent_ref_response.json()
+                )
+                logger.debug(
+                    "DSS Response {dss_operational_intent_references}".format(
+                        dss_operational_intent_references=dss_operational_intent_references
+                    )
                 )
                 operational_intent_references = dss_operational_intent_references[
                     "operational_intent_references"
@@ -507,8 +516,8 @@ class SCDOperations:
                         subscription_id=o_i_r["subscription_id"],
                     )
                     # if o_i_r_formatted.uss_base_url != blender_base_url:
-
                     all_uss_operational_intent_details.append(o_i_r_formatted)
+
 
             for (
                 current_uss_operational_intent_detail
@@ -542,31 +551,14 @@ class SCDOperations:
                     op_int_details_retrieved = True
 
                 else:  # This operational intent details is from a peer uss, need to query peer USS
-                    try:
-                        ext = tldextract.extract(current_uss_base_url)
-                    except Exception as e:
-                        uss_audience = "localhost"
-                    else:
-                        switch = {
-                            "localhost": "localhost",
-                            "internal": "host.docker.internal",
-                            "test": "local.test",
-                        }
-                        if ext.domain in [
-                            "localhost",
-                            "internal",
-                            "test",
-                        ]:  # for host.docker.internal type calls
-                            uss_audience = switch[ext.domain]
-                        else:
-                            if ext.suffix in (""):
-                                uss_audience = ext.domain
-                            else:
-                                uss_audience = ".".join(
-                                    ext[:3]
-                                )  # get the subdomain, domain and suffix and create a audience and get credentials
+                    uss_audience = generate_audience_from_base_url(base_url= current_uss_base_url)
+                    
                     uss_auth_token = self.get_auth_token(audience=uss_audience)
-
+                    logger.info(
+                        "Auth Token {uss_auth_token}".format(
+                            uss_auth_token=uss_auth_token
+                        )
+                    )
                     uss_headers = {
                         "Content-Type": "application/json",
                         "Authorization": "Bearer " + uss_auth_token["access_token"],
@@ -577,6 +569,11 @@ class SCDOperations:
                         + current_uss_operational_intent_detail.id
                     )
 
+                    logger.debug(
+                        "Querying USS: {current_uss_base_url}".format(
+                            current_uss_base_url=current_uss_base_url
+                        )
+                    )
                     try:
                         uss_operational_intent_request = requests.get(
                             uss_operational_intent_url, headers=uss_headers
@@ -584,18 +581,19 @@ class SCDOperations:
                     except Exception as e:
                         logger.error(
                             "Error in getting operational intent id {uss_op_int_id} details from uss with base url {uss_base_url}".format(
-                                uss_op_int_id=current_uss_operational_intent_detail.id, uss_base_url = current_uss_base_url
+                                uss_op_int_id=current_uss_operational_intent_detail.id,
+                                uss_base_url=current_uss_base_url,
                             )
                         )
                         op_int_details_retrieved = False
                         logger.error("Error details %s " % e)
                     else:
-                        # Request was successful
-                        operational_intent_details_json = (
-                            uss_operational_intent_request.json()
-                        )
                         # Verify status of the response from the USS
                         if uss_operational_intent_request.status_code == 200:
+                            # Request was successful
+                            operational_intent_details_json = (
+                                uss_operational_intent_request.json()
+                            )
                             op_int_details_retrieved = True
                             outline_polygon = None
                             outline_circle = None
@@ -607,13 +605,18 @@ class SCDOperations:
                                 "operational_intent"
                             ]["reference"]
                         # The attempt to get data from the USS in the network failed
-                        elif uss_operational_intent_request.status_code in [400, 404, 500]: 
+                        elif uss_operational_intent_request.status_code in [
+                            401,
+                            400,
+                            404,
+                            500,
+                        ]:
                             logger.error(
                                 "Error in querying peer USS about operational intent details from uss with base url {uss_base_url}".format(
-                                    uss_op_int_id=current_uss_operational_intent_detail.id, uss_base_url = current_uss_base_url
+                                    uss_op_int_id=current_uss_operational_intent_detail.id,
+                                    uss_base_url=current_uss_base_url,
                                 )
                             )
-
 
                 if op_int_details_retrieved:
                     op_int_reference: OperationalIntentReferenceDSSResponse = my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
@@ -1030,8 +1033,14 @@ class SCDOperations:
         all_existing_operational_intent_details = self.get_latest_airspace_volumes(
             volumes=volumes
         )
-        logger.info("Found {all_existing_operational_intent_details} operational intent references in the DSS".format(all_existing_operational_intent_details=len(all_existing_operational_intent_details)))
-        
+        logger.info(
+            "Found {all_existing_operational_intent_details} operational intent references in the DSS".format(
+                all_existing_operational_intent_details=len(
+                    all_existing_operational_intent_details
+                )
+            )
+        )
+
         if all_existing_operational_intent_details:
             logger.info(
                 "Checking deconfliction status with {num_existing_op_ints} operational intent details".format(
@@ -1059,7 +1068,7 @@ class SCDOperations:
         else:
             deconflicted = True
             logger.info(
-                "No existing operational intents in the DSS, deconfliction status: %s"
+                "No existing operational intent references in the DSS, deconfliction status: %s"
                 % deconflicted
             )
         # logger.info("Airspace keys: %s" % airspace_keys)
@@ -1115,7 +1124,7 @@ class SCDOperations:
                     dss_response=dss_creation_response,
                     operational_intent_id=new_entity_id,
                 )
-            elif dss_r_status_code in [400,401,403,409,43,429]:
+            elif dss_r_status_code in [400, 401, 403, 409, 43, 429]:
                 dss_creation_response_error = OperationalIntentSubmissionError(
                     result=dss_response, notes=dss_r.text
                 )
@@ -1138,7 +1147,9 @@ class SCDOperations:
                 )
         else:
             # When flight is not deconflicted, Flight Blender assigns a error code of 500
-            logger.info("Flight not deconflicted, there are other flights in the area..")
+            logger.info(
+                "Flight not deconflicted, there are other flights in the area.."
+            )
             d_r = OperationalIntentSubmissionStatus(
                 status="conflict_with_flight",
                 status_code=500,
