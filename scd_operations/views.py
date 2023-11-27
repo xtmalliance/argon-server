@@ -22,14 +22,7 @@ from .scd_data_definitions import (
     FlightAuthorizationDataPayload,
     SCDTestStatusResponse,
     CapabilitiesResponse,
-    DeleteFlightResponse,
-    LatLngPoint,
-    Polygon,
-    Circle,
-    Altitude,
-    Volume3D,
-    Time,
-    Radius,
+    DeleteFlightResponse,    
     OperationalIntentSubmissionStatus,
     Volume4D,
     OperationalIntentTestInjection,
@@ -38,6 +31,7 @@ from .scd_data_definitions import (
     ClearAreaResponseOutcome,
     SuccessfulOperationalIntentFlightIDStorage,
     OperationalIntentStorageVolumes,
+    DeleteFlightStatus
 )
 from . import dss_scd_helper
 from rid_operations import rtree_helper
@@ -294,7 +288,7 @@ def SCDAuthTest(request, operation_id):
             my_operational_intent_validator.validate_operational_intent_test_data()
         )
 
-        if not operational_intent_valid:
+        if not operational_intent_valid:              
             return Response(
                 json.loads(
                     json.dumps(
@@ -312,7 +306,7 @@ def SCDAuthTest(request, operation_id):
             volumes=test_injection_data.operational_intent.volumes
         )
 
-        if not volumes_valid:
+        if not volumes_valid:    
             return Response(
                 json.loads(
                     json.dumps(
@@ -341,6 +335,7 @@ def SCDAuthTest(request, operation_id):
             )
 
         if not is_reg_number_valid:
+            
             injection_response = asdict(rejected_test_injection_response)
             return Response(
                 json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
@@ -375,7 +370,7 @@ def SCDAuthTest(request, operation_id):
             )
         )
 
-        if same_operational_intent_exists_in_blender and test_state == "Activated":
+        if same_operational_intent_exists_in_blender and test_state in ["Activated","Nonconforming"]:
             # Update the operational intent
             # Send the update Operational Intent command to DSS
             # Check updated airspace for flight that is accepted before activated
@@ -399,13 +394,18 @@ def SCDAuthTest(request, operation_id):
                     operation_id=operation_id_str
                 )
             )
+            # If it is a non-conforming flight 
+            if test_state == "Nonconforming":
+                # extents = stored_operational_intent_details.details.volumes
+                extents = operational_intent_data.off_nominal_volumes
+                
 
-            # deconfliction_check = (
-            #     False if current_state == 2 else True
-            # )  # If the flight is activated then no need to deconflict (this has happened prior)
+            elif test_state == "Activated":
+                extents= test_injection_data.operational_intent.volumes
+
             update_operational_intent_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
-                extents=test_injection_data.operational_intent.volumes,
+                extents=extents,
                 new_state=test_state,
                 current_state=current_state_str,
                 ovn=stored_operational_intent_details.reference.ovn,
@@ -413,39 +413,55 @@ def SCDAuthTest(request, operation_id):
                 deconfliction_check=True,
                 priority=operational_intent_data.priority,
             )
-
-            if update_operational_intent_job.status in [200, 201]:
-                ready_to_fly_injection_response.operational_intent_id = (
-                    dss_operational_intent_id
-                )
-
-                # update the state to Activated
-                my_database_writer.update_flight_operation_state(
-                    flight_declaration_id=operation_id_str, state=2
-                )
-                # TODO: Update flight declaration object
-
+            if update_operational_intent_job.status in [200, 201]:   
                 # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
                 flight_opint_key = "flight_opint." + operation_id_str
                 if r.exists(flight_opint_key):
-                    new_operational_intent_full_details = OperationalIntentStorage(
+                    existing_op_int_details = my_operational_intent_parser.parse_stored_operational_intent_details(operation_id=operation_id_str)
+
+                else: 
+                    logger.info("Error in getting details of a operational inten ...")
+                    return Response(
+                        json.loads(
+                            json.dumps(
+                                failed_test_injection_response, cls=EnhancedJSONEncoder
+                            )
+                        ),
+                        status=status.HTTP_200_OK,
+                    )
+                    
+
+                print('P1')
+                print(existing_op_int_details)
+                print('P2')
+                print(test_injection_data)
+                print('P3')
+                if test_state == "Activated":
+                    ready_to_fly_injection_response.operational_intent_id = (
+                        dss_operational_intent_id
+                    )
+
+                    # update the state to Activated
+                    my_database_writer.update_flight_operation_state(
+                        flight_declaration_id=operation_id_str, state=2
+                    )                    
+                    
+                    new_updated_operational_intent_full_details = OperationalIntentStorage(
                         bounds=view_r_bounds,
-                        start_time=json.dumps(
-                            asdict(
+                        start_time=
                                 test_injection_data.operational_intent.volumes[
                                     0
-                                ].time_start
-                            )
-                        ),
-                        end_time=json.dumps(
-                            asdict(
+                                ].time_start.value,
+                        end_time=
                                 test_injection_data.operational_intent.volumes[
                                     0
-                                ].time_end
-                            )
-                        ),
-                        alt_max=50,
-                        alt_min=25,
+                                ].time_end.value,
+                        alt_max=test_injection_data.operational_intent.volumes[
+                                    0
+                                ].volume.altitude_upper.value,
+                        alt_min=test_injection_data.operational_intent.volumes[
+                                    0
+                                ].volume.altitude_lower.value,
                         success_response=asdict(
                             update_operational_intent_job.dss_response
                         ),
@@ -453,11 +469,22 @@ def SCDAuthTest(request, operation_id):
                             test_injection_data.operational_intent
                         ),
                     )
-                    r.set(
-                        flight_opint_key,
-                        json.dumps(asdict(new_operational_intent_full_details)),
+                elif test_state =="Nonconforming":
+                    # Update the declaration to non-conforming
+                    my_database_writer.update_flight_operation_state(
+                        flight_declaration_id=operation_id_str, state=3
                     )
-                    r.expire(name=flight_opint_key, time=opint_subscription_end_time)
+                    
+                    existing_op_int_details.operational_intent_details.off_nominal_volumes = all_off_nominal_volumes
+                    new_updated_operational_intent_full_details = existing_op_int_details
+                    print(existing_op_int_details)
+
+                r.set(
+                    flight_opint_key,
+                    json.dumps(asdict(new_updated_operational_intent_full_details)),
+                )
+                r.expire(name=flight_opint_key, time=opint_subscription_end_time)
+
 
                 return Response(
                     json.loads(
@@ -506,8 +533,8 @@ def SCDAuthTest(request, operation_id):
                     bounds=view_r_bounds,
                     start_time=test_injection_data.operational_intent.volumes[
                         0
-                    ].time_start,
-                    end_time=test_injection_data.operational_intent.volumes[0].time_end,
+                    ].time_start.value,
+                    end_time=test_injection_data.operational_intent.volumes[0].time_end.value,
                     alt_max=50,
                     alt_min=25,
                     success_response=op_int_submission.dss_response,
@@ -584,7 +611,7 @@ def SCDAuthTest(request, operation_id):
                 )
             
             elif op_int_submission.status == "failure":
-                # The flight was rejected by the DSS we will make it a failure and report back
+                # The flight was rejected by the DSS we will make it a failure and report back    
                 rejected_test_injection_response.operational_intent_id = (
                     op_int_submission.operational_intent_id
                 )
@@ -661,12 +688,12 @@ def SCDAuthTest(request, operation_id):
             )
 
             delete_flight_response = DeleteFlightResponse(
-                result="Closed",
+                result=DeleteFlightStatus.Closed,
                 notes="The flight was closed successfully by the USS and is now out of the UTM system.",
             )
         else:
             delete_flight_response = DeleteFlightResponse(
-                result="Failed",
+                result=DeleteFlightStatus.Failed,
                 notes="The flight was not found in the USS, please check your flight ID %s"
                 % operation_id_str,
             )

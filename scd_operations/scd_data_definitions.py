@@ -206,6 +206,7 @@ class TestInjectionResult:
         TestInjectionResultState.Rejected,
         TestInjectionResultState.ConflictWithFlight,
         TestInjectionResultState.Failed,
+        TestInjectionResultState.ReadyToFly,
     ]
     notes: str
     operational_intent_id: uuid4
@@ -310,11 +311,23 @@ class OperationalIntentReferenceDSSResponse:
     uss_base_url: str
     subscription_id: str
 
+@dataclass
+class SubscriptionState:
+    subscription_id: str
+    notification_index: int
+
+
+@dataclass
+class SubscriberToNotify:
+    subscriptions: List[SubscriptionState]
+    uss_base_url: str
+
 
 @dataclass
 class OperationalIntentSubmissionSuccess:
-    subscribers: List[str]
+    subscribers: List[SubscriberToNotify]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
+    
 
 
 @dataclass
@@ -365,12 +378,6 @@ class OperationalIntentSubmissionStatus:
 
 
 @dataclass
-class SubscriptionState:
-    subscription_id: str
-    notification_index: int
-
-
-@dataclass
 class NotifyPeerUSSPostPayload:
     operational_intent_id: uuid4
     operational_intent: OperationalIntentDetailsUSSResponse
@@ -410,11 +417,6 @@ class DeleteOperationalIntentResponse:
     message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
 
 
-@dataclass
-class SubscriberToNotify:
-    subscriptions: List[SubscriptionState]
-    uss_base_url: str
-
 
 @dataclass
 class OperationalIntentUpdateSuccessResponse:
@@ -431,7 +433,7 @@ class OperationalIntentUpdateErrorResponse:
 class OperationalIntentUpdateResponse:
     dss_response: Union[OperationalIntentUpdateSuccessResponse, CommonDSS4xxResponse]
     status: int
-    message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
+    message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse,str]
 
 
 @dataclass

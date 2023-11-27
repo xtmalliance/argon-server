@@ -30,7 +30,7 @@ from .scd_data_definitions import (
     DeleteOperationalIntentResponse,
     DeleteOperationalIntentResponseSuccess,
     CommonDSS2xxResponse,
-    QueryOperationalIntentPayload,
+    QueryOperationalIntentPayload,    
     OperationalIntentDetailsUSSResponse,
     OperationalIntentUSSDetails,
     Circle,
@@ -46,9 +46,11 @@ from .scd_data_definitions import (
     NotifyPeerUSSPostPayload,
     USSNotificationResponse,
     OperationalIntentUpdateErrorResponse,
-    OperationalIntentTestInjection,
+    OperationalIntentTestInjection,    
+    OperationalIntentStorage,
+    OperationalIntentReferenceDSSResponse,OperationalIntentState
 )
-from .scd_data_definitions import Polygon as Plgn
+from .scd_data_definitions import Polygon as Plgn, SubscriptionState
 from common.auth_token_audience_helper import generate_audience_from_base_url
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -72,13 +74,14 @@ def is_time_within_time_period(
         return time_to_check >= start_time or time_to_check <= end_time
 
 
+
 class OperationalIntentValidator:
     def __init__(self, operational_intent_data: OperationalIntentTestInjection):
         self.operational_intent_data = operational_intent_data
 
     def validate_operational_intent_state(self):
         try:
-            assert self.operational_intent_data.state in ["Accepted", "Activated"]
+            assert self.operational_intent_data.state in ["Accepted", "Activated","Nonconforming"]
         except AssertionError as ae:
             return False
         else:
@@ -245,6 +248,60 @@ class OperationalIntentReferenceHelper:
     """
     A class to parse Operational Intent References into Dataclass objects
     """
+
+    def parse_stored_operational_intent_details(self, operation_id:str)-> OperationalIntentStorage:
+        r = get_redis()
+        flight_opint = "flight_opint." + str(operation_id)
+
+        op_int_details_raw = r.get(flight_opint)
+        existing_op_int_details_raw  = json.loads(op_int_details_raw)
+
+        all_subscribers = existing_op_int_details_raw['success_response']['subscribers']
+        subscribers = []
+        print(existing_op_int_details_raw)
+        for s in all_subscribers:
+            all_s = s['subscriptions']
+            for cur_s in all_s: 
+                sub = SubscriptionState(subscription_id= cur_s['subscription_id'], notification_index=cur_s['notification_index'])
+                subscribers.append(sub)
+            s_n = SubscriberToNotify(subscriptions= all_s, uss_base_url=s['uss_base_url'])
+            subscribers.append(s_n)
+
+        operational_intent_respose_raw = existing_op_int_details_raw['success_response']['operational_intent_reference']
+        operational_intent_details_raw = existing_op_int_details_raw['operational_intent_details']
+        volumes = operational_intent_details_raw['volumes']
+        off_nominal_volumes = operational_intent_details_raw['off_nominal_volumes']
+        priority = operational_intent_details_raw['priority']
+        state = operational_intent_details_raw['state']
+
+        operational_intent_response = self.parse_and_load_stored_flight_opint(operation_id)
+        operational_intent_response = OperationalIntentReferenceDSSResponse(id= operational_intent_respose_raw['id'], manager= operational_intent_respose_raw['manager'], uss_availability= operational_intent_respose_raw['uss_availability'], version= operational_intent_respose_raw['version'],state=operational_intent_respose_raw['state'], ovn =operational_intent_respose_raw['ovn'], time_start=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), time_end=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), uss_base_url= operational_intent_respose_raw['uss_base_url'], subscription_id=operational_intent_respose_raw['subscription_id'],)
+
+        all_volumes: List[Volume4D] = []
+        all_off_nominal_volumes: List[Volume4D] = []
+        for volume in volumes:
+            volume4D = self.parse_volume_to_volume4D(volume=volume)
+            all_volumes.append(volume4D)
+
+        for off_nominal_volume in off_nominal_volumes:
+            off_nominal_volume4D = self.parse_volume_to_volume4D(
+                volume=off_nominal_volume
+            )
+            all_off_nominal_volumes.append(off_nominal_volume4D)
+
+        operational_intent_details = OperationalIntentTestInjection(volumes = all_volumes,priority=priority, off_nominal_volumes=all_off_nominal_volumes, state = state)
+
+        stored = OperationalIntentStorage(
+        bounds = existing_op_int_details_raw['bounds'],
+        start_time = existing_op_int_details_raw['start_time'],
+        end_time = existing_op_int_details_raw['end_time'],
+        alt_max = existing_op_int_details_raw['alt_max'],
+        alt_min = existing_op_int_details_raw['alt_min'],
+        success_response = OperationalIntentSubmissionSuccess(subscribers=subscribers,operational_intent_reference= operational_intent_response) ,
+        operational_intent_details=  operational_intent_details ,
+        )
+        return stored
+    
 
     def parse_and_load_stored_flight_opint(
         self, operation_id: str
@@ -883,7 +940,7 @@ class SCDOperations:
         operational_intent_update.keys = airspace_keys
 
         # our priority is 100 there is no need to deconflight the flight.
-        if priority == 100:
+        if priority == 100 or new_state=='Nonconforming':
             deconflicted = True
         else:
             my_ind_volumes_converter = VolumesConverter()
@@ -896,7 +953,7 @@ class SCDOperations:
                 polygon_to_check=ind_volumes_polygon,
             )
             deconflicted = False if is_conflicted else True
-
+        
         if not deconflicted:
             d_r = None
             dss_r_status_code = 999
@@ -1078,6 +1135,7 @@ class SCDOperations:
         opint_creation_payload = json.loads(
             json.dumps(asdict(operational_intent_reference))
         )
+        
         dss_response = {}
 
         if deconflicted:
@@ -1103,7 +1161,19 @@ class SCDOperations:
                 dss_r_status_code = dss_r.status_code
 
             if dss_r_status_code == 201:
+                print(dss_response)
                 subscribers = dss_response["subscribers"]
+                all_subscribers_to_notify = []
+                for s in subscribers:
+                    subs = s['subscriptions']
+                    all_subs = []
+                    for subscription in subs: 
+                        s_s = SubscriptionState(subscription_id=subscription['subscription_id'], notification_index=subscription['notification_index'])
+                        all_subs.append(s_s)
+                    subscriber_to_notify =SubscriberToNotify(subscriptions=all_subs , uss_base_url=s['uss_base_url'])
+                    all_subscribers_to_notify.append(subscriber_to_notify)
+
+
                 o_i_r = dss_response["operational_intent_reference"]
                 my_op_int_ref_helper = OperationalIntentReferenceHelper()
                 operational_intent_r: OperationalIntentReferenceDSSResponse = (
@@ -1113,7 +1183,7 @@ class SCDOperations:
                 )
                 dss_creation_response = OperationalIntentSubmissionSuccess(
                     operational_intent_reference=operational_intent_r,
-                    subscribers=subscribers,
+                    subscribers=all_subscribers_to_notify,
                 )
                 logger.info("Successfully created operational intent in the DSS")
                 logger.debug("Response details from the DSS %s" % dss_r.text)
