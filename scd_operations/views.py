@@ -31,7 +31,8 @@ from .scd_data_definitions import (
     ClearAreaResponseOutcome,
     SuccessfulOperationalIntentFlightIDStorage,
     OperationalIntentStorageVolumes,
-    DeleteFlightStatus
+    DeleteFlightStatus,
+    OperationalIntentState
 )
 from . import dss_scd_helper
 from rid_operations import rtree_helper
@@ -431,11 +432,6 @@ def SCDAuthTest(request, operation_id):
                     )
                     
 
-                print('P1')
-                print(existing_op_int_details)
-                print('P2')
-                print(test_injection_data)
-                print('P3')
                 if test_state == "Activated":
                     ready_to_fly_injection_response.operational_intent_id = (
                         dss_operational_intent_id
@@ -462,13 +458,14 @@ def SCDAuthTest(request, operation_id):
                         alt_min=test_injection_data.operational_intent.volumes[
                                     0
                                 ].volume.altitude_lower.value,
-                        success_response=asdict(
+                        success_response= asdict(
                             update_operational_intent_job.dss_response
                         ),
-                        operational_intent_details=asdict(
+                        operational_intent_details= asdict(
                             test_injection_data.operational_intent
-                        ),
+                        )
                     )
+                    
                 elif test_state =="Nonconforming":
                     # Update the declaration to non-conforming
                     my_database_writer.update_flight_operation_state(
@@ -476,7 +473,13 @@ def SCDAuthTest(request, operation_id):
                     )
                     
                     existing_op_int_details.operational_intent_details.off_nominal_volumes = all_off_nominal_volumes
+
+                    existing_op_int_details.success_response.operational_intent_reference.state= OperationalIntentState.Nonconforming
+                    
+                    existing_op_int_details.operational_intent_details.state = OperationalIntentState.Nonconforming
+                    
                     new_updated_operational_intent_full_details = existing_op_int_details
+                    # Remove outline circle from off-nominal volumes
                     print(existing_op_int_details)
 
                 r.set(

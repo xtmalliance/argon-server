@@ -189,6 +189,11 @@ def USSOpIntDetails(request, opint_id):
 
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
+            # TODO: Fix outline circle
+            for v in stored_off_nominal_volumes:
+                if "outline_circle" in v["volume"].keys():
+                    if not v["volume"]["outline_circle"]:
+                        v["volume"].pop("outline_circle")
 
             reference = OperationalIntentReferenceDSSResponse(
                 id=stored_operational_intent_id,

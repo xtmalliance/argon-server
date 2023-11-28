@@ -70,8 +70,7 @@ class Volume3D:
     outline_polygon: Polygon
     altitude_lower: Altitude
     altitude_upper: Altitude
-    outline_circle: Circle = None
-
+    outline_circle: Circle = None    
 
 class OperationalIntentState(str, enum.Enum):
     """A test is either pass or fail or could not be processed, currently not"""
@@ -311,6 +310,7 @@ class OperationalIntentReferenceDSSResponse:
     uss_base_url: str
     subscription_id: str
 
+
 @dataclass
 class SubscriptionState:
     subscription_id: str
@@ -327,7 +327,6 @@ class SubscriberToNotify:
 class OperationalIntentSubmissionSuccess:
     subscribers: List[SubscriberToNotify]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
-    
 
 
 @dataclass
@@ -417,7 +416,6 @@ class DeleteOperationalIntentResponse:
     message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
 
 
-
 @dataclass
 class OperationalIntentUpdateSuccessResponse:
     subscribers: List[str]
@@ -433,7 +431,7 @@ class OperationalIntentUpdateErrorResponse:
 class OperationalIntentUpdateResponse:
     dss_response: Union[OperationalIntentUpdateSuccessResponse, CommonDSS4xxResponse]
     status: int
-    message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse,str]
+    message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse, str]
 
 
 @dataclass

@@ -48,7 +48,7 @@ from .scd_data_definitions import (
     OperationalIntentUpdateErrorResponse,
     OperationalIntentTestInjection,    
     OperationalIntentStorage,
-    OperationalIntentReferenceDSSResponse,OperationalIntentState
+    OperationalIntentReferenceDSSResponse
 )
 from .scd_data_definitions import Polygon as Plgn, SubscriptionState
 from common.auth_token_audience_helper import generate_audience_from_base_url
@@ -72,8 +72,6 @@ def is_time_within_time_period(
     else:
         # Over midnight:
         return time_to_check >= start_time or time_to_check <= end_time
-
-
 
 class OperationalIntentValidator:
     def __init__(self, operational_intent_data: OperationalIntentTestInjection):
@@ -258,7 +256,6 @@ class OperationalIntentReferenceHelper:
 
         all_subscribers = existing_op_int_details_raw['success_response']['subscribers']
         subscribers = []
-        print(existing_op_int_details_raw)
         for s in all_subscribers:
             all_s = s['subscriptions']
             for cur_s in all_s: 
@@ -274,8 +271,8 @@ class OperationalIntentReferenceHelper:
         priority = operational_intent_details_raw['priority']
         state = operational_intent_details_raw['state']
 
-        operational_intent_response = self.parse_and_load_stored_flight_opint(operation_id)
-        operational_intent_response = OperationalIntentReferenceDSSResponse(id= operational_intent_respose_raw['id'], manager= operational_intent_respose_raw['manager'], uss_availability= operational_intent_respose_raw['uss_availability'], version= operational_intent_respose_raw['version'],state=operational_intent_respose_raw['state'], ovn =operational_intent_respose_raw['ovn'], time_start=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), time_end=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), uss_base_url= operational_intent_respose_raw['uss_base_url'], subscription_id=operational_intent_respose_raw['subscription_id'],)
+        operational_intent_reference_dss_repsonse = self.parse_and_load_stored_flight_opint(operation_id)
+        operational_intent_reference_dss_repsonse = OperationalIntentReferenceDSSResponse(id= operational_intent_respose_raw['id'], manager= operational_intent_respose_raw['manager'], uss_availability= operational_intent_respose_raw['uss_availability'], version= operational_intent_respose_raw['version'],state=operational_intent_respose_raw['state'], ovn =operational_intent_respose_raw['ovn'], time_start=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), time_end=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), uss_base_url= operational_intent_respose_raw['uss_base_url'], subscription_id=operational_intent_respose_raw['subscription_id'],)
 
         all_volumes: List[Volume4D] = []
         all_off_nominal_volumes: List[Volume4D] = []
@@ -297,7 +294,7 @@ class OperationalIntentReferenceHelper:
         end_time = existing_op_int_details_raw['end_time'],
         alt_max = existing_op_int_details_raw['alt_max'],
         alt_min = existing_op_int_details_raw['alt_min'],
-        success_response = OperationalIntentSubmissionSuccess(subscribers=subscribers,operational_intent_reference= operational_intent_response) ,
+        success_response = OperationalIntentSubmissionSuccess(subscribers=subscribers,operational_intent_reference= operational_intent_reference_dss_repsonse) ,
         operational_intent_details=  operational_intent_details ,
         )
         return stored
@@ -574,7 +571,6 @@ class SCDOperations:
                     )
                     # if o_i_r_formatted.uss_base_url != blender_base_url:
                     all_uss_operational_intent_details.append(o_i_r_formatted)
-
 
             for (
                 current_uss_operational_intent_detail
@@ -940,18 +936,27 @@ class SCDOperations:
         operational_intent_update.keys = airspace_keys
 
         # our priority is 100 there is no need to deconflight the flight.
+    
+        my_ind_volumes_converter = VolumesConverter()
+        my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
+        ind_volumes_polygon = (
+            my_ind_volumes_converter.get_minimum_rotated_rectangle()
+        )
+        is_conflicted = rtree_helper.check_polygon_intersection(
+            op_int_details=all_existing_operational_intent_details,
+            polygon_to_check=ind_volumes_polygon,
+        )
+        print('*******')
+        print(current_state,new_state, is_conflicted)
+        print('*******')
+
         if priority == 100 or new_state=='Nonconforming':
             deconflicted = True
+        elif current_state == 'Activated' and new_state =='Activated':
+            deconflicted = True
+        elif current_state == 'Activated' and new_state =='Activated' and is_conflicted == True:
+            deconflicted = False
         else:
-            my_ind_volumes_converter = VolumesConverter()
-            my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
-            ind_volumes_polygon = (
-                my_ind_volumes_converter.get_minimum_rotated_rectangle()
-            )
-            is_conflicted = rtree_helper.check_polygon_intersection(
-                op_int_details=all_existing_operational_intent_details,
-                polygon_to_check=ind_volumes_polygon,
-            )
             deconflicted = False if is_conflicted else True
         
         if not deconflicted:
@@ -1160,8 +1165,7 @@ class SCDOperations:
                 dss_response = dss_r.json()
                 dss_r_status_code = dss_r.status_code
 
-            if dss_r_status_code == 201:
-                print(dss_response)
+            if dss_r_status_code == 201:                
                 subscribers = dss_response["subscribers"]
                 all_subscribers_to_notify = []
                 for s in subscribers:
