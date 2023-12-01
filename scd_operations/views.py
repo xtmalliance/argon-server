@@ -395,14 +395,15 @@ def SCDAuthTest(request, operation_id):
                     operation_id=operation_id_str
                 )
             )
+            deconfliction_check = True
+            extents = test_injection_data.operational_intent.volumes
+            
             # If it is a non-conforming flight 
             if test_state == "Nonconforming":
-                # extents = stored_operational_intent_details.details.volumes
                 extents = operational_intent_data.off_nominal_volumes
-                
-
-            elif test_state == "Activated":
-                extents= test_injection_data.operational_intent.volumes
+                deconfliction_check = False
+            elif current_state == "Activated" and test_state == "Activated":
+                deconfliction_check = True
 
             update_operational_intent_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
@@ -411,7 +412,7 @@ def SCDAuthTest(request, operation_id):
                 current_state=current_state_str,
                 ovn=stored_operational_intent_details.reference.ovn,
                 subscription_id=stored_operational_intent_details.reference.subscription_id,
-                deconfliction_check=True,
+                deconfliction_check=deconfliction_check,
                 priority=operational_intent_data.priority,
             )
             if update_operational_intent_job.status in [200, 201]:   

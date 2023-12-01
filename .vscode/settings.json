@@ -1,3 +1,5 @@
 {
-    "python.pythonPath": "C:\\Users\\hrish\\Miniconda3\\envs\\windev\\python.exe"
+    "python.pythonPath": "C:\\Users\\hrish\\Miniconda3\\envs\\windev\\python.exe",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true
 }
