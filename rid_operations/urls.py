@@ -15,6 +15,7 @@ Including another URLconf
 """
 
 from django.urls import path
+
 from . import views as rid_views
 
 urlpatterns = [

@@ -6,21 +6,21 @@ from os import environ as env
 import http_sfv
 import jwt
 import requests
-import hashlib, http_sfv
-from django.http import HttpRequest, HttpResponse
-from auth_helper.common import get_redis
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.core.signing import Signer
+from django.http import HttpRequest, HttpResponse
 from dotenv import find_dotenv, load_dotenv
 from http_message_signatures import (
-    HTTPMessageVerifier,
     HTTPMessageSigner,
+    HTTPMessageVerifier,
     HTTPSignatureKeyResolver,
     algorithms,
 )
 from jwcrypto import jwk, jws
 from jwcrypto.common import json_encode
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.hazmat.backends import default_backend
+
+from auth_helper.common import get_redis
 
 from .models import SignedTelmetryPublicKey
 
@@ -47,6 +47,7 @@ class MyHTTPSignatureKeyResolver(HTTPSignatureKeyResolver):
         )
         return private_key
 
+
 class MessageVerifier:
     def get_public_keys(self):
         r = get_redis()
@@ -64,11 +65,7 @@ class MessageVerifier:
                 jwks_data = response.json()
                 if "keys" in jwks_data:
                     jwk = next(
-                        (
-                            item
-                            for item in jwks_data["keys"]
-                            if item["kid"] == current_kid
-                        ),
+                        (item for item in jwks_data["keys"] if item["kid"] == current_kid),
                         None,
                     )
                 else:
@@ -105,22 +102,17 @@ class MessageVerifier:
 
 
 class ResponseSigningOperations:
-        
-    def __init__(self):        
-        self.signing_url = env.get('FLIGHT_PASSPORT_SIGNING_URL', None)        
-        self.signing_client_id = env.get('FLIGHT_PASSPORT_SIGNING_CLIENT_ID')
-        self.signing_client_secret = env.get('FLIGHT_PASSPORT_SIGNING_CLIENT_SECRET')
+    def __init__(self):
+        self.signing_url = env.get("FLIGHT_PASSPORT_SIGNING_URL", None)
+        self.signing_client_id = env.get("FLIGHT_PASSPORT_SIGNING_CLIENT_ID")
+        self.signing_client_secret = env.get("FLIGHT_PASSPORT_SIGNING_CLIENT_SECRET")
 
-        self.signing_key_id = env.get('IETF_SIGNING_KEY_ID', "temp_id")
-        self.signing_key_label = env.get('IETF_SIGNING_KEY_LABEL', "temp_label") 
+        self.signing_key_id = env.get("IETF_SIGNING_KEY_ID", "temp_id")
+        self.signing_key_label = env.get("IETF_SIGNING_KEY_LABEL", "temp_label")
 
     def generate_content_digest(self, payload):
         payload_str = json.dumps(payload)
-        return str(
-            http_sfv.Dictionary(
-                {"sha-256": hashlib.sha256(payload_str.encode("utf-8")).digest()}
-            )
-        )
+        return str(http_sfv.Dictionary({"sha-256": hashlib.sha256(payload_str.encode("utf-8")).digest()}))
 
     def sign_json_via_django(self, data_to_sign):
         signer = Signer()
@@ -153,15 +145,11 @@ class ResponseSigningOperations:
             sig = jws_token.serialize()
             s = json.loads(sig)
 
-            return {
-                "signature": s["protected"] + "." + s["payload"] + "." + s["signature"]
-            }
+            return {"signature": s["protected"] + "." + s["payload"] + "." + s["signature"]}
         else:
             return {}
-        
-    def sign_http_message(
-        self, json_payload, original_request: HttpRequest
-    ) -> HttpResponse:
+
+    def sign_http_message(self, json_payload, original_request: HttpRequest) -> HttpResponse:
         """
         Sign the http response message using IETF standard and returns a HttpResponse object.
         Source: https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/

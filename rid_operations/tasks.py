@@ -1,49 +1,52 @@
-from flight_blender.celery import app
-import logging
-from . import dss_rid_helper
-from auth_helper.common import get_redis
-from .rid_utils import (
-    RIDAircraftPosition,
-    RIDAircraftState,
-    RIDTestInjection,
-    RIDTestDetailsResponse,
-    RIDOperatorDetails,
-    LatLngPoint,
-    RIDHeight,
-    AuthData,
-    SingleObservationMetadata,
-    RIDTestInjectionProcessing,
-    RIDTestDataStorage,
-    FullRequestedFlightDetails,
-    RIDTime,
-    RIDPolygon,
-    RIDAltitude,
-)
-from rid_operations.data_definitions import (
-    SignedUnsignedTelemetryObservation,
-    UAClassificationEU,
-    UASID,
-)
-from flight_feed_operations.rid_telemetry_helper import BlenderTelemetryValidator
-
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
-import time
-import arrow
 import json
-from arrow.parser import ParserError
-from typing import List
+import logging
+import time
 from dataclasses import asdict
+from datetime import timedelta
+from itertools import cycle, islice
 from os import environ as env
+from typing import List
+
+import arrow
+from arrow.parser import ParserError
+from shapely.geometry import MultiPoint, Point, box
+
+from auth_helper.common import get_redis
+from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from flight_blender.celery import app
 from flight_feed_operations import flight_stream_helper
 from flight_feed_operations.data_definitions import SingleRIDObservation
+from flight_feed_operations.rid_telemetry_helper import BlenderTelemetryValidator
 from flight_feed_operations.tasks import write_incoming_air_traffic_data
-from shapely.geometry import Point, MultiPoint, box
-from .rid_utils import RIDVolume3D, RIDVolume4D
-from itertools import cycle, islice
-from datetime import timedelta
+from rid_operations.data_definitions import (
+    UASID,
+    SignedUnsignedTelemetryObservation,
+    UAClassificationEU,
+)
+
+from . import dss_rid_helper
+from .rid_utils import (
+    AuthData,
+    FullRequestedFlightDetails,
+    LatLngPoint,
+    RIDAircraftPosition,
+    RIDAircraftState,
+    RIDAltitude,
+    RIDHeight,
+    RIDOperatorDetails,
+    RIDPolygon,
+    RIDTestDataStorage,
+    RIDTestDetailsResponse,
+    RIDTestInjection,
+    RIDTestInjectionProcessing,
+    RIDTime,
+    RIDVolume3D,
+    RIDVolume4D,
+    SingleObservationMetadata,
+)
 
 logger = logging.getLogger("django")
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
@@ -99,9 +102,7 @@ def poll_uss_for_flights_async():
     r = get_redis()
     flights_dict = {}
     # Get the flights URL from the DSS and put it in
-    for keybatch in flight_stream_helper.batcher(
-        r.scan_iter("all_uss_flights:*"), 100
-    ):  # reasonably we wont have more than 100 subscriptions active
+    for keybatch in flight_stream_helper.batcher(r.scan_iter("all_uss_flights:*"), 100):  # reasonably we wont have more than 100 subscriptions active
         key_batch_set = set(keybatch)
         for key in key_batch_set:
             if key:
@@ -109,9 +110,7 @@ def poll_uss_for_flights_async():
                 logger.debug("Flights Dict %s" % flights_dict)
                 if bool(flights_dict):
                     subscription_id = key.split(":")[1]
-                    myDSSSubscriber.query_uss_for_rid(
-                        flights_dict, all_observations, subscription_id
-                    )
+                    myDSSSubscriber.query_uss_for_rid(flights_dict, all_observations, subscription_id)
 
 
 @app.task(name="stream_rid_telemetry_data")
@@ -124,14 +123,10 @@ def stream_rid_telemetry_data(rid_telemetry_observations):
         current_states = observation["current_states"]
         operation_id = flight_details["id"]
         # Update telemetry received timetamp
-        my_database_writer.update_telemetry_timestamp(
-            flight_declaration_id=operation_id
-        )
+        my_database_writer.update_telemetry_timestamp(flight_declaration_id=operation_id)
 
         for current_state in current_states:
-            observation_and_metadata = SignedUnsignedTelemetryObservation(
-                current_state=current_state, flight_details=flight_details
-            )
+            observation_and_metadata = SignedUnsignedTelemetryObservation(current_state=current_state, flight_details=flight_details)
 
             flight_details_id = flight_details["uas_id"]["serial_number"]
             lat_dd = current_state["position"]["lat"]
@@ -150,9 +145,7 @@ def stream_rid_telemetry_data(rid_telemetry_observations):
                 icao_address=icao_address,
                 metadata=json.dumps(asdict(observation_and_metadata)),
             )
-            msgid = write_incoming_air_traffic_data.delay(
-                json.dumps(asdict(so))
-            )  # Send a job to the task queue
+            msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
             logger.debug("Submitted observation..")
             logger.debug("...")
 
@@ -180,40 +173,33 @@ def stream_rid_test_data(requested_flights):
             fd = provided_flight_detail["details"]
             requested_flight_detail_id = fd["id"]
 
-            op_location = LatLngPoint(
-                lat=fd["operator_location"]["lat"], lng=fd["operator_location"]["lng"]
-            )
+            op_location = LatLngPoint(lat=fd["operator_location"]["lat"], lng=fd["operator_location"]["lng"])
             if "auth_data" in fd.keys():
-                auth_data = AuthData(
-                    format=fd["auth_data"]["format"], data=fd["auth_data"]["data"]
-                )
+                auth_data = AuthData(format=fd["auth_data"]["format"], data=fd["auth_data"]["data"])
             else:
-                auth_data = AuthData(format=0, data="")      
-            serial_number = fd['serial_number'] if 'serial_number' in fd else  'MFR1C123456789ABC'
+                auth_data = AuthData(format=0, data="")
+            serial_number = fd["serial_number"] if "serial_number" in fd else "MFR1C123456789ABC"
             if "uas_id" in fd.keys():
                 uas_id = UASID(
                     specific_session_id=fd["uas_id"]["specific_session_id"],
                     serial_number=fd["uas_id"]["serial_number"],
                     registration_id=fd["uas_id"]["registration_id"],
-                    utm_id=fd["uas_id"]["utm_id"]
+                    utm_id=fd["uas_id"]["utm_id"],
                 )
             else:
                 uas_id = UASID(
-                    specific_session_id= "02-a1b2c3d4e5f60708",
+                    specific_session_id="02-a1b2c3d4e5f60708",
                     serial_number=serial_number,
                     utm_id="ae1fa066-6d68-4018-8274-af867966978e",
-                    registration_id="MFR1C123456789ABC"
+                    registration_id="MFR1C123456789ABC",
                 )
             if "eu_classification" in fd.keys():
                 eu_classification = UAClassificationEU(
                     category=fd["eu_classification"]["category"],
-                    class_=fd["eu_classification"]["class"]
+                    class_=fd["eu_classification"]["class"],
                 )
             else:
-                eu_classification = UAClassificationEU(
-                    category="EUCategoryUndefined",
-                    class_="EUClassUndefined"
-                )
+                eu_classification = UAClassificationEU(category="EUCategoryUndefined", class_="EUClassUndefined")
 
             flight_detail = RIDOperatorDetails(
                 id=requested_flight_detail_id,
@@ -234,7 +220,7 @@ def stream_rid_test_data(requested_flights):
             all_flight_details.append(pfd)
 
             flight_details_storage = "flight_details:" + requested_flight_detail_id
-            
+
             r.set(flight_details_storage, json.dumps(asdict(flight_detail)))
             # expire in 5 mins
             r.expire(flight_details_storage, time=3000)
@@ -243,9 +229,7 @@ def stream_rid_test_data(requested_flights):
         for telemetry_id, provided_telemetry in enumerate(provided_telemetries):
             pos = provided_telemetry["position"]
             # In provided telemetry position and pressure altitude and extrapolated values are optional use if provided else generate them.
-            pressure_altitude = (
-                pos["pressure_altitude"] if "pressure_altitude" in pos else 0.0
-            )
+            pressure_altitude = pos["pressure_altitude"] if "pressure_altitude" in pos else 0.0
             extrapolated = pos["extrapolated"] if "extrapolated" in pos else 0
 
             llp = LatLngPoint(lat=pos["lat"], lng=pos["lng"])
@@ -275,7 +259,7 @@ def stream_rid_test_data(requested_flights):
                 logger.info("Error in parsing telemetry timestamp")
             else:
                 t = RIDAircraftState(
-                    timestamp=RIDTime(value=provided_telemetry["timestamp"],format='RFC3339'),
+                    timestamp=RIDTime(value=provided_telemetry["timestamp"], format="RFC3339"),
                     timestamp_accuracy=provided_telemetry["timestamp_accuracy"],
                     operational_status=provided_telemetry["operational_status"],
                     position=position,
@@ -285,21 +269,13 @@ def stream_rid_test_data(requested_flights):
                     vertical_speed=provided_telemetry["vertical_speed"],
                     height=height,
                 )
-                # 
+                #
                 closest_details_response = min(
                     all_flight_details,
-                    key=lambda d: abs(
-                        arrow.get(d.effective_after) - formatted_timestamp
-                    ),
+                    key=lambda d: abs(arrow.get(d.effective_after) - formatted_timestamp),
                 )
-                flight_state_storage = RIDTestDataStorage(
-                    flight_state=t, details_response=closest_details_response
-                )
-                zadd_struct = {
-                    json.dumps(
-                        asdict(flight_state_storage)
-                    ): formatted_timestamp.int_timestamp
-                }
+                flight_state_storage = RIDTestDataStorage(flight_state=t, details_response=closest_details_response)
+                zadd_struct = {json.dumps(asdict(flight_state_storage)): formatted_timestamp.int_timestamp}
                 # Add these as a sorted set in Redis
                 r.zadd(flight_injection_sorted_set, zadd_struct)
                 all_telemetry.append(t)
@@ -312,15 +288,11 @@ def stream_rid_test_data(requested_flights):
 
         all_requested_flights.append(requested_flight)
 
-    start_time_of_injection_list = r.zrange(
-        flight_injection_sorted_set, 0, 0, withscores=True
-    )
+    start_time_of_injection_list = r.zrange(flight_injection_sorted_set, 0, 0, withscores=True)
     start_time_of_injections = arrow.get(start_time_of_injection_list[0][1])
 
     # Computing when the requested flight data will end
-    end_time_of_injection_list = r.zrevrange(
-        flight_injection_sorted_set, 0, 0, withscores=True
-    )
+    end_time_of_injection_list = r.zrevrange(flight_injection_sorted_set, 0, 0, withscores=True)
     end_time_of_injections = arrow.get(end_time_of_injection_list[0][1])
 
     logger.info("Provided Telemetry Starts at %s" % start_time_of_injections)
@@ -331,17 +303,10 @@ def stream_rid_test_data(requested_flights):
     provided_telemetry_item_length = r.zcard(flight_injection_sorted_set)
     logger.info("Provided Telemetry Item Count: %s" % provided_telemetry_item_length)
 
-    provided_telemetry_duration_seconds = (
-        end_time_of_injections - start_time_of_injections
-    ).total_seconds()
-    logger.info(
-        "Provided Telemetry Duration in seconds: %s"
-        % provided_telemetry_duration_seconds
-    )
+    provided_telemetry_duration_seconds = (end_time_of_injections - start_time_of_injections).total_seconds()
+    logger.info("Provided Telemetry Duration in seconds: %s" % provided_telemetry_duration_seconds)
     ASTM_TIME_SHIFT_SECS = 65  # Enable querying for upto sixty seconds after end time.
-    astm_rid_standard_end_time = end_time_of_injections.shift(
-        seconds=ASTM_TIME_SHIFT_SECS
-    )
+    astm_rid_standard_end_time = end_time_of_injections.shift(seconds=ASTM_TIME_SHIFT_SECS)
 
     # Create an ISA in the DSS
     position_list: List[Point] = []
@@ -361,12 +326,8 @@ def stream_rid_test_data(requested_flights):
     polygon_verticies.pop()
     outline_polygon = RIDPolygon(vertices=polygon_verticies)
     # Buffer the altitude by 5 m
-    altitude_lower = RIDAltitude(
-        value=min(all_altitudes) - 5, reference="W84", units="M"
-    )
-    altitude_upper = RIDAltitude(
-        value=min(all_altitudes) + 5, reference="W84", units="M"
-    )
+    altitude_lower = RIDAltitude(value=min(all_altitudes) - 5, reference="W84", units="M")
+    altitude_upper = RIDAltitude(value=min(all_altitudes) + 5, reference="W84", units="M")
 
     volume3D = RIDVolume3D(
         outline_polygon=outline_polygon,
@@ -376,9 +337,7 @@ def stream_rid_test_data(requested_flights):
     volume4D = RIDVolume4D(
         volume=volume3D,
         time_start=RIDTime(value=isa_start_time.isoformat(), format="RFC3339"),
-        time_end=RIDTime(
-            value=astm_rid_standard_end_time.isoformat(), format="RFC3339"
-        ),
+        time_end=RIDTime(value=astm_rid_standard_end_time.isoformat(), format="RFC3339"),
     )
 
     uss_base_url = env.get("BLENDER_FQDN", "http://host.docker.internal:8000")
@@ -391,12 +350,8 @@ def stream_rid_test_data(requested_flights):
     r.expire(flight_injection_sorted_set, time=3000)
     time.sleep(2)  # Wait 2 seconds before starting mission
     should_continue = True
-    query_target = (
-        provided_telemetry_item_length + ASTM_TIME_SHIFT_SECS
-    )  # one per second
-    all_telemetry_details = r.zrange(
-        flight_injection_sorted_set, 0, -1, withscores=True
-    )
+    query_target = provided_telemetry_item_length + ASTM_TIME_SHIFT_SECS  # one per second
+    all_telemetry_details = r.zrange(flight_injection_sorted_set, 0, -1, withscores=True)
     all_timestamps = []
     for telemetry_id, cur_telemetry_detail in enumerate(all_telemetry_details):
         all_timestamps.append(cur_telemetry_detail[1])
@@ -413,11 +368,7 @@ def stream_rid_test_data(requested_flights):
             "closest_observation_count": len(closest_observations),
             "q_time": query_time.isoformat(),
         }
-        logger.info(
-            "Closest observations: {closest_observation_count} found, at query time {q_time}".format(
-                **obs_query_dict
-            )
-        )
+        logger.info("Closest observations: {closest_observation_count} found, at query time {q_time}".format(**obs_query_dict))
         for closest_observation in closest_observations:
             c_o = json.loads(closest_observation)
             single_telemetry_data = c_o["flight_state"]
@@ -443,9 +394,7 @@ def stream_rid_test_data(requested_flights):
                 icao_address=icao_address,
                 metadata=json.dumps(asdict(observation_metadata)),
             )
-            msgid = write_incoming_air_traffic_data.delay(
-                json.dumps(asdict(so))
-            )  # Send a job to the task queue
+            msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
             logger.debug("Submitted flight observation..")
 
     r.expire(flight_injection_sorted_set, time=3000)
@@ -459,18 +408,11 @@ def stream_rid_test_data(requested_flights):
 
         elif now > end_time_of_injections:
             # the current time is more than the end time for flight injection, we must provide closest observation
-            seconds_now_after_end_of_injections = (
-                now - end_time_of_injections
-            ).total_seconds()
-            q_index = (
-                provided_telemetry_item_length + seconds_now_after_end_of_injections
-            )
+            seconds_now_after_end_of_injections = (now - end_time_of_injections).total_seconds()
+            q_index = provided_telemetry_item_length + seconds_now_after_end_of_injections
             query_time = arrow.get(query_time_lookup[int(q_index)])
-            logger.info(
-                "Exceeded normal end time of injections, looking up iteration, query time: %s"
-                % query_time.isoformat()
-            )
-            
+            logger.info("Exceeded normal end time of injections, looking up iteration, query time: %s" % query_time.isoformat())
+
         _stream_data(query_time=query_time)
         # Sleep for .2 seconds before submitting the next iteration.
         time.sleep(0.2)

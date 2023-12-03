@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class DssOperationsConfig(AppConfig):
-    name = 'rid_operations'
+    name = "rid_operations"

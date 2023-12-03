@@ -1,14 +1,14 @@
-from django.core.management.base import BaseCommand, CommandError
-from os import environ as env
-from common.database_operations import BlenderDatabaseReader
-import arrow
-from common.database_operations import BlenderDatabaseReader
-from dotenv import load_dotenv, find_dotenv
-import logging
-from auth_helper.common import get_redis
-import logging
-from scd_operations.dss_scd_helper import SCDOperations
 import json
+import logging
+from os import environ as env
+
+import arrow
+from django.core.management.base import BaseCommand, CommandError
+from dotenv import find_dotenv, load_dotenv
+
+from auth_helper.common import get_redis
+from common.database_operations import BlenderDatabaseReader
+from scd_operations.dss_scd_helper import SCDOperations
 
 load_dotenv(find_dotenv())
 
@@ -51,24 +51,14 @@ class Command(BaseCommand):
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
-            raise CommandError(
-                "Incomplete command, Flight Declaration ID not provided %s" % e
-            )
+            raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
 
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         if not flight_declaration:
             raise CommandError(
-                "Flight Declaration with ID {flight_declaration_id} does not exist".format(
-                    flight_declaration_id=flight_declaration_id
-                )
+                "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
-        flight_authorization = (
-            my_database_reader.get_flight_authorization_by_flight_declaration_obj(
-                flight_declaration=flight_declaration
-            )
-        )
+        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=flight_declaration)
         dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
 
         r = get_redis()
@@ -78,37 +68,25 @@ class Command(BaseCommand):
         if r.exists(flight_opint):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
-            reference_full = op_int_details["success_response"][
-                "operational_intent_reference"
-            ]
+            reference_full = op_int_details["success_response"]["operational_intent_reference"]
             stored_ovn = reference_full["ovn"]
             try:
                 flight_declaration_id = options["flight_declaration_id"]
             except Exception as e:
-                raise CommandError(
-                    "Incomplete command, Flight Declaration ID not provided %s" % e
-                )
+                raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
 
             # Get the flight declaration
 
             my_database_reader = BlenderDatabaseReader()
             now = arrow.now().isoformat()
 
-            flight_declaration = my_database_reader.get_flight_declaration_by_id(
-                flight_declaration_id=flight_declaration_id
-            )
+            flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
             if not flight_declaration:
                 raise CommandError(
-                    "Flight Declaration with ID {flight_declaration_id} does not exist".format(
-                        flight_declaration_id=flight_declaration_id
-                    )
+                    "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
                 )
 
-            flight_authorization = (
-                my_database_reader.get_flight_authorization_by_flight_declaration(
-                    flight_declaration_id=flight_declaration_id
-                )
-            )
+            flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
             if not dry_run:
                 operation_removal_status = my_scd_dss_helper.delete_operational_intent(
                     dss_operational_intent_ref_id=dss_operational_intent_ref_id,
@@ -124,8 +102,4 @@ class Command(BaseCommand):
                     logger.info("Error in deleting operational intent from DSS")
 
             else:
-                logger.info(
-                    "Error in removing {flight_declaration_id} reference  from DSS".format(
-                        flight_declaration_id=flight_declaration_id
-                    )
-                )
+                logger.info("Error in removing {flight_declaration_id} reference  from DSS".format(flight_declaration_id=flight_declaration_id))

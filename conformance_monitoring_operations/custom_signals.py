@@ -1,11 +1,14 @@
-from django.dispatch import receiver
+import logging
+
 import django.dispatch
 from django.core import management
-from .operator_conformance_notifications import OperationConformanceNotification
-import logging
-from .conformance_state_helper import ConformanceChecksList
+from django.dispatch import receiver
+
 from common.database_operations import BlenderDatabaseReader
+
 from .conformance_checks_handler import FlightOperationConformanceHelper
+from .conformance_state_helper import ConformanceChecksList
+from .operator_conformance_notifications import OperationConformanceNotification
 
 logger = logging.getLogger("django")
 # Declare signals
@@ -19,9 +22,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
 
     non_conformance_state = int(kwargs["non_conformance_state"])
     flight_declaration_id = kwargs["flight_declaration_id"]
-    my_operation_notification = OperationConformanceNotification(
-        flight_declaration_id=flight_declaration_id
-    )
+    my_operation_notification = OperationConformanceNotification(flight_declaration_id=flight_declaration_id)
     my_conformance_checks_handler = FlightOperationConformanceHelper()
     # Check the conformance notification status and notification rules
     message = "{} -- {}".format(sender, kwargs["non_conformance_state"])
@@ -34,9 +35,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(invalid_aircraft_id_msg)
-        my_operation_notification.send_conformance_status_notification(
-            message=invalid_aircraft_id_msg, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=invalid_aircraft_id_msg, level="error")
         new_state = 4
         event = "blender_confirms_contingent"
 
@@ -45,9 +44,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(flight_state_not_correct_msg)
-        my_operation_notification.send_conformance_status_notification(
-            message=flight_state_not_correct_msg, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=flight_state_not_correct_msg, level="error")
         event = "blender_confirms_contingent"
         new_state = 3
 
@@ -56,20 +53,18 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(telemetry_timestamp_not_within_op_start_end_msg)
-        my_operation_notification.send_conformance_status_notification(
-            message=telemetry_timestamp_not_within_op_start_end_msg, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=telemetry_timestamp_not_within_op_start_end_msg, level="error")
         new_state = 3
         event = "ua_departs_early_late"
 
     elif non_conformance_state_code == "C7a":
-        aircraft_altitude_nonconformant_msg = "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the altitude bounds C7a check failed.".format(
-            flight_declaration_id=flight_declaration_id
+        aircraft_altitude_nonconformant_msg = (
+            "The telemetry timestamp provided for operation {flight_declaration_id}, is not within the altitude bounds C7a check failed.".format(
+                flight_declaration_id=flight_declaration_id
+            )
         )
         logger.error(aircraft_altitude_nonconformant_msg)
-        my_operation_notification.send_conformance_status_notification(
-            message=aircraft_altitude_nonconformant_msg, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=aircraft_altitude_nonconformant_msg, level="error")
         new_state = 3
         event = "ua_exits_coordinated_op_intent"
 
@@ -78,9 +73,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(aircraft_bounds_nonconformant_msg)
-        my_operation_notification.send_conformance_status_notification(
-            message=aircraft_bounds_nonconformant_msg, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=aircraft_bounds_nonconformant_msg, level="error")
         new_state = 3
         event = "ua_exits_coordinated_op_intent"
 
@@ -88,22 +81,15 @@ def process_telemetry_conformance_message(sender, **kwargs):
     if event:
         my_blender_database_reader = BlenderDatabaseReader()
 
-        fd = my_blender_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
+        fd = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         original_state = fd.state
         fd.add_state_history_entry(
             original_state=original_state,
             new_state=new_state,
-            notes="State changed by telemetry conformance checks: %s"
-            % non_conformance_state_code,
+            notes="State changed by telemetry conformance checks: %s" % non_conformance_state_code,
         )
-        my_conformance_helper = FlightOperationConformanceHelper(
-            flight_declaration_id=flight_declaration_id
-        )
-        my_conformance_helper.manage_operation_state_transition(
-            original_state=original_state, new_state=new_state, event=event
-        )
+        my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=flight_declaration_id)
+        my_conformance_helper.manage_operation_state_transition(original_state=original_state, new_state=new_state, event=event)
 
 
 @receiver(flight_authorization_non_conformance_signal)
@@ -111,19 +97,17 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
     """This method checks if the telemetry provided is conformant to the declared operation states, if it is not then the state of the operation is assigned as non-conforming (3) or contingent (4)"""
     non_conformance_state = kwargs["non_conformance_state"]
     flight_declaration_id = kwargs["flight_declaration_id"]
-    my_operation_notification = OperationConformanceNotification(
-        flight_declaration_id=flight_declaration_id
-    )
+    my_operation_notification = OperationConformanceNotification(flight_declaration_id=flight_declaration_id)
 
     non_conformance_state_code = ConformanceChecksList.state_code(non_conformance_state)
     event = None
     if non_conformance_state_code == "C9a":
-        telemetry_not_being_received_error_msg = "The telemetry for operation {flight_declaration_id}, has not been received in the past 15 seconds. Check C9a Failed".format(
-            flight_declaration_id=flight_declaration_id
+        telemetry_not_being_received_error_msg = (
+            "The telemetry for operation {flight_declaration_id}, has not been received in the past 15 seconds. Check C9a Failed".format(
+                flight_declaration_id=flight_declaration_id
+            )
         )
-        my_operation_notification.send_conformance_status_notification(
-            message=telemetry_not_being_received_error_msg, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=telemetry_not_being_received_error_msg, level="error")
 
         event = "timeout"
         new_state = 4
@@ -133,9 +117,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(telemetry_never_received_error_msg)
-        my_operation_notification.send_conformance_status_notification(
-            message=telemetry_never_received_error_msg, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=telemetry_never_received_error_msg, level="error")
 
         event = "blender_confirms_contingent"
         new_state = 4
@@ -145,9 +127,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
             flight_declaration_id=flight_declaration_id
         )
         logger.error(flight_state_not_conformant)
-        my_operation_notification.send_conformance_status_notification(
-            message=flight_state_not_conformant, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=flight_state_not_conformant, level="error")
         event = "blender_confirms_contingent"
         new_state = 4
     elif non_conformance_state_code == "C11":
@@ -157,26 +137,17 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         logger.error(flight_state_not_conformant)
 
         new_state = 4
-        my_operation_notification.send_conformance_status_notification(
-            message=authorization_not_granted_message, level="error"
-        )
+        my_operation_notification.send_conformance_status_notification(message=authorization_not_granted_message, level="error")
         event = "blender_confirms_contingent"
     # The operation is non-conforming, need to update the operational intent in the dss and notify peer USSP
     if event:
         my_blender_database_reader = BlenderDatabaseReader()
-        fd = my_blender_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
+        fd = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         original_state = fd.state
         fd.add_state_history_entry(
             original_state=original_state,
             new_state=new_state,
-            notes="State changed by flight authorization checks because of telemetry non-conformance: %s"
-            % non_conformance_state_code,
+            notes="State changed by flight authorization checks because of telemetry non-conformance: %s" % non_conformance_state_code,
         )
-        my_conformance_helper = FlightOperationConformanceHelper(
-            flight_declaration_id=flight_declaration_id
-        )
-        my_conformance_helper.manage_operation_state_transition(
-            original_state=original_state, new_state=new_state, event=event
-        )
+        my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=flight_declaration_id)
+        my_conformance_helper.manage_operation_state_transition(original_state=original_state, new_state=new_state, event=event)

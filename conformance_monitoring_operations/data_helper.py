@@ -1,11 +1,11 @@
 from scd_operations.scd_data_definitions import (
+    Altitude,
+    Circle,
     LatLngPoint,
     Polygon,
     Radius,
-    Circle,
-    Altitude,
-    Volume3D,
     Time,
+    Volume3D,
     Volume4D,
 )
 
@@ -54,12 +54,8 @@ def cast_to_volume4d(volume) -> Volume4D:
         altitude_upper=altitude_upper,
     )
 
-    time_start = Time(
-        format=volume["time_start"]["format"], value=volume["time_start"]["value"]
-    )
-    time_end = Time(
-        format=volume["time_end"]["format"], value=volume["time_end"]["value"]
-    )
+    time_start = Time(format=volume["time_start"]["format"], value=volume["time_start"]["value"])
+    time_end = Time(format=volume["time_end"]["format"], value=volume["time_end"]["value"])
 
     volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
 

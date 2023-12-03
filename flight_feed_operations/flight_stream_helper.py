@@ -1,12 +1,13 @@
-from datetime import datetime, timedelta
-import os
 import json
 import logging
-import requests
-
-from auth_helper.common import get_walrus_database, get_redis
+import os
+from datetime import datetime, timedelta
 from itertools import zip_longest
-from dotenv import load_dotenv, find_dotenv
+
+import requests
+from dotenv import find_dotenv, load_dotenv
+
+from auth_helper.common import get_redis, get_walrus_database
 
 load_dotenv(find_dotenv())
 from os import environ as env
@@ -49,6 +50,7 @@ class StreamHelperOps:
             cg.set_id("$")
 
         return cg
+
 
 class ObservationReadOperations:
     def get_observations(self, cg):
