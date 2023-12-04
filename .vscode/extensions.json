@@ -1,0 +1,6 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "sonarsource.sonarlint-vscode"
+    ]
+}

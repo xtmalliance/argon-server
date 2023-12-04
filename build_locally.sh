@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-docker build . -t openskiessh/flight-blender
+docker build --platform linux/amd64 -t openskiessh/flight-blender .
