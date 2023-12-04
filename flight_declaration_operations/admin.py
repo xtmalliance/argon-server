@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import FlightDeclaration, FlightAuthorization
+
+from .models import FlightAuthorization, FlightDeclaration
 
 # Register your models here.
 

@@ -1,11 +1,14 @@
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
-from .operation_state_helper import FlightOperationStateMachine, match_state, get_status
-from django.core import management
-from dotenv import load_dotenv, find_dotenv
-from .models import TaskScheduler
+import logging
 import os
 from os import environ as env
-import logging
+
+from django.core import management
+from dotenv import find_dotenv, load_dotenv
+
+from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+
+from .models import TaskScheduler
+from .operation_state_helper import FlightOperationStateMachine, get_status, match_state
 
 load_dotenv(find_dotenv())
 
@@ -24,18 +27,12 @@ class FlightOperationConformanceHelper:
     def __init__(self, flight_declaration_id: str):
         self.flight_declaration_id = flight_declaration_id
         self.database_reader = BlenderDatabaseReader()
-        self.flight_declaration = self.database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=self.flight_declaration_id
-        )
+        self.flight_declaration = self.database_reader.get_flight_declaration_by_id(flight_declaration_id=self.flight_declaration_id)
         self.database_writer = BlenderDatabaseWriter()
-        self.ENABLE_CONFORMANCE_MONITORING = int(
-            os.getenv("ENABLE_CONFORMANCE_MONITORING", 0)
-        )
+        self.ENABLE_CONFORMANCE_MONITORING = int(os.getenv("ENABLE_CONFORMANCE_MONITORING", 0))
         self.USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
 
-    def verify_operation_state_transition(
-        self, original_state: int, new_state: int, event: str
-    ) -> bool:
+    def verify_operation_state_transition(self, original_state: int, new_state: int, event: str) -> bool:
         """
         This class updates the state of a flight operation.
         """
@@ -51,9 +48,7 @@ class FlightOperationConformanceHelper:
         else:
             return True
 
-    def manage_operation_state_transition(
-        self, original_state: int, new_state: int, event: str
-    ):
+    def manage_operation_state_transition(self, original_state: int, new_state: int, event: str):
         """
         This method manages the communication with DSS once a new state has been received by the POST method
         """
@@ -68,15 +63,9 @@ class FlightOperationConformanceHelper:
 
                 if self.ENABLE_CONFORMANCE_MONITORING:
                     # Remove the conformance monitoring periodic job
-                    conformance_monitoring_job = (
-                        self.database_reader.get_conformance_monitoring_task(
-                            flight_declaration=self.flight_declaration
-                        )
-                    )
+                    conformance_monitoring_job = self.database_reader.get_conformance_monitoring_task(flight_declaration=self.flight_declaration)
                     if conformance_monitoring_job:
-                        self.database_writer.remove_conformance_monitoring_periodic_task(
-                            conformance_monitoring_task=conformance_monitoring_job
-                        )
+                        self.database_writer.remove_conformance_monitoring_periodic_task(conformance_monitoring_task=conformance_monitoring_job)
 
         elif new_state == 4:  # handle entry into contingent state
             if original_state == 2 and event in [
@@ -139,9 +128,7 @@ class FlightOperationConformanceHelper:
                     )
                     if conformance_monitoring_job:
                         logger.info(
-                            "Created conformance monitoring job for {flight_declaration_id}".format(
-                                flight_declaration_id=self.flight_declaration_id
-                            )
+                            "Created conformance monitoring job for {flight_declaration_id}".format(flight_declaration_id=self.flight_declaration_id)
                         )
                     else:
                         logger.info(

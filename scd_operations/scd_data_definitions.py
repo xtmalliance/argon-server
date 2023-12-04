@@ -1,10 +1,11 @@
-from dataclasses import dataclass
-from uuid import uuid4
 import enum
-import arrow
+from dataclasses import dataclass
 from typing import List, Literal, Optional, Union
-from shapely.geometry import Polygon
+from uuid import uuid4
+
+import arrow
 from implicitdict import StringBasedDateTime
+from shapely.geometry import Polygon
 
 
 @dataclass
@@ -29,14 +30,6 @@ class Time:
 
     format: str
     value: StringBasedDateTime
-
-
-@dataclass
-class Radius:
-    """A class to hold the radius object"""
-
-    value: float
-    units: str
 
 
 @dataclass
@@ -232,9 +225,7 @@ class CapabilitiesResponse:
 class DeleteFlightResponse:
     """Delete flight status response"""
 
-    result: Literal[
-        DeleteFlightStatusResponseEnum.Failed, DeleteFlightStatusResponseEnum.Closed
-    ]
+    result: Literal[DeleteFlightStatusResponseEnum.Failed, DeleteFlightStatusResponseEnum.Closed]
     notes: str
 
 
@@ -355,9 +346,7 @@ class OperationalIntentSubmissionError:
 
 @dataclass
 class OperationalIntentSubmissionStatus:
-    dss_response: Union[
-        OperationalIntentSubmissionSuccess, OperationalIntentSubmissionError
-    ]
+    dss_response: Union[OperationalIntentSubmissionSuccess, OperationalIntentSubmissionError]
     status: str
     status_code: int
     message: str

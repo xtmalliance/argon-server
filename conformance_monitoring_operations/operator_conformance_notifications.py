@@ -1,7 +1,9 @@
-from flight_declaration_operations.tasks import send_operational_update_message
-from dotenv import load_dotenv, find_dotenv
-from os import environ as env
 import logging
+from os import environ as env
+
+from dotenv import find_dotenv, load_dotenv
+
+from flight_declaration_operations.tasks import send_operational_update_message
 
 load_dotenv(find_dotenv())
 
@@ -20,9 +22,5 @@ class OperationConformanceNotification:
             )
         else:
             # If no AMQP is specified then
-            logger.error(
-                "Conformance Notification for {operation_id}".format(
-                    operation_id=self.flight_declaration_id
-                )
-            )
+            logger.error("Conformance Notification for {operation_id}".format(operation_id=self.flight_declaration_id))
             logger.error(message)

@@ -1,8 +1,10 @@
 # Code reference: https://gis.stackexchange.com/a/327046
 # Source: https://gist.github.com/harshithjv/bcd3fef5661ce0a2ec20224e8e4ac415
 import json
+
 import shapely.geometry as shp_geo
 from shapely.geometry import Polygon as ShpPolygon
+
 
 def toFromUTM(shp, proj, inv=False):
     """
@@ -22,21 +24,21 @@ def toFromUTM(shp, proj, inv=False):
     """
     geoInterface = shp.__geo_interface__
 
-    shpType = geoInterface['type']
-    coords = geoInterface['coordinates']
+    shpType = geoInterface["type"]
+    coords = geoInterface["coordinates"]
 
-    if shpType == 'Polygon':
+    if shpType == "Polygon":
         newCoord = [[proj(*point, inverse=inv) for point in linring] for linring in coords]
-    elif shpType == 'MultiPolygon':
+    elif shpType == "MultiPolygon":
         newCoord = [[[proj(*point, inverse=inv) for point in linring] for linring in poly] for poly in coords]
-    elif shpType == 'LineString':
+    elif shpType == "LineString":
         newCoord = [proj(*point, inverse=inv) for point in coords]
-    elif shpType == 'Point':
+    elif shpType == "Point":
         newCoord = proj(*coords, inverse=inv)
 
-    return shp_geo.shape({'type': shpType, 'coordinates': tuple(newCoord)})
+    return shp_geo.shape({"type": shpType, "coordinates": tuple(newCoord)})
 
 
-def convert_shapely_to_geojson(shp:ShpPolygon) -> str:
+def convert_shapely_to_geojson(shp: ShpPolygon) -> str:
     shp_polygon = shp_geo.mapping(shp)
     return json.dumps(shp_polygon)

@@ -17,9 +17,7 @@ class StandardResultsSetPagination(PageNumberPagination):
                     "previous": self.get_previous_link(),
                 },
                 "total": self.page.paginator.count,
-                "page": math.ceil(
-                    int(self.request.GET.get("page", 1))
-                ),  # can not set default = self.page
+                "page": math.ceil(int(self.request.GET.get("page", 1))),  # can not set default = self.page
                 "pages": int(math.ceil(self.page.paginator.count / self.page_size)),
                 "page_size": int(self.request.GET.get("page_size", self.page_size)),
                 "results": data,

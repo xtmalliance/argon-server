@@ -18,17 +18,17 @@ from django.urls import path
 
 from . import views as uss_operations_views
 
-
-
 urlpatterns = [
     # USS Details Urls
-    # This end point is used when op-intent details is used by the USS: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#section/Authentication 
-    # path('v1/operational_intents', uss_operations_views.USSUpdateOpIntDetails),        
-    path('v1/operational_intents/<uuid:opint_id>', uss_operations_views.USSOpIntDetails),        
-    path('v1/operational_intents/<uuid:opint_id>/telemetry', uss_operations_views.USSOpIntDetailTelemetry),        
-    path('v1/operational_intents', uss_operations_views.USSUpdateOpIntDetails),  
-    # end points for remote id    
-    path('flights/<str:flight_id>/details', uss_operations_views.get_uss_flight_details),
-    path('flights', uss_operations_views.get_uss_flights)
-
+    # This end point is used when op-intent details is used by the USS: https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#section/Authentication
+    # path('v1/operational_intents', uss_operations_views.USSUpdateOpIntDetails),
+    path("v1/operational_intents/<uuid:opint_id>", uss_operations_views.USSOpIntDetails),
+    path(
+        "v1/operational_intents/<uuid:opint_id>/telemetry",
+        uss_operations_views.USSOpIntDetailTelemetry,
+    ),
+    path("v1/operational_intents", uss_operations_views.USSUpdateOpIntDetails),
+    # end points for remote id
+    path("flights/<str:flight_id>/details", uss_operations_views.get_uss_flight_details),
+    path("flights", uss_operations_views.get_uss_flights),
 ]
