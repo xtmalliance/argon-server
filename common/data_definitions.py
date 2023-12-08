@@ -31,3 +31,6 @@ OPERATOR_EVENT_LOOKUP = {
     2: "operator_activates",
     4: "operator_initiates_contingent",
 }
+
+
+FLIGHT_OPINT_KEY = "flight_opint."

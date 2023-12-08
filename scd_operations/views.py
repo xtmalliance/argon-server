@@ -2,7 +2,6 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 import json
 import arrow
-import time
 from typing import List
 from auth_helper.utils import requires_scopes
 from rest_framework.response import Response

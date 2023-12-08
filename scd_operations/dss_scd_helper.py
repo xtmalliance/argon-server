@@ -14,6 +14,7 @@ from shapely.geometry import Point, Polygon
 import shapely.geometry
 from pyproj import Proj
 from os import environ as env
+from common.data_definitions import FLIGHT_OPINT_KEY
 from .scd_data_definitions import (
     ImplicitSubscriptionParameters,
     Volume3D,
@@ -48,11 +49,10 @@ from .scd_data_definitions import (
     OperationalIntentUpdateErrorResponse,
     OperationalIntentTestInjection,    
     OperationalIntentStorage,
-    OperationalIntentReferenceDSSResponse
+    
 )
-from .scd_data_definitions import Polygon as Plgn, SubscriptionState
+from .scd_data_definitions import Polygon as Plgn
 from common.auth_token_audience_helper import generate_audience_from_base_url
-from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
@@ -81,6 +81,7 @@ class OperationalIntentValidator:
         try:
             assert self.operational_intent_data.state in ["Accepted", "Activated","Nonconforming"]
         except AssertionError as ae:
+            logger.error(ae)
             return False
         else:
             return True
@@ -249,7 +250,7 @@ class OperationalIntentReferenceHelper:
 
     def parse_stored_operational_intent_details(self, operation_id:str)-> OperationalIntentStorage:
         r = get_redis()
-        flight_opint = "flight_opint." + str(operation_id)
+        flight_opint = FLIGHT_OPINT_KEY + str(operation_id)
 
         op_int_details_raw = r.get(flight_opint)
         existing_op_int_details_raw  = json.loads(op_int_details_raw)
@@ -271,7 +272,7 @@ class OperationalIntentReferenceHelper:
         priority = operational_intent_details_raw['priority']
         state = operational_intent_details_raw['state']
 
-        operational_intent_reference_dss_repsonse = self.parse_and_load_stored_flight_opint(operation_id)
+        
         operational_intent_reference_dss_repsonse = OperationalIntentReferenceDSSResponse(id= operational_intent_respose_raw['id'], manager= operational_intent_respose_raw['manager'], uss_availability= operational_intent_respose_raw['uss_availability'], version= operational_intent_respose_raw['version'],state=operational_intent_respose_raw['state'], ovn =operational_intent_respose_raw['ovn'], time_start=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), time_end=Time(format=operational_intent_respose_raw['time_start']['format'], value = operational_intent_respose_raw['time_start']['value']), uss_base_url= operational_intent_respose_raw['uss_base_url'], subscription_id=operational_intent_respose_raw['subscription_id'],)
 
         all_volumes: List[Volume4D] = []
@@ -307,7 +308,7 @@ class OperationalIntentReferenceHelper:
         Given a stored flight operational intent, get the details of the operational intent
         """
         r = get_redis()
-        flight_opint = "flight_opint." + str(operation_id)
+        flight_opint =FLIGHT_OPINT_KEY + str(operation_id)
         if r.exists(flight_opint):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
@@ -589,7 +590,7 @@ class SCDOperations:
                     opint_ref_raw = r.get(opint_flightref)
                     opint_ref = json.loads(opint_ref_raw)
                     opint_id = opint_ref["operation_id"]
-                    flight_opint = "flight_opint." + opint_id
+                    flight_opint = FLIGHT_OPINT_KEY + opint_id
 
                     if r.exists(flight_opint):
                         op_int_details_raw = r.get(flight_opint)
@@ -858,13 +859,13 @@ class SCDOperations:
         audience: str,
     ):
         """This method posts operaitonal intent details to peer USS via a POST request to /uss/v1/operational_intents"""
+        auth_token = self.get_auth_token(audience=audience)
+
         notification_url = uss_base_url + "uss/v1/operational_intents"
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
         }
-
-        auth_token = self.get_auth_token(audience=audience)
 
         uss_r = requests.post(
             notification_url,

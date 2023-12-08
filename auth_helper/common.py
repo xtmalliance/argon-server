@@ -1,11 +1,11 @@
 import redis
 from walrus import Database
 import logging
+from os import environ as env
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 logger = logging.getLogger('django')
 
-from os import environ as env
 
 def get_redis():
     # A method to get the redis instance and is used globally

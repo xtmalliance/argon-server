@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from uuid import uuid4
 import enum
-import arrow
 from typing import List, Literal, Optional, Union
 from shapely.geometry import Polygon
 from implicitdict import StringBasedDateTime
