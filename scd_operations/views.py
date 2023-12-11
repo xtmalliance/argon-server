@@ -41,10 +41,9 @@ from auth_helper.common import get_redis
 import logging
 from common.database_operations import BlenderDatabaseWriter, BlenderDatabaseReader
 from uuid import UUID
-from os import environ as env
 from dotenv import load_dotenv, find_dotenv
-from auth_helper.common import RedisHelper
 from .scd_test_harness_helper import SCDTestHarnessHelper
+from common.data_definitions import FLIGHT_OPINT_KEY
 
 load_dotenv(find_dotenv())
 INDEX_NAME = "opint_proc"
@@ -69,7 +68,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 @api_view(["GET"])
 @requires_scopes(["utm.inject_test_data"])
-def SCDTestStatus(request):
+def scd_test_status(request):
     status = SCDTestStatusResponse(status="Ready", version="latest")
     return JsonResponse(
         json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200
@@ -78,7 +77,7 @@ def SCDTestStatus(request):
 
 @api_view(["GET"])
 @requires_scopes(["utm.inject_test_data"])
-def SCDTestCapabilities(request):
+def scd_test_capabilities(request):
     status = CapabilitiesResponse(
         capabilities=[
             "BasicStrategicConflictDetection",
@@ -93,10 +92,9 @@ def SCDTestCapabilities(request):
 
 @api_view(["POST"])
 @requires_scopes(["utm.inject_test_data"])
-def SCDClearAreaRequest(request):
+def scd_clear_area_request(request):
     clear_area_request = request.data
     try:
-        request_id = clear_area_request["request_id"]
         extent_raw = clear_area_request["extent"]
     except KeyError as ke:
         return Response(
@@ -128,55 +126,55 @@ def SCDClearAreaRequest(request):
         )
 
     all_deletion_requests_status = []
-    if all_existing_op_ints_in_area:
-        for flight_details in all_existing_op_ints_in_area:
-            if flight_details:
-                deletion_success = False
-                operation_id = flight_details["flight_id"]
-                op_int_details_key = "flight_opint." + operation_id
-                if r.exists(op_int_details_key):
-                    op_int_detail_raw = r.get(op_int_details_key)
-                    my_scd_dss_helper = dss_scd_helper.SCDOperations()
-                    # op_int_detail_raw = op_int_details.decode()
-                    op_int_detail = json.loads(op_int_detail_raw)
-                    ovn = op_int_detail["success_response"][
-                        "operational_intent_reference"
-                    ]["ovn"]
-                    opint_id = op_int_detail["success_response"][
-                        "operational_intent_reference"
-                    ]["id"]
-                    ovn_opint = {"ovn_id": ovn, "opint_id": opint_id}
-                    logger.info(
-                        "Deleting operational intent {opint_id} with ovn {ovn_id}".format(
-                            **ovn_opint
-                        )
-                    )
-
-                    deletion_request = my_scd_dss_helper.delete_operational_intent(
-                        dss_operational_intent_ref_id=opint_id, ovn=ovn
-                    )
-
-                    if deletion_request.status == 200:
-                        logger.info(
-                            "Success in deleting operational intent {opint_id} with ovn {ovn_id}".format(
-                                **ovn_opint
-                            )
-                        )
-                        deletion_success = True
-                    all_deletion_requests_status.append(deletion_success)
-        clear_area_status = ClearAreaResponseOutcome(
-            success=all(all_deletion_requests_status),
-            message="All operational intents in the area cleared successfully",
-            timestamp=arrow.now().isoformat(),
-        )
-
-    else:
+    if not all_existing_op_ints_in_area:
+        
         clear_area_status = ClearAreaResponseOutcome(
             success=True,
             message="All operational intents in the area cleared successfully",
             timestamp=arrow.now().isoformat(),
         )
-    my_rtree_helper.clear_rtree_index(pattern="flight_opint.*")
+    for flight_details in all_existing_op_ints_in_area:
+        if flight_details:
+            deletion_success = False
+            operation_id = flight_details["flight_id"]
+            op_int_details_key = FLIGHT_OPINT_KEY + operation_id
+            if r.exists(op_int_details_key):
+                op_int_detail_raw = r.get(op_int_details_key)
+                my_scd_dss_helper = dss_scd_helper.SCDOperations()
+                # op_int_detail_raw = op_int_details.decode()
+                op_int_detail = json.loads(op_int_detail_raw)
+                ovn = op_int_detail["success_response"][
+                    "operational_intent_reference"
+                ]["ovn"]
+                opint_id = op_int_detail["success_response"][
+                    "operational_intent_reference"
+                ]["id"]
+                ovn_opint = {"ovn_id": ovn, "opint_id": opint_id}
+                logger.info(
+                    "Deleting operational intent {opint_id} with ovn {ovn_id}".format(
+                        **ovn_opint
+                    )
+                )
+
+                deletion_request = my_scd_dss_helper.delete_operational_intent(
+                    dss_operational_intent_ref_id=opint_id, ovn=ovn
+                )
+
+                if deletion_request.status == 200:
+                    logger.info(
+                        "Success in deleting operational intent {opint_id} with ovn {ovn_id}".format(
+                            **ovn_opint
+                        )
+                    )
+                    deletion_success = True
+                all_deletion_requests_status.append(deletion_success)
+    clear_area_status = ClearAreaResponseOutcome(
+        success=all(all_deletion_requests_status),
+        message="All operational intents in the area cleared successfully",
+        timestamp=arrow.now().isoformat(),
+    )
+
+    my_rtree_helper.clear_rtree_index(pattern=FLIGHT_OPINT_KEY)
     clear_area_response = ClearAreaResponse(outcome=clear_area_status)
     return JsonResponse(
         json.loads(json.dumps(clear_area_response, cls=EnhancedJSONEncoder)), status=200
@@ -185,7 +183,7 @@ def SCDClearAreaRequest(request):
 
 @api_view(["PUT", "DELETE"])
 @requires_scopes(["utm.inject_test_data"])
-def SCDAuthTest(request, operation_id):
+def scd_auth_test(request, operation_id):
     # This view implementes the automated verification of SCD capabilities
     r = get_redis()
 
@@ -238,8 +236,7 @@ def SCDAuthTest(request, operation_id):
         # my_rtree_helper.generate_operational_intents_index(pattern="flight_opint.*")
 
         # Initial data for subscriptions
-        opint_subscription_end_time = timedelta(seconds=180)
-        # TODO use ImplicitDict for this
+        opint_subscription_end_time = timedelta(seconds=180)        
         # Parse the operational intent
         try:
             operational_intent = scd_test_data["operational_intent"]
@@ -351,9 +348,11 @@ def SCDAuthTest(request, operation_id):
         try:
             assert "error" not in auth_token
         except AssertionError as e:
+            
             logger.error(
                 "Error in retrieving auth_token, check if the auth server is running properly, error details below"
             )
+            logger.error(e)
             logger.error(auth_token["error"])
             return Response(
                 json.loads(
@@ -416,7 +415,7 @@ def SCDAuthTest(request, operation_id):
             )
             if update_operational_intent_job.status in [200, 201]:   
                 # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
-                flight_opint_key = "flight_opint." + operation_id_str
+                flight_opint_key =FLIGHT_OPINT_KEY + operation_id_str
                 if r.exists(flight_opint_key):
                     existing_op_int_details = my_operational_intent_parser.parse_stored_operational_intent_details(operation_id=operation_id_str)
 
@@ -544,7 +543,7 @@ def SCDAuthTest(request, operation_id):
                     operational_intent_details=test_injection_data.operational_intent,
                 )
                 # Store flight DSS response and operational intent reference
-                flight_opint = "flight_opint." + operation_id_str
+                flight_opint = FLIGHT_OPINT_KEY + operation_id_str
                 logger.info(
                     "Flight with operational intent id {flight_opint} created".format(
                         flight_opint=operation_id_str
