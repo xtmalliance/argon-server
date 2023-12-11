@@ -67,6 +67,8 @@ class Command(BaseCommand):
                 )
             )
 
+        current_state = flight_declaration.state
+        current_state_str = OPERATION_STATES[current_state][1]
         my_scd_dss_helper = SCDOperations()
         flight_authorization = (
             my_database_reader.get_flight_authorization_by_flight_declaration(
@@ -144,6 +146,8 @@ class Command(BaseCommand):
                         new_state=str(new_state),
                         ovn=reference.ovn,
                         deconfliction_check=True,
+                        priority = 0,
+                        current_state = current_state_str
                     )
                 )
 

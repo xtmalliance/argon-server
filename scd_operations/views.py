@@ -363,49 +363,46 @@ def scd_auth_test(request, operation_id):
 
         # Check if the operational intent is updated, if it is then update the intent
         my_test_harness_helper = SCDTestHarnessHelper()
-        same_operational_intent_exists_in_blender = (
+        operational_intent_exists_in_blender = (
             my_test_harness_helper.check_if_same_flight_id_exists(
                 operation_id=operation_id_str
             )
         )
 
-        if same_operational_intent_exists_in_blender and test_state in ["Activated","Nonconforming"]:
-            # Update the operational intent
-            # Send the update Operational Intent command to DSS
-            # Check updated airspace for flight that is accepted before activated
-
-            # Get the detail of the existing / stored operational intent
+        if operational_intent_exists_in_blender and test_state in ["Activated","Nonconforming"]:
+            # Operational intent exists, update the operational intent based on SCD rules. Get the detail of the existing / stored operational intent
 
             flight_declaration = my_database_reader.get_flight_declaration_by_id(
                 flight_declaration_id=operation_id_str
             )
-            current_state = flight_declaration.state
-            current_state_str = OPERATION_STATES[current_state][1]
 
             flight_authorization = (
                 my_database_reader.get_flight_authorization_by_flight_declaration_obj(
                     flight_declaration=flight_declaration
                 )
             )
+            current_state = flight_declaration.state
+            current_state_str = OPERATION_STATES[current_state][1]
             dss_operational_intent_id = flight_authorization.dss_operational_intent_id
             stored_operational_intent_details = (
                 my_operational_intent_parser.parse_and_load_stored_flight_opint(
                     operation_id=operation_id_str
                 )
             )
+            injected_extents = test_injection_data.operational_intent.volumes
+
             deconfliction_check = True
-            extents = test_injection_data.operational_intent.volumes
             
             # If it is a non-conforming flight 
-            if test_state == "Nonconforming":
-                extents = operational_intent_data.off_nominal_volumes
+            if current_state == "Activated" and test_state == "Nonconforming":
+                injected_extents = operational_intent_data.off_nominal_volumes
                 deconfliction_check = False
             elif current_state == "Activated" and test_state == "Activated":
                 deconfliction_check = True
 
             update_operational_intent_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
-                extents=extents,
+                extents=injected_extents,
                 new_state=test_state,
                 current_state=current_state_str,
                 ovn=stored_operational_intent_details.reference.ovn,
@@ -472,14 +469,10 @@ def scd_auth_test(request, operation_id):
                     )
                     
                     existing_op_int_details.operational_intent_details.off_nominal_volumes = all_off_nominal_volumes
-
-                    existing_op_int_details.success_response.operational_intent_reference.state= OperationalIntentState.Nonconforming
-                    
-                    existing_op_int_details.operational_intent_details.state = OperationalIntentState.Nonconforming
-                    
+                    existing_op_int_details.success_response.operational_intent_reference.state= OperationalIntentState.Nonconforming                    
+                    existing_op_int_details.operational_intent_details.state = OperationalIntentState.Nonconforming                    
                     new_updated_operational_intent_full_details = existing_op_int_details
                     # Remove outline circle from off-nominal volumes
-                    print(existing_op_int_details)
 
                 r.set(
                     flight_opint_key,

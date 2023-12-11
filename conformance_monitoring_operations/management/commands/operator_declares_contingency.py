@@ -13,8 +13,6 @@ from scd_operations.dss_scd_helper import SCDOperations
 from scd_operations.scd_data_definitions import (
     Time,
     OperationalIntentReferenceDSSResponse,
-    ImplicitSubscriptionParameters,
-    LatLngPoint,
     Polygon,
     Volume4D,
 )
@@ -22,6 +20,8 @@ from flight_feed_operations import flight_stream_helper
 from dacite import from_dict
 from conformance_monitoring_operations.data_definitions import PolygonAltitude
 from flight_declaration_operations.utils import OperationalIntentsConverter
+
+from common.data_definitions import FLIGHT_OPINT_KEY
 
 load_dotenv(find_dotenv())
 
@@ -61,7 +61,6 @@ class Command(BaseCommand):
 
         my_scd_dss_helper = SCDOperations()
         my_database_reader = BlenderDatabaseReader()
-        now = arrow.now().isoformat()
 
         try:
             flight_declaration_id = options["flight_declaration_id"]
@@ -84,11 +83,13 @@ class Command(BaseCommand):
                 flight_declaration=flight_declaration
             )
         )
+        current_state = flight_declaration.state
+        current_state_str = OPERATION_STATES[current_state][1]
         dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
 
         r = get_redis()
 
-        flight_opint = "flight_opint." + str(flight_declaration_id)
+        flight_opint = FLIGHT_OPINT_KEY + str(flight_declaration_id)
         # Update the volume to create a new volume
 
         if r.exists(flight_opint):
@@ -155,6 +156,8 @@ class Command(BaseCommand):
                         new_state=str(contingent_state),
                         ovn=reference.ovn,
                         deconfliction_check=False,
+                        priority = 0,
+                        current_state = current_state_str
                     )
                 )
 
@@ -248,7 +251,7 @@ class Command(BaseCommand):
 
                     r = get_redis()
 
-                    flight_opint = "flight_opint." + str(flight_declaration_id)
+                    flight_opint = FLIGHT_OPINT_KEY + str(flight_declaration_id)
 
                     if r.exists(flight_opint):
                         op_int_details_raw = r.get(flight_opint)

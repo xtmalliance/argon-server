@@ -101,6 +101,8 @@ class Command(BaseCommand):
                 flight_declaration=flight_declaration
             )
         )
+        current_state = flight_declaration.state
+        current_state_str = OPERATION_STATES[current_state][1]
         dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
 
         r = get_redis()
@@ -172,6 +174,8 @@ class Command(BaseCommand):
                         new_state=str(new_state),
                         ovn=reference.ovn,
                         deconfliction_check=False,
+                        priority = 0,
+                        current_state = current_state_str
                     )
                 )
 
