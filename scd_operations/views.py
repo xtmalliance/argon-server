@@ -23,6 +23,7 @@ from .scd_data_definitions import (
     CapabilitiesResponse,
     DeleteFlightResponse,    
     OperationalIntentSubmissionStatus,
+    USSCapabilitiesResponseEnum,
     Volume4D,
     OperationalIntentTestInjection,
     OperationalIntentStorage,
@@ -80,9 +81,9 @@ def scd_test_status(request):
 def scd_test_capabilities(request):
     status = CapabilitiesResponse(
         capabilities=[
-            "BasicStrategicConflictDetection",
-            "FlightAuthorisationValidation",
-            "HighPriorityFlights",
+            USSCapabilitiesResponseEnum.BasicStrategicConflictDetection,
+            USSCapabilitiesResponseEnum.FlightAuthorisationValidation,
+            USSCapabilitiesResponseEnum.HighPriorityFlights
         ]
     )
     return JsonResponse(
@@ -195,7 +196,6 @@ def scd_auth_test(request, operation_id):
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
         my_geo_json_converter = dss_scd_helper.VolumesConverter()
         my_volumes_validator = dss_scd_helper.VolumesValidator()
-
         my_database_writer = BlenderDatabaseWriter()
         my_database_reader = BlenderDatabaseReader()
         # Get the test data
@@ -226,14 +226,6 @@ def scd_auth_test(request, operation_id):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # Set up initial data
-
-        # # Create a index and see what is already in Blender
-        # my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(
-        #     index_name=INDEX_NAME
-        # )
-        # # Create a index of existing opints
-        # my_rtree_helper.generate_operational_intents_index(pattern="flight_opint.*")
 
         # Initial data for subscriptions
         opint_subscription_end_time = timedelta(seconds=180)        
@@ -256,20 +248,20 @@ def scd_auth_test(request, operation_id):
         # Create a list of Volume4D objects
         all_volumes: List[Volume4D] = []
         for volume in operational_intent_volumes:
-            v4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=volume)
-            all_volumes.append(v4D)
+            volume_4d = my_operational_intent_parser.parse_volume_to_volume4D(volume=volume)
+            all_volumes.append(volume_4d)
 
         # Create a list of Volume4D objects
         all_off_nominal_volumes: List[Volume4D] = []
         for off_nominal_volume in operational_intent_off_nominal_volumes:
-            v4D = my_operational_intent_parser.parse_volume_to_volume4D(
+            off_nominal_volume_4d = my_operational_intent_parser.parse_volume_to_volume4D(
                 volume=off_nominal_volume
             )
-            all_off_nominal_volumes.append(v4D)
+            all_off_nominal_volumes.append(off_nominal_volume_4d)
 
-        # Get THe state of the test data is coming in
+        # The state of the data coming in
         test_state = operational_intent["state"]
-        # Parse the intent data and
+        # Parse the intent data and test state
         operational_intent_data = OperationalIntentTestInjection(
             volumes=all_volumes,
             priority=operational_intent["priority"],
@@ -277,6 +269,11 @@ def scd_auth_test(request, operation_id):
             state=test_state,
         )
         # End parse the operational intent
+        
+        # Set the object for SCD Test Injection
+        test_injection_data = SCDTestInjectionDataPayload(
+            operational_intent=operational_intent_data, flight_authorisation=f_a
+        )
         # Begin validation of operational intent
         my_operational_intent_validator = dss_scd_helper.OperationalIntentValidator(
             operational_intent_data=operational_intent_data
@@ -295,10 +292,7 @@ def scd_auth_test(request, operation_id):
                 status=status.HTTP_200_OK,
             )
         # End validation of operational intent
-        # Set the object for SCD Test Injection
-        test_injection_data = SCDTestInjectionDataPayload(
-            operational_intent=operational_intent_data, flight_authorisation=f_a
-        )
+        # Begin validation of volumes
         volumes_valid = my_volumes_validator.validate_volumes(
             volumes=test_injection_data.operational_intent.volumes
         )
@@ -312,8 +306,9 @@ def scd_auth_test(request, operation_id):
                 ),
                 status=status.HTTP_200_OK,
             )
+        # End validation of Volumes
 
-        # Check flight auth data first before going to DSS
+        # Begin validation of Flight Authorization
         my_serial_number_validator = UAVSerialNumberValidator(
             serial_number=test_injection_data.flight_authorisation.uas_serial_number
         )
@@ -338,12 +333,8 @@ def scd_auth_test(request, operation_id):
                 json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
                 status=status.HTTP_200_OK,
             )
-
-        my_geo_json_converter.convert_volumes_to_geojson(volumes=all_volumes)
-        view_rect_bounds = my_geo_json_converter.get_bounds()
-        view_rect_bounds_storage = ",".join([str(i) for i in view_rect_bounds])
-        view_r_bounds = ",".join(map(str, view_rect_bounds))
-
+        # End validation of Flight Authorization
+        # Get auth token for DSS interactions
         auth_token = my_scd_dss_helper.get_auth_token()
         try:
             assert "error" not in auth_token
@@ -360,8 +351,14 @@ def scd_auth_test(request, operation_id):
                 ),
                 status=status.HTTP_200_OK,
             )
+        # End get auth token for DSS interactions
 
-        # Check if the operational intent is updated, if it is then update the intent
+        my_geo_json_converter.convert_volumes_to_geojson(volumes=all_volumes)
+        view_rect_bounds = my_geo_json_converter.get_bounds()
+        view_rect_bounds_storage = ",".join([str(i) for i in view_rect_bounds])
+        view_r_bounds = ",".join(map(str, view_rect_bounds))
+
+        # Check if operational intent exists in Flight Blender
         my_test_harness_helper = SCDTestHarnessHelper()
         operational_intent_exists_in_blender = (
             my_test_harness_helper.check_if_same_flight_id_exists(
@@ -375,6 +372,15 @@ def scd_auth_test(request, operation_id):
             flight_declaration = my_database_reader.get_flight_declaration_by_id(
                 flight_declaration_id=operation_id_str
             )
+            if not flight_declaration:
+                return Response(
+                    {
+                        "result": "Flight Declaration with ID %s not found in Flight Blender"
+                        % operation_id_str
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
 
             flight_authorization = (
                 my_database_reader.get_flight_authorization_by_flight_declaration_obj(
@@ -383,26 +389,28 @@ def scd_auth_test(request, operation_id):
             )
             current_state = flight_declaration.state
             current_state_str = OPERATION_STATES[current_state][1]
+            # ID of the operational intent reference stored in the DSS
             dss_operational_intent_id = flight_authorization.dss_operational_intent_id
             stored_operational_intent_details = (
                 my_operational_intent_parser.parse_and_load_stored_flight_opint(
                     operation_id=operation_id_str
                 )
             )
-            injected_extents = test_injection_data.operational_intent.volumes
+            provided_volumes_off_nominal_volumes = test_injection_data.operational_intent.volumes
 
             deconfliction_check = True
             
-            # If it is a non-conforming flight 
+            # If the flight is activated and submitted to the DSS and the new stat is non-conforming, submit off-nominal volumes and no need to check for de-confliction
             if current_state == "Activated" and test_state == "Nonconforming":
-                injected_extents = operational_intent_data.off_nominal_volumes
+                provided_volumes_off_nominal_volumes = operational_intent_data.off_nominal_volumes
                 deconfliction_check = False
+            # If the flight state is activate and new state is also activated, check for deconfliction before updating the volumes
             elif current_state == "Activated" and test_state == "Activated":
                 deconfliction_check = True
 
             update_operational_intent_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
-                extents=injected_extents,
+                extents=provided_volumes_off_nominal_volumes,
                 new_state=test_state,
                 current_state=current_state_str,
                 ovn=stored_operational_intent_details.reference.ovn,
@@ -410,25 +418,15 @@ def scd_auth_test(request, operation_id):
                 deconfliction_check=deconfliction_check,
                 priority=operational_intent_data.priority,
             )
-            if update_operational_intent_job.status in [200, 201]:   
-                # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
-                flight_opint_key =FLIGHT_OPINT_KEY + operation_id_str
-                if r.exists(flight_opint_key):
-                    existing_op_int_details = my_operational_intent_parser.parse_stored_operational_intent_details(operation_id=operation_id_str)
+            
+            flight_opint_key =FLIGHT_OPINT_KEY + operation_id_str
 
-                else: 
-                    logger.info("Error in getting details of a operational inten ...")
-                    return Response(
-                        json.loads(
-                            json.dumps(
-                                failed_test_injection_response, cls=EnhancedJSONEncoder
-                            )
-                        ),
-                        status=status.HTTP_200_OK,
-                    )
-                    
+            if update_operational_intent_job.status in [200, 201]:   
+                # The operational intent update in the DSS is successful, update storage 
+                # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
 
                 if test_state == "Activated":
+                    # The current state is activated and the original state was also activated 
                     ready_to_fly_injection_response.operational_intent_id = (
                         dss_operational_intent_id
                     )
