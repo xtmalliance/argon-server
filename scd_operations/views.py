@@ -368,7 +368,7 @@ def scd_auth_test(request, operation_id):
 
         if operational_intent_exists_in_blender and test_state in ["Activated","Nonconforming"]:
             # Operational intent exists, update the operational intent based on SCD rules. Get the detail of the existing / stored operational intent
-
+            existing_op_int_details = my_operational_intent_parser.parse_stored_operational_intent_details(operation_id=operation_id_str)
             flight_declaration = my_database_reader.get_flight_declaration_by_id(
                 flight_declaration_id=operation_id_str
             )
@@ -408,7 +408,7 @@ def scd_auth_test(request, operation_id):
             elif current_state == "Activated" and test_state == "Activated":
                 deconfliction_check = True
 
-            update_operational_intent_job = my_scd_dss_helper.update_specified_operational_intent_reference(
+            operational_intent_update_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
                 extents=provided_volumes_off_nominal_volumes,
                 new_state=test_state,
@@ -421,7 +421,7 @@ def scd_auth_test(request, operation_id):
             
             flight_opint_key =FLIGHT_OPINT_KEY + operation_id_str
 
-            if update_operational_intent_job.status in [200, 201]:   
+            if operational_intent_update_job.status == 200:   
                 # The operational intent update in the DSS is successful, update storage 
                 # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
 
@@ -453,7 +453,7 @@ def scd_auth_test(request, operation_id):
                                     0
                                 ].volume.altitude_lower.value,
                         success_response= asdict(
-                            update_operational_intent_job.dss_response
+                            operational_intent_update_job.dss_response
                         ),
                         operational_intent_details= asdict(
                             test_injection_data.operational_intent
@@ -464,8 +464,7 @@ def scd_auth_test(request, operation_id):
                     # Update the declaration to non-conforming
                     my_database_writer.update_flight_operation_state(
                         flight_declaration_id=operation_id_str, state=3
-                    )
-                    
+                    )                    
                     existing_op_int_details.operational_intent_details.off_nominal_volumes = all_off_nominal_volumes
                     existing_op_int_details.success_response.operational_intent_reference.state= OperationalIntentState.Nonconforming                    
                     existing_op_int_details.operational_intent_details.state = OperationalIntentState.Nonconforming                    
@@ -488,9 +487,8 @@ def scd_auth_test(request, operation_id):
                     status=status.HTTP_200_OK,
                 )
 
-            elif update_operational_intent_job.status == 999:
-
-                # Flight is not deconflicted
+            elif operational_intent_update_job.status == 999:
+                # Deconfliction check failed during updating of operational intent 
                 logger.info("Flight not deconflicted...")
                 return Response(
                     json.loads(
@@ -502,6 +500,7 @@ def scd_auth_test(request, operation_id):
                     status=status.HTTP_200_OK,
                 )
             else:
+                # The update failed because the DSS returned a 4XX code
                 logger.info("Updating of Operational intent failed...")
                 return Response(
                     json.loads(
@@ -512,7 +511,6 @@ def scd_auth_test(request, operation_id):
                     status=status.HTTP_200_OK,
                 )
         else:
-            # Operational intents valid and now send to DSS
             op_int_submission: OperationalIntentSubmissionStatus = my_scd_dss_helper.create_and_submit_operational_intent_reference(
                 state=test_injection_data.operational_intent.state,
                 volumes=test_injection_data.operational_intent.volumes,
