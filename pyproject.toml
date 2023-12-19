@@ -8,7 +8,11 @@ exclude = '''
 
 '''
 
-
 [tool.isort]
 profile = "black"
 skip = "migrations"
+
+[tool.ruff]
+line-length = 150
+target-version = "py310"
+exclude = ["migrations"]

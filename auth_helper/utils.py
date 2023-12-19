@@ -39,8 +39,7 @@ def requires_scopes(required_scopes):
             request = args[0]
             auth = request.META.get("HTTP_AUTHORIZATION", None)
             # If no authorization data provided, then reject the request
-            if auth:
-                parts = auth.split()
+            if auth and len(parts := auth.split()) > 1:
                 token = parts[1]
             else:
                 response = JsonResponse({"detail": "Authentication credentials were not provided"})
