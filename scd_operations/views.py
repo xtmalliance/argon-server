@@ -187,17 +187,18 @@ def scd_clear_area_request(request):
 def scd_auth_test(request, operation_id):
     # This view implementes the automated verification of SCD capabilities
     r = get_redis()
+    my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
+    my_scd_dss_helper = dss_scd_helper.SCDOperations()
+    my_geo_json_converter = dss_scd_helper.VolumesConverter()
+    my_volumes_validator = dss_scd_helper.VolumesValidator()
+    my_database_writer = BlenderDatabaseWriter()
+    my_database_reader = BlenderDatabaseReader()
 
     operation_id_str = str(operation_id)
     logger.info("*********************")
     logger.info(operation_id_str)
+
     if request.method == "PUT":
-        my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
-        my_scd_dss_helper = dss_scd_helper.SCDOperations()
-        my_geo_json_converter = dss_scd_helper.VolumesConverter()
-        my_volumes_validator = dss_scd_helper.VolumesValidator()
-        my_database_writer = BlenderDatabaseWriter()
-        my_database_reader = BlenderDatabaseReader()
         # Get the test data
         scd_test_data = request.data
         # Prase the flight authorization data set
@@ -365,8 +366,8 @@ def scd_auth_test(request, operation_id):
                 operation_id=operation_id_str
             )
         )
-
         if operational_intent_exists_in_blender and test_state in ["Activated","Nonconforming"]:
+            
             # Operational intent exists, update the operational intent based on SCD rules. Get the detail of the existing / stored operational intent
             existing_op_int_details = my_operational_intent_parser.parse_stored_operational_intent_details(operation_id=operation_id_str)
             flight_declaration = my_database_reader.get_flight_declaration_by_id(
@@ -397,7 +398,6 @@ def scd_auth_test(request, operation_id):
                 )
             )
             provided_volumes_off_nominal_volumes = test_injection_data.operational_intent.volumes
-
             deconfliction_check = True
             
             # If the flight is activated and submitted to the DSS and the new stat is non-conforming, submit off-nominal volumes and no need to check for de-confliction
@@ -408,6 +408,7 @@ def scd_auth_test(request, operation_id):
             elif current_state == "Activated" and test_state == "Activated":
                 deconfliction_check = True
 
+                
             operational_intent_update_job = my_scd_dss_helper.update_specified_operational_intent_reference(
                 operational_intent_ref_id=stored_operational_intent_details.reference.id,
                 extents=provided_volumes_off_nominal_volumes,
@@ -517,7 +518,7 @@ def scd_auth_test(request, operation_id):
                 off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
                 priority=test_injection_data.operational_intent.priority,
             )
-
+            
             if op_int_submission.status == "success":
                 # Successfully submitted to the DSS, save the operational intent in Redis
                 operational_intent_full_details = OperationalIntentStorage(
@@ -651,11 +652,11 @@ def scd_auth_test(request, operation_id):
                 )
 
     elif request.method == "DELETE":
-        op_int_details_key = "flight_opint." + operation_id_str
+        op_int_details_key = FLIGHT_OPINT_KEY + operation_id_str
         op_int_detail_raw = r.get(op_int_details_key)
-        my_database_writer = BlenderDatabaseWriter()
+        
         if op_int_detail_raw:
-            my_scd_dss_helper = dss_scd_helper.SCDOperations()
+        
             op_int_detail = json.loads(op_int_detail_raw)
 
             ovn = op_int_detail["success_response"]["operational_intent_reference"][

@@ -84,7 +84,7 @@ class OperationalIntentsIndexFactory():
         intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]     
         return intersections
 
-def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon_to_check:Polygon ) -> True:     
+def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon_to_check:Polygon ) -> bool:     
     idx = index.Index()
     for pos, op_int_detail in enumerate(op_int_details):
         idx.insert(pos, op_int_detail.shape.bounds)
@@ -93,7 +93,7 @@ def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon
     does_intersect = []
     if op_ints_of_interest_ids: 
         for op_ints_of_interest_id in op_ints_of_interest_ids:
-            existing_op_int = op_int_details[op_ints_of_interest_id]            
+            existing_op_int = op_int_details[op_ints_of_interest_id]          
             intersects = polygon_to_check.intersects(existing_op_int.shape)            
             if intersects:
                 does_intersect.append(True)

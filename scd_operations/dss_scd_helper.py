@@ -5,7 +5,7 @@ import requests
 import arrow
 import logging
 from dataclasses import asdict
-from typing import List, Optional
+from typing import List, Optional, Union
 from auth_helper import dss_auth_helper
 from datetime import datetime
 from shapely.ops import unary_union
@@ -192,9 +192,8 @@ class VolumesConverter:
         return g_c
 
     def get_minimum_rotated_rectangle(self) -> Polygon:
-        union = unary_union(self.all_volume_features)
-        rectangle = union.minimum_rotated_rectangle
-        return rectangle
+        union = unary_union(self.all_volume_features)        
+        return union
 
     def get_bounds(self) -> List[float]:
         union = unary_union(self.all_volume_features)
@@ -947,7 +946,7 @@ class SCDOperations:
         self,
         all_existing_operational_intent_details_full: List[OpInttoCheckDetails],
         operational_intent_ref_id: str,
-    ) -> Optional[None, str]:
+    ) -> Union[None, str]:
         """ This method gets the latest ovn from the dss for the specificed operational intent reference """
         ovn = None
         relevant_op_int_id = [
@@ -983,7 +982,32 @@ class SCDOperations:
         )
 
         return is_conflicted
+    def check_if_update_payload_should_be_submitted_to_dss(self,
+            current_state:str,
+            new_state:str,
+            extents_conflict_with_dss_volumes:bool,
+            priority:int)->bool:
+        
+        if (
+            current_state == "Activated" and new_state == "Activated" and extents_conflict_with_dss_volumes
+        ):
+            logger.debug('B')
+            submit_update_payload_to_dss = False
 
+        elif current_state == "Activated" or new_state in ["Nonconforming", "Contingent"]:
+            logger.debug('A')
+            submit_update_payload_to_dss = True
+        elif current_state == "Activated" and new_state == "Activated":
+            logger.debug('C')
+            submit_update_payload_to_dss = True
+        elif priority == 100:
+            logger.debug('D')
+            submit_update_payload_to_dss = True
+        else:       
+            logger.debug('E')      
+            submit_update_payload_to_dss = False if extents_conflict_with_dss_volumes else True
+        return submit_update_payload_to_dss
+    
     def update_specified_operational_intent_reference(
         self,
         operational_intent_ref_id: str,
@@ -1031,22 +1055,12 @@ class SCDOperations:
             extents=extents,
         )
 
-        print("*******")
-        print(current_state, new_state, extents_conflict_with_dss_volumes)
-        print("*******")
-
-        submit_update_payload_to_dss = False if extents_conflict_with_dss_volumes else True
-        if current_state == "Activated" or new_state in ["Nonconforming", "Contingent"]:
-            submit_update_payload_to_dss = True
-        elif current_state == "Activated" and new_state == "Activated":
-            submit_update_payload_to_dss = True
-        elif (
-            current_state == "Activated" and new_state == "Activated" and extents_conflict_with_dss_volumes
-        ):
-            submit_update_payload_to_dss = False
-        elif priority == 100:
-            submit_update_payload_to_dss = True
-                   
+        submit_update_payload_to_dss = self.check_if_update_payload_should_be_submitted_to_dss(
+            current_state=current_state,
+            new_state=new_state,
+            extents_conflict_with_dss_volumes=extents_conflict_with_dss_volumes,
+            priority=priority,
+        )
 
         if not submit_update_payload_to_dss:
             d_r = None
@@ -1198,7 +1212,7 @@ class SCDOperations:
                 )
             )
             my_ind_volumes_converter = VolumesConverter()
-            my_ind_volumes_converter.convert_volumes_to_geojson(volumes=volumes)
+            my_ind_volumes_converter.convert_volumes_to_geojson(volumes=volumes)                        
             ind_volumes_polygon = (
                 my_ind_volumes_converter.get_minimum_rotated_rectangle()
             )
@@ -1220,7 +1234,7 @@ class SCDOperations:
             logger.info(
                 "No existing operational intent references in the DSS, deconfliction status: %s"
                 % deconflicted
-            )
+            )        
         # logger.info("Airspace keys: %s" % airspace_keys)
         operational_intent_reference.keys = airspace_keys
         # logger.info("Deconfliction status: %s" % deconflicted)
@@ -1251,7 +1265,7 @@ class SCDOperations:
                 dss_response = {"error": re}
             else:
                 dss_response = dss_r.json()
-                dss_r_status_code = dss_r.status_code
+                dss_r_status_code = dss_r.status_code                
 
             if dss_r_status_code == 201:
                 subscribers = dss_response["subscribers"]
@@ -1321,7 +1335,7 @@ class SCDOperations:
                 status_code=500,
                 message="Flight not deconflicted, there are other flights in the area",
                 dss_response={},
-                operational_intent_id=new_entity_id,
+                operational_intent_id=""
             )
 
         return d_r
