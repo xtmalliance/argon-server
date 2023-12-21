@@ -522,7 +522,7 @@ class OperationalIntentReferenceHelper:
 
 class SCDOperations:
     def __init__(self):
-        self.dss_base_url = env.get("DSS_BASE_URL")
+        self.dss_base_url = env.get("DSS_BASE_URL","0")
         self.r = get_redis()
 
     def get_nearby_operational_intents(
@@ -976,6 +976,7 @@ class SCDOperations:
         my_ind_volumes_converter = VolumesConverter()
         my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
         ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()
+        
         is_conflicted = rtree_helper.check_polygon_intersection(
             op_int_details=all_existing_operational_intent_details,
             polygon_to_check=ind_volumes_polygon,
@@ -1044,7 +1045,8 @@ class SCDOperations:
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full,
             operational_intent_ref_id=operational_intent_ref_id,
         )
-        ovn = updated_ovn if ovn else ovn
+        
+        ovn = updated_ovn if updated_ovn else ovn
         airspace_keys = self.generate_airspace_keys(
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full
         )
@@ -1070,7 +1072,7 @@ class SCDOperations:
                 dss_response=d_r, status=dss_r_status_code, message=message
             )
             return opint_update_result
-
+        
         dss_opint_update_url = (
             self.dss_base_url
             + "dss/v1/operational_intent_references/"

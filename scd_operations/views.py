@@ -1,3 +1,4 @@
+from cgi import test
 from rest_framework.decorators import api_view
 from rest_framework import status
 import json
@@ -401,11 +402,12 @@ def scd_auth_test(request, operation_id):
             deconfliction_check = True
             
             # If the flight is activated and submitted to the DSS and the new stat is non-conforming, submit off-nominal volumes and no need to check for de-confliction
-            if current_state == "Activated" and test_state == "Nonconforming":
+            if current_state_str in ["Accepted","Activated"] and test_state == "Nonconforming":
+                
                 provided_volumes_off_nominal_volumes = operational_intent_data.off_nominal_volumes
                 deconfliction_check = False
             # If the flight state is activate and new state is also activated, check for deconfliction before updating the volumes
-            elif current_state == "Activated" and test_state == "Activated":
+            elif current_state_str == "Activated" and test_state == "Activated":
                 deconfliction_check = True
 
                 

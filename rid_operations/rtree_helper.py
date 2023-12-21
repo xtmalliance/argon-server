@@ -88,8 +88,8 @@ def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon
     idx = index.Index()
     for pos, op_int_detail in enumerate(op_int_details):
         idx.insert(pos, op_int_detail.shape.bounds)
+        
     op_ints_of_interest_ids = list(idx.intersection(polygon_to_check.bounds))
-
     does_intersect = []
     if op_ints_of_interest_ids: 
         for op_ints_of_interest_id in op_ints_of_interest_ids:
