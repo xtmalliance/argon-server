@@ -6,6 +6,9 @@ from shapely.geometry import Polygon
 from rtree import index
 from scd_operations.scd_data_definitions import OpInttoCheckDetails, Time, Altitude
 import hashlib
+import logging
+
+logger = logging.getLogger("django")
 
 class OperationalIntentComparisonFactory():
     """ A method to check if two operational intents are same in geometry / time and altitude. """
@@ -86,9 +89,9 @@ class OperationalIntentsIndexFactory():
 
 def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon_to_check:Polygon ) -> bool:     
     idx = index.Index()
-    for pos, op_int_detail in enumerate(op_int_details):
+    for pos, op_int_detail in enumerate(op_int_details):            
         idx.insert(pos, op_int_detail.shape.bounds)
-        
+    
     op_ints_of_interest_ids = list(idx.intersection(polygon_to_check.bounds))
     does_intersect = []
     if op_ints_of_interest_ids: 

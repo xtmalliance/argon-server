@@ -876,9 +876,11 @@ class SCDOperations:
         # This method checks if a flight volume has conflicts with any other volume in the airspace
         all_opints_to_check = []
         all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
-
         for uss_op_int_detail in all_uss_op_int_details:
-            operational_intent_volumes = uss_op_int_detail.details.volumes
+            if uss_op_int_detail.details.off_nominal_volumes:
+                operational_intent_volumes = uss_op_int_detail.details.off_nominal_volumes
+            else:
+                operational_intent_volumes = uss_op_int_detail.details.volumes
             my_volume_converter = VolumesConverter()
             my_volume_converter.convert_volumes_to_geojson(
                 volumes=operational_intent_volumes
@@ -975,8 +977,7 @@ class SCDOperations:
     ) -> bool:
         my_ind_volumes_converter = VolumesConverter()
         my_ind_volumes_converter.convert_volumes_to_geojson(volumes=extents)
-        ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()
-        
+        ind_volumes_polygon = my_ind_volumes_converter.get_minimum_rotated_rectangle()    
         is_conflicted = rtree_helper.check_polygon_intersection(
             op_int_details=all_existing_operational_intent_details,
             polygon_to_check=ind_volumes_polygon,
@@ -1041,6 +1042,7 @@ class SCDOperations:
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full,
             operational_intent_ref_id=operational_intent_ref_id,
         )
+        print(all_existing_operational_intent_details)    
         updated_ovn = self.get_updated_ovn(
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full,
             operational_intent_ref_id=operational_intent_ref_id,
@@ -1051,11 +1053,13 @@ class SCDOperations:
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full
         )
         operational_intent_update_payload.key = airspace_keys
-
-        extents_conflict_with_dss_volumes = self.check_extents_conflict_with_latest_volumes(
+        if all_existing_operational_intent_details:             
+            extents_conflict_with_dss_volumes = self.check_extents_conflict_with_latest_volumes(
             all_existing_operational_intent_details=all_existing_operational_intent_details,
             extents=extents,
         )
+        else:
+            extents_conflict_with_dss_volumes = False
 
         submit_update_payload_to_dss = self.check_if_update_payload_should_be_submitted_to_dss(
             current_state=current_state,
