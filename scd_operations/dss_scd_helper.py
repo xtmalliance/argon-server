@@ -668,7 +668,7 @@ class SCDOperations:
                         "Querying USS: {current_uss_base_url}".format(
                             current_uss_base_url=current_uss_base_url
                         )
-                    )
+                    )                    
                     try:
                         uss_operational_intent_request = requests.get(
                             uss_operational_intent_url, headers=uss_headers
@@ -707,7 +707,7 @@ class SCDOperations:
                             500,
                         ]:
                             logger.error(
-                                "Error in querying peer USS about operational intent details from uss with base url {uss_base_url}".format(
+                                "Error in querying peer USS about operational intent (ID: {uss_op_int_id}) details from uss with base url {uss_base_url}".format(
                                     uss_op_int_id=current_uss_operational_intent_detail.id,
                                     uss_base_url=current_uss_base_url,
                                 )

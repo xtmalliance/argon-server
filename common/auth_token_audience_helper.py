@@ -1,7 +1,7 @@
-import tldextract
-
-def generate_audience_from_base_url(base_url: str) -> str:
-
+def process_localutm(subdomain: str, domain:str) -> str:
+    uss_audience = subdomain + "." + domain
+    return uss_audience
+def generate_audience_from_base_url(base_url: str) -> str:    
     switch = {
         "localhost": "localhost",
         "internal": "host.docker.internal",
@@ -13,13 +13,15 @@ def generate_audience_from_base_url(base_url: str) -> str:
     except Exception as e:
         uss_audience = "localhost"
     else:
+        
         if ext.domain in [
             "localhost",
             "internal",
             "test",
-            "localutm",
         ]:  # for host.docker.internal type calls
             uss_audience = switch[ext.domain]
+        elif ext.domain in ["localutm"]:
+            uss_audience = process_localutm(subdomain = ext.subdomain,domain =ext.domain)
         else:
             if ext.suffix in (""):
                 uss_audience = ext.domain
