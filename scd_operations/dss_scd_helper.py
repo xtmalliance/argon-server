@@ -929,6 +929,17 @@ class SCDOperations:
 
         return notification_result
 
+    def process_peer_uss_notifications(self, all_subscribers: List[SubscriberToNotify], operational_intent_details:OperationalIntentUSSDetails,operational_intent_reference:OperationalIntentReferenceDSSResponse, operational_intent_id:str ):
+        """ This method sends a notification to all the subscribers of the operational intent reference in the DSS"""
+        for subscriber in all_subscribers:
+            operational_intent = OperationalIntentDetailsUSSResponse(reference=operational_intent_reference, details=operational_intent_details)
+            print(operational_intent)
+            notification_payload = NotifyPeerUSSPostPayload(operational_intent_id=operational_intent_id, operational_intent=operational_intent, subscriptions=subscriber.subscriptions)
+            audience = generate_audience_from_base_url(base_url=subscriber.uss_base_url)
+            print(subscriber.uss_base_url, asdict(notification_payload), audience)
+        #     # self.notify_peer_uss_of_created_updated_operational_intent(uss_base_url=subscriber.uss_base_url, notification_payload=notification_payload, audience=audience)
+
+
     def process_retrieved_airspace_volumes(
         self,
         all_existing_operational_intent_details_full: List[OpInttoCheckDetails],
@@ -1010,6 +1021,8 @@ class SCDOperations:
             submit_update_payload_to_dss = False if extents_conflict_with_dss_volumes else True
         return submit_update_payload_to_dss
     
+
+
     def update_specified_operational_intent_reference(
         self,
         operational_intent_ref_id: str,
@@ -1042,7 +1055,7 @@ class SCDOperations:
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full,
             operational_intent_ref_id=operational_intent_ref_id,
         )
-        print(all_existing_operational_intent_details)    
+        
         updated_ovn = self.get_updated_ovn(
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full,
             operational_intent_ref_id=operational_intent_ref_id,
@@ -1101,7 +1114,7 @@ class SCDOperations:
         if dss_r_status_code == 200:
             # Update request was successful, notify the subscribers
             subscribers = dss_response["subscribers"]
-            all_subscribers = []
+            all_subscribers: List[SubscriberToNotify] = []
             for subscriber in subscribers:
                 subscriptions = subscriber["subscriptions"]
                 uss_base_url = subscriber["uss_base_url"]
@@ -1114,15 +1127,9 @@ class SCDOperations:
                         )
                         all_subscription_states.append(s_state)
                     subscriber_obj = SubscriberToNotify(
-                        subscriptions=all_subscribers, uss_base_url=uss_base_url
+                        subscriptions=all_subscription_states, uss_base_url=uss_base_url
                     )
                     all_subscribers.append(subscriber_obj)
-
-            # TODO:Notify subscribers
-            # for subscriber in all_subscribers:
-            #     notification_payload = NotifyPeerUSSPostPayload(operational_intent_ref_id, operational_intent=OperationalIntentDetailsUSSResponse())
-            #     self.notify_peer_uss_of_created_updated_operational_intent(uss_base_url=subscriber.uss_base_url, notification_payload=)
-
             my_op_int_ref_helper = OperationalIntentReferenceHelper()
             operational_intent_reference: OperationalIntentReferenceDSSResponse = (
                 my_op_int_ref_helper.parse_operational_intent_reference_from_dss(
@@ -1130,10 +1137,9 @@ class SCDOperations:
                         "operational_intent_reference"
                     ]
                 )
-            )
-            # TODO: Subscribers is not a dataclass but needs to be
+            )            
             d_r = OperationalIntentUpdateSuccessResponse(
-                subscribers=subscribers,
+                subscribers=all_subscribers,
                 operational_intent_reference=operational_intent_reference,
             )
             logger.info("Updated Operational Intent in the DSS Successfully")

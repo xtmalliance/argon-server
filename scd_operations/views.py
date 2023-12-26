@@ -33,7 +33,8 @@ from .scd_data_definitions import (
     SuccessfulOperationalIntentFlightIDStorage,
     OperationalIntentStorageVolumes,
     DeleteFlightStatus,
-    OperationalIntentState
+    OperationalIntentState,
+    OperationalIntentUSSDetails
 )
 from . import dss_scd_helper
 from rid_operations import rtree_helper
@@ -367,6 +368,7 @@ def scd_auth_test(request, operation_id):
                 operation_id=operation_id_str
             )
         )
+        operational_intent_details_notification= OperationalIntentUSSDetails(volumes =test_injection_data.operational_intent.volumes , priority = test_injection_data.operational_intent.priority, off_nominal_volumes = test_injection_data.operational_intent.off_nominal_volumes)
         if operational_intent_exists_in_blender and test_state in ["Activated","Nonconforming"]:
             
             # Operational intent exists, update the operational intent based on SCD rules. Get the detail of the existing / stored operational intent
@@ -427,6 +429,10 @@ def scd_auth_test(request, operation_id):
             if operational_intent_update_job.status == 200:   
                 # The operational intent update in the DSS is successful, update storage 
                 # Update the redis storage for operational intent details so that when the USS endpoint is queried it will reflect the most updated state.
+
+                # Notify the subscribers that the operational intent has been updated
+                
+                my_scd_dss_helper.process_peer_uss_notifications(all_subscribers=operational_intent_update_job.dss_response.subscribers, operational_intent_details = operational_intent_details_notification, operational_intent_reference=operational_intent_update_job.dss_response.operational_intent_reference, operational_intent_id =dss_operational_intent_id)
 
                 if test_state == "Activated":
                     # The current state is activated and the original state was also activated 
@@ -523,6 +529,11 @@ def scd_auth_test(request, operation_id):
             
             if op_int_submission.status == "success":
                 # Successfully submitted to the DSS, save the operational intent in Redis
+                
+                # Notify the subscribers that the operational intent has been updated
+                my_scd_dss_helper.process_peer_uss_notifications(all_subscribers=op_int_submission.dss_response.subscribers, operational_intent_details = operational_intent_details_notification, operational_intent_reference=op_int_submission.dss_response.operational_intent_reference, operational_intent_id =op_int_submission.operational_intent_id)
+
+
                 operational_intent_full_details = OperationalIntentStorage(
                     bounds=view_r_bounds,
                     start_time=test_injection_data.operational_intent.volumes[

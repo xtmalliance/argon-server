@@ -417,7 +417,7 @@ class DeleteOperationalIntentResponse:
 
 @dataclass
 class OperationalIntentUpdateSuccessResponse:
-    subscribers: List[str]
+    subscribers: List[SubscriberToNotify]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
 
 
