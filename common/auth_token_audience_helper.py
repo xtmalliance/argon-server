@@ -1,3 +1,5 @@
+import tldextract
+
 def process_localutm(subdomain: str, domain:str) -> str:
     uss_audience = subdomain + "." + domain
     return uss_audience

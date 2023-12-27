@@ -904,7 +904,7 @@ class SCDOperations:
         """This method posts operaitonal intent details to peer USS via a POST request to /uss/v1/operational_intents"""
         auth_token = self.get_auth_token(audience=audience)
 
-        notification_url = uss_base_url + "uss/v1/operational_intents"
+        notification_url = uss_base_url + "/uss/v1/operational_intents"
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + auth_token["access_token"],
@@ -917,11 +917,13 @@ class SCDOperations:
         )
 
         uss_r_status_code = uss_r.status_code
-
+        
         if uss_r_status_code == 204:
             result_message = CommonDSS2xxResponse(message="Notified successfully")
+            logger.info("Peer USS notified successfully")
         else:
             result_message = CommonDSS4xxResponse(message="Error in notification")
+            logger.info("Error in notifying peer USS at {endpoint}, the request resulted in a {uss_r_status_code} response from the peer".format(endpoint=notification_url, uss_r_status_code = uss_r_status_code))
 
         notification_result = USSNotificationResponse(
             status=uss_r_status_code, message=result_message
@@ -933,11 +935,12 @@ class SCDOperations:
         """ This method sends a notification to all the subscribers of the operational intent reference in the DSS"""
         for subscriber in all_subscribers:
             operational_intent = OperationalIntentDetailsUSSResponse(reference=operational_intent_reference, details=operational_intent_details)
-            print(operational_intent)
+
             notification_payload = NotifyPeerUSSPostPayload(operational_intent_id=operational_intent_id, operational_intent=operational_intent, subscriptions=subscriber.subscriptions)
             audience = generate_audience_from_base_url(base_url=subscriber.uss_base_url)
-            print(subscriber.uss_base_url, asdict(notification_payload), audience)
-        #     # self.notify_peer_uss_of_created_updated_operational_intent(uss_base_url=subscriber.uss_base_url, notification_payload=notification_payload, audience=audience)
+            if audience != 'host.docker.internal':
+                
+                self.notify_peer_uss_of_created_updated_operational_intent(uss_base_url=subscriber.uss_base_url, notification_payload=notification_payload, audience=audience)
 
 
     def process_retrieved_airspace_volumes(
