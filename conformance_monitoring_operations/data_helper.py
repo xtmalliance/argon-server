@@ -47,7 +47,7 @@ def cast_to_volume4d(volume) -> Volume4D:
         reference=volume["volume"]["altitude_upper"]["reference"],
         units=volume["volume"]["altitude_upper"]["units"],
     )
-    volume3D = Volume3D(
+    volume_3d = Volume3D(
         outline_circle=outline_circle,
         outline_polygon=outline_polygon,
         altitude_lower=altitude_lower,
@@ -57,6 +57,6 @@ def cast_to_volume4d(volume) -> Volume4D:
     time_start = Time(format=volume["time_start"]["format"], value=volume["time_start"]["value"])
     time_end = Time(format=volume["time_end"]["format"], value=volume["time_end"]["value"])
 
-    volume4D = Volume4D(volume=volume3D, time_start=time_start, time_end=time_end)
+    volume_4d = Volume4D(volume=volume_3d, time_start=time_start, time_end=time_end)
 
-    return volume4D
+    return volume_4d
