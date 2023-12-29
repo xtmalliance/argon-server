@@ -1,43 +1,47 @@
 version: "3"
-services:  
+services:
   redis:
-    command: [ "redis-server", "/redis.conf" ]
+    platform: linux/amd64
+    command: ["redis-server", "/redis.conf"]
     image: "redis:latest"
     expose:
-        - "6379"
+      - "6379"
     volumes:
       - ./config/redis.conf:/redis.conf
     container_name: "redis"
 
   db:
+    platform: linux/amd64
     image: postgres
     expose:
       - "5432"
-    restart: unless-stopped        
+    restart: unless-stopped
     volumes:
       - db_data:/var/lib/postgresql/data
     env_file:
       - ".env"
 
-  web:    
+  web:
+    platform: linux/amd64
     env_file:
-      - ".env"      
-    build: . 
+      - ".env"
+    build: .
     image: openskiessh/flight-blender
     command: ./entrypoint.sh
     ports:
-        - "8000:8000"
+      - "8000:8000"
     depends_on:
       - redis
-      - db      
+      - db
     volumes:
       - .:/app
-      
+
   celery:
+    platform: linux/amd64
     container_name: flight-blender-worker
     image: openskiessh/flight-blender
     build:
-      context: "."        
+      context: "."
     env_file:
       - ".env"
     command: celery --app=flight_blender worker --loglevel=info
@@ -47,20 +51,19 @@ services:
       - redis
 
   # beat:
+  #   platform: linux/amd64
   #   container_name: flight-blender-beat
   #   image: openskies-sh/flight-blender
   #   build:
-  #     context: "."    
-      
+  #     context: "."
   #   env_file:
   #     - ".env"
-  #   hostname: beat    
+  #   hostname: beat
   #   command: celery --app=flight_blender beat --loglevel=info --scheduler django
   #   volumes:
   #     - .:/app
   #   depends_on:
   #     - redis
-
 
 volumes:
   app:

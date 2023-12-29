@@ -1,18 +1,21 @@
 from django.core.management.base import BaseCommand, CommandError
 from os import environ as env
-from common.database_operations import BlenderDatabaseReader
-from common.data_definitions import OPERATION_STATES
+import json
 import arrow
 from scd_operations.scd_data_definitions import (
     Time,
     OperationalIntentReferenceDSSResponse,
 )
 from auth_helper.common import get_redis
-import json
-from datetime import timedelta
-from dotenv import load_dotenv, find_dotenv
-import logging
+from common.data_definitions import OPERATION_STATES
+from common.database_operations import BlenderDatabaseReader
 from scd_operations.dss_scd_helper import SCDOperations
+from scd_operations.scd_data_definitions import (
+    OperationalIntentReferenceDSSResponse,
+    Time,
+)
+
+logger = logging.getLogger("django")
 
 load_dotenv(find_dotenv())
 ENV_FILE = find_dotenv()

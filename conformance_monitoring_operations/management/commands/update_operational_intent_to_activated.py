@@ -1,16 +1,18 @@
-from django.core.management.base import BaseCommand, CommandError
-from os import environ as env
-from common.database_operations import BlenderDatabaseReader
-from common.data_definitions import OPERATION_STATES
-from dotenv import load_dotenv, find_dotenv
-import logging
-from auth_helper.common import get_redis
 import json
+import logging
+from os import environ as env
+
+from django.core.management.base import BaseCommand, CommandError
+from dotenv import find_dotenv, load_dotenv
+
+from auth_helper.common import get_redis
+from common.data_definitions import OPERATION_STATES
+from common.database_operations import BlenderDatabaseReader
 from scd_operations.dss_scd_helper import SCDOperations
 from scd_operations.scd_data_definitions import (
-    Time,
-    OperationalIntentReferenceDSSResponse,
     ImplicitSubscriptionParameters,
+    OperationalIntentReferenceDSSResponse,
+    Time,
 )
 
 load_dotenv(find_dotenv())
@@ -18,6 +20,7 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 logger = logging.getLogger("django")
+
 
 class Command(BaseCommand):
     help = "This command clears the operation in the DSS after the state has been set to ended."
@@ -49,32 +52,22 @@ class Command(BaseCommand):
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
-            raise CommandError(
-                "Incomplete command, Flight Declaration ID not provided %s" % e
-            )
+            raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
 
         # Get the flight declaration
 
         my_database_reader = BlenderDatabaseReader()
 
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         if not flight_declaration:
             raise CommandError(
-                "Flight Declaration with ID {flight_declaration_id} does not exist".format(
-                    flight_declaration_id=flight_declaration_id
-                )
+                "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
 
         current_state = flight_declaration.state
         current_state_str = OPERATION_STATES[current_state][1]
         my_scd_dss_helper = SCDOperations()
-        flight_authorization = (
-            my_database_reader.get_flight_authorization_by_flight_declaration(
-                flight_declaration_id=flight_declaration_id
-            )
-        )
+        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
 
         operational_intent_id = flight_authorization.dss_operational_intent_id
 
@@ -86,9 +79,7 @@ class Command(BaseCommand):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
 
-            reference_full = op_int_details["success_response"][
-                "operational_intent_reference"
-            ]
+            reference_full = op_int_details["success_response"]["operational_intent_reference"]
             dss_response_subscribers = op_int_details["success_response"]["subscribers"]
             details_full = op_int_details["operational_intent_details"]
             # Load existing opint details
@@ -164,8 +155,4 @@ class Command(BaseCommand):
                 logger.info("Dry run, not submitting to the DSS")
 
         else:
-            logger.info(
-                "Operational intent with {flight_declaration_id} does not exist...".format(
-                    flight_declaration_id=flight_declaration_id
-                )
-            )
+            logger.info("Operational intent with {flight_declaration_id} does not exist...".format(flight_declaration_id=flight_declaration_id))

@@ -31,9 +31,7 @@ class OperationalIntentsConverter:
 
         self.all_features = []
 
-    def utm_converter(
-        self, shapely_shape: shapely.geometry, inverse: bool = False
-    ) -> shapely.geometry.shape:
+    def utm_converter(self, shapely_shape: shapely.geometry, inverse: bool = False) -> shapely.geometry.shape:
         """A helper function to convert from lat / lon to UTM coordinates for buffering. tracks. This is the UTM projection (https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system), we use Zone 54N which encompasses Japan, this zone has to be set for each locale / city. Adapted from https://gis.stackexchange.com/questions/325926/buffering-geometry-with-points-in-wgs84-using-shapely"""
 
         proj = Proj(proj="utm", zone=self.utm_zone, ellps="WGS84", datum="WGS84")
@@ -42,26 +40,17 @@ class OperationalIntentsConverter:
         point_or_polygon = geo_interface["type"]
         coordinates = geo_interface["coordinates"]
         if point_or_polygon == "Polygon":
-            new_coordinates = [
-                [proj(*point, inverse=inverse) for point in linring]
-                for linring in coordinates
-            ]
+            new_coordinates = [[proj(*point, inverse=inverse) for point in linring] for linring in coordinates]
         elif point_or_polygon == "Point":
             new_coordinates = proj(*coordinates, inverse=inverse)
         else:
-            raise RuntimeError(
-                "Unexpected geo_interface type: {}".format(point_or_polygon)
-            )
+            raise RuntimeError("Unexpected geo_interface type: {}".format(point_or_polygon))
 
-        return shapely.geometry.shape(
-            {"type": point_or_polygon, "coordinates": tuple(new_coordinates)}
-        )
+        return shapely.geometry.shape({"type": point_or_polygon, "coordinates": tuple(new_coordinates)})
 
     def convert_operational_intent_to_geo_json(self, volumes: List[Volume4D]):
         for volume in volumes:
-            geo_json_features = self._convert_operational_intent_to_geojson_feature(
-                volume
-            )
+            geo_json_features = self._convert_operational_intent_to_geojson_feature(volume)
             self.geo_json["features"] += geo_json_features
 
     def create_partial_operational_intent_ref(
@@ -78,15 +67,11 @@ class OperationalIntentsConverter:
             end_datetime=end_datetime,
         )
 
-        op_int_r = PartialCreateOperationalIntentReference(
-            volumes=all_v4d, state=state, priority=priority, off_nominal_volumes=[]
-        )
+        op_int_r = PartialCreateOperationalIntentReference(volumes=all_v4d, state=state, priority=priority, off_nominal_volumes=[])
 
         return op_int_r
 
-    def convert_geo_json_to_volume4D(
-        self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime: str
-    ) -> List[Volume4D]:
+    def convert_geo_json_to_volume4D(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime: str) -> List[Volume4D]:
         all_v4d = []
         # all_shapes = []
         all_features = geo_json_fc["features"]
@@ -118,18 +103,11 @@ class OperationalIntentsConverter:
                 altitude_upper=Altitude(value=max_altitude, reference="W84", units="M"),
             )
 
-            if (
-                "start_time" in feature["properties"]
-                and "end_time" in feature["properties"]
-            ):
+            if "start_time" in feature["properties"] and "end_time" in feature["properties"]:
                 volume4D = Volume4D(
                     volume=volume3D,
-                    time_start=Time(
-                        format="RFC3339", value=feature["properties"]["start_time"]
-                    ),
-                    time_end=Time(
-                        format="RFC3339", value=feature["properties"]["end_time"]
-                    ),
+                    time_start=Time(format="RFC3339", value=feature["properties"]["start_time"]),
+                    time_end=Time(format="RFC3339", value=feature["properties"]["end_time"]),
                 )
             else:
                 volume4D = Volume4D(
@@ -217,9 +195,7 @@ class OperationalIntentsConverter:
         if "outline_circle" in v and v["outline_circle"] is not None:
             outline_circle = v["outline_circle"]
             circle_radius = outline_circle["radius"]["value"]
-            center_point = Point(
-                outline_circle["center"]["lng"], outline_circle["center"]["lat"]
-            )
+            center_point = Point(outline_circle["center"]["lng"], outline_circle["center"]["lat"])
             utm_center = self.utm_converter(shapely_shape=center_point)
             buffered_cicle = utm_center.buffer(circle_radius)
             converted_circle = self.utm_converter(buffered_cicle, inverse=True)

@@ -1,0 +1,5 @@
+pylint_django
+black
+isort
+ruff
+bandit

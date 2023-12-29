@@ -4,8 +4,7 @@ from os import environ as env
 from django.apps import AppConfig
 from dotenv import find_dotenv, load_dotenv
 
-from notification_operations.notification_helper import \
-    InitialNotificationFactory
+from notification_operations.notification_helper import InitialNotificationFactory
 
 load_dotenv(find_dotenv())
 logger = logging.getLogger("django")

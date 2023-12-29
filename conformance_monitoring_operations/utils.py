@@ -1,15 +1,18 @@
 ## This file checks the conformance of a operation per the AMC stated in the EU Conformance monitoring service
-import logging
-import arrow
 import json
+import logging
 from typing import List
+
+import arrow
+from dotenv import find_dotenv, load_dotenv
 from shapely.geometry import Point
 from shapely.geometry import Polygon as Plgn
-from dotenv import load_dotenv, find_dotenv
-from .conformance_state_helper import ConformanceChecksList
+
 from common.database_operations import BlenderDatabaseReader
-from scd_operations.scd_data_definitions import LatLngPoint, Polygon, Volume4D
 from conformance_monitoring_operations.data_definitions import PolygonAltitude
+from scd_operations.scd_data_definitions import LatLngPoint, Polygon, Volume4D
+
+from .conformance_state_helper import ConformanceChecksList
 from .data_helper import cast_to_volume4d
 
 logger = logging.getLogger("django")
@@ -27,7 +30,6 @@ def is_time_between(begin_time, end_time, check_time=None):
 
 
 class BlenderConformanceEngine:
-
     def is_operation_conformant_via_telemetry(
         self,
         flight_declaration_id: str,
@@ -49,14 +51,8 @@ class BlenderConformanceEngine:
         my_database_reader = BlenderDatabaseReader()
         now = arrow.now()
 
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
-        flight_authorization = (
-            my_database_reader.get_flight_authorization_by_flight_declaration(
-                flight_declaration_id=flight_declaration_id
-            )
-        )
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
         # # C2 Check
         # try:
         #     assert flight_authorization is not None
@@ -79,13 +75,13 @@ class BlenderConformanceEngine:
         # C4, C5 check
         try:
             # Check flight is not processing, ended, withdrawn, cancelled, rejected
-            assert flight_declaration.state not in [0,5,6,7,8]
+            assert flight_declaration.state not in [0, 5, 6, 7, 8]
         except AssertionError as ae:
             return ConformanceChecksList.C4
 
         try:
             # Check flight is activated, nonconforming contingent
-            assert flight_declaration.state in [2,3,4]
+            assert flight_declaration.state in [2, 3, 4]
         except AssertionError as ae:
             return ConformanceChecksList.C5
 
@@ -134,9 +130,7 @@ class BlenderConformanceEngine:
         for p in all_polygon_altitudes:
             is_within = rid_location.within(p.polygon)
             # If the aircraft RID is within the the polygon, check the altitude
-            altitude_conformant = (
-                True if altitude_lower <= altitude_m_wgs_84 <= altitude_upper else False
-            )
+            altitude_conformant = True if altitude_lower <= altitude_m_wgs_84 <= altitude_upper else False
 
             rid_obs_within_all_volumes.append(is_within)
             rid_obs_within_altitudes.append(altitude_conformant)
@@ -157,9 +151,7 @@ class BlenderConformanceEngine:
         # TODO
         return True
 
-    def check_flight_authorization_conformance(
-        self, flight_declaration_id: str
-    ) -> bool:
+    def check_flight_authorization_conformance(self, flight_declaration_id: str) -> bool:
         """This method checks the conformance of a flight authorization independent of telemetry observations being sent:
         C9 a/b Check if telemetry is being sent
         C10 Check operation state that it not ended and the time limit of the flight authorization has passed
@@ -169,14 +161,8 @@ class BlenderConformanceEngine:
 
         my_database_reader = BlenderDatabaseReader()
         now = arrow.now()
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
-        flight_authorization_exists = (
-            my_database_reader.get_flight_authorization_by_flight_declaration(
-                flight_declaration_id=flight_declaration_id
-            )
-        )
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+        flight_authorization_exists = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
         # C11 Check
         if not flight_authorization_exists:
             # if flight state is accepted, then change it to ended and delete from dss
@@ -196,11 +182,7 @@ class BlenderConformanceEngine:
         # C9 state check
         # Operation is supposed to start check if telemetry is bieng submitted (within the last minute)
         if latest_telemetry_datetime:
-            if (
-                not fifteen_seconds_before_now
-                <= latest_telemetry_datetime
-                <= fifteen_seconds_after_now
-            ):
+            if not fifteen_seconds_before_now <= latest_telemetry_datetime <= fifteen_seconds_after_now:
                 return ConformanceChecksList.C9b
         else:
             # declare state as contingent

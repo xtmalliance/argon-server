@@ -1,22 +1,23 @@
-from flight_blender.celery import app
-import logging
 import json
-
-from .data_definitions import (
-    GeoZone,
-    GeoAwarenessTestStatus,
-)
+import logging
 from dataclasses import asdict
-from shapely.geometry import shape
-from .common import GeoZoneParser
-from requests.exceptions import ConnectionError
-import requests
-from auth_helper.common import get_redis
+
 import arrow
-from .models import GeoFence
+import requests
+from requests.exceptions import ConnectionError
+from shapely.geometry import shape
 from shapely.ops import unary_union
 
+from auth_helper.common import get_redis
+from flight_blender.celery import app
+
+from .common import GeoZoneParser
+from .data_definitions import GeoAwarenessTestStatus, GeoZone
+from .models import GeoFence
+
 logger = logging.getLogger("django")
+
+
 @app.task(name="download_geozone_source")
 def download_geozone_source(geo_zone_url: str, geozone_source_id: str):
     r = get_redis()
@@ -26,9 +27,7 @@ def download_geozone_source(geo_zone_url: str, geozone_source_id: str):
     except ConnectionError as ce:
         logger.error("Error in downloading data from Geofence url")
         logger.error(ce)
-        test_status_storage = GeoAwarenessTestStatus(
-            result="Error", message="Error in downloading data"
-        )
+        test_status_storage = GeoAwarenessTestStatus(result="Error", message="Error in downloading data")
     else:
         if geo_zone_request.status_code == 200:
             try:
@@ -37,13 +36,9 @@ def download_geozone_source(geo_zone_url: str, geozone_source_id: str):
                 write_geo_zone.delay(geo_zone=geo_zone_str, test_harness_datasource="1")
                 test_status_storage = GeoAwarenessTestStatus(result="Ready", message="")
             except Exception as e:
-                test_status_storage = GeoAwarenessTestStatus(
-                    result="Error", message="The URL could be "
-                )
+                test_status_storage = GeoAwarenessTestStatus(result="Error", message="The URL could be ")
         else:
-            test_status_storage = GeoAwarenessTestStatus(
-                result="Unsupported", message=""
-            )
+            test_status_storage = GeoAwarenessTestStatus(result="Unsupported", message="")
 
     if r.exists(geoawareness_test_data_store):
         r.set(geoawareness_test_data_store, json.dumps(asdict(test_status_storage)))
@@ -53,8 +48,11 @@ def download_geozone_source(geo_zone_url: str, geozone_source_id: str):
 def write_geo_zone(geo_zone: str, test_harness_datasource: str = "0"):
     geo_zone = json.loads(geo_zone)
     test_harness_datasource = int(test_harness_datasource)
-    my_geo_zone_parser = GeoZoneParser(geo_zone= geo_zone)    
-    all_zones_valid, processed_geo_zone_features = my_geo_zone_parser.parse_validate_geozone()    
+    my_geo_zone_parser = GeoZoneParser(geo_zone=geo_zone)
+    (
+        all_zones_valid,
+        processed_geo_zone_features,
+    ) = my_geo_zone_parser.parse_validate_geozone()
     logger.info("Processing %s geozone features.." % len(processed_geo_zone_features))
     for geo_zone_feature in processed_geo_zone_features:
         all_feat_geoms = geo_zone_feature.geometry
@@ -81,12 +79,8 @@ def write_geo_zone(geo_zone: str, test_harness_datasource: str = "0"):
         name = geo_zone_feature.name
         start_time = arrow.now()
         end_time = start_time.shift(years=1)
-        upper_limit = (
-            geo_zone_feature["upperLimit"] if "upperLimit" in geo_zone_feature else 300
-        )
-        lower_limit = (
-            geo_zone_feature["lowerLimit"] if "lowerLimit" in geo_zone_feature else 10
-        )
+        upper_limit = geo_zone_feature["upperLimit"] if "upperLimit" in geo_zone_feature else 300
+        lower_limit = geo_zone_feature["lowerLimit"] if "lowerLimit" in geo_zone_feature else 10
         geo_f = GeoFence(
             geozone=json.dumps(geo_zone_feature),
             raw_geo_fence=json.dumps(fc),

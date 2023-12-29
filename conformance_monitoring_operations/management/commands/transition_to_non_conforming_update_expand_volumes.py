@@ -1,25 +1,27 @@
-from django.core.management.base import BaseCommand, CommandError
-from os import environ as env
-from common.database_operations import BlenderDatabaseReader
-from common.data_definitions import OPERATION_STATES
-import arrow
-from flight_feed_operations import flight_stream_helper
-from scd_operations.scd_data_definitions import (
-    Time,
-    OperationalIntentReferenceDSSResponse,
-    Volume4D
-)
-from typing import List
-from conformance_monitoring_operations.data_definitions import PolygonAltitude
-from shapely.geometry import Point, Polygon
-from flight_declaration_operations.utils import OperationalIntentsConverter
-from dacite import from_dict
-from auth_helper.common import get_redis
 import json
-from datetime import timedelta
-from dotenv import load_dotenv, find_dotenv
 import logging
+from datetime import timedelta
+from os import environ as env
+from typing import List
+
+import arrow
+from dacite import from_dict
+from django.core.management.base import BaseCommand, CommandError
+from dotenv import find_dotenv, load_dotenv
+from shapely.geometry import Point, Polygon
+
+from auth_helper.common import get_redis
+from common.data_definitions import OPERATION_STATES
+from common.database_operations import BlenderDatabaseReader
+from conformance_monitoring_operations.data_definitions import PolygonAltitude
+from flight_declaration_operations.utils import OperationalIntentsConverter
+from flight_feed_operations import flight_stream_helper
 from scd_operations.dss_scd_helper import SCDOperations
+from scd_operations.scd_data_definitions import (
+    OperationalIntentReferenceDSSResponse,
+    Time,
+    Volume4D,
+)
 
 load_dotenv(find_dotenv())
 ENV_FILE = find_dotenv()
@@ -62,18 +64,12 @@ class Command(BaseCommand):
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
-            raise CommandError(
-                "Incomplete command, Flight Declaration ID not provided %s" % e
-            )
+            raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
         # Get the flight declaration
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         if not flight_declaration:
             raise CommandError(
-                "Flight Declaration with ID {flight_declaration_id} does not exist".format(
-                    flight_declaration_id=flight_declaration_id
-                )
+                "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
 
         my_scd_dss_helper = SCDOperations()
@@ -83,22 +79,12 @@ class Command(BaseCommand):
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
-            raise CommandError(
-                "Incomplete command, Flight Declaration ID not provided %s" % e
-            )
+            raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
 
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(
-            flight_declaration_id=flight_declaration_id
-        )
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         if not flight_declaration:
             raise CommandError(
-                "Flight Declaration with ID {flight_declaration_id} does not exist".format(
-                    flight_declaration_id=flight_declaration_id
-                )
-            )
-        flight_authorization = (
-            my_database_reader.get_flight_authorization_by_flight_declaration_obj(
-                flight_declaration=flight_declaration
+                "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
         )
         current_state = flight_declaration.state
@@ -114,9 +100,7 @@ class Command(BaseCommand):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
 
-            reference_full = op_int_details["success_response"][
-                "operational_intent_reference"
-            ]
+            reference_full = op_int_details["success_response"]["operational_intent_reference"]
             dss_response_subscribers = op_int_details["success_response"]["subscribers"]
             details_full = op_int_details["operational_intent_details"]
             # Load existing opint details
@@ -198,13 +182,9 @@ class Command(BaseCommand):
                             }
                         )
                     # sort by date
-                    unique_flights.sort(
-                        key=lambda item: item["timestamp"], reverse=True
-                    )
+                    unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
                     # Keep only the latest message
-                    distinct_messages = {
-                        i["address"]: i for i in reversed(unique_flights)
-                    }.values()
+                    distinct_messages = {i["address"]: i for i in reversed(unique_flights)}.values()
                     relevant_observation = {}
                     for index, rid_observation in enumerate(distinct_messages):
                         if rid_observation.get("icao_address") == flight_declaration_id:
@@ -212,10 +192,7 @@ class Command(BaseCommand):
 
                             break
                 except KeyError as ke:
-                    logger.error(
-                        "Error in sorting distinct messages, ICAO name not defined %s"
-                        % ke
-                    )
+                    logger.error("Error in sorting distinct messages, ICAO name not defined %s" % ke)
                     distinct_messages = []
 
                 lat_dd = rid_observation["lat_dd"]
@@ -251,9 +228,7 @@ class Command(BaseCommand):
 
                 aircraft_bounds_conformant = any(rid_obs_within_all_volumes)
 
-                if (
-                    aircraft_bounds_conformant
-                ):  # Operator declares contingency, but the aircraft is within bounds, no need to update / change bounds
+                if aircraft_bounds_conformant:  # Operator declares contingency, but the aircraft is within bounds, no need to update / change bounds
                     pass
 
                 else:
@@ -275,12 +250,8 @@ class Command(BaseCommand):
                         op_int_details_raw = r.get(flight_opint)
                         op_int_details = json.loads(op_int_details_raw)
 
-                        reference_full = op_int_details["success_response"][
-                            "operational_intent_reference"
-                        ]
-                        dss_response_subscribers = op_int_details["success_response"][
-                            "subscribers"
-                        ]
+                        reference_full = op_int_details["success_response"]["operational_intent_reference"]
+                        dss_response_subscribers = op_int_details["success_response"]["subscribers"]
                         details_full = op_int_details["operational_intent_details"]
                         # Load existing opint details
 
@@ -346,9 +317,7 @@ class Command(BaseCommand):
                                 )
                             )
                         else:
-                            logger.info(
-                                "Error in updating operational intent on the DSS"
-                            )
+                            logger.info("Error in updating operational intent on the DSS")
 
                     else:
                         logger.info("Dry run, not submitting to the DSS")

@@ -1,59 +1,59 @@
-from rest_framework.decorators import api_view
-from auth_helper.utils import requires_scopes
-from dataclasses import asdict, is_dataclass
-import rid_operations.view_port_ops as view_port_ops
-from datetime import timedelta
-from scd_operations import dss_scd_helper
+import json
+import logging
 import time
+from dataclasses import asdict, is_dataclass
+from datetime import timedelta
 
 # Create your views here.
 from os import environ as env
-from dotenv import load_dotenv, find_dotenv
 from uuid import UUID
-from django.http import JsonResponse
-from django.utils.datastructures import MultiValueDictKeyError
-from .uss_data_definitions import (
-    OperationalIntentNotFoundResponse,
-    OperationalIntentDetails,
-    UpdateOperationalIntent,
-    GenericErrorResponseMessage,
-    SummaryFlightsOnly,
-    OperatorDetailsSuccessResponse,
-    FlightDetailsNotFoundMessage,
-    UpdateChangedOpIntDetailsPost,
-    OperationalIntentDetailsUSSResponse,
-    OperationalIntentUSSDetails,
-    OperationalIntentReferenceDSSResponse,
-    Time,
-)
 
-
-from rid_operations.rid_utils import (
-    RIDAuthData,
-    RIDAircraftPosition,
-    RIDHeight,
-    RIDAircraftState,
-    RIDOperatorDetails,
-    RIDFlightResponse,
-    LatLngPoint,
-    RIDOperatorDetails,
-    TelemetryFlightDetails,
-    AuthData,
-)
-from rid_operations.data_definitions import (
-    SignedUnsignedTelemetryObservation,
-    UAClassificationEU,
-    UASID,
-    OperatorLocation,
-    Altitude,
-)
 import arrow
 from dacite import from_dict
-import json
-import logging
-from auth_helper.common import get_redis
-from flight_feed_operations import flight_stream_helper
+from django.http import JsonResponse
+from django.utils.datastructures import MultiValueDictKeyError
+from dotenv import find_dotenv, load_dotenv
+from rest_framework.decorators import api_view
 from shapely.geometry import Point
+
+import rid_operations.view_port_ops as view_port_ops
+from auth_helper.common import get_redis
+from auth_helper.utils import requires_scopes
+from flight_feed_operations import flight_stream_helper
+from rid_operations.data_definitions import (
+    UASID,
+    Altitude,
+    OperatorLocation,
+    SignedUnsignedTelemetryObservation,
+    UAClassificationEU,
+)
+from rid_operations.rid_utils import (
+    AuthData,
+    LatLngPoint,
+    RIDAircraftPosition,
+    RIDAircraftState,
+    RIDAuthData,
+    RIDFlightResponse,
+    RIDHeight,
+    RIDOperatorDetails,
+    TelemetryFlightDetails,
+)
+from scd_operations import dss_scd_helper
+
+from .uss_data_definitions import (
+    FlightDetailsNotFoundMessage,
+    GenericErrorResponseMessage,
+    OperationalIntentDetails,
+    OperationalIntentDetailsUSSResponse,
+    OperationalIntentNotFoundResponse,
+    OperationalIntentReferenceDSSResponse,
+    OperationalIntentUSSDetails,
+    OperatorDetailsSuccessResponse,
+    SummaryFlightsOnly,
+    Time,
+    UpdateChangedOpIntDetailsPost,
+    UpdateOperationalIntent,
+)
 
 load_dotenv(find_dotenv())
 logger = logging.getLogger("django")
@@ -83,9 +83,7 @@ def USSUpdateOpIntDetails(request):
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
     op_int_update_details_data = request.data
     r = get_redis()
-    op_int_update_detail = from_dict(
-        data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data
-    )
+    op_int_update_detail = from_dict(data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data)
     my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
     # Write the operational Intent
     operation_id_str = op_int_update_detail.operational_intent_id
@@ -120,12 +118,8 @@ def USSUpdateOpIntDetails(request):
     # # Read the new operational intent
     # Store the opint, see what other operations conflict the opint
 
-    updated_success = UpdateOperationalIntent(
-        message="New or updated full operational intent information received successfully "
-    )
-    return JsonResponse(
-        json.loads(json.dumps(updated_success, cls=EnhancedJSONEncoder)), status=204
-    )
+    updated_success = UpdateOperationalIntent(message="New or updated full operational intent information received successfully ")
+    return JsonResponse(json.loads(json.dumps(updated_success, cls=EnhancedJSONEncoder)), status=204)
 
 
 @api_view(["GET"])
@@ -158,9 +152,7 @@ def USSOpIntDetails(request, opint_id):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
 
-            reference_full = op_int_details["success_response"][
-                "operational_intent_reference"
-            ]
+            reference_full = op_int_details["success_response"]["operational_intent_reference"]
             details_full = op_int_details["operational_intent_details"]
             # Load existing opint details
             stored_operational_intent_id = reference_full["id"]
@@ -213,25 +205,16 @@ def USSOpIntDetails(request, opint_id):
                 off_nominal_volumes=stored_off_nominal_volumes,
             )
 
-            operational_intent = OperationalIntentDetailsUSSResponse(
-                reference=reference, details=details
-            )
-            operational_intent_response = OperationalIntentDetails(
-                operational_intent=operational_intent
-            )
+            operational_intent = OperationalIntentDetailsUSSResponse(reference=reference, details=details)
+            operational_intent_response = OperationalIntentDetails(operational_intent=operational_intent)
 
             return JsonResponse(
-                json.loads(
-                    json.dumps(operational_intent_response, cls=EnhancedJSONEncoder)
-                ),
+                json.loads(json.dumps(operational_intent_response, cls=EnhancedJSONEncoder)),
                 status=200,
             )
 
         else:
-            not_found_response = OperationalIntentNotFoundResponse(
-                message="Requested Operational intent with id %s not found"
-                % str(opint_id)
-            )
+            not_found_response = OperationalIntentNotFoundResponse(message="Requested Operational intent with id %s not found" % str(opint_id))
 
             return JsonResponse(
                 json.loads(json.dumps(not_found_response, cls=EnhancedJSONEncoder)),
@@ -239,9 +222,7 @@ def USSOpIntDetails(request, opint_id):
             )
 
     else:
-        not_found_response = OperationalIntentNotFoundResponse(
-            message="Requested Operational intent with id %s not found" % str(opint_id)
-        )
+        not_found_response = OperationalIntentNotFoundResponse(message="Requested Operational intent with id %s not found" % str(opint_id))
 
         return JsonResponse(
             json.loads(json.dumps(not_found_response, cls=EnhancedJSONEncoder)),
@@ -263,40 +244,23 @@ def get_uss_flights(request):
         view = request.query_params["view"]
         view_port = [float(i) for i in view.split(",")]
     except Exception as ke:
-        incorrect_parameters = {
-            "message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"
-        }
+        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return JsonResponse(json.loads(json.dumps(incorrect_parameters)), status=400)
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
     view_port_area = 0
     if not view_port_valid:
-        view_port_not_ok = GenericErrorResponseMessage(
-            message="The requested view %s rectangle is not valid format: lat1,lng1,lat2,lng2"
-            % view
-        )
-        return JsonResponse(
-            json.loads(json.dumps(asdict(view_port_not_ok))), status=419
-        )
+        view_port_not_ok = GenericErrorResponseMessage(message="The requested view %s rectangle is not valid format: lat1,lng1,lat2,lng2" % view)
+        return JsonResponse(json.loads(json.dumps(asdict(view_port_not_ok))), status=419)
     view_box = view_port_ops.build_view_port_box(view_port_coords=view_port)
     view_port_area = view_port_ops.get_view_port_area(view_box=view_box)
-    view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(
-        view_port_coords=view_port
-    )
+    view_port_diagonal = view_port_ops.get_view_port_diagonal_length_kms(view_port_coords=view_port)
     if (view_port_diagonal) > 7:
-        view_port_too_large_msg = GenericErrorResponseMessage(
-            message="The requested view %s rectangle is too large" % view
-        )
-        return JsonResponse(
-            json.loads(json.dumps(asdict(view_port_too_large_msg))), status=413
-        )
+        view_port_too_large_msg = GenericErrorResponseMessage(message="The requested view %s rectangle is too large" % view)
+        return JsonResponse(json.loads(json.dumps(asdict(view_port_too_large_msg))), status=413)
 
     if (view_port_area) < 250000 and (view_port_area) > 90000:
-        view_port_too_large_msg = GenericErrorResponseMessage(
-            message="The requested view %s rectangle is too large" % view
-        )
-        return JsonResponse(
-            json.loads(json.dumps(asdict(view_port_too_large_msg))), status=419
-        )
+        view_port_too_large_msg = GenericErrorResponseMessage(message="The requested view %s rectangle is too large" % view)
+        return JsonResponse(json.loads(json.dumps(asdict(view_port_too_large_msg))), status=419)
 
     time.sleep(0.5)
 
@@ -360,9 +324,7 @@ def get_uss_flights(request):
 
                 telemetry_data_dict = observation_data_dict["telemetry"]
 
-                details_response_dict = observation_data_dict["details_response"][
-                    "details"
-                ]
+                details_response_dict = observation_data_dict["details_response"]["details"]
 
                 position = RIDAircraftPosition(
                     lat=telemetry_data_dict["position"]["lat"],
@@ -371,9 +333,7 @@ def get_uss_flights(request):
                     accuracy_h=telemetry_data_dict["position"]["accuracy_h"],
                     accuracy_v=telemetry_data_dict["position"]["accuracy_v"],
                     extrapolated=telemetry_data_dict["position"]["extrapolated"],
-                    pressure_altitude=telemetry_data_dict["position"][
-                        "pressure_altitude"
-                    ],
+                    pressure_altitude=telemetry_data_dict["position"]["pressure_altitude"],
                 )
                 height = RIDHeight(
                     distance=telemetry_data_dict["height"]["distance"],
@@ -401,9 +361,7 @@ def get_uss_flights(request):
                         lng=details_response_dict["operator_location"]["lng"],
                     ),
                     operator_id=details_response_dict["operator_id"],
-                    operation_description=details_response_dict[
-                        "operation_description"
-                    ],
+                    operation_description=details_response_dict["operation_description"],
                     serial_number=details_response_dict["serial_number"],
                     registration_number=details_response_dict["registration_number"],
                     auth_data=RIDAuthData(
@@ -426,13 +384,9 @@ def get_uss_flights(request):
                 # see if it matches the viewport
 
                 # show / add metadata it if it does
-                rid_response = RIDFlightResponse(
-                    timestamp=Time(value=now, format="RFC3339"), flights=rid_flights
-                )
+                rid_response = RIDFlightResponse(timestamp=Time(value=now, format="RFC3339"), flights=rid_flights)
 
-                return JsonResponse(
-                    json.loads(json.dumps(asdict(rid_response))), status=200
-                )
+                return JsonResponse(json.loads(json.dumps(asdict(rid_response))), status=200)
 
     else:
         # show / add metadata it if it does
@@ -485,11 +439,7 @@ def get_uss_flight_details(request, flight_id):
 
         flight_details_full = OperatorDetailsSuccessResponse(details=f_detail)
 
-        return JsonResponse(
-            json.loads(json.dumps(asdict(flight_details_full))), status=200
-        )
+        return JsonResponse(json.loads(json.dumps(asdict(flight_details_full))), status=200)
     else:
-        fd = FlightDetailsNotFoundMessage(
-            message="The requested flight could not be found"
-        )
+        fd = FlightDetailsNotFoundMessage(message="The requested flight could not be found")
         return JsonResponse(json.loads(json.dumps(asdict(fd))), status=404)

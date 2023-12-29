@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from typing import List, Optional, Literal
+from typing import List, Literal, Optional
+
 
 @dataclass
-class FlightDeclarationCreationPayload: 
-    id:str
-    operational_intent:str
+class FlightDeclarationCreationPayload:
+    id: str
+    operational_intent: str
     flight_declaration_raw_geojson: str
     bounds: str
     aircraft_id: str
@@ -96,13 +97,13 @@ class SCDVolume4D:
 #     off_nominal_volumes: List[Volume4D]
 #     priority: int
 
+
 @dataclass
 class FlightDeclarationOperationalIntentStorageDetails:
     volumes: List[SCDVolume4D]
     off_nominal_volumes: List[SCDVolume4D]
     priority: int
-    state:str
-
+    state: str
 
 
 # class OperationalIntent(ImplicitDict):

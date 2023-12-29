@@ -1,30 +1,31 @@
 import json
+import logging
+from functools import partial
 from typing import List, Tuple
+
+import pyproj
+from shapely.geometry import Point, mapping
+from shapely.ops import transform
+
 from .data_definitions import (
-    ImplicitDict,
-    ZoneAuthority,
-    HorizontalProjection,
     ED269Geometry,
     GeoZoneFeature,
+    HorizontalProjection,
+    ImplicitDict,
+    ZoneAuthority,
 )
-import logging
-from shapely.geometry import Point, mapping
-import pyproj
-from shapely.ops import transform
-from functools import partial
 
 logger = logging.getLogger("django")
 proj_wgs84 = pyproj.Proj("+proj=longlat +datum=WGS84")
 
 
-
-
-class GeoZoneParser():
+class GeoZoneParser:
     def __init__(self, geo_zone):
         self.geo_zone = geo_zone
 
-    def parse_validate_geozone(self)-> (bool,Tuple[None, List[GeoZoneFeature]],):
-        
+    def parse_validate_geozone(
+        self,
+    ) -> (bool, Tuple[None, List[GeoZoneFeature]],):
         processed_geo_zone_features: List[GeoZoneFeature] = []
         all_zones_valid: List[bool] = []
         for _geo_zone_feature in self.geo_zone["features"]:
@@ -47,9 +48,7 @@ class GeoZoneParser():
                         lng = ed_269_geometry["horizontalProjection"]["center"][0]
                         radius = ed_269_geometry["horizontalProjection"]["radius"]
                     except KeyError as ke:
-                        logger.info(
-                            "Error in parsing points provided in the ED 269 file %s" % ke
-                        )
+                        logger.info("Error in parsing points provided in the ED 269 file %s" % ke)
 
                         parse_error = True
                     else:
@@ -58,17 +57,13 @@ class GeoZoneParser():
                         b = mapping(buf)
                         fc = {
                             "type": "FeatureCollection",
-                            "features": [
-                                {"type": "Feature", "properties": {}, "geometry": b}
-                            ],
+                            "features": [{"type": "Feature", "properties": {}, "geometry": b}],
                         }
                         logger.info("Converting point to circle")
                         # logger.info(json.dumps(fc))
                         ed_269_geometry["horizontalProjection"] = b
                 if not parse_error:
-                    horizontal_projection = ImplicitDict.parse(
-                        ed_269_geometry["horizontalProjection"], HorizontalProjection
-                    )
+                    horizontal_projection = ImplicitDict.parse(ed_269_geometry["horizontalProjection"], HorizontalProjection)
                     parse_error = False
                     ed_269_geometry = ED269Geometry(
                         uomDimensions=ed_269_geometry["uomDimensions"],
@@ -100,33 +95,36 @@ class GeoZoneParser():
             processed_geo_zone_features.append(geo_zone_feature)
             all_zones_valid.append(True)
 
-        return (all_zones_valid, processed_geo_zone_features,)
+        return (
+            all_zones_valid,
+            processed_geo_zone_features,
+        )
+
 
 def geodesic_point_buffer(lat, lon, km):
     # Azimuthal equidistant projection
     aeqd_proj = "+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0"
-    project = partial(
-        pyproj.transform, pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)), proj_wgs84
-    )
+    project = partial(pyproj.transform, pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)), proj_wgs84)
     buf = Point(0, 0).buffer(km * 1000)  # distance in metres
     return transform(project, buf)
 
 
 def validate_geo_zone(geo_zone) -> bool:
-    '''A class to validate GeoZones '''
-    
+    """A class to validate GeoZones"""
 
-    if all(k in geo_zone for k in ("title","description",'features')):
+    if all(k in geo_zone for k in ("title", "description", "features")):
         pass
-    else: 
-        return False
-    
-    all_zones_valid = []
-    my_geo_zone_parser= GeoZoneParser(geo_zone= geo_zone)
-    all_zones_valid, processed_geo_zone_features = my_geo_zone_parser.parse_validate_geozone()
-    
-    if all(all_zones_valid):
-        return True 
-    else: 
+    else:
         return False
 
+    all_zones_valid = []
+    my_geo_zone_parser = GeoZoneParser(geo_zone=geo_zone)
+    (
+        all_zones_valid,
+        processed_geo_zone_features,
+    ) = my_geo_zone_parser.parse_validate_geozone()
+
+    if all(all_zones_valid):
+        return True
+    else:
+        return False

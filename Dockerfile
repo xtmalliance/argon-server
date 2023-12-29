@@ -1,5 +1,5 @@
-FROM python:3.8-slim
-ENV PYTHONUNBUFFERED 1
+FROM python:3.10
+ENV PYTHONUNBUFFERED=1
 RUN mkdir /app
 WORKDIR /app
 COPY requirements.txt /app/
