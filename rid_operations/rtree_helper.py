@@ -1,7 +1,7 @@
 import hashlib
 import json
 from typing import List
-
+from shapely.geometry import Polygon
 from rtree import index
 from scd_operations.scd_data_definitions import OpInttoCheckDetails, Time, Altitude
 import hashlib
