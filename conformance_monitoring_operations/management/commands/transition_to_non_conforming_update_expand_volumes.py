@@ -86,7 +86,9 @@ class Command(BaseCommand):
             raise CommandError(
                 "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
-        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=flight_declaration)
+        )
+        current_state = flight_declaration.state
+        current_state_str = OPERATION_STATES[current_state][1]
         dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
 
         r = get_redis()
@@ -148,13 +150,17 @@ class Command(BaseCommand):
                             subscription_id = s["subscription_id"]
                             break
                 # Create a new subscription to the airspace
-                operational_update_response = my_scd_dss_helper.update_specified_operational_intent_reference(
-                    subscription_id=subscription_id,
-                    operational_intent_ref_id=reference.id,
-                    extents=stored_volumes,
-                    new_state=str(new_state),
-                    ovn=reference.ovn,
-                    deconfliction_check=False,
+                operational_update_response = (
+                    my_scd_dss_helper.update_specified_operational_intent_reference(
+                        subscription_id=subscription_id,
+                        operational_intent_ref_id=reference.id,
+                        extents=stored_volumes,
+                        new_state=str(new_state),
+                        ovn=reference.ovn,
+                        deconfliction_check=False,
+                        priority = 0,
+                        current_state = current_state_str
+                    )
                 )
 
                 ## Update / expand volume

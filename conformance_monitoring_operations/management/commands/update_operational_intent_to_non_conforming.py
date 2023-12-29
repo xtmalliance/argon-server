@@ -1,12 +1,11 @@
-import json
-import logging
-from datetime import timedelta
-from os import environ as env
-
-import arrow
 from django.core.management.base import BaseCommand, CommandError
-from dotenv import find_dotenv, load_dotenv
-
+from os import environ as env
+import json
+import arrow
+from scd_operations.scd_data_definitions import (
+    Time,
+    OperationalIntentReferenceDSSResponse,
+)
 from auth_helper.common import get_redis
 from common.data_definitions import OPERATION_STATES
 from common.database_operations import BlenderDatabaseReader
@@ -18,9 +17,12 @@ from scd_operations.scd_data_definitions import (
 
 logger = logging.getLogger("django")
 
+load_dotenv(find_dotenv())
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
+
+logger = logging.getLogger("django")
 
 
 class Command(BaseCommand):
@@ -53,16 +55,28 @@ class Command(BaseCommand):
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
-            raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
+            raise CommandError(
+                "Incomplete command, Flight Declaration ID not provided %s" % e
+            )
         # Get the flight declaration
-        flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+        flight_declaration = my_database_reader.get_flight_declaration_by_id(
+            flight_declaration_id=flight_declaration_id
+        )
+        current_state = flight_declaration.state
+        current_state_str = OPERATION_STATES[current_state][1]
         if not flight_declaration:
             raise CommandError(
-                "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
+                "Flight Declaration with ID {flight_declaration_id} does not exist".format(
+                    flight_declaration_id=flight_declaration_id
+                )
             )
 
         my_scd_dss_helper = SCDOperations()
-        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
+        flight_authorization = (
+            my_database_reader.get_flight_authorization_by_flight_declaration(
+                flight_declaration_id=flight_declaration_id
+            )
+        )
 
         opint_subscription_end_time = timedelta(seconds=180)
         operational_intent_id = flight_authorization.dss_operational_intent_id
@@ -72,7 +86,9 @@ class Command(BaseCommand):
             op_int_details_raw = r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
 
-            reference_full = op_int_details["success_response"]["operational_intent_reference"]
+            reference_full = op_int_details["success_response"][
+                "operational_intent_reference"
+            ]
             dss_response_subscribers = op_int_details["success_response"]["subscribers"]
             details_full = op_int_details["operational_intent_details"]
             # Load existing opint details
@@ -122,19 +138,27 @@ class Command(BaseCommand):
                             subscription_id = s["subscription_id"]
                             break
 
-                operational_update_response = my_scd_dss_helper.update_specified_operational_intent_reference(
-                    subscription_id=subscription_id,
-                    operational_intent_ref_id=reference.id,
-                    extents=stored_volumes,
-                    new_state=str(new_state),
-                    ovn=reference.ovn,
-                    deconfliction_check=True,
+                operational_update_response = (
+                    my_scd_dss_helper.update_specified_operational_intent_reference(
+                        subscription_id=subscription_id,
+                        operational_intent_ref_id=reference.id,
+                        extents=stored_volumes,
+                        new_state=str(new_state),
+                        ovn=reference.ovn,
+                        deconfliction_check=True,
+                        priority = 0,
+                        current_state = current_state_str
+                    )
                 )
 
                 if operational_update_response.status == 200:
                     # Update was successful
-                    new_operational_intent_details = operational_update_response.dss_response
-                    op_int_details["success_response"]["operational_intent_details"] = new_operational_intent_details
+                    new_operational_intent_details = (
+                        operational_update_response.dss_response
+                    )
+                    op_int_details["success_response"][
+                        "operational_intent_details"
+                    ] = new_operational_intent_details
 
                     r.set(flight_opint, json.dumps(op_int_details))
                     r.expire(name=flight_opint, time=opint_subscription_end_time)

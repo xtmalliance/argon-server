@@ -71,4 +71,5 @@ volumes:
 
 networks:
   interop_ecosystem_network:
+    name: interop_ecosystem_network
     external: true

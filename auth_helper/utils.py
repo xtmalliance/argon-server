@@ -54,12 +54,13 @@ def requires_scopes(required_scopes):
                 return response
 
             if BYPASS_AUTH_TOKEN_VERIFICATION:
-                # Debug mode, no need to verify signatures
-                try:
-                    unverified_token_details = jwt.decode(token, algorithms=["RS256"], options={"verify_signature": False})
-                except jwt.DecodeError as de:
-                    response = JsonResponse({"detail": "Invalid token provided"})
-                    response.status_code = 401
+                # Debug mode, no need to verify signatures 
+                try: 
+                    unverified_token_details = jwt.decode(token,algorithms=['RS256'],options={"verify_signature": False})                       
+                    
+                except jwt.DecodeError as de:    
+                    response = JsonResponse({'detail': 'Invalid token provided'})
+                    response.status_code = 401                    
                     return response
 
                 try:

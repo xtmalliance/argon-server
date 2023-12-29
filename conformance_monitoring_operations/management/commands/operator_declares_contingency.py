@@ -17,13 +17,14 @@ from flight_declaration_operations.utils import OperationalIntentsConverter
 from flight_feed_operations import flight_stream_helper
 from scd_operations.dss_scd_helper import SCDOperations
 from scd_operations.scd_data_definitions import (
-    ImplicitSubscriptionParameters,
-    LatLngPoint,
+    Time,
     OperationalIntentReferenceDSSResponse,
     Polygon,
     Time,
     Volume4D,
 )
+
+from common.data_definitions import FLIGHT_OPINT_KEY
 
 load_dotenv(find_dotenv())
 
@@ -63,7 +64,6 @@ class Command(BaseCommand):
 
         my_scd_dss_helper = SCDOperations()
         my_database_reader = BlenderDatabaseReader()
-        now = arrow.now().isoformat()
 
         try:
             flight_declaration_id = options["flight_declaration_id"]
@@ -75,12 +75,14 @@ class Command(BaseCommand):
             raise CommandError(
                 "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
-        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=flight_declaration)
+        )
+        current_state = flight_declaration.state
+        current_state_str = OPERATION_STATES[current_state][1]
         dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
 
         r = get_redis()
 
-        flight_opint = "flight_opint." + str(flight_declaration_id)
+        flight_opint = FLIGHT_OPINT_KEY + str(flight_declaration_id)
         # Update the volume to create a new volume
 
         if r.exists(flight_opint):
@@ -137,13 +139,17 @@ class Command(BaseCommand):
                             subscription_id = s["subscription_id"]
                             break
                 # Create a new subscription to the airspace
-                operational_update_response = my_scd_dss_helper.update_specified_operational_intent_reference(
-                    subscription_id=subscription_id,
-                    operational_intent_ref_id=reference.id,
-                    extents=stored_volumes,
-                    new_state=str(contingent_state),
-                    ovn=reference.ovn,
-                    deconfliction_check=False,
+                operational_update_response = (
+                    my_scd_dss_helper.update_specified_operational_intent_reference(
+                        subscription_id=subscription_id,
+                        operational_intent_ref_id=reference.id,
+                        extents=stored_volumes,
+                        new_state=str(contingent_state),
+                        ovn=reference.ovn,
+                        deconfliction_check=False,
+                        priority = 0,
+                        current_state = current_state_str
+                    )
                 )
 
                 ## Update / expand volume
@@ -227,7 +233,7 @@ class Command(BaseCommand):
 
                     r = get_redis()
 
-                    flight_opint = "flight_opint." + str(flight_declaration_id)
+                    flight_opint = FLIGHT_OPINT_KEY + str(flight_declaration_id)
 
                     if r.exists(flight_opint):
                         op_int_details_raw = r.get(flight_opint)

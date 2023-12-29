@@ -2,8 +2,9 @@ import enum
 from dataclasses import dataclass
 from typing import List, Literal, Optional, Union
 from uuid import uuid4
-
-import arrow
+import enum
+from typing import List, Literal, Optional, Union
+from shapely.geometry import Polygon
 from implicitdict import StringBasedDateTime
 from shapely.geometry import Polygon
 
@@ -63,8 +64,7 @@ class Volume3D:
     outline_polygon: Polygon
     altitude_lower: Altitude
     altitude_upper: Altitude
-    outline_circle: Circle = None
-
+    outline_circle: Circle = None    
 
 class OperationalIntentState(str, enum.Enum):
     """A test is either pass or fail or could not be processed, currently not"""
@@ -199,6 +199,7 @@ class TestInjectionResult:
         TestInjectionResultState.Rejected,
         TestInjectionResultState.ConflictWithFlight,
         TestInjectionResultState.Failed,
+        TestInjectionResultState.ReadyToFly,
     ]
     notes: str
     operational_intent_id: uuid4
@@ -303,8 +304,20 @@ class OperationalIntentReferenceDSSResponse:
 
 
 @dataclass
+class SubscriptionState:
+    subscription_id: str
+    notification_index: int
+
+
+@dataclass
+class SubscriberToNotify:
+    subscriptions: List[SubscriptionState]
+    uss_base_url: str
+
+
+@dataclass
 class OperationalIntentSubmissionSuccess:
-    subscribers: List[str]
+    subscribers: List[SubscriberToNotify]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
 
 
@@ -354,12 +367,6 @@ class OperationalIntentSubmissionStatus:
 
 
 @dataclass
-class SubscriptionState:
-    subscription_id: str
-    notification_index: int
-
-
-@dataclass
 class NotifyPeerUSSPostPayload:
     operational_intent_id: uuid4
     operational_intent: OperationalIntentDetailsUSSResponse
@@ -400,14 +407,8 @@ class DeleteOperationalIntentResponse:
 
 
 @dataclass
-class SubscriberToNotify:
-    subscriptions: List[SubscriptionState]
-    uss_base_url: str
-
-
-@dataclass
 class OperationalIntentUpdateSuccessResponse:
-    subscribers: List[str]
+    subscribers: List[SubscriberToNotify]
     operational_intent_reference: OperationalIntentReferenceDSSResponse
 
 
@@ -420,7 +421,7 @@ class OperationalIntentUpdateErrorResponse:
 class OperationalIntentUpdateResponse:
     dss_response: Union[OperationalIntentUpdateSuccessResponse, CommonDSS4xxResponse]
     status: int
-    message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse]
+    message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse, str]
 
 
 @dataclass

@@ -1,6 +1,10 @@
+from .scd_data_definitions import (
+    TestInjectionResult,
+    Volume4D,
+    TestInjectionResultState,
+)
 import json
-from typing import List
-
+from rid_operations import rtree_helper
 from auth_helper.common import get_redis
 from rid_operations import rtree_helper
 
@@ -9,27 +13,27 @@ from .scd_data_definitions import TestInjectionResult, Volume4D
 
 # Set the responses to be used
 failed_test_injection_response = TestInjectionResult(
-    result="Failed",
+    result=TestInjectionResultState.Failed,
     notes="Processing of operational intent has failed",
     operational_intent_id="",
 )
 rejected_test_injection_response = TestInjectionResult(
-    result="Rejected",
+    result=TestInjectionResultState.Rejected,
     notes="An existing operational intent already exists and conflicts in space and time",
     operational_intent_id="",
 )
 planned_test_injection_response = TestInjectionResult(
-    result="Planned",
+    result=TestInjectionResultState.Planned,
     notes="Successfully created operational intent in the DSS",
     operational_intent_id="",
 )
 conflict_with_flight_test_injection_response = TestInjectionResult(
-    result="ConflictWithFlight",
+    result=TestInjectionResultState.ConflictWithFlight,
     notes="Processing of operational intent has failed, flight not deconflicted",
     operational_intent_id="",
 )
 ready_to_fly_injection_response = TestInjectionResult(
-    result="ReadyToFly",
+    result=TestInjectionResultState.ReadyToFly,
     notes="Processing of operational intent succeeded, flight is activated",
     operational_intent_id="",
 )
@@ -42,7 +46,9 @@ class SCDTestHarnessHelper:
         self.my_operational_intent_helper = OperationalIntentReferenceHelper()
         self.r = get_redis()
         self.my_volumes_converter = VolumesConverter()
-        self.my_operational_intent_comparator = rtree_helper.OperationalIntentComparisonFactory()
+        self.my_operational_intent_comparator = (
+            rtree_helper.OperationalIntentComparisonFactory()
+        )
 
     def check_if_same_flight_id_exists(self, operation_id: str) -> bool:
         r = get_redis()
@@ -88,3 +94,5 @@ class SCDTestHarnessHelper:
             all_checks.append(are_polygons_same)
 
         return all(all_checks)
+
+

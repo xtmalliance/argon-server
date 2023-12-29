@@ -88,8 +88,8 @@ def USSUpdateOpIntDetails(request):
     # Write the operational Intent
     operation_id_str = op_int_update_detail.operational_intent_id
     op_int_details_key = "flight_opint." + operation_id_str
-    # print('incoming...')
-    # print(op_int_update_detail)
+    logger.info('incoming...')
+    logger.info(op_int_update_detail)
     # operational_intent_reference = op_int_update_detail.operational_intent.reference
     # operational_intent_details = op_int_update_detail.operational_intent.details
     # volumes = operational_intent_details.volumes
@@ -181,6 +181,11 @@ def USSOpIntDetails(request, opint_id):
 
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
+            # TODO: Fix outline circle
+            for v in stored_off_nominal_volumes:
+                if "outline_circle" in v["volume"].keys():
+                    if not v["volume"]["outline_circle"]:
+                        v["volume"].pop("outline_circle")
 
             reference = OperationalIntentReferenceDSSResponse(
                 id=stored_operational_intent_id,

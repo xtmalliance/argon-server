@@ -3,11 +3,12 @@ import logging
 import redis
 from dotenv import find_dotenv, load_dotenv
 from walrus import Database
-
+import logging
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 logger = logging.getLogger("django")
 
-from os import environ as env
 
 
 def get_redis():
