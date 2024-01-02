@@ -1,5 +1,5 @@
 import enum
-import uuid
+
 from dataclasses import asdict, dataclass, field
 from typing import List, Literal, NamedTuple, Optional, Union
 
@@ -15,6 +15,11 @@ class RIDTime:
     value: str
     format: str
 
+
+@dataclass
+class LatLngPoint:
+    lat: float
+    lng: float
 
 class Position(NamedTuple):
     """A class to hold most recent position for remote id data"""
@@ -52,7 +57,7 @@ class SubscriptionResponse:
     """A object to hold details of a request for creation of subscription in the DSS"""
 
     created: bool
-    dss_subscription_id: Optional[uuid.uuid4]
+    dss_subscription_id: Optional[str]
     notification_index: int
 
 
@@ -63,12 +68,6 @@ class RIDAltitude:
     value: Union[int, float]
     reference: str
     units: str
-
-
-@dataclass
-class LatLngPoint:
-    lat: float
-    lng: float
 
 
 @dataclass
@@ -133,7 +132,7 @@ class CreateSubscriptionResponse(NamedTuple):
     """Output of a request to create subscription"""
 
     message: str
-    id: uuid.uuid4
+    id: str
     dss_subscription_response: Optional[SubscriptionResponse]
 
 
@@ -170,11 +169,6 @@ class RIDHeight:
     distance: float
     reference: str
 
-
-@dataclass
-class LatLngPoint:
-    lat: float
-    lng: float
 
 
 @dataclass
@@ -231,7 +225,7 @@ class RIDTestDetailsResponse:
 
 @dataclass
 class RIDTestInjection:
-    injection_id: uuid
+    injection_id: str
     telemetry: List[FlightState]
     details_responses: List[RIDTestDetailsResponse]
 
@@ -244,14 +238,7 @@ class RIDTestDataStorage:
 
 @dataclass
 class RIDTestInjectionProcessing:
-    injection_id: uuid
-    telemetry: List[FlightState]
-    details_responses: List[RIDTestDetailsResponse]
-
-
-@dataclass
-class RIDTestInjection:
-    injection_id: uuid
+    injection_id: str
     telemetry: List[FlightState]
     details_responses: List[RIDTestDetailsResponse]
 
@@ -265,30 +252,13 @@ class HTTPErrorResponse:
 @dataclass
 class CreateTestPayload:
     requested_flights: List[RIDTestInjection]
-    test_id: uuid
+    test_id: str
 
 
 @dataclass
 class CreateTestResponse:
     injected_flights: List[RIDTestInjection]
     version: int
-
-
-@dataclass
-class RIDAircraftPosition:
-    lat: float
-    lng: float
-    alt: float
-    accuracy_h: str
-    accuracy_v: str
-    extrapolated: Optional[bool]
-    pressure_altitude: Optional[float]
-
-
-@dataclass
-class RIDHeight:
-    distance: float
-    reference: str
 
 
 @dataclass
@@ -316,22 +286,9 @@ class RIDRecentAircraftPosition:
 
 @dataclass
 class FullRequestedFlightDetails:
-    id: uuid
+    id: str
     telemetry_length: int
 
-
-@dataclass
-class RIDRecentAircraftPosition:
-    time: str
-    position: Position
-
-
-# @dataclass
-# class RIDOperatorDetails():
-#   operator_id: Optional[str]
-#   operation_description: Optional[str]
-#   serial_number: Optional[str]
-#   registration_number: Optional[str]
 
 
 @dataclass

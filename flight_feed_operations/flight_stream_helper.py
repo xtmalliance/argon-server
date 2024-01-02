@@ -1,16 +1,12 @@
 import json
-import logging
-import os
-from datetime import datetime, timedelta
 from itertools import zip_longest
 
-import requests
 from dotenv import find_dotenv, load_dotenv
 
-from auth_helper.common import get_redis, get_walrus_database
+from auth_helper.common import get_walrus_database
 
 load_dotenv(find_dotenv())
-from os import environ as env
+
 
 
 # iterate a list in batches of size n
