@@ -3,13 +3,9 @@ import json
 from rest_framework import serializers
 
 from common.data_definitions import OPERATION_STATES, OPERATOR_EVENT_LOOKUP
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.database_operations import BlenderDatabaseReader
 from conformance_monitoring_operations.conformance_checks_handler import (
     FlightOperationConformanceHelper,
-)
-from conformance_monitoring_operations.operation_state_helper import (
-    FlightOperationStateMachine,
-    get_status,
 )
 
 from .models import FlightDeclaration
@@ -88,10 +84,9 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         my_database_reader = BlenderDatabaseReader()
-        fd = my_database_reader
-        fd = FlightDeclaration.objects.get(pk=instance.id)
+        fd = my_database_reader.get_flight_declaration_by_id(instance.id)        
         original_state = fd.state
-        fd_u = FlightDeclaration.objects.filter(pk=instance.id).update(**validated_data)
+        FlightDeclaration.objects.filter(pk=instance.id).update(**validated_data)
 
         # Save the database and trigger management command
         new_state = validated_data["state"]
@@ -101,7 +96,7 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
             new_state=new_state,
             notes="State changed by operator",
         )
-        my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=str(fd.id))
+        my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=str(instance.id))
         my_conformance_helper.manage_operation_state_transition(original_state=original_state, new_state=new_state, event=event)
         return fd
 

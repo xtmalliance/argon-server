@@ -42,7 +42,7 @@ from .tasks import (
     submit_flight_declaration_to_dss_async,
 )
 from .utils import OperationalIntentsConverter
-
+from common.data_definitions import RESPONSE_CONTENT_TYPE
 load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
@@ -52,10 +52,10 @@ logger = logging.getLogger("django")
 @requires_scopes(["blender.write"])
 def set_flight_declaration(request):
     try:
-        assert request.headers["Content-Type"] == "application/json"
-    except AssertionError as ae:
+        assert request.headers["Content-Type"] == RESPONSE_CONTENT_TYPE
+    except AssertionError:
         msg = {"message": "Unsupported Media Type"}
-        return JsonResponse(json.dumps(msg), status=415, mimetype="application/json")
+        return JsonResponse(msg, status=415, mimetype=RESPONSE_CONTENT_TYPE)
     else:
         req = request.data
 
@@ -68,7 +68,7 @@ def set_flight_declaration(request):
             "type_of_operation",
         }
 
-    except AssertionError as ae:
+    except AssertionError:
         msg = json.dumps(
             {
                 "message": "Not all necessary fields were provided. Originating Party, Start Datetime, End Datetime, Flight Declaration and Type of operation must be provided."
@@ -78,13 +78,13 @@ def set_flight_declaration(request):
 
     try:
         flight_declaration_geo_json = req["flight_declaration_geo_json"]
-    except KeyError as ke:
+    except KeyError:
         msg = json.dumps({"message": "A valid flight declaration as specified by the A flight declration protocol must be submitted."})
         return HttpResponse(msg, status=400)
 
     my_database_writer = BlenderDatabaseWriter()
     USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
-    aircraft_id = "000" if "vehicle_id" not in req else req["vehicle_id"]
+    
     submitted_by = None if "submitted_by" not in req else req["submitted_by"]
     approved_by = None if "approved_by" not in req else req["approved_by"]
     is_approved = False
@@ -117,22 +117,22 @@ def set_flight_declaration(request):
                     "message": "Error in processing the submitted GeoJSON: every Feature in a GeoJSON FeatureCollection must have a valid geometry, please check your submitted FeatureCollection"
                 }
             )
-            return HttpResponse(op, status=400, content_type="application/json")
+            return HttpResponse(op, status=400, content_type=RESPONSE_CONTENT_TYPE)
 
         props = feature["properties"]
         try:
             assert "min_altitude" in props
             assert "max_altitude" in props
-        except AssertionError as ae:
+        except AssertionError:
             op = json.dumps(
                 {
                     "message": "Error in processing the submitted GeoJSON every Feature in a GeoJSON FeatureCollection must have a min_altitude and max_altitude data structure"
                 }
             )
-            return HttpResponse(op, status=400, content_type="application/json")
-
-        min_altitude = Altitude(meters=props["min_altitude"]["meters"], datum=props["min_altitude"]["datum"])
-        max_altitude = Altitude(meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"])
+            return HttpResponse(op, status=400, content_type=RESPONSE_CONTENT_TYPE)
+        else:
+            min_altitude = Altitude(meters=props["min_altitude"]["meters"], datum=props["min_altitude"]["datum"])
+            max_altitude = Altitude(meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"])
 
     # Default state is Processing if working with a DSS, otherwise it is Accepted
     declaration_state = 0 if USSP_NETWORK_ENABLED else 1
@@ -261,7 +261,7 @@ def set_flight_declaration(request):
     )
 
     op = json.dumps(asdict(creation_response))
-    return HttpResponse(op, status=200, content_type="application/json")
+    return HttpResponse(op, status=200, content_type=RESPONSE_CONTENT_TYPE)
 
 
 @method_decorator(requires_scopes(["blender.write"]), name="dispatch")

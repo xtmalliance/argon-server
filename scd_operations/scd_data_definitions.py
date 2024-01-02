@@ -1,13 +1,9 @@
 import enum
 from dataclasses import dataclass
 from typing import List, Literal, Optional, Union
-from uuid import uuid4
-import enum
-from typing import List, Literal, Optional, Union
-from shapely.geometry import Polygon
-from implicitdict import StringBasedDateTime
-from shapely.geometry import Polygon
 
+from shapely.geometry import Polygon as Plgn
+from implicitdict import StringBasedDateTime
 
 @dataclass
 class LatLngPoint:
@@ -64,7 +60,7 @@ class Volume3D:
     outline_polygon: Polygon
     altitude_lower: Altitude
     altitude_upper: Altitude
-    outline_circle: Circle = None    
+    outline_circle: Optional[Circle] = None    
 
 class OperationalIntentState(str, enum.Enum):
     """A test is either pass or fail or could not be processed, currently not"""
@@ -202,7 +198,7 @@ class TestInjectionResult:
         TestInjectionResultState.ReadyToFly,
     ]
     notes: str
-    operational_intent_id: uuid4
+    operational_intent_id: str
 
 
 @dataclass
@@ -248,7 +244,7 @@ class ClearAreaResponse:
 class ClearAreaRequestData:
     """Request to clear flights in an area"""
 
-    request_id: uuid4
+    request_id: str
     extent: Volume4D
 
 
@@ -363,12 +359,12 @@ class OperationalIntentSubmissionStatus:
     status: str
     status_code: int
     message: str
-    operational_intent_id: uuid4
+    operational_intent_id: str
 
 
 @dataclass
 class NotifyPeerUSSPostPayload:
-    operational_intent_id: uuid4
+    operational_intent_id: str
     operational_intent: OperationalIntentDetailsUSSResponse
     subscriptions: List[SubscriptionState]
 
@@ -377,8 +373,8 @@ class NotifyPeerUSSPostPayload:
 class DeleteOperationalIntentConstuctor:
     """This method holds information to send to the DSS to delete a Operational intent"""
 
-    entity_id: uuid4
-    ovn: uuid4
+    entity_id: str
+    ovn: str
 
 
 @dataclass
@@ -439,11 +435,6 @@ class OperationalIntentUpdateRequest:
     subscription_id: str
 
 
-@dataclass
-class DeleteFlightResponse:
-    result: Literal[DeleteFlightStatus.Closed, DeleteFlightStatus.Failed]
-    notes: str
-
 
 @dataclass
 class QueryOperationalIntentPayload:
@@ -465,5 +456,5 @@ class SuccessfulOperationalIntentFlightIDStorage:
 @dataclass
 class OpInttoCheckDetails:
     ovn: str
-    shape: Polygon
+    shape: Plgn
     id: str

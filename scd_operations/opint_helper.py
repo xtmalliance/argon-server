@@ -146,7 +146,7 @@ class DSSOperationalIntentsCreator:
 
         try:
             ext = tldextract.extract(uss_base_url)
-        except Exception as e:
+        except Exception:
             uss_audience = "localhost"
         else:
             if ext.domain in [
