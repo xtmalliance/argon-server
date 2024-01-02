@@ -9,13 +9,11 @@ import uuid
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from os import environ as env
-from os import error
 from typing import List, Union
 
 import requests
 import tldextract
 from dotenv import find_dotenv, load_dotenv
-
 from auth_helper import dss_auth_helper
 from auth_helper.common import get_redis
 from rid_operations.rid_utils import RIDTime, SubscriptionResponse
@@ -37,7 +35,6 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
-
 class RemoteIDOperations:
     def __init__(self):
         self.dss_base_url = env.get("DSS_BASE_URL", "000")
@@ -50,8 +47,6 @@ class RemoteIDOperations:
         expiration_time_seconds: int = 30,
     ) -> ISACreationResponse:
         """This method PUTS /dss/subscriptions"""
-
-        # subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
         isa_creation_response = ISACreationResponse(created=False, service_area=None, subscribers=[])
         new_isa_id = str(uuid.uuid4())
 
@@ -61,7 +56,7 @@ class RemoteIDOperations:
 
         try:
             assert audience
-        except AssertionError as ae:
+        except AssertionError:
             logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
             return isa_creation_response
 
@@ -75,7 +70,7 @@ class RemoteIDOperations:
 
         try:
             assert error is None
-        except AssertionError as ae:
+        except AssertionError:
             return isa_creation_response
         else:
             # A token from authority was received,
@@ -85,7 +80,7 @@ class RemoteIDOperations:
             # check if a subscription already exists for this view_port
 
             headers = {
-                "content-type": "application/json",
+                "content-type": REPSONSE_CONTENT_TYPE,
                 "Authorization": "Bearer " + auth_token["access_token"],
             }
             p = ISACreationRequest(extents=flight_extents, uss_base_url=uss_base_url)
@@ -103,7 +98,7 @@ class RemoteIDOperations:
             try:
                 assert dss_r.status_code == 200
                 isa_creation_response.created = 1
-            except AssertionError as ae:
+            except AssertionError:
                 logger.error("Error in creating ISA in the DSS %s" % dss_r.text)
                 return isa_creation_response
             else:
@@ -124,7 +119,6 @@ class RemoteIDOperations:
                     id=dss_response_service_area["id"],
                 )
 
-                # TODO : Notify subscribers
                 dss_response_subscribers = dss_response["subscribers"]
 
                 dss_r_subs: List[SubscriberToNotify] = []
@@ -146,7 +140,7 @@ class RemoteIDOperations:
 
                     try:
                         ext = tldextract.extract(subscriber.url)
-                    except Exception as e:
+                    except Exception:
                         uss_audience = "localhost"
                     else:
                         if ext.domain in [
@@ -166,11 +160,11 @@ class RemoteIDOperations:
 
                     auth_credentials = my_authorization_helper.get_cached_credentials(audience=uss_audience, token_type="rid")
                     headers = {
-                        "content-type": "application/json",
+                        "content-type": REPSONSE_CONTENT_TYPE,
                         "Authorization": "Bearer " + auth_credentials["access_token"],
                     }
                     try:
-                        notification_request = requests.post(url, headers=headers, json=json.loads(json.dumps(payload)))
+                        requests.post(url, headers=headers, json=json.loads(json.dumps(payload)))
                     except Exception as re:
                         logger.error("Error in sending subscriber notification to %s :  %s " % (url, re))
 
@@ -194,8 +188,6 @@ class RemoteIDOperations:
         subscription_time_delta: int = 30,
     ):
         """This method PUTS /dss/subscriptions"""
-
-        # subscription_response = {"created": 0, "subscription_id": 0, "notification_index": 0}
         subscription_response = SubscriptionResponse(created=False, dss_subscription_id=None, notification_index=0)
 
         my_authorization_helper = dss_auth_helper.AuthorityCredentialsGetter()
@@ -204,7 +196,7 @@ class RemoteIDOperations:
 
         try:
             assert audience
-        except AssertionError as ae:
+        except AssertionError:
             logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
             return subscription_response
 
@@ -218,7 +210,7 @@ class RemoteIDOperations:
 
         try:
             assert error is None
-        except AssertionError as ae:
+        except AssertionError:
             return subscription_response
         else:
             # A token from authority was received,
@@ -236,7 +228,7 @@ class RemoteIDOperations:
             fifteen_seconds_from_now = now + subscription_seconds_timedelta
             fifteen_seconds_from_now_isoformat = fifteen_seconds_from_now.isoformat() + "Z"
             headers = {
-                "content-type": "application/json",
+                "content-type": REPSONSE_CONTENT_TYPE,
                 "Authorization": "Bearer " + auth_token["access_token"],
             }
             volume_object = {
@@ -262,8 +254,8 @@ class RemoteIDOperations:
 
             try:
                 assert dss_r.status_code == 200
-                subscription_response.created = 1
-            except AssertionError as ae:
+                subscription_response.created = bool(1)
+            except AssertionError:
                 logger.error("Error in creating subscription in the DSS %s" % dss_r.text)
                 return subscription_response
             else:
@@ -327,7 +319,7 @@ class RemoteIDOperations:
             try:
                 ext = tldextract.extract(cur_flight_url)
             except Exception as e:
-                logger.error("Error in extracting TLD {current_flight_url} domain: {error}".format(cur_flight_url=cur_flight_url, error=e))
+                logger.error("Error in extracting TLD {current_flight_url} domain: {error}".format(current_flight_url=cur_flight_url, error=e))
             else:
                 if ext.domain in [
                     "localhost",
@@ -339,7 +331,7 @@ class RemoteIDOperations:
 
             auth_credentials = authority_credentials.get_cached_credentials(audience=audience, token_type="rid")
             headers = {
-                "content-type": "application/json",
+                "content-type": REPSONSE_CONTENT_TYPE,
                 "Authorization": "Bearer " + auth_credentials["access_token"],
             }
             flights_request = requests.get(cur_flight_url, headers=headers)
@@ -352,7 +344,7 @@ class RemoteIDOperations:
                     flight_id = flight["id"]
                     try:
                         assert flight.get("current_state") is not None
-                    except AssertionError as ae:
+                    except AssertionError:
                         logger.error("There is no current_state provided by SP on the flights url %s" % cur_flight_url)
                         logger.debug(json.dumps(flight))
                     else:

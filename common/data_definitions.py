@@ -34,3 +34,4 @@ OPERATOR_EVENT_LOOKUP = {
 
 
 FLIGHT_OPINT_KEY = "flight_opint."
+RESPONSE_CONTENT_TYPE = "application/json"

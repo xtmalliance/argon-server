@@ -21,7 +21,7 @@ from uss_operations.uss_data_definitions import (
     FlightDetailsNotFoundMessage,
     OperatorDetailsSuccessResponse,
 )
-
+from common.data_definitions import (RESPONSE_CONTENT_TYPE)
 from . import dss_rid_helper, view_port_ops
 from .rid_utils import (
     CreateSubscriptionResponse,
@@ -37,7 +37,6 @@ from .rid_utils import (
 )
 from .tasks import (
     run_ussp_polling_for_rid,
-    stream_rid_telemetry_data,
     stream_rid_test_data,
 )
 
@@ -77,16 +76,16 @@ class SubscriptionHelper:
 
     def check_subscription_exists(self, view) -> bool:
         r = get_redis()
-        subscription_found = False
+        subscription_found = 0
         view_hash = int(hashlib.sha256(view.encode("utf-8")).hexdigest(), 16) % 10**8
         view_sub = "view_sub-" + str(view_hash)
         subscription_found = r.exists(view_sub)
-        return subscription_found
+        return bool(subscription_found)
 
     def create_new_subscription(self, request_id, view: str, vertex_list: list):
         subscription_time_delta = 15
-        myDSSubscriber = dss_rid_helper.RemoteIDOperations()
-        subscription_r = myDSSubscriber.create_dss_subscription(
+        my_dss_subscriber = dss_rid_helper.RemoteIDOperations()
+        subscription_r = my_dss_subscriber.create_dss_subscription(
             vertex_list=vertex_list,
             view=view,
             request_uuid=request_id,
@@ -118,7 +117,7 @@ def create_dss_subscription(request, *args, **kwargs):
     try:
         view = request.query_params["view"]
         view_port = [float(i) for i in view.split(",")]
-    except Exception as ke:
+    except Exception:
         incorrect_parameters = {"message": "A view bounding box is necessary with four values: lat1,lng1,lat2,lng2."}
         return HttpResponse(json.dumps(incorrect_parameters), status=400)
 
@@ -142,7 +141,7 @@ def create_dss_subscription(request, *args, **kwargs):
     vertex_list.pop()
 
     request_id = str(uuid.uuid4())
-    # TODO: Make this a asnyc call
+    
     my_subscription_helper = SubscriptionHelper()
     subscription_r = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view=view)
 
@@ -167,7 +166,7 @@ def create_dss_subscription(request, *args, **kwargs):
         }
         status = 400
     msg = my_rid_output_helper.make_json_compatible(m)
-    return HttpResponse(json.dumps(msg), status=status, content_type="application/json")
+    return HttpResponse(json.dumps(msg), status=status, content_type=RESPONSE_CONTENT_TYPE)
 
 
 @api_view(["GET"])
@@ -177,11 +176,11 @@ def get_rid_data(request, subscription_id):
 
     try:
         is_uuid = UUID(subscription_id, version=4)
-    except ValueError as ve:
+    except ValueError:
         return HttpResponse(
             "Incorrect UUID passed in the parameters, please send a valid subscription ID",
             status=400,
-            mimetype="application/json",
+            mimetype=RESPONSE_CONTENT_TYPE,
         )
 
     r = get_redis()
@@ -198,7 +197,7 @@ def get_rid_data(request, subscription_id):
         # run_ussp_polling_for_rid.delay()
 
     if bool(flights_dict):
-        # TODO for Pull operations Flights Dict is not being used at all
+        
         all_flights_rid_data = []
         stream_ops = flight_stream_helper.StreamHelperOps()
         push_cg = stream_ops.push_cg()
@@ -208,10 +207,10 @@ def get_rid_data(request, subscription_id):
         return HttpResponse(
             json.dumps(all_flights_rid_data),
             status=200,
-            content_type="application/json",
+            content_type=RESPONSE_CONTENT_TYPE,
         )
     else:
-        return HttpResponse(json.dumps({}), status=404, content_type="application/json")
+        return HttpResponse(json.dumps({}), status=404, content_type=RESPONSE_CONTENT_TYPE)
 
 
 @api_view(["POST"])
@@ -238,16 +237,16 @@ def dss_isa_callback(request, subscription_id):
         r.hmset(flights_key, flights_dict)
         r.expire(name=flights_key, time=30)  # if a AOI is updated then keep the subscription active for 30 seconds
 
-    except AssertionError as ae:
+    except AssertionError:
         return HttpResponse(
             "Incorrect data in the POST URL",
             status=400,
-            content_type="application/json",
+            content_type=RESPONSE_CONTENT_TYPE,
         )
 
     else:
         # All OK return a empty response
-        return HttpResponse(status=204, content_type="application/json")
+        return HttpResponse(status=204, content_type=RESPONSE_CONTENT_TYPE)
 
 
 @api_view(["GET"])
@@ -258,21 +257,21 @@ def get_flight_data(request, flight_id):
     flight_details_storage = "flight_details:" + flight_id
     if r.exists(flight_details_storage):
         flight_details = r.get(flight_details_storage)
-        location = LatLngPoint(lat=flight_detail["location"]["lat"], lng=flight_detail["location"]["lng"])
+        location = LatLngPoint(lat=flight_details["location"]["lat"], lng=flight_details["location"]["lng"])
         flight_detail = RIDOperatorDetails(
             id=flight_details["id"],
-            operator_id=flight_detail["operator_id"],
+            operator_id=flight_details["operator_id"],
             operator_location=location,
             operator_description=flight_details["operator_description"],
             auth_data={},
-            serial_number=flight_detail["serial_number"],
-            registration_number=flight_detail["registration_number"],
+            serial_number=flight_details["serial_number"],
+            registration_number=flight_details["registration_number"],
         )
         flight_details_full = OperatorDetailsSuccessResponse(details=flight_detail)
         return JsonResponse(
             json.loads(json.dumps(asdict(flight_details_full))),
             status=200,
-            mimetype="application/json",
+            mimetype=RESPONSE_CONTENT_TYPE,
         )
     else:
         fd = FlightDetailsNotFoundMessage(message="The requested flight could not be found")
@@ -291,12 +290,12 @@ def get_display_data(request):
     try:
         view = request.query_params["view"]
         view_port = [float(i) for i in view.split(",")]
-    except Exception as ke:
+    except Exception:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return HttpResponse(
             json.dumps(incorrect_parameters),
             status=400,
-            content_type="application/json",
+            content_type=RESPONSE_CONTENT_TYPE,
         )
 
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
@@ -327,7 +326,6 @@ def get_display_data(request):
 
             logger.debug(subscription_response)
 
-        # TODO: Get existing flight details from subscription
         stream_ops = flight_stream_helper.StreamHelperOps()
         pull_cg = stream_ops.get_pull_cg()
         all_streams_messages = pull_cg.read()
@@ -405,11 +403,11 @@ def get_display_data(request):
                 "clusters": rid_flights_dict["clusters"],
             },
             status=200,
-            content_type="application/json",
+            content_type=RESPONSE_CONTENT_TYPE,
         )
     else:
         view_port_error = {"message": "A incorrect view port bbox was provided"}
-        return JsonResponse(json.dumps(view_port_error), status=400, content_type="application/json")
+        return JsonResponse(view_port_error, status=400, content_type=RESPONSE_CONTENT_TYPE)
 
 
 @api_view(["PUT"])
@@ -421,7 +419,7 @@ def create_test(request, test_id):
 
     try:
         requested_flights = rid_qualifier_payload["requested_flights"]
-    except KeyError as ke:
+    except KeyError:
         msg = HTTPErrorResponse(message="Requested Flights not present in the payload", status=400)
         msg_dict = asdict(msg)
         return JsonResponse(msg_dict["message"], status=msg_dict["status"])
@@ -437,7 +435,7 @@ def create_test(request, test_id):
         now = arrow.now()
         r.set(test_id, json.dumps({"created_at": now.isoformat()}))
         r.expire(test_id, timedelta(seconds=300))
-        # TODO process requested flights
+        
         stream_rid_test_data.delay(requested_flights=json.dumps(requested_flights))  # Send a job to the task queue
 
     create_test_response = CreateTestResponse(injected_flights=requested_flights, version=1)
