@@ -7,6 +7,7 @@ from os import environ as env
 import arrow
 from dacite import from_dict
 
+from dotenv import find_dotenv, load_dotenv
 from auth_helper.common import get_redis
 from common.data_definitions import OPERATION_STATES
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
@@ -27,14 +28,13 @@ from scd_operations.scd_data_definitions import (
 )
 
 logger = logging.getLogger("django")
-from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
 
 @app.task(name="submit_flight_declaration_to_dss_async")
 def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
-    amqp_connection_url = env.get("AMQP_URL", 0)
+    
     my_dss_opint_creator = DSSOperationalIntentsCreator(flight_declaration_id)
     my_database_reader = BlenderDatabaseReader()
     r = get_redis()
@@ -172,8 +172,6 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
 
             logger.info("Notifying subscribers..")
 
-            # TODO: Make it async
-            # Notify subscribers of new operational intent
             subscribers = opint_submission_result.dss_response.subscribers
             if subscribers:
                 for subscriber in subscribers:

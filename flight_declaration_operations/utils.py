@@ -7,11 +7,10 @@ from geojson import FeatureCollection
 from pyproj import Proj
 from shapely.geometry import Point, Polygon, shape
 from shapely.ops import unary_union
-
+from dataclasses import asdict
 from scd_operations.scd_data_definitions import (
     Altitude,
     LatLngPoint,
-    OperationalIntentUSSDetails,
     PartialCreateOperationalIntentReference,
 )
 from scd_operations.scd_data_definitions import Polygon as Plgn
@@ -61,7 +60,7 @@ class OperationalIntentsConverter:
         priority: int,
         state: str = "Accepted",
     ) -> PartialCreateOperationalIntentReference:
-        all_v4d = self.convert_geo_json_to_volume4D(
+        all_v4d = self.convert_geo_json_to_volume_4_d(
             geo_json_fc=geo_json_fc,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
@@ -71,9 +70,8 @@ class OperationalIntentsConverter:
 
         return op_int_r
 
-    def convert_geo_json_to_volume4D(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime: str) -> List[Volume4D]:
+    def convert_geo_json_to_volume_4_d(self, geo_json_fc: FeatureCollection, start_datetime: str, end_datetime: str) -> List[Volume4D]:
         all_v4d = []
-        # all_shapes = []
         all_features = geo_json_fc["features"]
         for feature in all_features:
             geom = feature["geometry"]
@@ -97,26 +95,26 @@ class OperationalIntentsConverter:
             # remove the final point
             polygon_verticies.pop()
 
-            volume3D = Volume3D(
+            volume_3_d = Volume3D(
                 outline_polygon=Plgn(vertices=polygon_verticies),
                 altitude_lower=Altitude(value=min_altitude, reference="W84", units="M"),
                 altitude_upper=Altitude(value=max_altitude, reference="W84", units="M"),
             )
 
             if "start_time" in feature["properties"] and "end_time" in feature["properties"]:
-                volume4D = Volume4D(
-                    volume=volume3D,
+                volume_4_d = Volume4D(
+                    volume=volume_3_d,
                     time_start=Time(format="RFC3339", value=feature["properties"]["start_time"]),
                     time_end=Time(format="RFC3339", value=feature["properties"]["end_time"]),
                 )
             else:
-                volume4D = Volume4D(
-                    volume=volume3D,
+                volume_4_d = Volume4D(
+                    volume=volume_3_d,
                     time_start=Time(format="RFC3339", value=start_datetime),
                     time_end=Time(format="RFC3339", value=end_datetime),
                 )
 
-            all_v4d.append(volume4D)
+            all_v4d.append(volume_4_d)
 
         return all_v4d
 
@@ -146,19 +144,19 @@ class OperationalIntentsConverter:
         # remove the final point
         polygon_verticies.pop()
 
-        volume3D = Volume3D(
+        volume_3_d = Volume3D(
             outline_polygon=Plgn(vertices=polygon_verticies),
             altitude_lower=Altitude(value=max_altitude, reference="W84", units="M"),
             altitude_upper=Altitude(value=min_altitude, reference="W84", units="M"),
         )
 
-        volume4D = Volume4D(
-            volume=volume3D,
+        volume_4_d = Volume4D(
+            volume=volume_3_d,
             time_start=Time(format="RFC3339", value=start_datetime),
             time_end=Time(format="RFC3339", value=end_datetime),
         )
 
-        return volume4D
+        return volume_4_d
 
     def get_geo_json_bounds(self) -> str:
         combined_features = unary_union(self.all_features)
@@ -169,9 +167,9 @@ class OperationalIntentsConverter:
 
     def _convert_operational_intent_to_geojson_feature(self, volume: Volume4D):
         geo_json_features = []
-        v = volume["volume"]
-        time_start = volume["time_start"]
-        time_end = volume["time_end"]
+        v = asdict(volume.volume)
+        time_start = volume.time_start
+        time_end = volume.time_end
         if "outline_polygon" in v and v["outline_polygon"] is not None:
             outline_polygon = v["outline_polygon"]
             point_list = []
