@@ -1,5 +1,5 @@
 # Notifications List
-This document details when Blender sends notifications to the operator / GCS via the AMQP channel. 
+This document details when Blender sends notifications to the operator / GCS via the AMQP channel.
 
 
 |State | Action | Notification Type | Description | Code Location |

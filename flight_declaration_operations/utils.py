@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from os import environ as env
 from typing import List
 
@@ -7,7 +8,7 @@ from geojson import FeatureCollection
 from pyproj import Proj
 from shapely.geometry import Point, Polygon, shape
 from shapely.ops import unary_union
-from dataclasses import asdict
+
 from scd_operations.scd_data_definitions import (
     Altitude,
     LatLngPoint,

@@ -2,8 +2,9 @@ import enum
 from dataclasses import dataclass
 from typing import List, Literal, Optional, Union
 
-from shapely.geometry import Polygon as Plgn
 from implicitdict import StringBasedDateTime
+from shapely.geometry import Polygon as Plgn
+
 
 @dataclass
 class LatLngPoint:
@@ -60,7 +61,8 @@ class Volume3D:
     outline_polygon: Polygon
     altitude_lower: Altitude
     altitude_upper: Altitude
-    outline_circle: Optional[Circle] = None    
+    outline_circle: Optional[Circle] = None
+
 
 class OperationalIntentState(str, enum.Enum):
     """A test is either pass or fail or could not be processed, currently not"""
@@ -433,7 +435,6 @@ class OperationalIntentUpdateRequest:
     key: List[str]
     uss_base_url: str
     subscription_id: str
-
 
 
 @dataclass

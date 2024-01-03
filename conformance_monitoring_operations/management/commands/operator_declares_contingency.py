@@ -10,21 +10,18 @@ from dotenv import find_dotenv, load_dotenv
 from shapely.geometry import Point
 
 from auth_helper.common import get_redis
-from common.data_definitions import OPERATION_STATES
+from common.data_definitions import FLIGHT_OPINT_KEY, OPERATION_STATES
 from common.database_operations import BlenderDatabaseReader
 from conformance_monitoring_operations.data_definitions import PolygonAltitude
 from flight_declaration_operations.utils import OperationalIntentsConverter
 from flight_feed_operations import flight_stream_helper
 from scd_operations.dss_scd_helper import SCDOperations
 from scd_operations.scd_data_definitions import (
-    Time,
     OperationalIntentReferenceDSSResponse,
     Polygon,
     Time,
     Volume4D,
 )
-
-from common.data_definitions import FLIGHT_OPINT_KEY
 
 load_dotenv(find_dotenv())
 
@@ -75,7 +72,7 @@ class Command(BaseCommand):
             raise CommandError(
                 "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
-        
+
         current_state = flight_declaration.state
         current_state_str = OPERATION_STATES[current_state][1]
         dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
@@ -139,17 +136,15 @@ class Command(BaseCommand):
                             subscription_id = s["subscription_id"]
                             break
                 # Create a new subscription to the airspace
-                operational_update_response = (
-                    my_scd_dss_helper.update_specified_operational_intent_reference(
-                        subscription_id=subscription_id,
-                        operational_intent_ref_id=reference.id,
-                        extents=stored_volumes,
-                        new_state=str(contingent_state),
-                        ovn=reference.ovn,
-                        deconfliction_check=False,
-                        priority = 0,
-                        current_state = current_state_str
-                    )
+                operational_update_response = my_scd_dss_helper.update_specified_operational_intent_reference(
+                    subscription_id=subscription_id,
+                    operational_intent_ref_id=reference.id,
+                    extents=stored_volumes,
+                    new_state=str(contingent_state),
+                    ovn=reference.ovn,
+                    deconfliction_check=False,
+                    priority=0,
+                    current_state=current_state_str,
                 )
 
                 ## Update / expand volume

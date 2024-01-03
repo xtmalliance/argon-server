@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flight_declaration_operations', '0004_flightdeclaration_aircraft_id_and_more'),
+        ("flight_declaration_operations", "0004_flightdeclaration_aircraft_id_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='flightauthorization',
-            name='dss_operational_intent_id',
-            field=models.CharField(blank=True, help_text='Once the operational intent is shared on the DSS the operational intent is is stored here. By default nothing is stored here.', max_length=36, null=True),
+            model_name="flightauthorization",
+            name="dss_operational_intent_id",
+            field=models.CharField(
+                blank=True,
+                help_text="Once the operational intent is shared on the DSS the operational intent is is stored here. By default nothing is stored here.",
+                max_length=36,
+                null=True,
+            ),
         ),
     ]
