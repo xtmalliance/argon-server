@@ -14,6 +14,7 @@ from typing import List, Union
 import requests
 import tldextract
 from dotenv import find_dotenv, load_dotenv
+
 from auth_helper import dss_auth_helper
 from auth_helper.common import get_redis
 from rid_operations.rid_utils import RIDTime, SubscriptionResponse
@@ -34,6 +35,7 @@ load_dotenv(find_dotenv())
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
+
 
 class RemoteIDOperations:
     def __init__(self):

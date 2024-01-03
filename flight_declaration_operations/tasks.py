@@ -6,8 +6,8 @@ from os import environ as env
 
 import arrow
 from dacite import from_dict
-
 from dotenv import find_dotenv, load_dotenv
+
 from auth_helper.common import get_redis
 from common.data_definitions import OPERATION_STATES
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
@@ -34,7 +34,6 @@ load_dotenv(find_dotenv())
 
 @app.task(name="submit_flight_declaration_to_dss_async")
 def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
-    
     my_dss_opint_creator = DSSOperationalIntentsCreator(flight_declaration_id)
     my_database_reader = BlenderDatabaseReader()
     r = get_redis()

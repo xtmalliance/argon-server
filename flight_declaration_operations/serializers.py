@@ -84,7 +84,7 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         my_database_reader = BlenderDatabaseReader()
-        fd = my_database_reader.get_flight_declaration_by_id(instance.id)        
+        fd = my_database_reader.get_flight_declaration_by_id(instance.id)
         original_state = fd.state
         FlightDeclaration.objects.filter(pk=instance.id).update(**validated_data)
 

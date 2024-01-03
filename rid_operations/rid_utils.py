@@ -1,5 +1,4 @@
 import enum
-
 from dataclasses import asdict, dataclass, field
 from typing import List, Literal, NamedTuple, Optional, Union
 
@@ -20,6 +19,7 @@ class RIDTime:
 class LatLngPoint:
     lat: float
     lng: float
+
 
 class Position(NamedTuple):
     """A class to hold most recent position for remote id data"""
@@ -170,7 +170,6 @@ class RIDHeight:
     reference: str
 
 
-
 @dataclass
 class RIDAuthData:
     format: str
@@ -288,7 +287,6 @@ class RIDRecentAircraftPosition:
 class FullRequestedFlightDetails:
     id: str
     telemetry_length: int
-
 
 
 @dataclass

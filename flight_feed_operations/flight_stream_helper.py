@@ -8,7 +8,6 @@ from auth_helper.common import get_walrus_database
 load_dotenv(find_dotenv())
 
 
-
 # iterate a list in batches of size n
 def batcher(iterable, n):
     args = [iter(iterable)] * n

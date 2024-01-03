@@ -6,21 +6,27 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('flight_declaration_operations', '0005_flightauthorization_dss_operational_intent_id'),
+        ("flight_declaration_operations", "0005_flightauthorization_dss_operational_intent_id"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FlightOperationTracking',
+            name="FlightOperationTracking",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('notes', models.CharField(blank=True, help_text='Entry notes', max_length=512, null=True, verbose_name='Notes')),
-                ('deltas', models.JSONField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('flight_declaration', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tracking_info', to='flight_declaration_operations.flightdeclaration')),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("notes", models.CharField(blank=True, help_text="Entry notes", max_length=512, null=True, verbose_name="Notes")),
+                ("deltas", models.JSONField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "flight_declaration",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="tracking_info",
+                        to="flight_declaration_operations.flightdeclaration",
+                    ),
+                ),
             ],
         ),
     ]

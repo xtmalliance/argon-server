@@ -124,6 +124,7 @@ class BlenderDatabaseWriter:
 
         except IntegrityError as ie:
             return False
+
     def set_flight_declaration_non_conforming(self, flight_declaration: FlightDeclaration):
         flight_declaration.state = 3
         flight_declaration.save()

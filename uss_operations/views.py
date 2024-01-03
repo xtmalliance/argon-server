@@ -88,7 +88,7 @@ def USSUpdateOpIntDetails(request):
     # Write the operational Intent
     operation_id_str = op_int_update_detail.operational_intent_id
     op_int_details_key = "flight_opint." + operation_id_str
-    logger.info('incoming...')
+    logger.info("incoming...")
     logger.info(op_int_update_detail)
     # operational_intent_reference = op_int_update_detail.operational_intent.reference
     # operational_intent_details = op_int_update_detail.operational_intent.details

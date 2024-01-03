@@ -14,6 +14,7 @@ from rest_framework.decorators import api_view
 from shapely.geometry import shape
 
 from auth_helper.utils import requires_scopes
+from common.data_definitions import RESPONSE_CONTENT_TYPE
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
@@ -42,7 +43,7 @@ from .tasks import (
     submit_flight_declaration_to_dss_async,
 )
 from .utils import OperationalIntentsConverter
-from common.data_definitions import RESPONSE_CONTENT_TYPE
+
 load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
@@ -84,7 +85,7 @@ def set_flight_declaration(request):
 
     my_database_writer = BlenderDatabaseWriter()
     USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
-    
+
     submitted_by = None if "submitted_by" not in req else req["submitted_by"]
     approved_by = None if "approved_by" not in req else req["approved_by"]
     is_approved = False

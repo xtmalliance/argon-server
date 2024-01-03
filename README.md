@@ -16,9 +16,9 @@ There are different modules that enable this:
 - _Flight Tracking_: It takes in flight tracking feeds from various sources e.g. ADS-B, live telemetry, Broadcast Remote ID and others and outputs as a single fused JSON feed and submits it to a Display Application e.g. [Flight Spotlight](https://github.com/openutm/flight-spotlight) to be shown in real-time on a display
 - _Geofence_: A Geofence can be submitted into Flight Blender and consequently transmitted to Spotlight
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this support both the ASTM USS <-> USS API and can also be used as a standalone component, for supported DSS APIs see below
-- _Network Remote-ID_ : The Network RID module is compliant with ASTM standards for Network RID and can be used as a "display provider" or as a "service provider" 
-- _Operator Notifications_: Using a AMQP queue you can send notifications to the operator 
-- _Conformance Monitoring_ (beta): Monitory trajectory / flight path against the declared 4D Volume 
+- _Network Remote-ID_ : The Network RID module is compliant with ASTM standards for Network RID and can be used as a "display provider" or as a "service provider"
+- _Operator Notifications_: Using a AMQP queue you can send notifications to the operator
+- _Conformance Monitoring_ (beta): Monitory trajectory / flight path against the declared 4D Volume
 
 ## ▶️ Get started in 20 mins
 Follow our 5-step process to deploy Flight Blender and get started with the basic concepts of the software.
