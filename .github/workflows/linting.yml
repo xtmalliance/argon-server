@@ -14,6 +14,6 @@ jobs:
   bandit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Run bandit
-      uses: tj-actions/bandit@v5.1
+      - uses: actions/checkout@v3
+      - name: Run bandit
+        uses: tj-actions/bandit@v5.1
