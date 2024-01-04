@@ -170,7 +170,7 @@ class RemoteIDOperations:
                     except Exception as re:
                         logger.error("Error in sending subscriber notification to %s :  %s " % (url, re))
 
-                logger.info("Succesfully created a DSS ISA %s" % new_isa_id)
+                logger.info("Successfully created a DSS ISA %s" % new_isa_id)
                 # iterate over the service areas to get flights URL to poll
                 isa_key = "isa-" + service_area.id
                 isa_seconds_timedelta = timedelta(seconds=expiration_time_seconds)
@@ -270,7 +270,7 @@ class RemoteIDOperations:
                 new_subscription_version = dss_subscription_details["version"]
                 subscription_response.notification_index = notification_index
                 subscription_response.dss_subscription_id = subscription_id
-                # logger.info("Succesfully created a DSS subscription ID %s" % subscription_id)
+                # logger.info("Successfully created a DSS subscription ID %s" % subscription_id)
                 # iterate over the service areas to get flights URL to poll
                 flights_url_list = ""
 

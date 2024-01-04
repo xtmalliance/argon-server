@@ -60,7 +60,7 @@ paths:
     get:
       summary: 'Blender Signing Public Key'
 
-      description: 'Get the public key used to verify signed responses from Flight Blender. When Flight Blender will sign responses and this endpoint will provide a public key that can be used to verify signatures of messages singed by Flight Blender'
+      description: 'Get the public key used to verify signed responses from Flight Blender. When Flight Blender will sign responses and this endpoint will provide a public key that can be used to verify signatures of messages signed by Flight Blender'
 
       security: []
       responses:
@@ -1891,7 +1891,7 @@ components:
     AuthFromPassport:
       type: oauth2
       description: |-
-        Blender utilizes JWT tokens issued by a OAUTH server. This can be configured as an environment varaible. In this case we recommend using / deploying a Authorization Sevver: Flight Passport. For more information see https://id.openskies.sh
+        Blender utilizes JWT tokens issued by a OAUTH server. This can be configured as an environment variable. In this case we recommend using / deploying a Authorization Server: Flight Passport. For more information see https://id.openskies.sh
 
       flows:
         clientCredentials:
@@ -1976,7 +1976,7 @@ components:
       properties:
         message:
           type: string
-          example: 'RemoteID data succesfully submitted'
+          example: 'RemoteID data successfully submitted'
 
     FlightDeclarationCreated:
       description: A flight declaration has been created
@@ -2040,7 +2040,7 @@ components:
       properties:
         message:
           type: string
-          example: Openskies Newtork stream started
+          example: Openskies Network stream started
 
     OpenskiesNetworkDataRequestError:
       properties:
@@ -2049,7 +2049,7 @@ components:
           example: An incorrect view port bbox was provided
 
     Standard500ErrorResponse:
-      description: An unexpected error occured.
+      description: An unexpected error occurred.
       $ref: '#/components/schemas/Error'
 
     JWKSResponse:
@@ -4878,13 +4878,13 @@ tags:
   - name: uss
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions, operational intents to the DSS for ASTM Compliant Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data and querying operational intents
   - name: rid-qualifier
-    description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these enpoints implement the Observation API as described by the test suite.
+    description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these endpoints implement the Observation API as described by the test suite.
   - name: scd-qualifier
     description: Flight Blender allows connections and interactions with the USSP software testing framework (via InterUSS) for Remote ID and Strategic deconfliction. These endpoints implement the stratetgic deconflication test framework APIs.
   - name: rid
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data.
   - name: air-traffic
-    description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be intergrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display and or other API endpoints. Use these endpoints to submit / query air-traffic data.
+    description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be integrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display and or other API endpoints. Use these endpoints to submit / query air-traffic data.
   - name: flight-declarations
     description: Using tools like Flight Spotlight (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system. These endpoints define how flight declarations / operational intents can be created.
   - name: geo-fence

@@ -170,7 +170,7 @@ def create_dss_subscription(request, *args, **kwargs):
 @api_view(["GET"])
 @requires_scopes(["blender.read"])
 def get_rid_data(request, subscription_id):
-    """This is the GET endpoint for remote id data given a DSS subscription id. Blender will store flight URLs and everytime the data is queried"""
+    """This is the GET endpoint for remote id data given a DSS subscription id. Blender will store flight URLs and every time the data is queried"""
 
     try:
         is_uuid = UUID(subscription_id, version=4)
@@ -184,7 +184,7 @@ def get_rid_data(request, subscription_id):
     r = get_redis()
     flights_dict = {}
     # Get the flights URL from the DSS and put it in
-    # reasonably we wont have more than 500 subscriptions active
+    # reasonably we won't have more than 500 subscriptions active
     sub_to_check = "sub-" + subscription_id
 
     if r.exists(sub_to_check):
@@ -444,7 +444,7 @@ def create_test(request, test_id):
 @requires_scopes(["rid.inject_test_data"])
 def delete_test(request, test_id, version):
     """This is the end point for the rid_qualifier to get details of a flight"""
-    # Deleteing test
+    # Deleting test
     test_id = str(test_id)
     r = get_redis()
 

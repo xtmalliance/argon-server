@@ -27,7 +27,7 @@ logger = logging.getLogger("django")
 # This method conducts flight conformance checks as a async tasks
 @app.task(name="check_flight_conformance")
 def check_flight_conformance(flight_declaration_id: str, dry_run: str = "1"):
-    # This method checks the conformance status for ongoing operations and sends notifications / via the notificaitons channel
+    # This method checks the conformance status for ongoing operations and sends notifications / via the notifications channel
 
     dry_run = True if dry_run == "1" else False
     d_run = "1" if dry_run == True else "0"
@@ -53,7 +53,7 @@ def check_flight_conformance(flight_declaration_id: str, dry_run: str = "1"):
 # This method conducts flight telemetry checks
 @app.task(name="check_operation_telemetry_conformance")
 def check_operation_telemetry_conformance(flight_declaration_id: str, dry_run: str = "1"):
-    # This method checks the conformance status for ongoing operations and sends notifications / via the notificaitons channel
+    # This method checks the conformance status for ongoing operations and sends notifications / via the notifications channel
     dry_run = True if dry_run == "1" else False
     my_conformance_ops = BlenderConformanceEngine()
     # Get Telemetry

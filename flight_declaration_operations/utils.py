@@ -23,7 +23,7 @@ if ENV_FILE:
 
 
 class OperationalIntentsConverter:
-    """A class to covert a operational Intnet  in to GeoJSON"""
+    """A class to convert a operational intent in to GeoJSON"""
 
     def __init__(self):
         self.geo_json = {"type": "FeatureCollection", "features": []}

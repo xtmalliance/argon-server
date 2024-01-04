@@ -103,7 +103,7 @@ class DSSOperationalIntentsCreator:
                 )
             elif op_int_submission.status_code in [400, 409, 401, 403, 412, 413, 429]:
                 if op_int_submission.status_code == 400:
-                    notes = "Error during submission of operational intent, the DSS rejected becuase one or more parameters was missing"
+                    notes = "Error during submission of operational intent, the DSS rejected because one or more parameters was missing"
                 elif op_int_submission.status_code == 409:
                     notes = "Error during submission of operational intent, the DSS rejected it with because the latest airspace keys was not present"
                 elif op_int_submission.status_code == 401:
