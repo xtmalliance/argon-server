@@ -112,20 +112,20 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
 
             ###### Change via new state check helper
 
-            fo = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
-            fa = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=fo)
+            flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+            fa = my_database_reader.get_flight_authorization_by_flight_declaration_obj(flight_declaration=flight_declaration)
 
             logger.info("Saving created operational intent details..")
             created_opint = fa.dss_operational_intent_id
-            view_r_bounds = fo.bounds
+            view_r_bounds = flight_declaration.bounds
             operational_intent_full_details = OperationalIntentStorage(
                 bounds=view_r_bounds,
-                start_time=fo.start_datetime.isoformat(),
-                end_time=fo.end_datetime.isoformat(),
+                start_time=flight_declaration.start_datetime.isoformat(),
+                end_time=flight_declaration.end_datetime.isoformat(),
                 alt_max=50,
                 alt_min=25,
                 success_response=opint_submission_result.dss_response,
-                operational_intent_details=json.loads(fo.operational_intent),
+                operational_intent_details=json.loads(flight_declaration.operational_intent),
             )
             # Store flight ID
             delta = timedelta(seconds=10800)
@@ -143,7 +143,7 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
             r.set(opint_flightref, json.dumps(asdict(flight_op_int_storage)))
             r.expire(name=opint_flightref, time=delta)
             logger.info("Changing operation state..")
-            original_state = fo.state
+            original_state = flight_declaration.state
             accepted_state = OPERATION_STATES[1][0]
             my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=flight_declaration_id)
             transition_valid = my_conformance_helper.verify_operation_state_transition(
@@ -154,7 +154,7 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
             if transition_valid:
                 my_database_writer.update_flight_operation_state(flight_declaration_id=flight_declaration_id, state=accepted_state)
                 logger.info("The state change transition to Accepted state from current state Created is valid..")
-                fo.add_state_history_entry(
+                flight_declaration.add_state_history_entry(
                     new_state=accepted_state,
                     original_state=original_state,
                     notes="Successfully submitted to the DSS",
@@ -182,7 +182,7 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
                         subscriptions = from_dict(data_class=SubscriptionState, data=subscriptions_raw)
                         op_int_details = from_dict(
                             data_class=OperationalIntentUSSDetails,
-                            data=json.loads(fo.operational_intent),
+                            data=json.loads(flight_declaration.operational_intent),
                         )
                         operational_intent = OperationalIntentDetailsUSSResponse(
                             reference=opint_submission_result.dss_response.operational_intent_reference,
