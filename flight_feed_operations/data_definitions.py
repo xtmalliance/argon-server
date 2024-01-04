@@ -11,7 +11,7 @@ class SingleObservationMetadata:
 
 @dataclass
 class SingleRIDObservation:
-    """This is the object stores details of the obervation"""
+    """This is the object stores details of the observation"""
 
     lat_dd: float
     lon_dd: float
@@ -24,7 +24,7 @@ class SingleRIDObservation:
 
 @dataclass
 class SingleAirtrafficObservation:
-    """This is the object stores details of the obervation"""
+    """This is the object stores details of the observation"""
 
     lat_dd: float
     lon_dd: float

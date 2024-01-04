@@ -16,12 +16,13 @@ from rest_framework.decorators import api_view
 
 from auth_helper.common import get_redis
 from auth_helper.utils import requires_scopes
+from common.data_definitions import RESPONSE_CONTENT_TYPE
 from flight_feed_operations import flight_stream_helper
 from uss_operations.uss_data_definitions import (
     FlightDetailsNotFoundMessage,
     OperatorDetailsSuccessResponse,
 )
-from common.data_definitions import (RESPONSE_CONTENT_TYPE)
+
 from . import dss_rid_helper, view_port_ops
 from .rid_utils import (
     CreateSubscriptionResponse,
@@ -35,10 +36,7 @@ from .rid_utils import (
     RIDOperatorDetails,
     RIDPositions,
 )
-from .tasks import (
-    run_ussp_polling_for_rid,
-    stream_rid_test_data,
-)
+from .tasks import run_ussp_polling_for_rid, stream_rid_test_data
 
 load_dotenv(find_dotenv())
 logger = logging.getLogger("django")
@@ -141,7 +139,7 @@ def create_dss_subscription(request, *args, **kwargs):
     vertex_list.pop()
 
     request_id = str(uuid.uuid4())
-    
+
     my_subscription_helper = SubscriptionHelper()
     subscription_r = my_subscription_helper.create_new_subscription(request_id=request_id, vertex_list=vertex_list, view=view)
 
@@ -172,7 +170,7 @@ def create_dss_subscription(request, *args, **kwargs):
 @api_view(["GET"])
 @requires_scopes(["blender.read"])
 def get_rid_data(request, subscription_id):
-    """This is the GET endpoint for remote id data given a DSS subscription id. Blender will store flight URLs and everytime the data is queried"""
+    """This is the GET endpoint for remote id data given a DSS subscription id. Blender will store flight URLs and every time the data is queried"""
 
     try:
         is_uuid = UUID(subscription_id, version=4)
@@ -186,7 +184,7 @@ def get_rid_data(request, subscription_id):
     r = get_redis()
     flights_dict = {}
     # Get the flights URL from the DSS and put it in
-    # reasonably we wont have more than 500 subscriptions active
+    # reasonably we won't have more than 500 subscriptions active
     sub_to_check = "sub-" + subscription_id
 
     if r.exists(sub_to_check):
@@ -197,7 +195,6 @@ def get_rid_data(request, subscription_id):
         # run_ussp_polling_for_rid.delay()
 
     if bool(flights_dict):
-        
         all_flights_rid_data = []
         stream_ops = flight_stream_helper.StreamHelperOps()
         push_cg = stream_ops.push_cg()
@@ -435,7 +432,7 @@ def create_test(request, test_id):
         now = arrow.now()
         r.set(test_id, json.dumps({"created_at": now.isoformat()}))
         r.expire(test_id, timedelta(seconds=300))
-        
+
         stream_rid_test_data.delay(requested_flights=json.dumps(requested_flights))  # Send a job to the task queue
 
     create_test_response = CreateTestResponse(injected_flights=requested_flights, version=1)
@@ -447,7 +444,7 @@ def create_test(request, test_id):
 @requires_scopes(["rid.inject_test_data"])
 def delete_test(request, test_id, version):
     """This is the end point for the rid_qualifier to get details of a flight"""
-    # Deleteing test
+    # Deleting test
     test_id = str(test_id)
     r = get_redis()
 

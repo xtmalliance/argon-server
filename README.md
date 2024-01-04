@@ -8,7 +8,7 @@ Flight Blender is a backend / data-processing engine to stand up standards-compl
 - an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation for flight authorisation
 - ability to interact with `interuss/dss` or similar interoperability software to exchange data with other UTM implementations
 - ability to consume geo-fences per the ED-269 standard
-- basic monitoring of conformance and operator notificaitons
+- basic monitoring of conformance and operator notifications
 - a flight traffic feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data.
 
 There are different modules that enable this:
@@ -16,9 +16,9 @@ There are different modules that enable this:
 - _Flight Tracking_: It takes in flight tracking feeds from various sources e.g. ADS-B, live telemetry, Broadcast Remote ID and others and outputs as a single fused JSON feed and submits it to a Display Application e.g. [Flight Spotlight](https://github.com/openutm/flight-spotlight) to be shown in real-time on a display
 - _Geofence_: A Geofence can be submitted into Flight Blender and consequently transmitted to Spotlight
 - _Flight Declaration_: Future flights up-to 24 hours can be submitted, this support both the ASTM USS <-> USS API and can also be used as a standalone component, for supported DSS APIs see below
-- _Network Remote-ID_ : The Network RID module is compliant with ASTM standards for Network RID and can be used as a "display provider" or as a "service provider" 
-- _Operator Notifications_: Using a AMQP queue you can send notifications to the operator 
-- _Conformance Monitoring_ (beta): Monitory trajectory / flight path against the declared 4D Volume 
+- _Network Remote-ID_ : The Network RID module is compliant with ASTM standards for Network RID and can be used as a "display provider" or as a "service provider"
+- _Operator Notifications_: Using a AMQP queue you can send notifications to the operator
+- _Conformance Monitoring_ (beta): Monitory trajectory / flight path against the declared 4D Volume
 
 ## ▶️ Get started in 20 mins
 Follow our 5-step process to deploy Flight Blender and get started with the basic concepts of the software.
@@ -31,7 +31,7 @@ Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
 
 ## Openskies stack
 
-To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openutm/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
+To visualize flight tracking data you can use a complementary application like [Flight Spotlight](https://github.com/openutm/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
 

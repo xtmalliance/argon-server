@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from dataclasses import asdict
-from typing import List, Tuple
+from typing import List, Tuple,Union
 from uuid import uuid4
 
 import arrow
@@ -30,7 +30,7 @@ class BlenderDatabaseReader:
     A file to unify read and write operations to the database. Eventually caching etc. can be added via this file
     """
 
-    def get_all_flight_declarations(self) -> Tuple[None, List[FlightDeclaration]]:
+    def get_all_flight_declarations(self) -> Union[None, List[FlightDeclaration]]:
         flight_declarations = FlightDeclaration.objects.all()
         return flight_declarations
 
@@ -44,7 +44,7 @@ class BlenderDatabaseReader:
         except FlightDeclaration.DoesNotExist:
             return None
 
-    def get_flight_authorization_by_flight_declaration_obj(self, flight_declaration: FlightDeclaration) -> Tuple[None, FlightAuthorization]:
+    def get_flight_authorization_by_flight_declaration_obj(self, flight_declaration: FlightDeclaration) -> Union[None, FlightAuthorization]:
         try:
             flight_authorization = FlightAuthorization.objects.get(declaration=flight_declaration)
             return flight_authorization
@@ -53,7 +53,7 @@ class BlenderDatabaseReader:
         except FlightAuthorization.DoesNotExist:
             return None
 
-    def get_flight_authorization_by_flight_declaration(self, flight_declaration_id: str) -> Tuple[None, FlightAuthorization]:
+    def get_flight_authorization_by_flight_declaration(self, flight_declaration_id: str) -> Union[None, FlightAuthorization]:
         try:
             flight_declaration = FlightDeclaration.objects.get(id=flight_declaration_id)
             flight_authorization = FlightAuthorization.objects.get(declaration=flight_declaration)
@@ -63,7 +63,7 @@ class BlenderDatabaseReader:
         except FlightAuthorization.DoesNotExist:
             return None
 
-    def get_current_flight_declaration_ids(self, now: str) -> Tuple[None, uuid4]:
+    def get_current_flight_declaration_ids(self, now: str) -> Union[None, uuid4]:
         """This method gets flight operation ids that are active in the system within near the time interval"""
         n = arrow.get(now)
 
@@ -75,7 +75,7 @@ class BlenderDatabaseReader:
         ).values_list("id", flat=True)
         return relevant_ids
 
-    def get_current_flight_accepted_activated_declaration_ids(self, now: str) -> Tuple[None, uuid4]:
+    def get_current_flight_accepted_activated_declaration_ids(self, now: str) -> Union[None, uuid4]:
         """This method gets flight operation ids that are active in the system"""
         n = arrow.get(now)
 
@@ -91,7 +91,7 @@ class BlenderDatabaseReader:
         )
         return relevant_ids
 
-    def get_conformance_monitoring_task(self, flight_declaration: FlightDeclaration) -> Tuple[None, TaskScheduler]:
+    def get_conformance_monitoring_task(self, flight_declaration: FlightDeclaration) -> Union[None, TaskScheduler]:
         try:
             return TaskScheduler.objects.get(flight_declaration=flight_declaration)
         except TaskScheduler.DoesNotExist:
@@ -124,6 +124,7 @@ class BlenderDatabaseWriter:
 
         except IntegrityError as ie:
             return False
+
     def set_flight_declaration_non_conforming(self, flight_declaration: FlightDeclaration):
         flight_declaration.state = 3
         flight_declaration.save()

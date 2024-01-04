@@ -25,9 +25,7 @@ class Migration(migrations.Migration):
                 ("key_id", models.TextField(help_text="Specify the Key ID")),
                 (
                     "url",
-                    models.URLField(
-                        help_text="Enter the JWK / JWKS URL of the public key"
-                    ),
+                    models.URLField(help_text="Enter the JWK / JWKS URL of the public key"),
                 ),
                 (
                     "is_active",

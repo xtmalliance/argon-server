@@ -13,7 +13,7 @@ class NotificationLevel(Enum):
 
 @dataclass
 class FlightDeclarationUpdateMessage:
-    """This oject will hold messages that will go to the operational Notifications"""
+    """This object will hold messages that will go to the operational Notifications"""
 
     body: str
     level: Literal[

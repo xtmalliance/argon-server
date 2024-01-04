@@ -99,7 +99,7 @@ class BlenderConformanceEngine:
 
         # Construct the boundary of the current operation by getting the operational intent
 
-        # TODO: Cache this so that it need not be done everytime
+        # TODO: Cache this so that it need not be done every time
         operational_intent = json.loads(flight_declaration.operational_intent)
         all_volumes = operational_intent["volumes"]
         # The provided telemetry location cast as a Shapely Point

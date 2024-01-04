@@ -1,11 +1,12 @@
 import hashlib
 import json
-from typing import List
-from shapely.geometry import Polygon
-from rtree import index
-from scd_operations.scd_data_definitions import OpInttoCheckDetails, Time, Altitude
-import hashlib
 import logging
+from typing import List
+
+from rtree import index
+from shapely.geometry import Polygon
+
+from scd_operations.scd_data_definitions import Altitude, OpInttoCheckDetails, Time
 
 logger = logging.getLogger("django")
 
@@ -111,17 +112,18 @@ class OperationalIntentsIndexFactory:
         intersections = [n.object for n in self.idx.intersection((view_box[0], view_box[1], view_box[2], view_box[3]), objects=True)]
         return intersections
 
-def check_polygon_intersection(op_int_details:List[OpInttoCheckDetails], polygon_to_check:Polygon ) -> bool:     
+
+def check_polygon_intersection(op_int_details: List[OpInttoCheckDetails], polygon_to_check: Polygon) -> bool:
     idx = index.Index()
-    for pos, op_int_detail in enumerate(op_int_details):            
+    for pos, op_int_detail in enumerate(op_int_details):
         idx.insert(pos, op_int_detail.shape.bounds)
-    
+
     op_ints_of_interest_ids = list(idx.intersection(polygon_to_check.bounds))
     does_intersect = []
     if op_ints_of_interest_ids:
         for op_ints_of_interest_id in op_ints_of_interest_ids:
-            existing_op_int = op_int_details[op_ints_of_interest_id]          
-            intersects = polygon_to_check.intersects(existing_op_int.shape)            
+            existing_op_int = op_int_details[op_ints_of_interest_id]
+            intersects = polygon_to_check.intersects(existing_op_int.shape)
             if intersects:
                 does_intersect.append(True)
             else:

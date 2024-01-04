@@ -9,7 +9,7 @@ from scd_operations import dss_scd_helper
 
 
 class Command(BaseCommand):
-    help = "This command deletes all flight operations in the Blender database and also clears the DSS if avaialble"
+    help = "This command deletes all flight operations in the Blender database and also clears the DSS if available"
 
     def add_arguments(self, parser):
         parser.add_argument(

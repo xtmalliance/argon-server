@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from os import environ as env
 from typing import List
 
@@ -7,7 +8,7 @@ from geojson import FeatureCollection
 from pyproj import Proj
 from shapely.geometry import Point, Polygon, shape
 from shapely.ops import unary_union
-from dataclasses import asdict
+
 from scd_operations.scd_data_definitions import (
     Altitude,
     LatLngPoint,
@@ -22,7 +23,7 @@ if ENV_FILE:
 
 
 class OperationalIntentsConverter:
-    """A class to covert a operational Intnet  in to GeoJSON"""
+    """A class to convert a operational intent in to GeoJSON"""
 
     def __init__(self):
         self.geo_json = {"type": "FeatureCollection", "features": []}

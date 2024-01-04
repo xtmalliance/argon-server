@@ -3,7 +3,7 @@ openapi: '3.0.0'
 info:
   title: 'Flight Blender API specification'
   description: |-
-    All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations, enable ASTM specified network Remote-ID and U-Space Flight Authorisation (also know as Strategic Deconfliction). 
+    All the Interfaces for Flight Blender are defined here, using these APIs, you can submit raw air traffic observations, geo fencing data, flight declarations, enable ASTM specified network Remote-ID and U-Space Flight Authorisation (also know as Strategic Deconfliction).
 
     Unless otherwise specified, fields specified in a message but not declared in the API shall be ignored.
   version: '1.0.0'
@@ -15,7 +15,7 @@ security:
       - 'blender.write'
       - 'blender.read'
   - AuthFromAuthorizationAuthority:
-    - dss.read.identification_service_areas 
+    - dss.read.identification_service_areas
     - dss.write.identification_service_areas
 paths:
   /ping:
@@ -60,7 +60,7 @@ paths:
     get:
       summary: 'Blender Signing Public Key'
 
-      description: 'Get the public key used to verify signed responses from Flight Blender. When Flight Blender will sign responses and this endpoint will provide a public key that can be used to verify signatures of messages singed by Flight Blender'
+      description: 'Get the public key used to verify signed responses from Flight Blender. When Flight Blender will sign responses and this endpoint will provide a public key that can be used to verify signatures of messages signed by Flight Blender'
 
       security: []
       responses:
@@ -108,12 +108,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/RIDCapabilitiesResponse'
           description: >-
-            The capabilities as far as support of ASTM RID standard for Network Remote ID data exchange is concerned. 
+            The capabilities as far as support of ASTM RID standard for Network Remote ID data exchange is concerned.
         '401':
           description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
         '403':
           description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
-      summary: RID capabilities 
+      summary: RID capabilities
       description: Retrieve the capabilities of the USS
       tags:
         - rid
@@ -171,7 +171,7 @@ paths:
       tags:
         - rid
 
-  /rid/uss/identification_service_areas/{id}:    
+  /rid/uss/identification_service_areas/{id}:
     post:
       requestBody:
         content:
@@ -179,7 +179,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PutIdentificationServiceAreaNotificationParameters'
         required: true
-      
+
       summary: Notifications of change to Identification Service Areas.
       tags:
       - rid
@@ -219,11 +219,11 @@ paths:
             a previously-received notification and the Entity is different.
       security:
       - AuthFromAuthorizationAuthority:
-        - dss.write.identification_service_areas      
+        - dss.write.identification_service_areas
       description: 'Hosted by a remote ID display provider using Subscriptions: publish
         new full information of an Identification Service Area to the host of this
         endpoint (usually because of instructions from the DSS triggered by a subscription).'
-        
+
     parameters:
     - name: id
       description: EntityUUID of the Identification Service Area.
@@ -233,7 +233,7 @@ paths:
       required: true
 
   /flight_stream/set_telemetry:
-    put: 
+    put:
       tags:
       - telemetry
       summary: 'Add Telemetry observation(s)'
@@ -269,7 +269,7 @@ paths:
             * The Identification Service Area information could not be parsed, or contains illegal data.
 
   /flight_stream/set_signed_telemetry:
-    put: 
+    put:
       tags:
       - signed-rid
       summary: 'Add Signed Remote-ID observation(s)'
@@ -405,7 +405,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - rid-qualifier
-        
+
   /rid/tests/{test_id}:
     parameters:
       - examples:
@@ -711,7 +711,7 @@ paths:
         in: path
         required: true
     get:
-      tags:        
+      tags:
         - uss
       security:
         - AuthFromAuthorizationAuthority:
@@ -765,7 +765,7 @@ paths:
 
   /v1/uss/flights:
     summary: Basic operation details to meet remote ID requirements.
-    
+
     description: Retrieve basic flight information from a remote ID service provider
         to meet remote ID requirements.  This endpoint will be polled by remote ID
         display providers to display basic aircraft activity near a user in real time.  All
@@ -823,7 +823,7 @@ paths:
       - AuthFromAuthorizationAuthority:
 
         - dss.read.identification_service_areas
-     
+
       parameters:
       - name: view
         description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed
@@ -847,7 +847,7 @@ paths:
   /v1/uss/flights/{id}/details:
     summary: A remote ID flight reported by a remote ID service provider.
     get:
-    
+
       tags:
       - uss
       operationId: getFlightDetails
@@ -948,7 +948,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - air-traffic
-        
+
   /flight_stream/start_opensky_feed:
     get:
       parameters:
@@ -1002,7 +1002,7 @@ paths:
                 $ref: '#/components/schemas/Standard500ErrorResponse'
       tags:
         - air-traffic
-        
+
   /flight_stream/get_air_traffic:
     get:
       parameters:
@@ -1027,7 +1027,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FlightFeedJSON'
-            
+
         '400':
           description: Bad request submitted
           content:
@@ -1148,7 +1148,7 @@ paths:
 
       responses:
         '200':
-          description: The USSP network has been queried and the operational intents that encompass the bounds of the current flight declaration are provided. 
+          description: The USSP network has been queried and the operational intents that encompass the bounds of the current flight declaration are provided.
           content:
             application/json:
               schema:
@@ -1182,7 +1182,7 @@ paths:
 
   /flight_stream/public_keys/:
     get:
-      operationId: Get all Public Keys      
+      operationId: Get all Public Keys
       security:
         - AuthFromPassport: [blender.read]
 
@@ -1368,7 +1368,7 @@ paths:
           application/json:
             schema:
                 $ref: '#/components/schemas/ApproveRejectDeclaration'
-                
+
 
       responses:
         '200':
@@ -1427,7 +1427,7 @@ paths:
           application/json:
             schema:
                 $ref: '#/components/schemas/UpdateDeclarationState'
-                
+
       responses:
         '200':
           description: Flight State successfully updated
@@ -1486,7 +1486,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FlightDeclarationCreated'
-                
+
         '400':
           description: Bad request submitted
           content:
@@ -1891,7 +1891,7 @@ components:
     AuthFromPassport:
       type: oauth2
       description: |-
-        Blender utilizes JWT tokens issued by a OAUTH server. This can be configured as an environment varaible. In this case we recommend using / deploying a Authorization Sevver: Flight Passport. For more information see https://id.openskies.sh
+        Blender utilizes JWT tokens issued by a OAUTH server. This can be configured as an environment variable. In this case we recommend using / deploying a Authorization Server: Flight Passport. For more information see https://id.openskies.sh
 
       flows:
         clientCredentials:
@@ -1925,7 +1925,7 @@ components:
 
         Clients shall provide these access tokens in an `Authorization` header in the form `Bearer <token>` in accordance with RFC 6750.
   schemas:
-  
+
     RIDCapability:
       type: string
       description: >-
@@ -1954,7 +1954,7 @@ components:
       properties:
           is_approved:
             type: boolean
-            example: 1  
+            example: 1
           approved_by:
             type: string
             format: email
@@ -1966,9 +1966,9 @@ components:
           submitted_by:
             type: string
             format: email
-          state:          
+          state:
             $ref: '#/components/schemas/FlightDeclarationStateOperatorUpdateEnum'
-          
+
 
     RemoteIDDataProcessed:
       description: Remote ID data processed successfully
@@ -1976,7 +1976,7 @@ components:
       properties:
         message:
           type: string
-          example: 'RemoteID data succesfully submitted'
+          example: 'RemoteID data successfully submitted'
 
     FlightDeclarationCreated:
       description: A flight declaration has been created
@@ -1994,7 +1994,7 @@ components:
           example: 1
         state:
           $ref: '#/components/schemas/FlightDeclarationStateEnum'
-        
+
 
 
     SubscriptionCreated:
@@ -2040,7 +2040,7 @@ components:
       properties:
         message:
           type: string
-          example: Openskies Newtork stream started
+          example: Openskies Network stream started
 
     OpenskiesNetworkDataRequestError:
       properties:
@@ -2049,10 +2049,10 @@ components:
           example: An incorrect view port bbox was provided
 
     Standard500ErrorResponse:
-      description: An unexpected error occured.
+      description: An unexpected error occurred.
       $ref: '#/components/schemas/Error'
-    
-    JWKSResponse: 
+
+    JWKSResponse:
       description: A JWKS public key set is returned
       $ref: '#/components/schemas/JWKS'
 
@@ -2083,9 +2083,9 @@ components:
         observations:
             $ref: '#/components/schemas/ArrayOfObservations'
 
-    FlightDeclarationPaginatedList: 
+    FlightDeclarationPaginatedList:
       type: object
-      properties: 
+      properties:
         links:
           type: object
           properties:
@@ -2097,20 +2097,20 @@ components:
               type: string
               format: uri
               description: URL of the previous page to query
-        total: 
+        total:
           type: integer
-        page:    
+        page:
           type: integer
-          example: 1 
+          example: 1
         pages:
           type: integer
           example: 2
         page_size:
-          type: integer 
+          type: integer
           example: 10
-        results: 
+        results:
           $ref: '#/components/schemas/FlightDeclarationList'
-  
+
 
 
     FlightDeclarationList:
@@ -2154,14 +2154,14 @@ components:
         originating_party:
           description: Email address of person submitting this declaration
           type: string
-          format: email  
+          format: email
         aircraft_id:
-          description: Id of the aircraft 
-          type: string          
+          description: Id of the aircraft
+          type: string
         is_approved:
           description: Is the operation approved for flight?
           type: string
-          format: boolean          
+          format: boolean
           example: 1
         start_datetime:
           description: The start for the query
@@ -2178,7 +2178,7 @@ components:
         flight_declaration_geojson:
           description: The operational intent for this flight declaration as a GeoJSON FeatureCollection
           type: object
-          properties: 
+          properties:
             type:
               type: string
               example: "FeatureCollection"
@@ -2189,7 +2189,7 @@ components:
         flight_declaration_raw_geojson:
           description: The raw / original Flight Plan as GeoJSON
           type: object
-          properties: 
+          properties:
             type:
               type: string
               example: "FeatureCollection"
@@ -2199,10 +2199,10 @@ components:
                 $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
         operational_intent:
           description: The operational intent for this flight declaration, a raw flight plan is converted to an operational intent which can be in turn submitted to a DSS
-          $ref: '#/components/schemas/OperationalIntentDetails'            
+          $ref: '#/components/schemas/OperationalIntentDetails'
         state:
           $ref: '#/components/schemas/FlightDeclarationStateEnum'
-        type_of_operation: 
+        type_of_operation:
           enum:
           - 1
           - 2
@@ -2214,11 +2214,11 @@ components:
              * `1` - VLOS
              * `2` - BVLOS
              * `3` - CREWED
-            
-    PutFlightDeclarationRequest: 
+
+    PutFlightDeclarationRequest:
       type: object
-      properties:           
-        type_of_operation: 
+      properties:
+        type_of_operation:
           enum:
           - 1
           - 2
@@ -2245,12 +2245,12 @@ components:
           description: The end date and time for the flight
           type: string
           format: date-time
-        flight_declaration_geo_json: 
+        flight_declaration_geo_json:
           $ref: '#/components/schemas/FlightDeclarationGeoJSONFeatureCollection'
-    
+
     FlightDeclarationGeoJSONFeatureCollection:
       type: object
-      properties: 
+      properties:
         type:
           type: string
           example: "FeatureCollection"
@@ -2258,11 +2258,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FlightDeclarationFeatureGeoJSON'
-    FlightDeclarationStateEnum:  
+    FlightDeclarationStateEnum:
           type: integer
-          
+
           enum:
-          - 0 
+          - 0
           - 1
           - 2
           - 3
@@ -2283,14 +2283,14 @@ components:
              * `7` - Cancelled
              * `8` - Rejected
 
-    FlightDeclarationStateOperatorUpdateEnum:  
+    FlightDeclarationStateOperatorUpdateEnum:
           type: integer
           enum:
           - 2
           - 3
           - 5
           description: >
-            The state of the operation          
+            The state of the operation
              * `2` - Activated
              * `3` - Nonconforming
              * `5` - Ended
@@ -2511,9 +2511,9 @@ components:
       items:
         $ref: '#/components/schemas/GeoFenceDetails'
 
-    GeoFenceGeoJSONPaginatedList: 
+    GeoFenceGeoJSONPaginatedList:
       type: object
-      properties: 
+      properties:
         links:
           type: object
           properties:
@@ -2525,20 +2525,20 @@ components:
               type: string
               format: uri
               description: URL of the previous page to query
-        total: 
+        total:
           type: integer
-        page:    
+        page:
           type: integer
-          example: 1 
+          example: 1
         pages:
           type: integer
           example: 2
         page_size:
-          type: integer 
+          type: integer
           example: 10
-        results: 
+        results:
           $ref: '#/components/schemas/GeoFenceGeoJSONList'
-  
+
 
     Point2D:
       type: array
@@ -2609,10 +2609,10 @@ components:
           items:
             $ref: '#/components/schemas/Point2D'
 
-    NetworkOpIntGeoJSONFeatureCollection:           
+    NetworkOpIntGeoJSONFeatureCollection:
       description: The operational intent for this flight declaration as a GeoJSON FeatureCollection
       type: object
-      properties: 
+      properties:
         type:
           type: string
           example: "FeatureCollection"
@@ -2661,17 +2661,17 @@ components:
 
     JWK:
         properties:
-          alg: 
+          alg:
             type: string
-          use: 
+          use:
             type: string
-          kid: 
+          kid:
             type: string
           e:
             type: string
           kty:
             type: string
-          n: 
+          n:
             type: string
 
     FlightRIDData:
@@ -2681,14 +2681,14 @@ components:
         required:
           - current_states
           - flight_details
-          
+
         properties:
-        
+
           current_states:
             type: array
             items:
               $ref: '#/components/schemas/RIDAircraftState'
-          flight_details: 
+          flight_details:
             type: object
             $ref: '#/components/schemas/RIDOperatorDetails'
 
@@ -2749,7 +2749,7 @@ components:
             - 11
             type: integer
             description: >-
-              The source of the observation: 
+              The source of the observation:
               * `0` = 1090ES
               * `1` - UAT
               * `2` - Multi-radar (MRT)
@@ -2764,7 +2764,7 @@ components:
               * `11` - Network Remote-ID
 
           metadata:
-            type: object  
+            type: object
             description: An arbitrary JSON that can be submitted into Blender
 
     GetDisplayDataResponse:
@@ -2979,8 +2979,8 @@ components:
         id:
           description: ID for this flight, matching a existing flight declaration ID in Flight Blender in request. If the ID of does not match, Blender will reject data from this endpoint.
           type: string
-          example: 238c0189-cdb1-43f0-8510-5718b37eeca4    
-          
+          example: 238c0189-cdb1-43f0-8510-5718b37eeca4
+
         eu_classification:
           description: When this field is specified, the Classification Type is "European
             Union".  If no other classification field is specified, the Classification Type
@@ -3220,14 +3220,14 @@ components:
 
     GeoZoneSubmission:
       type: object
-      required: 
+      required:
         - title
         - description
         - zones
       properties:
         features:
           type: array
-          description: A set of Geozones 
+          description: A set of Geozones
           items:
             $ref: '#/components/schemas/GeoZone'
 
@@ -3644,7 +3644,7 @@ components:
           type: string
           enum:
             - RFC3339
-            
+
     OperationalIntentTestInjection:
       description: >-
         Parameters that define an operational intent: this injection is used to
@@ -4207,7 +4207,7 @@ components:
           - Takeoff
           - Dynamic
           - Fixed
-          
+
     RIDAircraftState:
       description: State of an aircraft for the purposes of remote ID.
       required:
@@ -4326,7 +4326,7 @@ components:
           enum:
           - TakeoffLocation
           - GroundLevel
-          type: string          
+          type: string
     SpeedAccuracy:
       description: |-
         This is the same enumeration scale and values from ADS-B NACv.
@@ -4555,7 +4555,7 @@ components:
       anyOf:
       - $ref: '#/components/schemas/UUIDv4'
       description: Universally-unique identifier for a Subscription communicated through
-        the DSS.  Formatted as UUIDv4.          
+        the DSS.  Formatted as UUIDv4.
     ################################################################################
     ####################### End of ASTM-standard definitions #######################
     ################################################################################
@@ -4855,7 +4855,7 @@ components:
           type: string
           description: >-
             Indication of whether one or more applicable Geozones were selected according to the selection criteria of the corresponding check.
-            
+
             * Present: One or more applicable Geozones were selected.
             * Absent: No applicable Geozones were selected.
             * UnsupportedFilter: Applicable Geozones could not be selected because one or more filter criteria are not supported by the USSP.  If this value is specified, `message` must be populated.
@@ -4878,13 +4878,13 @@ tags:
   - name: uss
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions, operational intents to the DSS for ASTM Compliant Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data and querying operational intents
   - name: rid-qualifier
-    description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these enpoints implement the Observation API as described by the test suite.
+    description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these endpoints implement the Observation API as described by the test suite.
   - name: scd-qualifier
     description: Flight Blender allows connections and interactions with the USSP software testing framework (via InterUSS) for Remote ID and Strategic deconfliction. These endpoints implement the stratetgic deconflication test framework APIs.
   - name: rid
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data.
   - name: air-traffic
-    description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be intergrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display and or other API endpoints. Use these endpoints to submit / query air-traffic data.
+    description: Airtraffic data from sensors such as ADS-B, FLARM etc. can be integrated into Flight Blender, Flight Blender will normalize the traffic and send it to the Display and or other API endpoints. Use these endpoints to submit / query air-traffic data.
   - name: flight-declarations
     description: Using tools like Flight Spotlight (see Openskies Github) you can submit declarations of flight for approval / review to the Blender system. These endpoints define how flight declarations / operational intents can be created.
   - name: geo-fence

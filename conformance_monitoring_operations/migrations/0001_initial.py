@@ -5,21 +5,23 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('django_celery_beat', '0018_improve_crontab_helptext'),
-        ('flight_declaration_operations', '0006_flightoperationtracking'),
+        ("django_celery_beat", "0018_improve_crontab_helptext"),
+        ("flight_declaration_operations", "0006_flightoperationtracking"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TaskScheduler',
+            name="TaskScheduler",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('flight_declaration', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='flight_declaration_operations.flightdeclaration')),
-                ('periodic_task', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='django_celery_beat.periodictask')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "flight_declaration",
+                    models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="flight_declaration_operations.flightdeclaration"),
+                ),
+                ("periodic_task", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="django_celery_beat.periodictask")),
             ],
         ),
     ]

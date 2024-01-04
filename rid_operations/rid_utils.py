@@ -1,5 +1,4 @@
 import enum
-
 from dataclasses import asdict, dataclass, field
 from typing import List, Literal, NamedTuple, Optional, Union
 
@@ -20,6 +19,7 @@ class RIDTime:
 class LatLngPoint:
     lat: float
     lng: float
+
 
 class Position(NamedTuple):
     """A class to hold most recent position for remote id data"""
@@ -137,7 +137,7 @@ class CreateSubscriptionResponse(NamedTuple):
 
 
 class RIDCapabilitiesResponseEnum(str, enum.Enum):
-    """A enum to hold USS capabilites operation"""
+    """A enum to hold USS capabilities operation"""
 
     ASTMRID2019 = "ASTMRID2019"
     ASTMRID2022 = "ASTMRID2022"
@@ -168,7 +168,6 @@ class RIDAircraftPosition:
 class RIDHeight:
     distance: float
     reference: str
-
 
 
 @dataclass
@@ -288,7 +287,6 @@ class RIDRecentAircraftPosition:
 class FullRequestedFlightDetails:
     id: str
     telemetry_length: int
-
 
 
 @dataclass

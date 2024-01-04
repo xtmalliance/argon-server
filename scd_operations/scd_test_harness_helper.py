@@ -1,15 +1,15 @@
-from .scd_data_definitions import (
-    TestInjectionResult,
-    Volume4D,
-    TestInjectionResultState,
-)
 import json
-from rid_operations import rtree_helper
+from typing import List
+
 from auth_helper.common import get_redis
 from rid_operations import rtree_helper
-from typing import List
+
 from .dss_scd_helper import OperationalIntentReferenceHelper, VolumesConverter
-from .scd_data_definitions import TestInjectionResult, Volume4D
+from .scd_data_definitions import (
+    TestInjectionResult,
+    TestInjectionResultState,
+    Volume4D,
+)
 
 # Set the responses to be used
 failed_test_injection_response = TestInjectionResult(
@@ -46,9 +46,7 @@ class SCDTestHarnessHelper:
         self.my_operational_intent_helper = OperationalIntentReferenceHelper()
         self.r = get_redis()
         self.my_volumes_converter = VolumesConverter()
-        self.my_operational_intent_comparator = (
-            rtree_helper.OperationalIntentComparisonFactory()
-        )
+        self.my_operational_intent_comparator = rtree_helper.OperationalIntentComparisonFactory()
 
     def check_if_same_flight_id_exists(self, operation_id: str) -> bool:
         r = get_redis()
@@ -94,5 +92,3 @@ class SCDTestHarnessHelper:
             all_checks.append(are_polygons_same)
 
         return all(all_checks)
-
-

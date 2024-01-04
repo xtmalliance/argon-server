@@ -16,3 +16,8 @@ skip = "migrations"
 line-length = 150
 target-version = "py310"
 exclude = ["migrations"]
+
+[tool.codespell]
+skip = "redis.conf,*.pyc"
+ignore-words-list = "corus"
+quiet-level = 2
