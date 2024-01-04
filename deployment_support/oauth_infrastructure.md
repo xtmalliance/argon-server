@@ -14,18 +14,18 @@ In this document, we will setup
 - use the importers to submit some flight information
 - and finally query the flight data using the API via a tool like Postman.
 
-Flight Blender follows the ASTM standads for access and authorization.
+Flight Blender follows the ASTM standards for access and authorization.
 
 
 ## Detailed Instructions
 
 ### Setting up authorization server
-The OpenUTM system is a standards compliant system and requires a OAUTH server for managing Identity and Authorization, the ASTM standard requires that JWT tokens be used to access UTM services, JWT tokens can be issued by any server, we recommend using Flight Passport since it gives full authorization capabilites.
+The OpenUTM system is a standards compliant system and requires a OAUTH server for managing Identity and Authorization, the ASTM standard requires that JWT tokens be used to access UTM services, JWT tokens can be issued by any server, we recommend using Flight Passport since it gives full authorization capabilities.
 
 ### Creating a .env file
 When you deploy Blender you will need a environment file. The environment file can be requested via [our contact form](https://www.openskies.sh/#contact).
 
-The section below deatils the environment file variables and a short comment on where they are used.
+The section below details the environment file variables and a short comment on where they are used.
 
 ## __1__
 *Used to upload data into Flight Blender*, see `importers` directory in Flight Blender for more information. A JWT Bearer Token is needed to write any data into Flight Blender, this set of environment variables enable you to write data into Flight Blender.
@@ -68,7 +68,7 @@ The section below deatils the environment file variables and a short comment on 
 | DEFAULT_APPROVED | - |
 
 ## __5__
-*Used in Flight Blender*, these varialbles are used in Flight Blender to ensure DSS connectivity and inter-operability ith other
+*Used in Flight Blender*, these variables are used in Flight Blender to ensure DSS connectivity and interoperability ith other
 
 | Variable Key | Description |
 |--------------|:-----:|
@@ -87,7 +87,7 @@ The section below deatils the environment file variables and a short comment on 
 |--------------|:-----:|
 | REDIS_HOST | Location of the Redis instance e.g. redis if using Docker Compose |
 | REDIS_PORT| 6379, if you using default / Docker compose, see also `redis.conf` file for changing this. |
-| REDIS_BROKER_URL | This is used in Django to manage the Celery / task management processes if you are usnig  |
+| REDIS_BROKER_URL | This is used in Django to manage the Celery / task management processes if you are using it  |
 | HEARTBEAT_RATE_SECS | This is the refresh rate of the system, normally set to 1 or 2 seconds |
 | OPENSKY_NETWORK_USERNAME | Get a Username from https://opensky-network.org/ |
 | OPENSKY_NETWORK_PASSWORD | - |

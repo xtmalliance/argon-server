@@ -8,7 +8,7 @@ Flight Blender is a backend / data-processing engine to stand up standards-compl
 - an open source implementation of the ASTM USS <-> USS standard and compatible with the EU U-Space regulation for flight authorisation
 - ability to interact with `interuss/dss` or similar interoperability software to exchange data with other UTM implementations
 - ability to consume geo-fences per the ED-269 standard
-- basic monitoring of conformance and operator notificaitons
+- basic monitoring of conformance and operator notifications
 - a flight traffic feed aggregator that has different modules that can process and relay data around flights and airspace: geo-fence, flight declarations, air-traffic data.
 
 There are different modules that enable this:
@@ -31,7 +31,7 @@ Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
 
 ## Openskies stack
 
-To visualize flight tracking data you can use a complementary appplication like [Flight Spotlight](https://github.com/openutm/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
+To visualize flight tracking data you can use a complementary application like [Flight Spotlight](https://github.com/openutm/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
 
 ![OpenskiesStack](images/openskies-stack.png)
 

@@ -134,7 +134,7 @@ def requires_scopes(required_scopes):
                 response.status_code = 401
                 return response
             except jwt.DecodeError as es:
-                response = JsonResponse({"detail": "Token canot be decoded"})
+                response = JsonResponse({"detail": "Token cannot be decoded"})
                 response.status_code = 401
                 return response
             except Exception as e:

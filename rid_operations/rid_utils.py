@@ -137,7 +137,7 @@ class CreateSubscriptionResponse(NamedTuple):
 
 
 class RIDCapabilitiesResponseEnum(str, enum.Enum):
-    """A enum to hold USS capabilites operation"""
+    """A enum to hold USS capabilities operation"""
 
     ASTMRID2019 = "ASTMRID2019"
     ASTMRID2022 = "ASTMRID2022"

@@ -102,7 +102,7 @@ def poll_uss_for_flights_async():
     r = get_redis()
     flights_dict = {}
     # Get the flights URL from the DSS and put it in
-    for keybatch in flight_stream_helper.batcher(r.scan_iter("all_uss_flights:*"), 100):  # reasonably we wont have more than 100 subscriptions active
+    for keybatch in flight_stream_helper.batcher(r.scan_iter("all_uss_flights:*"), 100):  # reasonably we won't have more than 100 subscriptions active
         key_batch_set = set(keybatch)
         for key in key_batch_set:
             if key:
@@ -122,7 +122,7 @@ def stream_rid_telemetry_data(rid_telemetry_observations):
         flight_details = observation["flight_details"]
         current_states = observation["current_states"]
         operation_id = flight_details["id"]
-        # Update telemetry received timetamp
+        # Update telemetry received timestamp
         my_database_writer.update_telemetry_timestamp(flight_declaration_id=operation_id)
 
         for current_state in current_states:

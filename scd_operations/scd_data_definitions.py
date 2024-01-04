@@ -156,7 +156,7 @@ class DeleteFlightStatusResponseEnum(str, enum.Enum):
 
 
 class USSCapabilitiesResponseEnum(str, enum.Enum):
-    """A enum to hold USS capabilites operation"""
+    """A enum to hold USS capabilities operation"""
 
     BasicStrategicConflictDetection = "BasicStrategicConflictDetection"
     FlightAuthorisationValidation = "FlightAuthorisationValidation"

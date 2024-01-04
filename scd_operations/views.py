@@ -160,7 +160,7 @@ def scd_clear_area_request(request):
 @api_view(["PUT", "DELETE"])
 @requires_scopes(["utm.inject_test_data"])
 def scd_auth_test(request, operation_id):
-    # This view implementes the automated verification of SCD capabilities
+    # This view implements the automated verification of SCD capabilities
     r = get_redis()
     my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
     my_scd_dss_helper = dss_scd_helper.SCDOperations()

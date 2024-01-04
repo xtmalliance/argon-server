@@ -144,7 +144,7 @@ class VolumesValidator:
 
 
 class VolumesConverter:
-    """A class to covert a Volume4D in to GeoJSON"""
+    """A class to convert a Volume4D in to GeoJSON"""
 
     def __init__(self):
         self.geo_json = {"type": "FeatureCollection", "features": []}
@@ -717,7 +717,7 @@ class SCDOperations:
             )
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=dss_response, status=412, message=common_400_response)
         else:
-            common_400_response = CommonDSS4xxResponse(message="A errror occured while deleting the operational intent")
+            common_400_response = CommonDSS4xxResponse(message="A error occurred while deleting the operational intent")
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=dss_response, status=500, message=common_400_response)
         return delete_op_int_status
 
@@ -761,7 +761,7 @@ class SCDOperations:
         notification_payload: NotifyPeerUSSPostPayload,
         audience: str,
     ):
-        """This method posts operaitonal intent details to peer USS via a POST request to /uss/v1/operational_intents"""
+        """This method posts operational intent details to peer USS via a POST request to /uss/v1/operational_intents"""
         auth_token = self.get_auth_token(audience=audience)
 
         notification_url = uss_base_url + "/uss/v1/operational_intents"
@@ -833,7 +833,7 @@ class SCDOperations:
         all_existing_operational_intent_details_full: List[OpInttoCheckDetails],
         operational_intent_ref_id: str,
     ) -> Union[None, str]:
-        """This method gets the latest ovn from the dss for the specificed operational intent reference"""
+        """This method gets the latest ovn from the dss for the specified operational intent reference"""
         ovn = None
         relevant_op_int_id = [x for x in all_existing_operational_intent_details_full if x.id == operational_intent_ref_id]
 

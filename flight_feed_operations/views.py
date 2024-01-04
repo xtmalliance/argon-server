@@ -114,7 +114,7 @@ def set_air_traffic(request):
             icao_address = observation["icao_address"]
 
         except KeyError as obs_ke:
-            msg = {"message": "One of your obervations do not have the mandatory required field"}
+            msg = {"message": "One of your observations do not have the mandatory required field"}
             return JsonResponse(msg, status=400)
             # logger.error("Not all data was provided")
         metadata = {}
@@ -228,7 +228,7 @@ def get_air_traffic(request):
 @api_view(["GET"])
 @requires_scopes(["blender.read"])
 def start_opensky_feed(request):
-    # This method takes in a view port as a lat1,lon1,lat2,lon2 co-ordinate system and for 60 seconds starts the stream of data from the OpenSky Network.
+    # This method takes in a view port as a lat1,lon1,lat2,lon2 coordinate system and for 60 seconds starts the stream of data from the OpenSky Network.
 
     try:
         view = request.query_params["view"]
@@ -248,7 +248,7 @@ def start_opensky_feed(request):
         start_opensky_network_stream.delay(view_port=json.dumps(view_port))
 
         return JsonResponse(
-            {"message": "Openskies Newtork stream started"},
+            {"message": "Openskies Network stream started"},
             status=200,
             content_type="application/json",
         )
@@ -264,7 +264,7 @@ def start_opensky_feed(request):
 
 @api_view(["PUT"])
 def set_signed_telemetry(request):
-    # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securly send signed telemetry information into Blender, since the messages are signed, we turn off any auth requirements for tokens and validate against allowed public keys in Blender.
+    # This endpoint sets signed telemetry details into Flight Blender, use this endpoint to securely send signed telemetry information into Blender, since the messages are signed, we turn off any auth requirements for tokens and validate against allowed public keys in Blender.
 
     my_message_verifier = MessageVerifier()
     my_blender_database_reader = BlenderDatabaseReader()
@@ -354,7 +354,7 @@ def set_signed_telemetry(request):
                     content_type="application/json",
                 )
 
-        submission_success = {"message": "Telemetry data succesfully submitted"}
+        submission_success = {"message": "Telemetry data successfully submitted"}
         content_digest = my_response_signer.generate_content_digest(submission_success)
         signed_data = my_response_signer.sign_json_via_django(submission_success)
         submission_success["signed"] = signed_data

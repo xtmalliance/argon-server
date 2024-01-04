@@ -1,8 +1,8 @@
 # ⌚ 20-min Quickstart
-In this article you will understand how to deploy the Flight Blender backend / data processsing engine. If you need a front end / display you will need to install [Flight Spotlight](https://flightspotlight.com) (which communicates with Blender via the API) and finally for production we also recommend that you use [Flight Passport](https://www.github.com/openskies-sh/flight_passport) authorization server for endpoint security.
+In this article you will understand how to deploy the Flight Blender backend / data processing engine. If you need a front end / display you will need to install [Flight Spotlight](https://flightspotlight.com) (which communicates with Blender via the API) and finally for production we also recommend that you use [Flight Passport](https://www.github.com/openskies-sh/flight_passport) authorization server for endpoint security.
 
 ## Who is this for?
-This guide is mainly for technical engineers within organizations who are interested in testing and standing up UTM capability. It is recommended that you are familiar with basic Docker, OAUTH / Bearer Tokens. The server is writted in Django / Python if you want to use / run the in built in data. However, since it is all API based, you can use any tools / languages that you are familar with to communicate with the server.
+This guide is mainly for technical engineers within organizations who are interested in testing and standing up UTM capability. It is recommended that you are familiar with basic Docker, OAUTH / Bearer Tokens. The server is written in Django / Python if you want to use / run the in built in data. However, since it is all API based, you can use any tools / languages that you are familiar with to communicate with the server.
 
 ## Need support?
 ![OpenUTM](../images/openutm-logo.png)
@@ -31,9 +31,9 @@ For this quick start we will use the [sample .env](https://github.com/openskies-
 | REDIS_HOST | string | Blender uses Redis as the backend, you can use localhost if you are running redis locally |
 | REDIS_PORT | integer | Normally Redis runs at port 6379, you can set it here, if you dont setup the REDIS Host and Port, Blender will use the default values |
 | REDIS_PASSWORD | string | In production the Redis instance is password protected, set the password here, see redis.conf for more information |
-| REDIS_BROKER_URL | string | Blender has background jobs controlled via Redies, you can setup the Broker URL here |
+| REDIS_BROKER_URL | string | Blender has background jobs controlled via Redis, you can setup the Broker URL here |
 | HEARTBEAT_RATE_SECS |integer | Generally set it to 1 or 2 seconds, this is used when querying data externally to other USSPs |
-| DATABASE_URL |string | A full database url with userame and password as necessary, you can review various database [url schema](https://github.com/jazzband/dj-database-url#url-schema) |
+| DATABASE_URL |string | A full database url with username and password as necessary, you can review various database [url schema](https://github.com/jazzband/dj-database-url#url-schema) |
 
 If you are working in stand-alone mode, recommended initially, the above environment file should work. If you want to engage with a DSS and inter-operate with other USSes then you will need additional variables below.
 
@@ -63,7 +63,7 @@ Next we can now upload flight data. Blender has a extensive API and you can revi
 You will have to setup a environment like Anaconda or similar software package and install dependencies via something like `pip install -r requirements.txt` then you can run the import script via `python import_flight_json_blender_local.py` this will send some observations to the `/set_air_traffic` POST endpoint. This script will send a observation and then wait for 10 seconds and send another one. All of this requires Python.
 
 ### 4. Use Postman to query the API
-While the script is running you can install Postman and which should help us query ther API. You can import the [Postman Collection](../api/flight_blender_api.postman_collection.json) prior. You will also need a "NoAuth" Bearer JWT token that you can generate by using the [get_access_token.py](../importers/get_access_token.py) script. You should have a scope of `blender.read` and a audience of `testflight.flightblender.com`. We will use this token to go to the Postman collection > Flight Feed Operations > Get airtraffic observations. You should be able to see output of the flight feed as a response!
+While the script is running you can install Postman and which should help us query the API. You can import the [Postman Collection](../api/flight_blender_api.postman_collection.json) prior. You will also need a "NoAuth" Bearer JWT token that you can generate by using the [get_access_token.py](../importers/get_access_token.py) script. You should have a scope of `blender.read` and a audience of `testflight.flightblender.com`. We will use this token to go to the Postman collection > Flight Feed Operations > Get airtraffic observations. You should be able to see output of the flight feed as a response!
 
 
 ## Frequently asked Questions (FAQs)
