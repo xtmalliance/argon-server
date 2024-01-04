@@ -182,7 +182,7 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
                         subscriptions = from_dict(data_class=SubscriptionState, data=subscriptions_raw)
                         op_int_details = from_dict(
                             data_class=OperationalIntentUSSDetails,
-                            data=json.loads(fo.operational_intent),
+                            data=json.loads(flight_declaration.operational_intent),
                         )
                         operational_intent = OperationalIntentDetailsUSSResponse(
                             reference=opint_submission_result.dss_response.operational_intent_reference,
