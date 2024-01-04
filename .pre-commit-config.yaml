@@ -11,7 +11,15 @@ repos:
       - id: check-executables-have-shebangs
       # - id: check-shebang-scripts-are-executable
       - id: mixed-line-ending
-    # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.4
+    hooks:
+      - id: remove-crlf
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+  # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 23.12.1
     hooks:
@@ -21,10 +29,6 @@ repos:
         # pre-commit's default_language_version, see
         # https://pre-commit.com/#top_level-default_language_version
         language_version: python3.10
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
   # - repo: https://github.com/PyCQA/bandit
   #   rev: 1.7.6
   #   hooks:
@@ -33,13 +37,9 @@ repos:
     rev: 1.16.0
     hooks:
       - id: blacken-docs
-  # - repo: https://github.com/codespell-project/codespell
-  #   rev: v2.2.6
-  #   hooks:
-  #     - id: codespell
-  #       additional_dependencies:
-  #         - tomli
-  - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.4
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
     hooks:
-      - id: remove-crlf
+      - id: codespell
+        additional_dependencies:
+          - tomli
