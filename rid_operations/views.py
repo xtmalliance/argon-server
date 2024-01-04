@@ -173,7 +173,7 @@ def get_rid_data(request, subscription_id):
     """This is the GET endpoint for remote id data given a DSS subscription id. Blender will store flight URLs and every time the data is queried"""
 
     try:
-        is_uuid = UUID(subscription_id, version=4)
+        UUID(subscription_id, version=4)
     except ValueError:
         return HttpResponse(
             "Incorrect UUID passed in the parameters, please send a valid subscription ID",

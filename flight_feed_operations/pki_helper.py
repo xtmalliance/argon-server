@@ -90,10 +90,10 @@ class MessageVerifier:
                 headers=request.headers,
             )
 
-            for key_id, jwk in stored_public_keys.items():
+            for key_id, jwk_detail in stored_public_keys.items():
                 verifier = HTTPMessageVerifier(
                     signature_algorithm=algorithms.RSA_PSS_SHA512,
-                    key_resolver=MyHTTPSignatureKeyResolver(jwk=jwk),
+                    key_resolver=MyHTTPSignatureKeyResolver(jwk=jwk_detail),
                 )
                 verifier.verify(r)
             return True

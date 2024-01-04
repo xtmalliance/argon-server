@@ -5,7 +5,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import timedelta
 
 # Create your views here.
-from os import environ as env
+
 from uuid import UUID
 
 import arrow
@@ -24,7 +24,6 @@ from rid_operations.data_definitions import (
     UASID,
     Altitude,
     OperatorLocation,
-    SignedUnsignedTelemetryObservation,
     UAClassificationEU,
 )
 from rid_operations.rid_utils import (
@@ -49,7 +48,6 @@ from .uss_data_definitions import (
     OperationalIntentReferenceDSSResponse,
     OperationalIntentUSSDetails,
     OperatorDetailsSuccessResponse,
-    SummaryFlightsOnly,
     Time,
     UpdateChangedOpIntDetailsPost,
     UpdateOperationalIntent,
@@ -76,18 +74,17 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 @api_view(["POST"])
 @requires_scopes(["utm.strategic_coordination"])
-def USSUpdateOpIntDetails(request):
-    # TODO: Process changing of updated operational intent
+def uss_update_opint_details(request):    
     # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
-    opint_subscription_end_time = timedelta(seconds=180)
-    my_geo_json_converter = dss_scd_helper.VolumesConverter()
+    
+    # my_geo_json_converter = dss_scd_helper.VolumesConverter()
     op_int_update_details_data = request.data
-    r = get_redis()
+    # r = get_redis()
     op_int_update_detail = from_dict(data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data)
-    my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
+    # my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
     # Write the operational Intent
-    operation_id_str = op_int_update_detail.operational_intent_id
-    op_int_details_key = "flight_opint." + operation_id_str
+    # operation_id_str = op_int_update_detail.operational_intent_id
+    # op_int_details_key = "flight_opint." + operation_id_str
     logger.info("incoming...")
     logger.info(op_int_update_detail)
     # operational_intent_reference = op_int_update_detail.operational_intent.reference
@@ -125,7 +122,7 @@ def USSUpdateOpIntDetails(request):
 @api_view(["GET"])
 @requires_scopes(["utm.strategic_coordination"])
 def USSOffNominalPositionDetails(request, entity_id):
-    # r = get_redis()
+    
     raise NotImplementedError
 
 
@@ -173,7 +170,6 @@ def USSOpIntDetails(request, opint_id):
                 value=reference_full["time_end"]["value"],
             )
             stored_volumes = details_full["volumes"]
-            # TODO: Fix outline circle
             for v in stored_volumes:
                 if "outline_circle" in v["volume"].keys():
                     if not v["volume"]["outline_circle"]:
@@ -181,7 +177,6 @@ def USSOpIntDetails(request, opint_id):
 
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
-            # TODO: Fix outline circle
             for v in stored_off_nominal_volumes:
                 if "outline_circle" in v["volume"].keys():
                     if not v["volume"]["outline_circle"]:
@@ -236,14 +231,13 @@ def get_uss_flights(request):
     """This is the end point for the rid_qualifier to get details of a flight"""
     try:
         include_recent_positions = request.query_params["include_recent_positions"]
-    except MultiValueDictKeyError as mvke:
+    except MultiValueDictKeyError:
         include_recent_positions = False
 
-    # my_rid_output_helper = RIDOutputHelper()
     try:
         view = request.query_params["view"]
         view_port = [float(i) for i in view.split(",")]
-    except Exception as ke:
+    except Exception:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return JsonResponse(json.loads(json.dumps(incorrect_parameters)), status=400)
     view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
