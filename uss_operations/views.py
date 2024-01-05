@@ -3,9 +3,6 @@ import logging
 import time
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-
-# Create your views here.
-
 from uuid import UUID
 
 import arrow
@@ -53,6 +50,9 @@ from .uss_data_definitions import (
     UpdateOperationalIntent,
 )
 
+# Create your views here.
+
+
 load_dotenv(find_dotenv())
 logger = logging.getLogger("django")
 
@@ -74,9 +74,9 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 @api_view(["POST"])
 @requires_scopes(["utm.strategic_coordination"])
-def uss_update_opint_details(request):    
+def uss_update_opint_details(request):
     # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
-    
+
     # my_geo_json_converter = dss_scd_helper.VolumesConverter()
     op_int_update_details_data = request.data
     # r = get_redis()
@@ -122,7 +122,6 @@ def uss_update_opint_details(request):
 @api_view(["GET"])
 @requires_scopes(["utm.strategic_coordination"])
 def USSOffNominalPositionDetails(request, entity_id):
-    
     raise NotImplementedError
 
 

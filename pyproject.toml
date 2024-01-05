@@ -18,6 +18,6 @@ target-version = "py310"
 exclude = ["migrations"]
 
 [tool.codespell]
-skip = "redis.conf,*.pyc"
-ignore-words-list = "corus"
+skip = "**/redis.conf"
+ignore-words = ".codespellignore"
 quiet-level = 2

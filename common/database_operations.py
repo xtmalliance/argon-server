@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from dataclasses import asdict
-from typing import List, Tuple,Union
+from typing import List, Tuple, Union
 from uuid import uuid4
 
 import arrow
