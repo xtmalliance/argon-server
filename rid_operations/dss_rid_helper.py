@@ -17,6 +17,7 @@ from dotenv import find_dotenv, load_dotenv
 
 from auth_helper import dss_auth_helper
 from auth_helper.common import get_redis
+from common.data_definitions import RESPONSE_CONTENT_TYPE
 from rid_operations.rid_utils import RIDTime, SubscriptionResponse
 
 from .rid_utils import (
@@ -82,7 +83,7 @@ class RemoteIDOperations:
             # check if a subscription already exists for this view_port
 
             headers = {
-                "content-type": REPSONSE_CONTENT_TYPE,
+                "content-type": RESPONSE_CONTENT_TYPE,
                 "Authorization": "Bearer " + auth_token["access_token"],
             }
             p = ISACreationRequest(extents=flight_extents, uss_base_url=uss_base_url)
@@ -162,7 +163,7 @@ class RemoteIDOperations:
 
                     auth_credentials = my_authorization_helper.get_cached_credentials(audience=uss_audience, token_type="rid")
                     headers = {
-                        "content-type": REPSONSE_CONTENT_TYPE,
+                        "content-type": RESPONSE_CONTENT_TYPE,
                         "Authorization": "Bearer " + auth_credentials["access_token"],
                     }
                     try:
@@ -230,7 +231,7 @@ class RemoteIDOperations:
             fifteen_seconds_from_now = now + subscription_seconds_timedelta
             fifteen_seconds_from_now_isoformat = fifteen_seconds_from_now.isoformat() + "Z"
             headers = {
-                "content-type": REPSONSE_CONTENT_TYPE,
+                "content-type": RESPONSE_CONTENT_TYPE,
                 "Authorization": "Bearer " + auth_token["access_token"],
             }
             volume_object = {
@@ -333,7 +334,7 @@ class RemoteIDOperations:
 
             auth_credentials = authority_credentials.get_cached_credentials(audience=audience, token_type="rid")
             headers = {
-                "content-type": REPSONSE_CONTENT_TYPE,
+                "content-type": RESPONSE_CONTENT_TYPE,
                 "Authorization": "Bearer " + auth_credentials["access_token"],
             }
             flights_request = requests.get(cur_flight_url, headers=headers)
