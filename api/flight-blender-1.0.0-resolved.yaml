@@ -2155,7 +2155,6 @@ components:
         originating_party:
           description: Provide the name of the flight declaration e.g. Flight Blender 102
           type: string
-          format: email
         submitted_by:
           description: Email address of person submitting this declaration
           type: string
