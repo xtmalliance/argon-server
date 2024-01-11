@@ -2141,6 +2141,7 @@ components:
       required:
       - key_id
       - url
+
     FlightDeclarationDetail:
       type: object
       properties:
@@ -2152,6 +2153,9 @@ components:
           type: string
           format: email
         originating_party:
+          description: Provide the name of the flight declaration e.g. Flight Blender 102
+          type: string
+        submitted_by:
           description: Email address of person submitting this declaration
           type: string
           format: email

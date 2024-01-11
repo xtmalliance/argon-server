@@ -5,6 +5,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import timedelta
 from os import environ as env
 from typing import List
+from django.shortcuts import redirect
 from uuid import UUID
 
 import arrow
@@ -86,6 +87,13 @@ def scd_test_capabilities(request):
         ]
     )
     return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
+
+
+@api_view(["GET"])
+@requires_scopes(["blender.read"])
+def scd_capabilities(request):
+    return redirect(scd_test_capabilities)
+    
 
 
 @api_view(["POST"])
