@@ -5,15 +5,22 @@ from dataclasses import asdict, is_dataclass
 from datetime import timedelta
 from os import environ as env
 from typing import List
-from django.shortcuts import redirect
 from uuid import UUID
 
 import arrow
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from dotenv import find_dotenv, load_dotenv
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from scd_test_harness_helper import (
+    conflict_with_flight_test_injection_response,
+    failed_test_injection_response,
+    planned_test_injection_response,
+    ready_to_fly_injection_response,
+    rejected_test_injection_response,
+)
 
 from auth_helper.common import RedisHelper, get_redis
 from auth_helper.utils import requires_scopes
@@ -30,9 +37,13 @@ from . import dss_scd_helper
 from .scd_data_definitions import (
     Altitude,
     CapabilitiesResponse,
+    ClearAreaResponse,
+    ClearAreaResponseOutcome,
     DeleteFlightResponse,
     DeleteFlightStatus,
+    FlightAuthorizationDataPayload,
     OperationalIntentState,
+    OperationalIntentStorage,
     OperationalIntentStorageVolumes,
     OperationalIntentSubmissionStatus,
     OperationalIntentTestInjection,
@@ -93,7 +104,6 @@ def scd_test_capabilities(request):
 @requires_scopes(["blender.read"])
 def scd_capabilities(request):
     return redirect(scd_test_capabilities)
-    
 
 
 @api_view(["POST"])
