@@ -48,7 +48,7 @@ def requires_scopes(required_scopes):
             # If the token is not decoded properly, the token was provided but is incorrect, return a 401
             try:
                 unverified_token_headers = jwt.get_unverified_header(token)
-            except jwt.DecodeError as de:
+            except jwt.DecodeError:
                 response = JsonResponse({"detail": "Bearer token could not be decoded properly"})
                 response.status_code = 401
                 return response
@@ -58,7 +58,7 @@ def requires_scopes(required_scopes):
                 try:
                     unverified_token_details = jwt.decode(token, algorithms=["RS256"], options={"verify_signature": False})
 
-                except jwt.DecodeError as de:
+                except jwt.DecodeError:
                     response = JsonResponse({"detail": "Invalid token provided"})
                     response.status_code = 401
                     return response
@@ -66,7 +66,7 @@ def requires_scopes(required_scopes):
                 try:
                     assert "aud" in unverified_token_details
                     assert unverified_token_details["aud"] != ""
-                except AssertionError as ae:
+                except AssertionError:
                     response = JsonResponse({"detail": "Incomplete token provided, audience claim must be present and should and not empty"})
                     response.status_code = 401
                     return response
@@ -113,31 +113,31 @@ def requires_scopes(required_scopes):
                     algorithms=["RS256"],
                     options={"require": ["exp", "iss", "aud"]},
                 )
-            except jwt.ImmatureSignatureError as es:
+            except jwt.ImmatureSignatureError:
                 response = JsonResponse({"detail": "Token Signature has is not valid"})
                 response.status_code = 401
                 return response
-            except jwt.ExpiredSignatureError as es:
+            except jwt.ExpiredSignatureError:
                 response = JsonResponse({"detail": "Token Signature has expired"})
                 response.status_code = 401
                 return response
-            except jwt.InvalidAudienceError as es:
+            except jwt.InvalidAudienceError:
                 response = JsonResponse({"detail": "Invalid audience in token"})
                 response.status_code = 401
                 return response
-            except jwt.InvalidIssuerError as es:
+            except jwt.InvalidIssuerError:
                 response = JsonResponse({"detail": "Invalid issuer for token"})
                 response.status_code = 401
                 return response
-            except jwt.InvalidSignatureError as es:
+            except jwt.InvalidSignatureError:
                 response = JsonResponse({"detail": "Invalid signature in token"})
                 response.status_code = 401
                 return response
-            except jwt.DecodeError as es:
+            except jwt.DecodeError:
                 response = JsonResponse({"detail": "Token cannot be decoded"})
                 response.status_code = 401
                 return response
-            except Exception as e:
+            except Exception:
                 response = JsonResponse({"detail": "Invalid token"})
                 response.status_code = 401
                 return response

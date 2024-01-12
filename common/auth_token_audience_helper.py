@@ -15,7 +15,7 @@ def generate_audience_from_base_url(base_url: str) -> str:
     }
     try:
         ext = tldextract.extract(base_url)
-    except Exception as e:
+    except Exception:
         uss_audience = "localhost"
     else:
         if ext.domain in [

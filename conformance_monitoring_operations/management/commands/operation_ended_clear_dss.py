@@ -1,6 +1,5 @@
 import json
 import logging
-from os import environ as env
 
 import arrow
 from django.core.management.base import BaseCommand, CommandError
@@ -78,8 +77,6 @@ class Command(BaseCommand):
             # Get the flight declaration
 
             my_database_reader = BlenderDatabaseReader()
-            now = arrow.now().isoformat()
-
             flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
             if not flight_declaration:
                 raise CommandError(

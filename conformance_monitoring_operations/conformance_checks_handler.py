@@ -7,8 +7,7 @@ from dotenv import find_dotenv, load_dotenv
 
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 
-from .models import TaskScheduler
-from .operation_state_helper import FlightOperationStateMachine, get_status, match_state
+from .operation_state_helper import FlightOperationStateMachine, get_status
 
 load_dotenv(find_dotenv())
 

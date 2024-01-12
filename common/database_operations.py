@@ -7,11 +7,9 @@ from uuid import uuid4
 
 import arrow
 from django.db.utils import IntegrityError
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from conformance_monitoring_operations.models import TaskScheduler
 from flight_declaration_operations.models import FlightAuthorization, FlightDeclaration
-from geo_fence_operations.models import GeoFence
 from scd_operations.data_definitions import FlightDeclarationCreationPayload
 from scd_operations.scd_data_definitions import PartialCreateOperationalIntentReference
 
@@ -106,7 +104,7 @@ class BlenderDatabaseWriter:
             return True
         except FlightDeclaration.DoesNotExist:
             return False
-        except IntegrityError as ie:
+        except IntegrityError:
             return False
 
     def create_flight_declaration(self, flight_declaration_creation: FlightDeclarationCreationPayload) -> bool:
@@ -122,7 +120,7 @@ class BlenderDatabaseWriter:
             flight_declaration.save()
             return True
 
-        except IntegrityError as ie:
+        except IntegrityError:
             return False
 
     def set_flight_declaration_non_conforming(self, flight_declaration: FlightDeclaration):
@@ -140,7 +138,7 @@ class BlenderDatabaseWriter:
             flight_authorization.save()
             return True
 
-        except IntegrityError as ie:
+        except IntegrityError:
             return False
 
     def create_flight_authorization_from_flight_declaration_obj(self, flight_declaration: FlightDeclaration) -> bool:
@@ -150,7 +148,7 @@ class BlenderDatabaseWriter:
             return True
         except FlightDeclaration.DoesNotExist:
             return False
-        except IntegrityError as ie:
+        except IntegrityError:
             return False
 
     def create_flight_authorization(self, flight_declaration_id: str) -> bool:
@@ -161,7 +159,7 @@ class BlenderDatabaseWriter:
             return True
         except FlightDeclaration.DoesNotExist:
             return False
-        except IntegrityError as ie:
+        except IntegrityError:
             return False
 
     def update_telemetry_timestamp(self, flight_declaration_id: str) -> bool:
@@ -179,7 +177,7 @@ class BlenderDatabaseWriter:
             flight_authorization.dss_operational_intent_id = dss_operational_intent_id
             flight_authorization.save()
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def update_flight_operation_operational_intent(
@@ -193,7 +191,7 @@ class BlenderDatabaseWriter:
             # TODO: Convert the updated operational intent to GeoJSON
             flight_declaration.save()
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def update_flight_operation_state(self, flight_declaration_id: str, state: int) -> bool:
@@ -202,7 +200,7 @@ class BlenderDatabaseWriter:
             flight_declaration.state = state
             flight_declaration.save()
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def create_conformance_monitoring_periodic_task(self, flight_declaration: FlightDeclaration) -> bool:
@@ -225,8 +223,8 @@ class BlenderDatabaseWriter:
             )
             p_task.start()
             return True
-        except Exception as e:
-            logger.error()
+        except Exception:
+            logger.error("Could not create periodic task")
             return False
 
     def remove_conformance_monitoring_periodic_task(self, conformance_monitoring_task: TaskScheduler):

@@ -174,7 +174,7 @@ def set_flight_declaration(request):
             relevant_id_set.append(i["geo_fence_id"])
 
         my_rtree_helper.clear_rtree_index()
-        logger.info("Geofence intersections checked, found {num_intersections} fences" % {"num_intersections": len(relevant_id_set)})
+        logger.info("Geofence intersections checked, found {num_intersections} fences".format(num_intersections=len(relevant_id_set)))
         if all_relevant_fences:
             is_approved = 0
             declaration_state = 8

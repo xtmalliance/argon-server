@@ -171,13 +171,13 @@ class BlenderTelemetryValidator:
         try:
             assert "flight_details" in flight
             assert "current_states" in flight
-        except AssertionError as ae:
+        except AssertionError:
             return False
         return True
 
     def validate_observation_key_exists(self, raw_request_data) -> bool:
         try:
             assert "observations" in raw_request_data
-        except AssertionError as ae:
+        except AssertionError:
             return False
         return True

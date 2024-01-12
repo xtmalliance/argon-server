@@ -1,7 +1,6 @@
 import logging
 
 import django.dispatch
-from django.core import management
 from django.dispatch import receiver
 
 from common.database_operations import BlenderDatabaseReader

@@ -5,6 +5,7 @@ from os import environ as env
 
 import arrow
 from django.core.management.base import BaseCommand, CommandError
+from dotenv import find_dotenv, load_dotenv
 
 from auth_helper.common import get_redis
 from common.data_definitions import OPERATION_STATES
