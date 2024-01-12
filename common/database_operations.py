@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import arrow
 from django.db.utils import IntegrityError
+from dotenv import find_dotenv, load_dotenv
 
 from conformance_monitoring_operations.models import TaskScheduler
 from flight_declaration_operations.models import FlightAuthorization, FlightDeclaration
@@ -14,7 +15,6 @@ from scd_operations.data_definitions import FlightDeclarationCreationPayload
 from scd_operations.scd_data_definitions import PartialCreateOperationalIntentReference
 
 logger = logging.getLogger("django")
-from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 

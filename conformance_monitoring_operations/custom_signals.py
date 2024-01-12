@@ -22,7 +22,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
     non_conformance_state = int(kwargs["non_conformance_state"])
     flight_declaration_id = kwargs["flight_declaration_id"]
     my_operation_notification = OperationConformanceNotification(flight_declaration_id=flight_declaration_id)
-    my_conformance_checks_handler = FlightOperationConformanceHelper()
+
     # Check the conformance notification status and notification rules
     message = "{} -- {}".format(sender, kwargs["non_conformance_state"])
     event = False

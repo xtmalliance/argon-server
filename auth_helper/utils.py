@@ -76,7 +76,7 @@ def requires_scopes(required_scopes):
             # Get the Public key JWKS by making a request
             try:
                 jwks_data = s.get(PASSPORT_JWKS_URL).json()
-            except requests.exceptions.RequestException as err:
+            except requests.exceptions.RequestException:
                 response = JsonResponse({"detail": "Public Key Server necessary to validate the token could not be reached"})
                 response.status_code = 400
                 return response
@@ -90,14 +90,14 @@ def requires_scopes(required_scopes):
             # Check the token has a key id
             try:
                 kid = unverified_token_headers["kid"]
-            except (KeyError, ValueError) as ve:
+            except (KeyError, ValueError):
                 response = JsonResponse({"detail": "There is no kid provided in the token headers / token cannot be verified"})
                 response.status_code = 401
                 return response
             # Check the public key has the same kid
             try:
                 assert kid in public_keys
-            except AssertionError as ae:
+            except AssertionError:
                 response = JsonResponse({"detail": "Error in parsing public keys, the signing key id {kid} is not present in JWKS".format(kid=kid)})
                 response.status_code = 401
                 return response
