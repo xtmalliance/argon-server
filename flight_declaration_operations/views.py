@@ -14,6 +14,7 @@ from rest_framework.decorators import api_view
 from shapely.geometry import shape
 
 from auth_helper.utils import requires_scopes
+from common.data_definitions import RESPONSE_CONTENT_TYPE
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
@@ -42,7 +43,7 @@ from .tasks import (
     submit_flight_declaration_to_dss_async,
 )
 from .utils import OperationalIntentsConverter
-from common.data_definitions import RESPONSE_CONTENT_TYPE
+
 load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
@@ -79,12 +80,12 @@ def set_flight_declaration(request):
     try:
         flight_declaration_geo_json = req["flight_declaration_geo_json"]
     except KeyError:
-        msg = json.dumps({"message": "A valid flight declaration as specified by the A flight declration protocol must be submitted."})
+        msg = json.dumps({"message": "A valid flight declaration as specified by the A flight declaration protocol must be submitted."})
         return HttpResponse(msg, status=400)
 
     my_database_writer = BlenderDatabaseWriter()
     USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
-    
+
     submitted_by = None if "submitted_by" not in req else req["submitted_by"]
     approved_by = None if "approved_by" not in req else req["approved_by"]
     is_approved = False
@@ -202,7 +203,7 @@ def set_flight_declaration(request):
             is_approved = 0
             declaration_state = 8
 
-    fo = FlightDeclaration(
+    flight_declaration = FlightDeclaration(
         operational_intent=json.dumps(asdict(parital_op_int_ref)),
         bounds=bounds,
         type_of_operation=type_of_operation,
@@ -215,18 +216,18 @@ def set_flight_declaration(request):
         state=declaration_state,
     )
 
-    fo.save()
+    flight_declaration.save()
 
-    my_database_writer.create_flight_authorization_from_flight_declaration_obj(flight_declaration=fo)
-    fo.add_state_history_entry(new_state=0, original_state=None, notes="Created Declaration")
+    my_database_writer.create_flight_authorization_from_flight_declaration_obj(flight_declaration=flight_declaration)
+    flight_declaration.add_state_history_entry(new_state=0, original_state=None, notes="Created Declaration")
     if declaration_state == 8:
-        fo.add_state_history_entry(
+        flight_declarationfo.add_state_history_entry(
             new_state=declaration_state,
             original_state=0,
-            notes="Rejected by Flight Blender becuase of  time / space conflicts with existing operations",
+            notes="Rejected by Flight Blender because of  time / space conflicts with existing operations",
         )
 
-    flight_declaration_id = str(fo.id)
+    flight_declaration_id = str(flight_declaration.id)
 
     send_operational_update_message.delay(
         flight_declaration_id=flight_declaration_id,
@@ -397,7 +398,6 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-            
         try:
             assert request.headers["Content-Type"] == RESPONSE_CONTENT_TYPE
         except AssertionError:
@@ -426,12 +426,12 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
         try:
             flight_declaration_geo_json = req["flight_declaration_geo_json"]
         except KeyError:
-            msg = json.dumps({"message": "A valid flight declaration as specified by the A flight declration protocol must be submitted."})
+            msg = json.dumps({"message": "A valid flight declaration as specified by the A flight declaration protocol must be submitted."})
             return HttpResponse(msg, status=400)
 
         my_database_writer = BlenderDatabaseWriter()
         USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
-        
+
         submitted_by = None if "submitted_by" not in req else req["submitted_by"]
         approved_by = None if "approved_by" not in req else req["approved_by"]
         is_approved = False
@@ -549,7 +549,7 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
                 is_approved = 0
                 declaration_state = 8
 
-        fo = FlightDeclaration(
+        flight_declaration = FlightDeclaration(
             operational_intent=json.dumps(asdict(parital_op_int_ref)),
             bounds=bounds,
             type_of_operation=type_of_operation,
@@ -562,18 +562,18 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
             state=declaration_state,
         )
 
-        fo.save()
+        flight_declaration.save()
 
-        my_database_writer.create_flight_authorization_from_flight_declaration_obj(flight_declaration=fo)
-        fo.add_state_history_entry(new_state=0, original_state=None, notes="Created Declaration")
+        my_database_writer.create_flight_authorization_from_flight_declaration_obj(flight_declaration=flight_declaration)
+        flight_declaration.add_state_history_entry(new_state=0, original_state=None, notes="Created Declaration")
         if declaration_state == 8:
-            fo.add_state_history_entry(
+            flight_declaration.add_state_history_entry(
                 new_state=declaration_state,
                 original_state=0,
-                notes="Rejected by Flight Blender becuase of  time / space conflicts with existing operations",
+                notes="Rejected by Flight Blender because of  time / space conflicts with existing operations",
             )
 
-        flight_declaration_id = str(fo.id)
+        flight_declaration_id = str(flight_declaration.id)
 
         send_operational_update_message.delay(
             flight_declaration_id=flight_declaration_id,
@@ -582,7 +582,7 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
         )
 
         if all_relevant_fences and all_relevant_declarations:
-            # Async submic flight declaration to DSS
+            # Async submit flight declaration to DSS
             logger.info("Self deconfliction failed, this declaration cannot be sent to the DSS system..")
 
             self_deconfliction_failed_msg = "Self deconfliction failed for operation {operation_id} did not pass self-deconfliction, there are existing operations declared in the area".format(
