@@ -170,11 +170,6 @@ LOGGING = {
     # disable logging
     # Handlers #############################################################
     "handlers": {
-        "file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": "flightblender-debug.log",
-        },
         "console": {
             "class": "logging.StreamHandler",
         },
@@ -182,7 +177,7 @@ LOGGING = {
     # Loggers ####################################################################
     "loggers": {
         "django": {
-            "handlers": ["file", "console"],
+            "handlers": ["console"],
             "propagate": True,
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
