@@ -2,11 +2,17 @@
 import json
 import logging
 from dataclasses import asdict
+from os import environ as env
 from typing import List
 
+import arrow
 import shapely.geometry
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
+from dotenv import find_dotenv, load_dotenv
+from jwcrypto import jwk, jwt
+from rest_framework import generics
 from rest_framework.decorators import api_view
 
 from auth_helper.utils import requires_scopes
@@ -23,24 +29,16 @@ from rid_operations.tasks import stream_rid_telemetry_data
 from . import flight_stream_helper
 from .data_definitions import (
     FlightObservationsProcessingResponse,
+    MessageVerificationFailedResponse,
     SingleAirtrafficObservation,
 )
-from .tasks import start_opensky_network_stream, write_incoming_air_traffic_data
-
-logger = logging.getLogger("django")
-from os import environ as env
-
-import arrow
-from django.utils.decorators import method_decorator
-from dotenv import find_dotenv, load_dotenv
-from jwcrypto import jwk, jwt
-from rest_framework import generics
-
-from .data_definitions import MessageVerificationFailedResponse
 from .models import SignedTelmetryPublicKey
 from .pki_helper import MessageVerifier, ResponseSigningOperations
 from .rid_telemetry_helper import BlenderTelemetryValidator, NestedDict
 from .serializers import SignedTelmetryPublicKeySerializer
+from .tasks import start_opensky_network_stream, write_incoming_air_traffic_data
+
+logger = logging.getLogger("django")
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:

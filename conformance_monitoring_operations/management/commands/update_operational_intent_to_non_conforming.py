@@ -1,8 +1,11 @@
 import json
+import logging
+from datetime import timedelta
 from os import environ as env
 
 import arrow
 from django.core.management.base import BaseCommand, CommandError
+from dotenv import find_dotenv, load_dotenv
 
 from auth_helper.common import get_redis
 from common.data_definitions import OPERATION_STATES
@@ -12,8 +15,6 @@ from scd_operations.scd_data_definitions import (
     OperationalIntentReferenceDSSResponse,
     Time,
 )
-
-logger = logging.getLogger("django")
 
 load_dotenv(find_dotenv())
 ENV_FILE = find_dotenv()
@@ -47,6 +48,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # This command declares an operation as non-conforming and updates the state to the DSS (and notifies subscribers)
         my_database_reader = BlenderDatabaseReader()
+        dry_run = options["dryrun"]
         dry_run = 1 if dry_run == "1" else 0
         # Set new state as non-conforming
         new_state = OPERATION_STATES[3][1]

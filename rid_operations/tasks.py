@@ -9,6 +9,7 @@ from typing import List
 
 import arrow
 from arrow.parser import ParserError
+from dotenv import find_dotenv, load_dotenv
 from shapely.geometry import MultiPoint, Point, box
 
 from auth_helper.common import get_redis
@@ -46,7 +47,6 @@ from .rid_utils import (
 )
 
 logger = logging.getLogger("django")
-from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 

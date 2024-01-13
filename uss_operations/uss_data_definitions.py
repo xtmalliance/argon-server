@@ -12,6 +12,14 @@ class OperationalIntentNotFoundResponse:
 
 
 @dataclass
+class Time:
+    """A class to hold time objects"""
+
+    format: str
+    value: str
+
+
+@dataclass
 class UpdateOperationalIntent:
     message: str
 
@@ -49,22 +57,6 @@ class LatLngPoint:
 
     lat: float
     lng: float
-
-
-@dataclass
-class Radius:
-    """A class to hold the radius object"""
-
-    value: float
-    units: str
-
-
-@dataclass
-class Time:
-    """A class to hold time objects"""
-
-    format: str
-    value: str
 
 
 @dataclass

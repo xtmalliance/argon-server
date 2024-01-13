@@ -7,6 +7,8 @@ from flight_declaration_operations.tasks import send_operational_update_message
 
 load_dotenv(find_dotenv())
 
+logger = logging.getLogger("django")
+
 
 class OperationConformanceNotification:
     def __init__(self, flight_declaration_id: str):

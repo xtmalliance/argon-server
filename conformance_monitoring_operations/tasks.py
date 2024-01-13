@@ -30,7 +30,7 @@ def check_flight_conformance(flight_declaration_id: str, dry_run: str = "1"):
     # This method checks the conformance status for ongoing operations and sends notifications / via the notifications channel
 
     dry_run = True if dry_run == "1" else False
-    d_run = "1" if dry_run == True else "0"
+    d_run = "1" if dry_run else "0"
     my_conformance_ops = BlenderConformanceEngine()
     my_database_reader = BlenderDatabaseReader()
     now = arrow.now().isoformat()
