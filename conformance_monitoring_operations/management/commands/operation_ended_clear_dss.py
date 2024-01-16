@@ -9,7 +9,6 @@ from common.database_operations import BlenderDatabaseReader
 from scd_operations.dss_scd_helper import SCDOperations
 
 load_dotenv(find_dotenv())
-
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
