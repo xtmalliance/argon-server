@@ -13,11 +13,11 @@ from dotenv import find_dotenv, load_dotenv
 from shapely.geometry import MultiPoint, Point, box
 
 from auth_helper.common import get_redis
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.database_operations import BlenderDatabaseWriter
 from flight_blender.celery import app
 from flight_feed_operations import flight_stream_helper
 from flight_feed_operations.data_definitions import SingleRIDObservation
-from flight_feed_operations.rid_telemetry_helper import BlenderTelemetryValidator
+
 from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from rid_operations.data_definitions import (
     UASID,
@@ -28,7 +28,6 @@ from rid_operations.data_definitions import (
 from . import dss_rid_helper
 from .rid_utils import (
     AuthData,
-    FullRequestedFlightDetails,
     LatLngPoint,
     RIDAircraftPosition,
     RIDAircraftState,
@@ -39,7 +38,6 @@ from .rid_utils import (
     RIDTestDataStorage,
     RIDTestDetailsResponse,
     RIDTestInjection,
-    RIDTestInjectionProcessing,
     RIDTime,
     RIDVolume3D,
     RIDVolume4D,
@@ -147,7 +145,7 @@ def stream_rid_telemetry_data(rid_telemetry_observations):
                 icao_address=icao_address,
                 metadata=json.dumps(asdict(observation_and_metadata)),
             )
-            msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+            write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
             logger.debug("Submitted observation..")
             logger.debug("...")
 
@@ -257,7 +255,7 @@ def stream_rid_test_data(requested_flights):
 
             try:
                 formatted_timestamp = arrow.get(provided_telemetry["timestamp"])
-            except ParserError as pe:
+            except ParserError:
                 logger.info("Error in parsing telemetry timestamp")
             else:
                 t = RIDAircraftState(
@@ -396,7 +394,7 @@ def stream_rid_test_data(requested_flights):
                 icao_address=icao_address,
                 metadata=json.dumps(asdict(observation_metadata)),
             )
-            msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+            write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
             logger.debug("Submitted flight observation..")
 
     r.expire(flight_injection_sorted_set, time=3000)

@@ -3,7 +3,6 @@ import logging
 from os import environ as env
 from typing import List
 
-import arrow
 from dacite import from_dict
 from django.core.management.base import BaseCommand, CommandError
 from dotenv import find_dotenv, load_dotenv
@@ -75,8 +74,7 @@ class Command(BaseCommand):
 
         current_state = flight_declaration.state
         current_state_str = OPERATION_STATES[current_state][1]
-        dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
-
+        
         r = get_redis()
 
         flight_opint = FLIGHT_OPINT_KEY + str(flight_declaration_id)
@@ -154,6 +152,7 @@ class Command(BaseCommand):
                 all_flights_rid_data = obs_helper.get_observations(push_cg)
                 # Get the last observation of the flight telemetry
                 unique_flights = []
+                relevant_observation = {}
                 # Keep only the latest message
                 try:
                     for message in all_flights_rid_data:
@@ -169,7 +168,6 @@ class Command(BaseCommand):
                     unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
                     # Keep only the latest message
                     distinct_messages = {i["address"]: i for i in reversed(unique_flights)}.values()
-                    relevant_observation = {}
                     for index, rid_observation in enumerate(distinct_messages):
                         if rid_observation.get("icao_address") == flight_declaration_id:
                             relevant_observation = rid_observation
@@ -179,8 +177,8 @@ class Command(BaseCommand):
                     logger.error("Error in sorting distinct messages, ICAO name not defined %s" % ke)
                     distinct_messages = []
 
-                lat_dd = rid_observation["lat_dd"]
-                lon_dd = rid_observation["lon_dd"]
+                lat_dd = relevant_observation["lat_dd"]
+                lon_dd = relevant_observation["lon_dd"]
                 rid_location = Point(lon_dd, lat_dd)
                 # check if it is within declared bounds
                 # TODO: This code is same as the C7check in the conformance / utils file. Need to refactor
@@ -189,10 +187,13 @@ class Command(BaseCommand):
                 all_polygon_altitudes: List[PolygonAltitude] = []
 
                 rid_obs_within_all_volumes = []
+                all_altitudes = []
                 for v in all_volumes:
                     v4d = from_dict(data_class=Volume4D, data=v)
                     altitude_lower = v4d.altitude_lower.value
                     altitude_upper = v4d.altitude_upper.value
+                    all_altitudes.append(altitude_lower)
+                    all_altitudes.append(altitude_upper)
                     outline_polygon = v4d.volume.outline_polygon
                     point_list = []
                     for vertex in outline_polygon["vertices"]:
@@ -210,21 +211,26 @@ class Command(BaseCommand):
                     is_within = rid_location.within(p.polygon)
                     rid_obs_within_all_volumes.append(is_within)
 
+
                 aircraft_bounds_conformant = any(rid_obs_within_all_volumes)
 
                 if aircraft_bounds_conformant:  # Operator declares contingency, but the aircraft is within bounds, no need to update / change bounds
                     pass
 
                 else:
+                    max_altitude = max(all_altitudes)
+                    min_altitude = min(all_altitudes)
                     # aircraft declares contingency when the aircraft is out of bounds
-
                     my_op_int_converter = OperationalIntentsConverter()
-                    newv4D = my_op_int_converter.buffer_point_to_volume4d(
+                    new_volume_4D = my_op_int_converter.buffer_point_to_volume4d(
                         lat=lat_dd,
-                        lon_dd=lon_dd,
+                        lng=lon_dd,
                         start_datetime=flight_declaration.start_datetime,
                         end_datetime=flight_declaration.end_datetime,
+                        min_altitude= min_altitude, 
+                        max_altitude= max_altitude
                     )
+                    logger.debug(new_volume_4D)
 
                     r = get_redis()
 
@@ -260,6 +266,8 @@ class Command(BaseCommand):
                         stored_volumes = details_full["volumes"]
                         stored_priority = details_full["priority"]
                         stored_off_nominal_volumes = details_full["off_nominal_volumes"]
+                        logger.debug(stored_priority)
+                        logger.debug(stored_off_nominal_volumes)
 
                         reference = OperationalIntentReferenceDSSResponse(
                             id=stored_operational_intent_id,

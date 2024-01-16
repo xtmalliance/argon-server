@@ -1,8 +1,7 @@
-import json
 import logging
 from functools import partial
 from typing import List, Tuple
-
+import json
 import pyproj
 from shapely.geometry import Point, mapping
 from shapely.ops import transform
@@ -60,7 +59,7 @@ class GeoZoneParser:
                             "features": [{"type": "Feature", "properties": {}, "geometry": b}],
                         }
                         logger.info("Converting point to circle")
-                        # logger.info(json.dumps(fc))
+                        logger.debug(json.dumps(fc))
                         ed_269_geometry["horizontalProjection"] = b
                 if not parse_error:
                     horizontal_projection = ImplicitDict.parse(ed_269_geometry["horizontalProjection"], HorizontalProjection)

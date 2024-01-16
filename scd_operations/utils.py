@@ -165,7 +165,7 @@ class OperatorRegistrationNumberValidator:
         base_id = oprn[3:-1]
         if not base_id.isalnum():
             return False
-        country_code = self.operator_registration_number[:3]
+        # country_code = self.operator_registration_number[:3]
         checksum = self.operator_registration_number[-5]  # checksum
         # op_registration_suffix = self.operator_registration_number[3:]
         random_three_alnum_string = self.operator_registration_number[-3:]

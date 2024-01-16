@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 import arrow
 import requests
 import shapely.geometry
-import tldextract
+
 from dotenv import find_dotenv, load_dotenv
 from pyproj import Proj
 from shapely.geometry import Point, Polygon
@@ -602,8 +602,8 @@ class SCDOperations:
                             # Request was successful
                             operational_intent_details_json = uss_operational_intent_request.json()
                             op_int_details_retrieved = True
-                            outline_polygon = None
-                            outline_circle = None
+                            # outline_polygon = None
+                            # outline_circle = None
 
                             op_int_det = operational_intent_details_json["operational_intent"]["details"]
                             op_int_ref = operational_intent_details_json["operational_intent"]["reference"]
@@ -655,7 +655,7 @@ class SCDOperations:
             audience = env.get("DSS_SELF_AUDIENCE", 0)
         try:
             assert audience
-        except AssertionError as ae:
+        except AssertionError:
             logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
         auth_token = {}
         try:

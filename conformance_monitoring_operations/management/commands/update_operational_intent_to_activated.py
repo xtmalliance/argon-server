@@ -10,7 +10,6 @@ from common.data_definitions import OPERATION_STATES
 from common.database_operations import BlenderDatabaseReader
 from scd_operations.dss_scd_helper import SCDOperations
 from scd_operations.scd_data_definitions import (
-    ImplicitSubscriptionParameters,
     OperationalIntentReferenceDSSResponse,
     Time,
 )
@@ -105,7 +104,8 @@ class Command(BaseCommand):
             stored_volumes = details_full["volumes"]
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
-
+            logger.debug(stored_priority)
+            logger.debug(stored_off_nominal_volumes)
             reference = OperationalIntentReferenceDSSResponse(
                 id=stored_operational_intent_id,
                 manager=stored_manager,

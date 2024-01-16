@@ -2,13 +2,13 @@ import json
 import logging
 import time
 from dataclasses import asdict, is_dataclass
-from datetime import timedelta
+
 from uuid import UUID
 
 import arrow
 from dacite import from_dict
 from django.http import JsonResponse
-from django.utils.datastructures import MultiValueDictKeyError
+
 from dotenv import find_dotenv, load_dotenv
 from rest_framework.decorators import api_view
 from shapely.geometry import Point
@@ -34,7 +34,6 @@ from rid_operations.rid_utils import (
     RIDOperatorDetails,
     TelemetryFlightDetails,
 )
-from scd_operations import dss_scd_helper
 
 from .uss_data_definitions import (
     FlightDetailsNotFoundMessage,
@@ -228,10 +227,10 @@ def USSOpIntDetails(request, opint_id):
 @requires_scopes(["rid.display_provider"])
 def get_uss_flights(request):
     """This is the end point for the rid_qualifier to get details of a flight"""
-    try:
-        include_recent_positions = request.query_params["include_recent_positions"]
-    except MultiValueDictKeyError:
-        include_recent_positions = False
+    # try:
+    #     include_recent_positions = request.query_params["include_recent_positions"]
+    # except MultiValueDictKeyError:
+    #     include_recent_positions = False
 
     try:
         view = request.query_params["view"]
@@ -257,7 +256,7 @@ def get_uss_flights(request):
 
     time.sleep(0.5)
 
-    summary_information_only = True if view_port_area > 22500 else False
+    # summary_information_only = True if view_port_area > 22500 else False
 
     stream_ops = flight_stream_helper.StreamHelperOps()
     pull_cg = stream_ops.get_pull_cg()
@@ -304,6 +303,7 @@ def get_uss_flights(request):
             #     return JsonResponse(json.loads(json.dumps(asdict(summary))), status=200)
             # else:
             rid_flights = []
+            observation_data_dict = {}
             try:
                 observation_data = all_observations_messages["msg_data"]
             except KeyError as ke:

@@ -1,10 +1,8 @@
 import json
 import logging
-from datetime import timedelta
 from os import environ as env
 from typing import List
 
-import arrow
 from dacite import from_dict
 from django.core.management.base import BaseCommand, CommandError
 from dotenv import find_dotenv, load_dotenv
@@ -60,7 +58,8 @@ class Command(BaseCommand):
         dry_run = 1 if dry_run == "1" else 0
 
         # Set new state as non-conforming
-        new_state = OPERATION_STATES[3][1]
+        new_state_int = 3
+        new_state = OPERATION_STATES[new_state_int][1]
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
@@ -74,7 +73,6 @@ class Command(BaseCommand):
 
         my_scd_dss_helper = SCDOperations()
         my_database_reader = BlenderDatabaseReader()
-        now = arrow.now().isoformat()
 
         try:
             flight_declaration_id = options["flight_declaration_id"]
@@ -82,7 +80,7 @@ class Command(BaseCommand):
             raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
 
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
-        flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
+        
         if not flight_declaration:
             raise CommandError(
                 "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
@@ -90,8 +88,7 @@ class Command(BaseCommand):
 
         current_state = flight_declaration.state
         current_state_str = OPERATION_STATES[current_state][1]
-        dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
-
+        
         r = get_redis()
 
         flight_opint = "flight_opint." + str(flight_declaration_id)
@@ -169,6 +166,8 @@ class Command(BaseCommand):
                 all_flights_rid_data = obs_helper.get_observations(push_cg)
                 # Get the last observation of the flight telemetry
                 unique_flights = []
+                relevant_observation = {}
+                
                 # Keep only the latest message
                 try:
                     for message in all_flights_rid_data:
@@ -184,7 +183,6 @@ class Command(BaseCommand):
                     unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
                     # Keep only the latest message
                     distinct_messages = {i["address"]: i for i in reversed(unique_flights)}.values()
-                    relevant_observation = {}
                     for index, rid_observation in enumerate(distinct_messages):
                         if rid_observation.get("icao_address") == flight_declaration_id:
                             relevant_observation = rid_observation
@@ -194,20 +192,23 @@ class Command(BaseCommand):
                     logger.error("Error in sorting distinct messages, ICAO name not defined %s" % ke)
                     distinct_messages = []
 
-                lat_dd = rid_observation["lat_dd"]
-                lon_dd = rid_observation["lon_dd"]
+                lat_dd = relevant_observation["lat_dd"]
+                lon_dd = relevant_observation["lon_dd"]
                 rid_location = Point(lon_dd, lat_dd)
                 # check if it is within declared bounds
                 # TODO: This code is same as the C7check in the conformance / utils file. Need to refactor
                 all_volumes = flight_declaration.operational_intent["volumes"]
 
                 all_polygon_altitudes: List[PolygonAltitude] = []
+                all_altitudes = []
 
                 rid_obs_within_all_volumes = []
                 for v in all_volumes:
                     v4d = from_dict(data_class=Volume4D, data=v)
                     altitude_lower = v4d.altitude_lower.value
                     altitude_upper = v4d.altitude_upper.value
+                    all_altitudes.append(altitude_lower)
+                    all_altitudes.append(altitude_upper)
                     outline_polygon = v4d.volume.outline_polygon
                     point_list = []
                     for vertex in outline_polygon["vertices"]:
@@ -233,13 +234,18 @@ class Command(BaseCommand):
                 else:
                     # aircraft declares contingency when the aircraft is out of bounds
 
+                    max_altitude = max(all_altitudes)
+                    min_altitude = min(all_altitudes)
                     my_op_int_converter = OperationalIntentsConverter()
-                    newv4D = my_op_int_converter.buffer_point_to_volume4d(
+                    new_volume_4d = my_op_int_converter.buffer_point_to_volume4d(
                         lat=lat_dd,
-                        lon_dd=lon_dd,
+                        lng=lon_dd,
                         start_datetime=flight_declaration.start_datetime,
                         end_datetime=flight_declaration.end_datetime,
+                        min_altitude= min_altitude, 
+                        max_altitude= max_altitude
                     )
+                    logger.debug(new_volume_4d)
 
                     r = get_redis()
 
@@ -276,6 +282,9 @@ class Command(BaseCommand):
                         stored_priority = details_full["priority"]
                         stored_off_nominal_volumes = details_full["off_nominal_volumes"]
 
+                        logger.debug(stored_priority)
+                        logger.debug(stored_off_nominal_volumes)
+
                         reference = OperationalIntentReferenceDSSResponse(
                             id=stored_operational_intent_id,
                             manager=stored_manager,
@@ -307,6 +316,8 @@ class Command(BaseCommand):
                             new_state="Contingent",
                             ovn=reference.ovn,
                             deconfliction_check=True,
+                            new_state= new_state
+                            current_state=current_state_str
                         )
 
                         if operational_update_response.status == 200:

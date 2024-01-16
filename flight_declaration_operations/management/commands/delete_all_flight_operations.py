@@ -1,10 +1,10 @@
 import json
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from auth_helper.common import RedisHelper, get_redis
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
-from flight_declaration_operations.models import FlightDeclaration
+
 from scd_operations import dss_scd_helper
 
 

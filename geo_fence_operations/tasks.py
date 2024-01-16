@@ -35,7 +35,7 @@ def download_geozone_source(geo_zone_url: str, geozone_source_id: str):
                 geo_zone_str = json.dumps(geo_zone_data)
                 write_geo_zone.delay(geo_zone=geo_zone_str, test_harness_datasource="1")
                 test_status_storage = GeoAwarenessTestStatus(result="Ready", message="")
-            except Exception as e:
+            except Exception:
                 test_status_storage = GeoAwarenessTestStatus(result="Error", message="The URL could be ")
         else:
             test_status_storage = GeoAwarenessTestStatus(result="Unsupported", message="")

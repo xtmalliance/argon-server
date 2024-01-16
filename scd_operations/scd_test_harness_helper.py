@@ -68,12 +68,12 @@ class SCDTestHarnessHelper:
             op_int_details_raw = self.r.get(flight_opint)
             op_int_details = json.loads(op_int_details_raw)
 
-            reference_full = op_int_details["success_response"]["operational_intent_reference"]
             details_full = op_int_details["operational_intent_details"]
             # Load existing opint details
-            operational_intent_reference = self.my_operational_intent_helper.parse_operational_intent_reference_from_dss(
-                operational_intent_reference=reference_full
-            )
+            # reference_full = op_int_details["success_response"]["operational_intent_reference"]
+            # operational_intent_reference = self.my_operational_intent_helper.parse_operational_intent_reference_from_dss(
+            #     operational_intent_reference=reference_full
+            # )
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
             operational_intent_details = self.my_operational_intent_helper.parse_operational_intent_details(
