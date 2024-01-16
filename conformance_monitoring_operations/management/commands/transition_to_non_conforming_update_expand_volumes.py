@@ -59,7 +59,7 @@ class Command(BaseCommand):
 
         # Set new state as non-conforming
         new_state_int = 3
-        new_state = OPERATION_STATES[new_state_int][1]
+        new_state_str = OPERATION_STATES[new_state_int][1]
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
@@ -152,7 +152,7 @@ class Command(BaseCommand):
                     subscription_id=subscription_id,
                     operational_intent_ref_id=reference.id,
                     extents=stored_volumes,
-                    new_state=str(new_state),
+                    new_state=new_state_str,
                     ovn=reference.ovn,
                     deconfliction_check=False,
                     priority=0,
@@ -313,10 +313,9 @@ class Command(BaseCommand):
                             subscription_id=subscription_id,
                             operational_intent_ref_id=reference.id,
                             extents=stored_volumes,
-                            new_state="Contingent",
                             ovn=reference.ovn,
                             deconfliction_check=True,
-                            new_state= new_state
+                            new_state= new_state_str,
                             current_state=current_state_str
                         )
 
