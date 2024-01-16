@@ -58,7 +58,8 @@ class Command(BaseCommand):
         dry_run = 1 if dry_run == "1" else 0
 
         # Set new state as non-conforming
-        new_state = OPERATION_STATES[3][1]
+        new_state_int = 3
+        new_state = OPERATION_STATES[new_state_int][1]
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:
@@ -238,7 +239,7 @@ class Command(BaseCommand):
                     my_op_int_converter = OperationalIntentsConverter()
                     new_volume_4d = my_op_int_converter.buffer_point_to_volume4d(
                         lat=lat_dd,
-                        lon_dd=lon_dd,
+                        lng=lon_dd,
                         start_datetime=flight_declaration.start_datetime,
                         end_datetime=flight_declaration.end_datetime,
                         min_altitude= min_altitude, 
@@ -315,6 +316,8 @@ class Command(BaseCommand):
                             new_state="Contingent",
                             ovn=reference.ovn,
                             deconfliction_check=True,
+                            new_state= new_state
+                            current_state=current_state_str
                         )
 
                         if operational_update_response.status == 200:
