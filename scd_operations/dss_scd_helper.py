@@ -867,20 +867,20 @@ class SCDOperations:
         self, current_state: str, new_state: str, extents_conflict_with_dss_volumes: bool, priority: int
     ) -> bool:
         if current_state == "Activated" and new_state == "Activated" and extents_conflict_with_dss_volumes:
-            logger.debug("B")
+            logger.debug("Case B")
             submit_update_payload_to_dss = False
 
         elif current_state == "Activated" or new_state in ["Nonconforming", "Contingent"]:
-            logger.debug("A")
+            logger.debug("Case A")
             submit_update_payload_to_dss = True
         elif current_state == "Activated" and new_state == "Activated":
-            logger.debug("C")
+            logger.debug("Case C")
             submit_update_payload_to_dss = True
         elif priority == 100:
-            logger.debug("D")
+            logger.debug("Case D")
             submit_update_payload_to_dss = True
         else:
-            logger.debug("E")
+            logger.debug("Case E")
             submit_update_payload_to_dss = False if extents_conflict_with_dss_volumes else True
         return submit_update_payload_to_dss
 
