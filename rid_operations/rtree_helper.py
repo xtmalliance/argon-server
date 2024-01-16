@@ -1,17 +1,15 @@
 import hashlib
 import json
 import logging
+from auth_helper.common import get_redis
+from scd_operations.scd_data_definitions import Altitude, OpInttoCheckDetails, Time
 from typing import List
 
 from rtree import index
 from shapely.geometry import Polygon
 
-from scd_operations.scd_data_definitions import Altitude, OpInttoCheckDetails, Time
 
 logger = logging.getLogger("django")
-
-from auth_helper.common import get_redis
-from scd_operations.scd_data_definitions import Altitude, OpInttoCheckDetails, Time
 
 
 class OperationalIntentComparisonFactory:

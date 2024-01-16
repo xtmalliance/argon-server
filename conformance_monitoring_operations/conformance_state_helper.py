@@ -50,7 +50,7 @@ class StatusCode:
                 continue
             if callable(value):
                 continue
-            if type(value) != int:
+            if not isinstance(value,int):
                 continue
             if value not in keys:
                 continue

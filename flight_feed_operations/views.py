@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from dotenv import find_dotenv, load_dotenv
-from jwcrypto import jwk, jwt
+from jwcrypto import jwk
 from rest_framework import generics
 from rest_framework.decorators import api_view
 
@@ -21,7 +21,6 @@ from rid_operations import view_port_ops
 from rid_operations.data_definitions import (
     RIDAircraftState,
     RIDFlightDetails,
-    SignedTelemetryRequest,
     SignedUnSignedTelemetryObservations,
 )
 from rid_operations.tasks import stream_rid_telemetry_data
@@ -65,7 +64,7 @@ def public_key_view(request):
 
             response = JsonResponse({"keys": keys})
             response["Access-Control-Allow-Origin"] = "*"
-        except:
+        except Exception:
             response = JsonResponse({})
     else:
         response = JsonResponse({})
@@ -85,7 +84,7 @@ def set_air_traffic(request):
 
     try:
         assert request.headers["Content-Type"] == "application/json"
-    except AssertionError as ae:
+    except AssertionError:
         msg = {"message": "Unsupported Media Type"}
         return JsonResponse(msg, status=415)
     else:
@@ -93,7 +92,7 @@ def set_air_traffic(request):
 
     try:
         observations = req["observations"]
-    except KeyError as ke:
+    except KeyError:
         msg = FlightObservationsProcessingResponse(
             message="At least one observation is required: observations with a list of observation objects. One or more of these were not found in your JSON request. For sample data see: https://github.com/openskies-sh/airtraffic-data-protocol-development/blob/master/Airtraffic-Data-Protocol.md#sample-traffic-object",
             status=400,
@@ -111,7 +110,7 @@ def set_air_traffic(request):
             source_type = observation["source_type"]
             icao_address = observation["icao_address"]
 
-        except KeyError as obs_ke:
+        except KeyError:
             msg = {"message": "One of your observations do not have the mandatory required field"}
             return JsonResponse(msg, status=400)
             # logger.error("Not all data was provided")
@@ -130,7 +129,7 @@ def set_air_traffic(request):
             metadata=json.dumps(metadata),
         )
 
-        msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
+        write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))  # Send a job to the task queue
 
     op = FlightObservationsProcessingResponse(message="OK", status=200)
     return JsonResponse(asdict(op), status=op.status)
@@ -147,7 +146,7 @@ def get_air_traffic(request):
     try:
         view = request.query_params["view"]
         view_port = [float(i) for i in view.split(",")]
-    except Exception as ke:
+    except Exception:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
         return JsonResponse(
             json.loads(json.dumps(incorrect_parameters)),
@@ -231,7 +230,7 @@ def start_opensky_feed(request):
     try:
         view = request.query_params["view"]
         view_port = [float(i) for i in view.split(",")]
-    except Exception as ke:
+    except Exception:
         incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
 
         return JsonResponse(

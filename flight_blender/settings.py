@@ -9,16 +9,13 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
 import os
-from datetime import datetime, timedelta
 from pathlib import Path
-
+from dotenv import find_dotenv, load_dotenv
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
@@ -39,7 +36,7 @@ DEBUG = os.getenv("IS_DEBUG", False)
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 else:
-    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(",")
+    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", 'openskies.sh').split(",")
 
 # Application definition
 INSTALLED_APPS = [

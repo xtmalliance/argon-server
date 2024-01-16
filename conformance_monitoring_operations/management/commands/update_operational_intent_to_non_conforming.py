@@ -3,7 +3,7 @@ import logging
 from datetime import timedelta
 from os import environ as env
 
-import arrow
+
 from django.core.management.base import BaseCommand, CommandError
 from dotenv import find_dotenv, load_dotenv
 
@@ -102,6 +102,11 @@ class Command(BaseCommand):
             stored_volumes = details_full["volumes"]
             stored_priority = details_full["priority"]
             stored_off_nominal_volumes = details_full["off_nominal_volumes"]
+            logger.debug("Stored priority")
+            logger.debug(stored_priority)
+
+            logger.debug("Stored Off Nominal Volumes")
+            logger.debug(stored_off_nominal_volumes)
 
             reference = OperationalIntentReferenceDSSResponse(
                 id=stored_operational_intent_id,

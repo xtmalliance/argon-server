@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import time
 from dataclasses import asdict
 from os import environ as env
@@ -127,6 +126,6 @@ def start_opensky_network_stream(view_port: str):
                         metadata=json.dumps(metadata),
                     )
 
-                    msgid = write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))
+                    write_incoming_air_traffic_data.delay(json.dumps(asdict(so)))
 
         time.sleep(heartbeat)

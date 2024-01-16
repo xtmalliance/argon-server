@@ -3,7 +3,6 @@ import logging
 from os import environ as env
 from typing import List
 
-import arrow
 from dacite import from_dict
 from django.core.management.base import BaseCommand, CommandError
 from dotenv import find_dotenv, load_dotenv
@@ -75,8 +74,7 @@ class Command(BaseCommand):
 
         current_state = flight_declaration.state
         current_state_str = OPERATION_STATES[current_state][1]
-        dss_operational_intent_ref_id = flight_authorization.dss_operational_intent_id
-
+        
         r = get_redis()
 
         flight_opint = FLIGHT_OPINT_KEY + str(flight_declaration_id)
@@ -154,6 +152,7 @@ class Command(BaseCommand):
                 all_flights_rid_data = obs_helper.get_observations(push_cg)
                 # Get the last observation of the flight telemetry
                 unique_flights = []
+                relevant_observation = {}
                 # Keep only the latest message
                 try:
                     for message in all_flights_rid_data:
@@ -169,7 +168,6 @@ class Command(BaseCommand):
                     unique_flights.sort(key=lambda item: item["timestamp"], reverse=True)
                     # Keep only the latest message
                     distinct_messages = {i["address"]: i for i in reversed(unique_flights)}.values()
-                    relevant_observation = {}
                     for index, rid_observation in enumerate(distinct_messages):
                         if rid_observation.get("icao_address") == flight_declaration_id:
                             relevant_observation = rid_observation
@@ -179,8 +177,8 @@ class Command(BaseCommand):
                     logger.error("Error in sorting distinct messages, ICAO name not defined %s" % ke)
                     distinct_messages = []
 
-                lat_dd = rid_observation["lat_dd"]
-                lon_dd = rid_observation["lon_dd"]
+                lat_dd = relevant_observation["lat_dd"]
+                lon_dd = relevant_observation["lon_dd"]
                 rid_location = Point(lon_dd, lat_dd)
                 # check if it is within declared bounds
                 # TODO: This code is same as the C7check in the conformance / utils file. Need to refactor
@@ -217,14 +215,14 @@ class Command(BaseCommand):
 
                 else:
                     # aircraft declares contingency when the aircraft is out of bounds
-
                     my_op_int_converter = OperationalIntentsConverter()
-                    newv4D = my_op_int_converter.buffer_point_to_volume4d(
+                    new_volume_4D = my_op_int_converter.buffer_point_to_volume4d(
                         lat=lat_dd,
                         lon_dd=lon_dd,
                         start_datetime=flight_declaration.start_datetime,
                         end_datetime=flight_declaration.end_datetime,
                     )
+                    logger.debug(new_volume_4D)
 
                     r = get_redis()
 
@@ -260,6 +258,8 @@ class Command(BaseCommand):
                         stored_volumes = details_full["volumes"]
                         stored_priority = details_full["priority"]
                         stored_off_nominal_volumes = details_full["off_nominal_volumes"]
+                        logger.debug(stored_priority)
+                        logger.debug(stored_off_nominal_volumes)
 
                         reference = OperationalIntentReferenceDSSResponse(
                             id=stored_operational_intent_id,
