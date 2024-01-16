@@ -199,12 +199,15 @@ class Command(BaseCommand):
                 all_volumes = flight_declaration.operational_intent["volumes"]
 
                 all_polygon_altitudes: List[PolygonAltitude] = []
+                all_altitudes = []
 
                 rid_obs_within_all_volumes = []
                 for v in all_volumes:
                     v4d = from_dict(data_class=Volume4D, data=v)
                     altitude_lower = v4d.altitude_lower.value
                     altitude_upper = v4d.altitude_upper.value
+                    all_altitudes.append(altitude_lower)
+                    all_altitudes.append(altitude_upper)
                     outline_polygon = v4d.volume.outline_polygon
                     point_list = []
                     for vertex in outline_polygon["vertices"]:
@@ -230,12 +233,16 @@ class Command(BaseCommand):
                 else:
                     # aircraft declares contingency when the aircraft is out of bounds
 
+                    max_altitude = max(all_altitudes)
+                    min_altitude = min(all_altitudes)
                     my_op_int_converter = OperationalIntentsConverter()
                     new_volume_4d = my_op_int_converter.buffer_point_to_volume4d(
                         lat=lat_dd,
                         lon_dd=lon_dd,
                         start_datetime=flight_declaration.start_datetime,
                         end_datetime=flight_declaration.end_datetime,
+                        min_altitude= min_altitude, 
+                        max_altitude= max_altitude
                     )
                     logger.debug(new_volume_4d)
 

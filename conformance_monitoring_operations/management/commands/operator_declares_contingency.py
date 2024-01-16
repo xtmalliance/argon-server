@@ -187,10 +187,13 @@ class Command(BaseCommand):
                 all_polygon_altitudes: List[PolygonAltitude] = []
 
                 rid_obs_within_all_volumes = []
+                all_altitudes = []
                 for v in all_volumes:
                     v4d = from_dict(data_class=Volume4D, data=v)
                     altitude_lower = v4d.altitude_lower.value
                     altitude_upper = v4d.altitude_upper.value
+                    all_altitudes.append(altitude_lower)
+                    all_altitudes.append(altitude_upper)
                     outline_polygon = v4d.volume.outline_polygon
                     point_list = []
                     for vertex in outline_polygon["vertices"]:
@@ -208,19 +211,24 @@ class Command(BaseCommand):
                     is_within = rid_location.within(p.polygon)
                     rid_obs_within_all_volumes.append(is_within)
 
+
                 aircraft_bounds_conformant = any(rid_obs_within_all_volumes)
 
                 if aircraft_bounds_conformant:  # Operator declares contingency, but the aircraft is within bounds, no need to update / change bounds
                     pass
 
                 else:
+                    max_altitude = max(all_altitudes)
+                    min_altitude = min(all_altitudes)
                     # aircraft declares contingency when the aircraft is out of bounds
                     my_op_int_converter = OperationalIntentsConverter()
                     new_volume_4D = my_op_int_converter.buffer_point_to_volume4d(
                         lat=lat_dd,
-                        lon_dd=lon_dd,
+                        lng=lon_dd,
                         start_datetime=flight_declaration.start_datetime,
                         end_datetime=flight_declaration.end_datetime,
+                        min_altitude= min_altitude, 
+                        max_altitude= max_altitude
                     )
                     logger.debug(new_volume_4D)
 
