@@ -7,6 +7,7 @@ from celery import Celery
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "flight_blender.settings")
 app = Celery(
     "flight_blender",
+    include=['conformance_monitoring_operations.tasks'],
     broker_connection_retry_on_startup=True,
 )
 # Using a string here means the worker doesn't have to serialize
@@ -17,7 +18,6 @@ app.config_from_object("django.conf:settings", namespace="")
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
-
 
 @app.task(bind=True)
 def debug_task(self):
