@@ -12,6 +12,7 @@ services:
 
   db:
     platform: linux/amd64
+    container_name: "db-blender"
     image: postgres
     expose:
       - "5432"
@@ -21,8 +22,10 @@ services:
     env_file:
       - ".env"
 
+
   web:
     platform: linux/amd64
+    container_name: "web"
     env_file:
       - ".env"
     build: .
@@ -38,13 +41,13 @@ services:
 
   celery:
     platform: linux/amd64
-    container_name: flight-blender-worker
+    container_name: worker
     image: openskiessh/flight-blender
     build:
       context: "."
     env_file:
       - ".env"
-    command: celery --app=flight_blender worker --loglevel=info
+    command: ./entrypoint-celery.sh
     volumes:
       - .:/app
     depends_on:
