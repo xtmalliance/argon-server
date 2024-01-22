@@ -7,18 +7,17 @@ from django.core.management.base import BaseCommand, CommandError
 from dotenv import find_dotenv, load_dotenv
 from shapely.geometry import Point
 
-from flight_declaration_operations.utils import OperationalIntentsConverter
 from auth_helper.common import get_redis
 from common.data_definitions import FLIGHT_OPINT_KEY, OPERATION_STATES
 from common.database_operations import BlenderDatabaseReader
 from conformance_monitoring_operations.data_definitions import PolygonAltitude
-
+from flight_declaration_operations.utils import OperationalIntentsConverter
 from flight_feed_operations import flight_stream_helper
-from scd_operations.dss_scd_helper import SCDOperations, OperationalIntentReferenceHelper
-from scd_operations.scd_data_definitions import (
-    Polygon,
-    Volume4D,
+from scd_operations.dss_scd_helper import (
+    OperationalIntentReferenceHelper,
+    SCDOperations,
 )
+from scd_operations.scd_data_definitions import Polygon, Volume4D
 
 load_dotenv(find_dotenv())
 
@@ -93,7 +92,7 @@ class Command(BaseCommand):
         dss_response_subscribers = existing_op_int_details.success_response.subscribers
 
         stored_volumes = details_full.volumes
-        
+
         if dry_run:
             logger.info(
                 "Operator declares contingency for operation {flight_declaration_id} activated in dry_run mode".format(
@@ -101,7 +100,7 @@ class Command(BaseCommand):
                 )
             )
 
-        else:            
+        else:
             ## Update / expand volume
             push_cg = stream_ops.push_cg()
             all_flights_rid_data = obs_helper.get_observations(push_cg)
@@ -193,7 +192,7 @@ class Command(BaseCommand):
                             for s in subscriptions:
                                 subscription_id = s.subscription_id
                                 break
-                            
+
                     operational_update_response = my_scd_dss_helper.update_specified_operational_intent_reference(
                         subscription_id=subscription_id,
                         operational_intent_ref_id=reference.id,
