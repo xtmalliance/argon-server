@@ -50,20 +50,30 @@ services:
     depends_on:
       - redis
 
-  # beat:
-  #   platform: linux/amd64
-  #   container_name: flight-blender-beat
-  #   image: openskies-sh/flight-blender
-  #   build:
-  #     context: "."
-  #   env_file:
-  #     - ".env"
-  #   hostname: beat
-  #   command: celery --app=flight_blender beat --loglevel=info --scheduler django
-  #   volumes:
-  #     - .:/app
-  #   depends_on:
-  #     - redis
+  celery-beat:
+    platform: linux/amd64
+    container_name: flight-blender-beat
+    image: openskies-sh/flight-blender
+    restart: on-failure
+    build:
+      context: "."
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB 
+    hostname: celery-beat
+    command: celery --app=flight_blender beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+      rabbitmq3:
+        condition: service_started
+      celery:
+        condition: service_started
 
 volumes:
   app:
