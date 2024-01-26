@@ -52,7 +52,7 @@ def write_geo_zone(geo_zone: str, test_harness_datasource: str = "0"):
 
     parse_response = my_geo_zone_parser.parse_validate_geozone()
 
-    all_zones_valid = parse_response.all_zones
+    # all_zones_valid = parse_response.all_zones
     processed_geo_zone_features = parse_response.feature_list
 
     logger.info("Processing %s geozone features.." % len(processed_geo_zone_features))

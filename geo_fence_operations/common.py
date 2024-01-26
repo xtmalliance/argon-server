@@ -1,7 +1,7 @@
 import json
 import logging
 from functools import partial
-from typing import List, Tuple, Union
+from typing import List
 
 import pyproj
 from shapely.geometry import Point, mapping
@@ -115,14 +115,14 @@ def validate_geo_zone(geo_zone) -> bool:
     else:
         return False
 
-    all_zones_valid = []
     my_geo_zone_parser = GeoZoneParser(geo_zone=geo_zone)
     parse_response = my_geo_zone_parser.parse_validate_geozone()
 
     all_zones = parse_response.all_zones
-    processed_geo_zone_features = parse_response.feature_list
+    # processed_geo_zone_features = parse_response.feature_list
 
-    if all(all_zones):
+    all_zones_valid = all(all_zones)
+    if all_zones_valid:
         return True
     else:
         return False
