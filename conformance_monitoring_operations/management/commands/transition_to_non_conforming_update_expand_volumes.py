@@ -80,7 +80,7 @@ class Command(BaseCommand):
             raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
 
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
-        
+
         if not flight_declaration:
             raise CommandError(
                 "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
@@ -88,7 +88,7 @@ class Command(BaseCommand):
 
         current_state = flight_declaration.state
         current_state_str = OPERATION_STATES[current_state][1]
-        
+
         r = get_redis()
 
         flight_opint = "flight_opint." + str(flight_declaration_id)
@@ -167,7 +167,7 @@ class Command(BaseCommand):
                 # Get the last observation of the flight telemetry
                 unique_flights = []
                 relevant_observation = {}
-                
+
                 # Keep only the latest message
                 try:
                     for message in all_flights_rid_data:
@@ -242,8 +242,8 @@ class Command(BaseCommand):
                         lng=lon_dd,
                         start_datetime=flight_declaration.start_datetime,
                         end_datetime=flight_declaration.end_datetime,
-                        min_altitude= min_altitude, 
-                        max_altitude= max_altitude
+                        min_altitude=min_altitude,
+                        max_altitude=max_altitude,
                     )
                     logger.debug(new_volume_4d)
 
@@ -315,8 +315,8 @@ class Command(BaseCommand):
                             extents=stored_volumes,
                             ovn=reference.ovn,
                             deconfliction_check=True,
-                            new_state= new_state_str,
-                            current_state=current_state_str
+                            new_state=new_state_str,
+                            current_state=current_state_str,
                         )
 
                         if operational_update_response.status == 200:

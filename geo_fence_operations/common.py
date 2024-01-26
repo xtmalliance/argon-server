@@ -1,7 +1,8 @@
+import json
 import logging
 from functools import partial
 from typing import List, Tuple
-import json
+
 import pyproj
 from shapely.geometry import Point, mapping
 from shapely.ops import transform

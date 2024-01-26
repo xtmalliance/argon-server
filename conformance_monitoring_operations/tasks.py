@@ -1,5 +1,7 @@
 import logging
+
 from dotenv import find_dotenv, load_dotenv
+
 from flight_blender.celery import app
 from flight_feed_operations import flight_stream_helper
 from scd_operations.scd_data_definitions import LatLngPoint
@@ -24,7 +26,6 @@ def check_flight_conformance(flight_declaration_id: str, dry_run: str = "1"):
     dry_run = True if dry_run == "1" else False
     d_run = "1" if dry_run else "0"
     my_conformance_ops = BlenderConformanceEngine()
-       
 
     flight_authorization_conformant = my_conformance_ops.check_flight_authorization_conformance(flight_declaration_id=flight_declaration_id)
     if flight_authorization_conformant:

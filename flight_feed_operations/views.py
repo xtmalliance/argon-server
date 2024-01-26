@@ -304,8 +304,9 @@ def set_signed_telemetry(request):
 
             except KeyError as ke:
                 incorrect_parameters = {
-                    "message": "A states object with a fully valid current states is necessary, the parsing the following key encountered errors %s"
-                    % ke
+                    "message": (
+                        "A states object with a fully valid current states is necessary, the parsing the following key encountered errors %s" % ke
+                    )
                 }
                 return JsonResponse(incorrect_parameters, status=400, content_type="application/json")
 

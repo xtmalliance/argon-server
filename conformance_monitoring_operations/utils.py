@@ -58,7 +58,11 @@ class BlenderConformanceEngine:
             assert flight_authorization is not None
             assert flight_declaration is not None
         except AssertionError:
-            logger.error("Error in getting flight authorization and declaration for {flight_declaration_id}, cannot continue with conformance checks, C2 Check failed.".format(flight_declaration_id = flight_declaration_id))
+            logger.error(
+                "Error in getting flight authorization and declaration for {flight_declaration_id}, cannot continue with conformance checks, C2 Check failed.".format(
+                    flight_declaration_id=flight_declaration_id
+                )
+            )
             return ConformanceChecksList.C2
 
         # Flight Operation and Flight Authorization exists, create a notifications helper
