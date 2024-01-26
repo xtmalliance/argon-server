@@ -25,7 +25,6 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -160,7 +159,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_BROKER_URL = BROKER_URL
 CELERY_RESULT_BACKEND = BROKER_URL
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = "UTC"
 
 # DataFlair #Logging Information
 LOGGING = {
