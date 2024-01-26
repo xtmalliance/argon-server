@@ -193,7 +193,7 @@ class Command(BaseCommand):
 
                     operational_update_response = my_scd_dss_helper.update_specified_operational_intent_reference(
                         subscription_id=subscription_id,
-                        operational_intent_ref_id=reference.id,
+                        operational_intent_ref_id=reference_full.id,
                         extents=nominal_or_off_nominal_volumes,
                         current_state=current_state_str,
                         new_state=contingent_state_str,
@@ -204,7 +204,7 @@ class Command(BaseCommand):
                     if operational_update_response.status == 200:
                         logger.info(
                             "Successfully updated operational intent status for {operational_intent_id} on the DSS".format(
-                                operational_intent_id=stored_operational_intent_id
+                                operational_intent_id=flight_declaration_id
                             )
                         )
                         # TODO Notify subscribers
