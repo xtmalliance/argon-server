@@ -64,18 +64,16 @@ class Command(BaseCommand):
         obs_helper = flight_stream_helper.ObservationReadOperations()
         r = get_redis()
 
-        try:
-            flight_declaration_id = options["flight_declaration_id"]
-        except Exception as e:
-            raise CommandError("Incomplete command, Flight Declaration ID not provided %s" % e)
+        flight_declaration_id = options["flight_declaration_id"]
+        if not flight_declaration_id:
+            raise CommandError("Incomplete command, Flight Declaration ID not provided")
 
         flight_opint = FLIGHT_OPINT_KEY + str(flight_declaration_id)
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         if not flight_declaration:
             raise CommandError(
-                "Flight Declaration with ID {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
+                "Flight Declaration with ID: {flight_declaration_id} does not exist".format(flight_declaration_id=flight_declaration_id)
             )
-
         current_state = flight_declaration.state
         current_state_str = OPERATION_STATES[current_state][1]
 
