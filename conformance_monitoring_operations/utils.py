@@ -10,7 +10,7 @@ from shapely.geometry import Polygon as Plgn
 
 from common.database_operations import BlenderDatabaseReader
 from conformance_monitoring_operations.data_definitions import PolygonAltitude
-from scd_operations.scd_data_definitions import LatLngPoint, Polygon, Volume4D
+from scd_operations.scd_data_definitions import LatLngPoint
 
 from .conformance_state_helper import ConformanceChecksList
 from .data_helper import cast_to_volume4d
@@ -54,12 +54,16 @@ class BlenderConformanceEngine:
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         flight_authorization = my_database_reader.get_flight_authorization_by_flight_declaration(flight_declaration_id=flight_declaration_id)
         # # C2 Check
-        # try:
-        #     assert flight_authorization is not None
-        #     assert flight_declaration is not None
-        # except AssertionError as ae:
-        #     logger.error("Error in getting flight authorization and declaration for {flight_declaration_id}, cannot continue with conformance checks, C2 Check failed.".format(flight_declaration_id = flight_declaration_id))
-        #     return ConformanceChecksList.C2
+        try:
+            assert flight_authorization is not None
+            assert flight_declaration is not None
+        except AssertionError:
+            logger.error(
+                "Error in getting flight authorization and declaration for {flight_declaration_id}, cannot continue with conformance checks, C2 Check failed.".format(
+                    flight_declaration_id=flight_declaration_id
+                )
+            )
+            return ConformanceChecksList.C2
 
         # Flight Operation and Flight Authorization exists, create a notifications helper
 
@@ -69,20 +73,20 @@ class BlenderConformanceEngine:
         # C3 check
         try:
             assert flight_declaration.aircraft_id == aircraft_id
-        except AssertionError as ae:
+        except AssertionError:
             return ConformanceChecksList.C3
 
         # C4, C5 check
         try:
             # Check flight is not processing, ended, withdrawn, cancelled, rejected
             assert flight_declaration.state not in [0, 5, 6, 7, 8]
-        except AssertionError as ae:
+        except AssertionError:
             return ConformanceChecksList.C4
 
         try:
             # Check flight is activated, nonconforming contingent
             assert flight_declaration.state in [2, 3, 4]
-        except AssertionError as ae:
+        except AssertionError:
             return ConformanceChecksList.C5
 
         # C6 check
@@ -92,7 +96,7 @@ class BlenderConformanceEngine:
                 end_time=operation_end_time,
                 check_time=now,
             )
-        except AssertionError as ae:
+        except AssertionError:
             return ConformanceChecksList.C6
 
         # C7 check : Check if the aircraft is within the 4D volume
@@ -140,11 +144,11 @@ class BlenderConformanceEngine:
 
         try:
             assert aircraft_altitude_conformant
-        except AssertionError as ae:
+        except AssertionError:
             return ConformanceChecksList.C7b
         try:
             assert aircraft_bounds_conformant
-        except AssertionError as ae:
+        except AssertionError:
             return ConformanceChecksList.C7a
 
         # C8 check Check if aircraft is not breaching any active Geofences

@@ -1,7 +1,6 @@
 import json
 import logging
 
-import arrow
 from django.core.management.base import BaseCommand, CommandError
 from dotenv import find_dotenv, load_dotenv
 
@@ -10,7 +9,6 @@ from common.database_operations import BlenderDatabaseReader
 from scd_operations.dss_scd_helper import SCDOperations
 
 load_dotenv(find_dotenv())
-
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
@@ -45,8 +43,6 @@ class Command(BaseCommand):
 
         my_scd_dss_helper = SCDOperations()
         my_database_reader = BlenderDatabaseReader()
-        now = arrow.now().isoformat()
-
         try:
             flight_declaration_id = options["flight_declaration_id"]
         except Exception as e:

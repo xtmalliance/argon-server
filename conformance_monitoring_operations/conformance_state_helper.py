@@ -50,7 +50,7 @@ class StatusCode:
                 continue
             if callable(value):
                 continue
-            if type(value) != int:
+            if not isinstance(value, int):
                 continue
             if value not in keys:
                 continue
@@ -126,16 +126,16 @@ class ConformanceChecksList(StatusCode):
     C11 = 13
 
     options = {
-        C2: ("Flight Auth not granted"),
-        C3: ("Telemetry Auth mismatch"),
-        C4: ("Operation state invalid"),
-        C5: ("Operation not activated"),
-        C6: ("Telemetry time incorrect"),
-        C7a: ("Flight out of bounds"),
-        C7b: ("Flight altitude out of bounds"),
-        C8: ("Geofence breached"),
-        C9a: ("Telemetry not received"),
-        C9b: ("Telemetry not received within last 15 secs"),
-        C10: ("State not in accepted, non-conforming, activated"),
-        C11: ("No Flight Authorization"),
+        C2: "Flight Auth not granted",
+        C3: "Telemetry Auth mismatch",
+        C4: "Operation state invalid",
+        C5: "Operation not activated",
+        C6: "Telemetry time incorrect",
+        C7a: "Flight out of bounds",
+        C7b: "Flight altitude out of bounds",
+        C8: "Geofence breached",
+        C9a: "Telemetry not received",
+        C9b: "Telemetry not received within last 15 secs",
+        C10: "State not in accepted, non-conforming, activated",
+        C11: "No Flight Authorization",
     }

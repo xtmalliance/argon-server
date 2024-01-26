@@ -11,21 +11,19 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import dj_database_url
+from dotenv import find_dotenv, load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -39,7 +37,7 @@ DEBUG = os.getenv("IS_DEBUG", False)
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 else:
-    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(",")
+    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "openskies.sh").split(",")
 
 # Application definition
 INSTALLED_APPS = [
@@ -159,8 +157,9 @@ else:
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-
+CELERY_BROKER_URL = BROKER_URL
 CELERY_RESULT_BACKEND = BROKER_URL
+CELERY_TIMEZONE = "UTC"
 
 # DataFlair #Logging Information
 LOGGING = {

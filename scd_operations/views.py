@@ -1,9 +1,9 @@
 import json
 import logging
-from cgi import test
+
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from os import environ as env
+
 from typing import List
 from uuid import UUID
 
@@ -15,7 +15,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from auth_helper.common import RedisHelper, get_redis
+from auth_helper.common import get_redis
 from auth_helper.utils import requires_scopes
 from common.data_definitions import (
     FLIGHT_OPINT_KEY,
@@ -28,7 +28,6 @@ from scd_operations.data_definitions import FlightDeclarationCreationPayload
 
 from . import dss_scd_helper
 from .scd_data_definitions import (
-    Altitude,
     CapabilitiesResponse,
     ClearAreaResponse,
     ClearAreaResponseOutcome,
@@ -41,8 +40,6 @@ from .scd_data_definitions import (
     OperationalIntentSubmissionStatus,
     OperationalIntentTestInjection,
     OperationalIntentUSSDetails,
-    Polygon,
-    Radius,
     SCDTestInjectionDataPayload,
     SCDTestStatusResponse,
     SuccessfulOperationalIntentFlightIDStorage,

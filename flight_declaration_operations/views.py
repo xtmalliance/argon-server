@@ -134,6 +134,7 @@ def set_flight_declaration(request):
         else:
             min_altitude = Altitude(meters=props["min_altitude"]["meters"], datum=props["min_altitude"]["datum"])
             max_altitude = Altitude(meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"])
+            logging.debug(min_altitude, max_altitude)
 
     # Default state is Processing if working with a DSS, otherwise it is Accepted
     declaration_state = 0 if USSP_NETWORK_ENABLED else 1
@@ -221,7 +222,7 @@ def set_flight_declaration(request):
     my_database_writer.create_flight_authorization_from_flight_declaration_obj(flight_declaration=flight_declaration)
     flight_declaration.add_state_history_entry(new_state=0, original_state=None, notes="Created Declaration")
     if declaration_state == 8:
-        flight_declarationfo.add_state_history_entry(
+        flight_declaration.add_state_history_entry(
             new_state=declaration_state,
             original_state=0,
             notes="Rejected by Flight Blender because of  time / space conflicts with existing operations",
@@ -480,6 +481,7 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
             else:
                 min_altitude = Altitude(meters=props["min_altitude"]["meters"], datum=props["min_altitude"]["datum"])
                 max_altitude = Altitude(meters=props["max_altitude"]["meters"], datum=props["max_altitude"]["datum"])
+                logging.debug(min_altitude, max_altitude)
 
         # Default state is Processing if working with a DSS, otherwise it is Accepted
         declaration_state = 0 if USSP_NETWORK_ENABLED else 1
@@ -520,7 +522,7 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
                 relevant_id_set.append(i["geo_fence_id"])
 
             my_rtree_helper.clear_rtree_index()
-            logger.info("Geofence intersections checked, found {num_intersections} fences" % {"num_intersections": len(relevant_id_set)})
+            logger.info("Geofence intersections checked, found {num_intersections} fences".format(num_intersections=len(relevant_id_set)))
             if all_relevant_fences:
                 is_approved = 0
                 declaration_state = 8

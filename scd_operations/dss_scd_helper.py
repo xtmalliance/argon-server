@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 import arrow
 import requests
 import shapely.geometry
-import tldextract
+
 from dotenv import find_dotenv, load_dotenv
 from pyproj import Proj
 from shapely.geometry import Point, Polygon
@@ -602,8 +602,8 @@ class SCDOperations:
                             # Request was successful
                             operational_intent_details_json = uss_operational_intent_request.json()
                             op_int_details_retrieved = True
-                            outline_polygon = None
-                            outline_circle = None
+                            # outline_polygon = None
+                            # outline_circle = None
 
                             op_int_det = operational_intent_details_json["operational_intent"]["details"]
                             op_int_ref = operational_intent_details_json["operational_intent"]["reference"]
@@ -655,7 +655,7 @@ class SCDOperations:
             audience = env.get("DSS_SELF_AUDIENCE", 0)
         try:
             assert audience
-        except AssertionError as ae:
+        except AssertionError:
             logger.error("Error in getting Authority Access Token DSS_SELF_AUDIENCE is not set in the environment")
         auth_token = {}
         try:
@@ -867,20 +867,20 @@ class SCDOperations:
         self, current_state: str, new_state: str, extents_conflict_with_dss_volumes: bool, priority: int
     ) -> bool:
         if current_state == "Activated" and new_state == "Activated" and extents_conflict_with_dss_volumes:
-            logger.debug("B")
+            logger.debug("Case B")
             submit_update_payload_to_dss = False
 
         elif current_state == "Activated" or new_state in ["Nonconforming", "Contingent"]:
-            logger.debug("A")
+            logger.debug("Case A")
             submit_update_payload_to_dss = True
         elif current_state == "Activated" and new_state == "Activated":
-            logger.debug("C")
+            logger.debug("Case C")
             submit_update_payload_to_dss = True
         elif priority == 100:
-            logger.debug("D")
+            logger.debug("Case D")
             submit_update_payload_to_dss = True
         else:
-            logger.debug("E")
+            logger.debug("Case E")
             submit_update_payload_to_dss = False if extents_conflict_with_dss_volumes else True
         return submit_update_payload_to_dss
 

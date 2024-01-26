@@ -35,7 +35,7 @@ def download_geozone_source(geo_zone_url: str, geozone_source_id: str):
                 geo_zone_str = json.dumps(geo_zone_data)
                 write_geo_zone.delay(geo_zone=geo_zone_str, test_harness_datasource="1")
                 test_status_storage = GeoAwarenessTestStatus(result="Ready", message="")
-            except Exception as e:
+            except Exception:
                 test_status_storage = GeoAwarenessTestStatus(result="Error", message="The URL could be ")
         else:
             test_status_storage = GeoAwarenessTestStatus(result="Unsupported", message="")
@@ -49,10 +49,12 @@ def write_geo_zone(geo_zone: str, test_harness_datasource: str = "0"):
     geo_zone = json.loads(geo_zone)
     test_harness_datasource = int(test_harness_datasource)
     my_geo_zone_parser = GeoZoneParser(geo_zone=geo_zone)
-    (
-        all_zones_valid,
-        processed_geo_zone_features,
-    ) = my_geo_zone_parser.parse_validate_geozone()
+
+    parse_response = my_geo_zone_parser.parse_validate_geozone()
+
+    # all_zones_valid = parse_response.all_zones
+    processed_geo_zone_features = parse_response.feature_list
+
     logger.info("Processing %s geozone features.." % len(processed_geo_zone_features))
     for geo_zone_feature in processed_geo_zone_features:
         all_feat_geoms = geo_zone_feature.geometry

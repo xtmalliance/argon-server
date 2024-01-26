@@ -121,7 +121,7 @@ def set_geo_fence(request: HttpRequest):
 def set_geozone(request):
     try:
         assert request.headers["Content-Type"] == "application/json"
-    except AssertionError as ae:
+    except AssertionError:
         msg = {"message": "Unsupported Media Type"}
         return HttpResponse(
             json.dumps(msg),
@@ -131,7 +131,7 @@ def set_geozone(request):
 
     try:
         geo_zone = request.data
-    except KeyError as ke:
+    except KeyError:
         msg = json.dumps({"message": "A geozone object is necessary in the body of the request"})
         return HttpResponse(msg, status=status.HTTP_400_BAD_REQUEST)
 
@@ -223,7 +223,7 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         r = get_redis()
         try:
             geo_zone_url_details = ImplicitDict.parse(request.data, GeoZoneHttpsSource)
-        except KeyError as ke:
+        except KeyError:
             ga_import_response = GeoAwarenessTestStatus(
                 result="Rejected",
                 message="There was an error in processing the request payload, a url and format key is required for successful processing",
@@ -236,7 +236,7 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         url_validator = URLValidator()
         try:
             url_validator(geo_zone_url_details.https_source.url)
-        except ValidationError as ve:
+        except ValidationError:
             ga_import_response = GeoAwarenessTestStatus(result="Unsupported", message="There was an error in the url provided")
             return JsonResponse(
                 json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)),
