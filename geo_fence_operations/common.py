@@ -1,7 +1,8 @@
+import json
 import logging
 from functools import partial
-from typing import List, Tuple
-import json
+from typing import List
+
 import pyproj
 from shapely.geometry import Point, mapping
 from shapely.ops import transform
@@ -11,6 +12,7 @@ from .data_definitions import (
     GeoZoneFeature,
     HorizontalProjection,
     ImplicitDict,
+    ParseValidateResponse,
     ZoneAuthority,
 )
 
@@ -24,7 +26,7 @@ class GeoZoneParser:
 
     def parse_validate_geozone(
         self,
-    ) -> (bool, Tuple[None, List[GeoZoneFeature]],):
+    ) -> ParseValidateResponse:
         processed_geo_zone_features: List[GeoZoneFeature] = []
         all_zones_valid: List[bool] = []
         for _geo_zone_feature in self.geo_zone["features"]:
@@ -94,10 +96,7 @@ class GeoZoneParser:
             processed_geo_zone_features.append(geo_zone_feature)
             all_zones_valid.append(True)
 
-        return (
-            all_zones_valid,
-            processed_geo_zone_features,
-        )
+        return ParseValidateResponse(all_zones=all_zones_valid, feature_list=processed_geo_zone_features)
 
 
 def geodesic_point_buffer(lat, lon, km):
@@ -116,14 +115,14 @@ def validate_geo_zone(geo_zone) -> bool:
     else:
         return False
 
-    all_zones_valid = []
     my_geo_zone_parser = GeoZoneParser(geo_zone=geo_zone)
-    (
-        all_zones_valid,
-        processed_geo_zone_features,
-    ) = my_geo_zone_parser.parse_validate_geozone()
+    parse_response = my_geo_zone_parser.parse_validate_geozone()
 
-    if all(all_zones_valid):
+    all_zones = parse_response.all_zones
+    # processed_geo_zone_features = parse_response.feature_list
+
+    all_zones_valid = all(all_zones)
+    if all_zones_valid:
         return True
     else:
         return False

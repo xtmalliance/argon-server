@@ -1,6 +1,6 @@
 import enum
 from dataclasses import dataclass
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional, Union
 
 from implicitdict import ImplicitDict
 
@@ -110,6 +110,12 @@ class GeoZoneFeature(ImplicitDict):
     applicability: List[Dict[str, str]]
     zoneAuthority: List[ZoneAuthority]
     geometry: List[ED269Geometry]
+
+
+@dataclass
+class ParseValidateResponse:
+    all_zones: List[bool]
+    feature_list: Union[None, List[GeoZoneFeature]]
 
 
 class GeoZone(ImplicitDict):
