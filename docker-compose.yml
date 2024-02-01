@@ -1,6 +1,6 @@
 version: "3"
 services:
-  redis:
+  redis-blender:
     platform: linux/amd64
     command: ["redis-server", "/redis.conf"]
     image: "redis:latest"
@@ -8,9 +8,9 @@ services:
       - "6379"
     volumes:
       - ./config/redis.conf:/redis.conf
-    container_name: "redis"
+    container_name: "redis-blender"
 
-  db:
+  db-blender:
     platform: linux/amd64
     container_name: "db-blender"
     image: postgres
@@ -21,7 +21,6 @@ services:
       - db_data:/var/lib/postgresql/data
     env_file:
       - ".env"
-
 
   web:
     platform: linux/amd64
@@ -34,8 +33,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - redis
-      - db
+      - redis-blender
+      - db-blender
     volumes:
       - .:/app
 
@@ -51,7 +50,7 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - redis
+      - redis-blender
 
   celery-beat:
     platform: linux/amd64
@@ -63,15 +62,15 @@ services:
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
-      - POSTGRES_DB 
+      - POSTGRES_DB
     hostname: celery-beat
-    command: celery --app=flight_blender beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: ./entrypoint-beat.sh
     volumes:
       - .:/app
     depends_on:
-      redis:
+      redis-blender:
         condition: service_started
-      db:
+      db-blender:
         condition: service_started
       rabbitmq3:
         condition: service_started
