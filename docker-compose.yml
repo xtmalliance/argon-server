@@ -2,13 +2,15 @@ version: "3"
 services:
   redis-blender:
     platform: linux/amd64
-    command: ["redis-server", "/redis.conf"]
+    command: ["redis-server", "/redis.conf", "--requirepass", "$REDIS_PASSWORD"]
     image: "redis:latest"
     expose:
       - "6379"
     volumes:
       - ./config/redis.conf:/redis.conf
     container_name: "redis-blender"
+    env_file:
+      - ".env"
 
   db-blender:
     platform: linux/amd64
@@ -71,8 +73,6 @@ services:
       redis-blender:
         condition: service_started
       db-blender:
-        condition: service_started
-      rabbitmq3:
         condition: service_started
       celery:
         condition: service_started
