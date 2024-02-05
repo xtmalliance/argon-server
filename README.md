@@ -25,6 +25,9 @@ Follow our 5-step process to deploy Flight Blender and get started with the basi
 
 Read the ⏲️ [20-minute quickstart](deployment_support/README.md) now!
 
+## Deployment
+Refer to the [deployment](https://github.com/openutm/deployment) repository to see how you can deploy this server along with instructions and sample environment file.
+
 ## Join the OpenUTM community
 
 Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
