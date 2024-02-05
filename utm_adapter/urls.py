@@ -20,4 +20,5 @@ urlpatterns = [
         "flight_declaration_state/<uuid:pk>",
         flight_declaration_views.FlightDeclarationStateUpdate.as_view(),
     ),
+    path("discover_traffic_information", flight_feed_views.traffic_information_discovery_view),
 ]

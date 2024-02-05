@@ -30,6 +30,7 @@ from .data_definitions import (
     FlightObservationsProcessingResponse,
     MessageVerificationFailedResponse,
     SingleAirtrafficObservation,
+    TrafficInformationDiscoveryResponse,
 )
 from .models import SignedTelmetryPublicKey
 from .pki_helper import MessageVerifier, ResponseSigningOperations
@@ -361,6 +362,43 @@ def set_signed_telemetry(request):
         response["req"] = request.headers["Signature"]
 
         return response
+
+
+@api_view(["GET"])
+@requires_scopes(["blender.read"])
+def traffic_information_discovery_view(request):
+    try:
+        view = request.query_params["view"]
+        view_port = [float(i) for i in view.split(",")]
+    except Exception:
+        incorrect_parameters = {"message": "A view bbox is necessary with four values: minx, miny, maxx and maxy"}
+
+        return JsonResponse(
+            json.loads(json.dumps(incorrect_parameters)),
+            status=400,
+            content_type="application/json",
+        )
+
+    view_port_valid = view_port_ops.check_view_port(view_port_coords=view_port)
+
+    if not view_port_valid:
+        view_port_error = {"message": "An incorrect view port bbox was provided"}
+
+        return JsonResponse(
+            json.loads(json.dumps(view_port_error)),
+            status=400,
+            content_type="application/json",
+        )
+
+    traffic_information_url = env.get("TRAFFIC_INFORMATION_URL", "https://not_implemented_yet")
+
+    traffic_information_discovery_response = TrafficInformationDiscoveryResponse(
+        message="Traffic Information Discovery information successfully retrieved",
+        url=traffic_information_url,
+        description="Start a QUIC query to the traffic information url service to get traffic information in the specified view port",
+    )
+
+    return JsonResponse(asdict(traffic_information_discovery_response), status=200, content_type="application/json")
 
 
 @api_view(["PUT"])

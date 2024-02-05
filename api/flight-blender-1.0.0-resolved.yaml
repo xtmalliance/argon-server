@@ -1884,6 +1884,62 @@ paths:
       tags:
         - geozone-qualifier
 
+  /utm_adapter/traffic_information:
+    get:
+      parameters:
+        - name: view
+          in: query
+          description: 'The area of this view: lat1,lng1,lat2,lng2.  Size may not exceed a diagonal length specified in the standard.  The view is the smallest box bounded by the provided corner points.'
+          schema:
+            type: string
+            example: 29.97816,31.13296,29.98025,31.13535
+
+          required: true
+
+      summary: 'Get latest air-traffic data'
+      security:
+        - AuthFromPassport:  [qgcs.utm_adapter.read]
+      description:
+        "Using this endpoint, you can query a stream of air-traffic observations for the view port provided"
+
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrafficInformationDiscoveryResponse'
+
+        '400':
+          description: Bad request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest400ErrorResponse'
+        '401':
+          description: Un-authorized request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauthorized401ErrorResponse'
+        '403':
+          description: Forbidden request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forbidden403ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Standard500ErrorResponse'
+      tags:
+        - crewed-traffic
+
+
+
+
 
 
 components:
@@ -2082,6 +2138,21 @@ components:
       properties:
         observations:
             $ref: '#/components/schemas/ArrayOfObservations'
+
+    TrafficInformationDiscoveryResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'Successfully retrieved traffic information url'
+        url:
+          type: string
+          example: 'https://www.example.com/traffic_information/get_traffic_information'
+          description: >-
+            The URL to the traffic information endpoint
+        description:
+          type: string
+          example: 'Start a QUIC connection to the URL to receive traffic information in real-time'
 
     FlightDeclarationPaginatedList:
       type: object
