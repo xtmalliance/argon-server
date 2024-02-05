@@ -44,3 +44,10 @@ class FlightObservationsProcessingResponse:
 @dataclass
 class MessageVerificationFailedResponse:
     message: str
+
+
+@dataclass
+class TrafficInformationDiscoveryResponse:
+    message: str
+    url: str
+    description: str

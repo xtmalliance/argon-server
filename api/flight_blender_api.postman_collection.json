@@ -34,13 +34,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://local.test:8000/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
-							"protocol": "http",
+							"raw": "{{base_url}}/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"scd",
 								"v1",
@@ -76,12 +73,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
-							"protocol": "http",
+							"raw": "{{base_url}}/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
 							"host": [
-								"localhost"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"scd",
 								"v1",
@@ -117,13 +112,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://local.test:8000/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
-							"protocol": "http",
+							"raw": "{{base_url}}/scd/v1/flights/ab3dda3e-b80b-4fc6-9888-a51fe1a2b68a",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"scd",
 								"v1",
@@ -159,13 +151,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://local.test:8000/scd/v1/clear_area_requests",
-							"protocol": "http",
+							"raw": "{{base_url}}/scd/v1/clear_area_requests",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"scd",
 								"v1",
@@ -191,13 +180,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://local.test:8000/uss/v1/operational_intents/45a29775-21da-46ea-8d09-be7d7eef44fa",
-							"protocol": "http",
+							"raw": "{{base_url}}/uss/v1/operational_intents/45a29775-21da-46ea-8d09-be7d7eef44fa",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"uss",
 								"v1",
@@ -301,13 +287,10 @@
 							"raw": "{\"is_approved\":1, \"approved_by\":\"hh@auth.com\"}"
 						},
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration_review/18108acd-2f7d-4375-8096-dd1a95589f9f",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_declaration_ops/flight_declaration_review/18108acd-2f7d-4375-8096-dd1a95589f9f",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration_review",
@@ -413,13 +396,10 @@
 							"raw": "{\"state\":2, \"submitted_by\":\"hh@auth.com\"}"
 						},
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration_state/d120d8bb-2169-463f-bbfd-6850bc7ec2da",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_declaration_ops/flight_declaration_state/d120d8bb-2169-463f-bbfd-6850bc7ec2da",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration_state",
@@ -526,13 +506,10 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration?start_date=2022-05-01&end_date=2023-06-24",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_declaration_ops/flight_declaration?start_date=2022-05-01&end_date=2023-06-24",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration"
@@ -641,13 +618,10 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration?start_date=2022-06-02&end_date=2022-06-05&view=30.0661790370941162,-1.9293988077580486, 30.0712859630584717,-1.9261927014160831",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_declaration_ops/flight_declaration?start_date=2022-06-02&end_date=2022-06-05&view=30.0661790370941162,-1.9293988077580486, 30.0712859630584717,-1.9261927014160831",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration"
@@ -755,13 +729,10 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration/5216e3f3-6916-4a27-a57e-7690c94e2e6b",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_declaration_ops/flight_declaration/5216e3f3-6916-4a27-a57e-7690c94e2e6b",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration",
@@ -856,13 +827,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/set_flight_declaration",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_declaration_ops/set_flight_declaration",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_declaration_ops",
 								"set_flight_declaration"
@@ -888,13 +856,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://local.test:8000/flight_declaration_ops/flight_declaration/cbb8269e-47f5-4e76-8b2e-d38aeb0d96ed/network_flight_declarations",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_declaration_ops/flight_declaration/cbb8269e-47f5-4e76-8b2e-d38aeb0d96ed/network_flight_declarations",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_declaration_ops",
 								"flight_declaration",
@@ -941,13 +906,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://local.test:8000/flight_stream/public_keys/",
-									"protocol": "http",
+									"raw": "{{base_url}}/flight_stream/public_keys/",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"flight_stream",
 										"public_keys",
@@ -982,13 +944,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://local.test:8000/flight_stream/public_keys/",
-									"protocol": "http",
+									"raw": "{{base_url}}/flight_stream/public_keys/",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"flight_stream",
 										"public_keys",
@@ -1099,13 +1058,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://local.test:8000/flight_stream/set_air_traffic",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_stream/set_air_traffic",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_stream",
 								"set_air_traffic"
@@ -1212,13 +1168,10 @@
 							}
 						],
 						"url": {
-							"raw": "http://local.test:8000/flight_stream/get_air_traffic?view=-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_stream/get_air_traffic?view=-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_stream",
 								"get_air_traffic"
@@ -1250,13 +1203,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://local.test:8000/flight_stream/start_opensky_feed?view=-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_stream/start_opensky_feed?view=-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_stream",
 								"start_opensky_feed"
@@ -1287,13 +1237,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://local.test:8000/flight_stream/start_opensky_feed?view=-10.855685846181927,51.372228043539025,-4.972664441895574,55.39053251949662",
-							"protocol": "http",
+							"raw": "{{base_url}}/flight_stream/start_opensky_feed?view=-10.855685846181927,51.372228043539025,-4.972664441895574,55.39053251949662",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"flight_stream",
 								"start_opensky_feed"
@@ -1454,13 +1401,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/rid/display_data?view=46.97471588813772,7.473307389701852,46.975508163062706,7.473955394898998",
-									"protocol": "http",
+									"raw": "{{base_url}}/rid/display_data?view=46.97471588813772,7.473307389701852,46.975508163062706,7.473955394898998",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"rid",
 										"display_data"
@@ -1575,13 +1519,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/dss/create_dss_subscription?view=46.97478407188788,7.473543702146228,46.97542602102813,7.4753388728502985",
-									"protocol": "http",
+									"raw": "{{base_url}}/dss/create_dss_subscription?view=46.97478407188788,7.473543702146228,46.97542602102813,7.4753388728502985",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"dss",
 										"create_dss_subscription"
@@ -1786,13 +1727,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/dss/create_dss_subscription/?view=-4.9558482039999996,51.6912750520000017,-4.9471846910000004,51.6951759410000022",
-									"protocol": "http",
+									"raw": "{{base_url}}/dss/create_dss_subscription/?view=-4.9558482039999996,51.6912750520000017,-4.9471846910000004,51.6951759410000022",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"dss",
 										"create_dss_subscription",
@@ -1899,13 +1837,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/dss/create_dss_subscription?view=30.1121520996093750,-1.982636438429737,30.1787567138671875,-1.9543290263437825",
-									"protocol": "http",
+									"raw": "{{base_url}}/dss/create_dss_subscription?view=30.1121520996093750,-1.982636438429737,30.1787567138671875,-1.9543290263437825",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"dss",
 										"create_dss_subscription"
@@ -2024,13 +1959,10 @@
 									"raw": "{\r\n  \"requested_flights\": [\r\n    {\r\n      \"injection_id\": \"edb7695f-8737-4b9f-91f8-e2afbb333f41\",\r\n      \"telemetry\": [\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.124,\r\n            \"lng\": -118.457,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.125,\r\n            \"lng\": -118.457,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.124,\r\n            \"lng\": -118.457,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        },\r\n        {\r\n          \"timestamp\": \"2019-08-24T14:15:22Z\",\r\n          \"timestamp_accuracy\": 0,\r\n          \"operational_status\": \"Undeclared\",\r\n          \"position\": {\r\n            \"lat\": 34.123,\r\n            \"lng\": -118.456,\r\n            \"alt\": 1321.2,\r\n            \"accuracy_h\": \"HAUnknown\",\r\n            \"accuracy_v\": \"VAUnknown\",\r\n            \"extrapolated\": true,\r\n            \"pressure_altitude\": 0\r\n          },\r\n          \"track\": 0,\r\n          \"speed\": 1.9,\r\n          \"speed_accuracy\": \"SAUnknown\",\r\n          \"vertical_speed\": 0.2,\r\n          \"height\": {\r\n            \"distance\": 0,\r\n            \"reference\": \"TakeoffLocation\"\r\n          },\r\n          \"group_radius\": 0,\r\n          \"group_ceiling\": 0,\r\n          \"group_floor\": 0,\r\n          \"group_count\": 1,\r\n          \"group_time_start\": \"2019-08-24T14:15:22Z\",\r\n          \"group_time_end\": \"2019-08-24T14:15:22Z\"\r\n        }\r\n      ],\r\n      \"details_responses\": [\r\n        {\r\n          \"effective_after\": \"2019-08-24T14:15:22Z\",\r\n          \"details\": {\r\n            \"id\": \"a3423b-213401-0023\",\r\n            \"operator_id\": \"string\",\r\n            \"operator_location\": {\r\n              \"lng\": -118.456,\r\n              \"lat\": 34.123\r\n            },\r\n            \"operation_description\": \"SafeFlightDrone company doing survey with DJI Inspire 2. See my privacy policy www.example.com/privacy.\",\r\n            \"auth_data\": {\r\n              \"format\": \"string\",\r\n              \"data\": \"string\"\r\n            },\r\n            \"serial_number\": \"INTCJ123-4567-890\",\r\n            \"registration_number\": \"FA12345897\"\r\n          }\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}"
 								},
 								"url": {
-									"raw": "http://local.test:8000/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f",
-									"protocol": "http",
+									"raw": "{{base_url}}/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"rid",
 										"tests",
@@ -2139,13 +2071,10 @@
 									"raw": "{\r\n  \"requested_flights\":\r\n  [\r\n    {\"injection_id\":\"1bd4c265-c4c6-44c0-80b4-e0fc1e929141\", \"telemetry\":[\r\n            {\"timestamp\":\"2022-05-17T14:56:49.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.9754225199202, \"lng\":7.475076017275803, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":181.6975641099569, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:50.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97537839156561, \"lng\":7.475074106522959, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":187.32256350913605, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:51.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97533460388938, \"lng\":7.475065885577716, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":192.94755828743686, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:52.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97529157858963, \"lng\":7.4750514336274, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":198.5725484866273, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:53.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97524973002137, \"lng\":7.475030889866306, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":204.19753420333566, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:54.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.975209461206134, \"lng\":7.475004452154652, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":209.8225155857433, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:55.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97517115995081, \"lng\":7.474972375112586, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":215.44749279959558, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:56.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97513519511295, \"lng\":7.474934967667648, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":221.07246606410473, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:57.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97510191304869, \"lng\":7.47489259007933, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":226.69743567376366, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:58.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.9750716342773, \"lng\":7.474845650469361, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":232.32240184321986, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:56:59.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97504465039461, \"lng\":7.474794600891187, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":237.94736498393496, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:00.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97502122126502, \"lng\":7.474739932976472, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":243.57232539252175, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:01.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97500157251901, \"lng\":7.474682173200564, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":249.19728347676727, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:02.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.974985893380456, \"lng\":7.4746218778124875, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":254.82223961412566, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:03.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.974974334844354, \"lng\":7.474559627478333, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":260.4471942717671, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:04.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97496700822293, \"lng\":7.474496021689548, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":266.0721478626451, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:05.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97496398407367, \"lng\":7.474431672990031, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":271.6971007845053, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:06.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97496529151983, \"lng\":7.474367201077551, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":277.32205360031514, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:07.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.974970917970175, \"lng\":7.474303226836321, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":282.94700666829954, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:08.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97498080924005, \"lng\":7.474240366358126, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":288.57196049163485, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:09.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97499487007325, \"lng\":7.47417922500962, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":294.19691547654986, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:10.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97501296505933, \"lng\":7.474120391602846, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":299.8218720981668, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:11.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.9750349199375, \"lng\":7.47406443272514, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":305.44683073280254, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:12.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.975060523274735, \"lng\":7.47401188728299, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":311.07179180494865, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:13.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.975089528501826, \"lng\":7.473963261312384, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":316.69675569788495, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:14.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.975121656287804, \"lng\":7.47391902310561, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":322.32172274232187, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:15.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.9751565972298, \"lng\":7.473879598701442, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":327.94669324232154, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:16.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.97519401483258, \"lng\":7.4738453677821175, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":333.57166752256273, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:17.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.975233548749024, \"lng\":7.473816660016666, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":339.196645789534, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            },\r\n            {\"timestamp\":\"2022-05-17T14:57:18.553647+00:00\", \"operational_status\":\"Airborne\", \"position\":{\"lat\":46.975274818250206, \"lng\":7.473793751885744, \"alt\":620.0, \"accuracy_h\":\"HAUnkown\", \"accuracy_v\":\"VAUnknown\", \"extrapolated\":\"false\"\r\n                }, \"height\":{\"distance\":50.0, \"reference\":\"TakeoffLocation\"\r\n                }, \"track\":344.82162827649853, \"speed\":4.91, \"timestamp_accuracy\":0.0, \"speed_accuracy\":\"SA3mps\", \"vertical_speed\":0.0\r\n            }\r\n        ], \"details_responses\":[\r\n            {\"effective_after\":\"2022-05-17T14:56:48.553647+00:00\", \"details\":{\"id\":\"0\", \"serial_number\":\"44b2e0e2-4c71-4467-a63f-f0b0f12a4a9f\", \"operation_description\":\"Electricity Grid Inspection\", \"operator_location\":{\"lat\":46.97615311620088, \"lng\":7.476099729537965\r\n                    }, \"operator_id\":\"OP-dz18p37s\", \"registration_number\":\"CHE05qmltpx610rp\"\r\n                }\r\n            }\r\n        ]\r\n    }\r\n]\r\n}"
 								},
 								"url": {
-									"raw": "http://local.test:8000/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f",
-									"protocol": "http",
+									"raw": "{{base_url}}/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"rid",
 										"tests",
@@ -2254,13 +2183,10 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "http://local.test:8000/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f/1",
-									"protocol": "http",
+									"raw": "{{base_url}}/rid/tests/ac52ccd4-2bf9-4397-9ae3-4842b63f942f/1",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"rid",
 										"tests",
@@ -2288,13 +2214,10 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://local.test:8000/uss/flights?view=34.0986568654943909,-118.4733867645263530,34.1304210314761178,-118.4358787536620952",
-									"protocol": "http",
+									"raw": "{{base_url}}/uss/flights?view=34.0986568654943909,-118.4733867645263530,34.1304210314761178,-118.4358787536620952",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"uss",
 										"flights"
@@ -2325,13 +2248,10 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://local.test:8000/uss/flights?view=46.97487251727889,7.473587100324012,46.97536628504498,7.474702673251279",
-									"protocol": "http",
+									"raw": "{{base_url}}/uss/flights?view=46.97487251727889,7.473587100324012,46.97536628504498,7.474702673251279",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"uss",
 										"flights"
@@ -2449,13 +2369,10 @@
 									"raw": "{\r\n    \"observations\": [\r\n        {\r\n            \"current_states\": [\r\n                {\r\n                    \"timestamp\": {\r\n                        \"value\": \"2022-07-18T14:23:21.541652+00:00\",\r\n                        \"format\": \"RFC3339\"\r\n                    },\r\n                    \"operational_status\": \"Airborne\",\r\n                    \"position\": {\r\n                        \"lat\": 46.9754225199202,\r\n                        \"lng\": 7.475076017275803,\r\n                        \"alt\": {\r\n                            \"reference\": \"GroundLevel\",\r\n                            \"distance\": 620\r\n                        },\r\n                        \"accuracy_h\": \"HAUnknown\",\r\n                        \"accuracy_v\": \"VAUnknown\",\r\n                        \"extrapolated\": false\r\n                    },\r\n                    \"height\": {\r\n                        \"distance\": 50,\r\n                        \"reference\": \"TakeoffLocation\"\r\n                    },\r\n                    \"track\": 181.6975641099569,\r\n                    \"speed\": 4.91,\r\n                    \"timestamp_accuracy\": 0.0,\r\n                    \"speed_accuracy\": \"SA3mps\",\r\n                    \"vertical_speed\": 0\r\n                }\r\n            ],\r\n            \"flight_details\": {\r\n                \"rid_details\": {\r\n                    \"id\": \"1\",\r\n                    \"eu_classification\": {\r\n                        \"category\": \"EUCategoryUndefined\",\r\n                        \"class\": \"EUClassUndefined\"\r\n                    },\r\n                    \"operator_id\": \"OP-0xn81lwa\",\r\n                    \"uas_id\": {\r\n                        \"serial_number\": \"f9edf164-1c8f-45d7-9854-bc0ffa33573d\",\r\n                        \"registration_id\": \"CHE9t1sq8bqa023t\",\r\n                        \"utm_id\": \"07a06bba-5092-48e4-8253-7a523f885bfe\"\r\n                    },\r\n                    \"operation_description\": \"Delivery operation, see more details at https://deliveryops.com/operation\",\r\n                    \"operator_location\": {\r\n                        \"position\": {\r\n                            \"lat\": 46.97615311620088,\r\n                            \"lng\": 7.476099729537965\r\n                        }\r\n                    }\r\n                },\r\n                \"aircraft_type\": \"Helicopter\"\r\n            }\r\n        }\r\n    ]\r\n}"
 								},
 								"url": {
-									"raw": "http://local.test:8000/flight_stream/set_telemetry",
-									"protocol": "http",
+									"raw": "{{base_url}}/flight_stream/set_telemetry",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"flight_stream",
 										"set_telemetry"
@@ -2483,13 +2400,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://local.test:8000/rid/capabilities",
-							"protocol": "http",
+							"raw": "{{base_url}}/rid/capabilities",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
 								"rid",
 								"capabilities"
@@ -2595,13 +2509,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_awareness/status",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_awareness/status",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_awareness",
@@ -2708,13 +2619,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_awareness/geozone_sources/2081a7af-7631-46ab-b34e-1ebe129e69b4",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_awareness/geozone_sources/2081a7af-7631-46ab-b34e-1ebe129e69b4",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_awareness",
@@ -2826,13 +2734,10 @@
 									"raw": "{\"https_source\":{\"url\":\"https://caa.example.com/geozones.json\",\"format\":\"ED-269\"}}"
 								},
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_awareness/geozone_sources/2081a7af-7631-46ab-b34e-1ebe129e69b4",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_awareness/geozone_sources/2081a7af-7631-46ab-b34e-1ebe129e69b4",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_awareness",
@@ -2940,13 +2845,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_awareness/geozone_sources/2081a7af-7631-46ab-b34e-1ebe129e69b4",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_awareness/geozone_sources/2081a7af-7631-46ab-b34e-1ebe129e69b4",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_awareness",
@@ -3058,13 +2960,10 @@
 									"raw": "{\"checks\":[{\"filterSets\":[{\"position\":{\"uomDimensions\":\"M\",\"verticalReferenceType\":\"AGL\",\"height\":0,\"longitude\":0,\"latitude\":0},\"after\":\"2019-08-24T14:15:22Z\",\"before\":\"2019-08-24T14:15:22Z\",\"ed269\":{\"uSpaceClass\":\"string\",\"acceptableRestrictions\":[\"PROHIBITED\"]}}]}]}"
 								},
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_awareness/geozones/check",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_awareness/geozones/check",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_awareness",
@@ -3196,13 +3095,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/set_geo_fence",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/set_geo_fence",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"set_geo_fence"
@@ -3322,13 +3218,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/set_geozone",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/set_geozone",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"set_geozone"
@@ -3429,13 +3322,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_fence",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_fence",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_fence"
@@ -3541,13 +3431,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_fence",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_fence",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_fence"
@@ -3658,13 +3545,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://local.test:8000/geo_fence_ops/geo_fence?view=30.1391887664794922,-1.9744016045411854, 30.1593589782714844,-1.9683112323881620",
-									"protocol": "http",
+									"raw": "{{base_url}}/geo_fence_ops/geo_fence?view=30.1391887664794922,-1.9744016045411854, 30.1593589782714844,-1.9683112323881620",
 									"host": [
-										"local",
-										"test"
+										"{{base_url}}"
 									],
-									"port": "8000",
 									"path": [
 										"geo_fence_ops",
 										"geo_fence"
@@ -3698,6 +3582,45 @@
 			"name": "UTM Adapter",
 			"item": [
 				{
+					"name": "Traffic Information",
+					"item": [
+						{
+							"name": "Traffic Information Request",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ0ZXN0ZmxpZ2h0LmZsaWdodGJsZW5kZXIuY29tIiwiY2xpZW50X2lkIjoidXNzX25vYXV0aCIsImV4cCI6MTY5MzY1MTE0NiwiaXNzIjoiTm9BdXRoIiwianRpIjoiNjI5ODZiM2QtMTJhOS00OWQwLWFmMWMtZTVjZDQ0Y2UzOTM1IiwibmJmIjoxNjkzNjQ3NTQ1LCJzY29wZSI6ImJsZW5kZXIud3JpdGUgYmxlbmRlci5yZWFkIiwic3ViIjoidXNzX25vYXV0aCJ9.c2IhiYD9mKu7uBg3XrThorROR11H_k2pk3kMwqY0j0oF3ogGgqrTUkrVm5RWSKlPMPY0y2kUF8f9QJV4dOjVLJLuO4aYs6Vwn1lt08FRuIfL41hyUbEMTZxFvbEN3tgijYVYezp2doUiAtm0Mmyvvm7UU9CzG7jbn6qRP8jsuLI",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/utm_adapter/discover_traffic_information?view=-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"utm_adapter",
+										"discover_traffic_information"
+									],
+									"query": [
+										{
+											"key": "view",
+											"value": "-0.11877451706071201,51.46228293261794,-0.0834551637606495,51.48674752688704"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "Get Flight Declaration / SCD Capabilities",
 					"request": {
 						"auth": {
@@ -3713,15 +3636,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://local.test:8000/qgcs/flight_declaration/capabilities",
-							"protocol": "http",
+							"raw": "{{base_url}}/utm_adapter/flight_declaration/capabilities",
 							"host": [
-								"local",
-								"test"
+								"{{base_url}}"
 							],
-							"port": "8000",
 							"path": [
-								"qgcs",
+								"utm_adapter",
 								"flight_declaration",
 								"capabilities"
 							]
@@ -3743,6 +3663,11 @@
 				"auth": {
 					"type": "oauth2",
 					"oauth2": [
+						{
+							"key": "accessTokenUrl",
+							"value": "{{auth_server_base_url}}/oauth/token/",
+							"type": "string"
+						},
 						{
 							"key": "tokenName",
 							"value": "Flight Blender RW",
@@ -3791,11 +3716,6 @@
 							"type": "string"
 						},
 						{
-							"key": "accessTokenUrl",
-							"value": "https://id.openskies.sh/oauth/token/",
-							"type": "string"
-						},
-						{
 							"key": "accessToken",
 							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjkzNDMyNTZiLTVlYTUtNGY0OC04NzJlLTE0YTI5N2NmZTkzYyJ9.eyJpc3MiOiJodHRwczovL2lkLm9wZW5za2llcy5zaC8iLCJleHAiOjE2MDU1MjQxNDcsImlhdCI6MTYwNTUyMDU0Nywic3ViIjoiRjB2a1ZnWkJDTWZCem1yQTZNUjRJSW5MU0trRGdYamNRb2pXTFZrU0BjbGllbnRzIiwic2NvcGUiOiJibGVuZGVyLnJlYWQgYmxlbmRlci53cml0ZSIsInR5cCI6IkJlYXJlciJ9.QFhKD6nmSByaRbCA8pCNElwSAvdpyJav4lNF6PKW3nsISsR1i560T9fX8wmJ6WBZ6mL-bIIYbv88So2reg3vGDZKl1PZCCxjq4-FpmJqITWdCxGrNoY7crpmFa9u6sIw4qzeL4PMOyAC2qCk43CJD7ohk5pHq2OyqclB0x4KtdeRVzUPNekIK5nPnLXiXrbWc2Y3p-VPOva3sOFfU8jvVO2JvHxpUGbQkqog01QPSkQZ0_tEg_n3YD_TnD1Su9EXNCP9ROfLVyzZQIYtCPfL5euQh5-llWK1uakjx0yC4sZIuTmKOME4WErUdUN0iH9nZdIrLMHqGTpWNFWKWb7ZaLEQ9PSuYEHXTJ0oMbk5OakwEbr3mFtQfjd8xFlcDaVjESL3U9cb6LVZfBumJrwtqg0h39oYNoTIWp7VPwZR1kRg43GkMa3Y6eLMTU4ul2OQf1QjQOq6WyNVYOUZArzpSv9ORw_R7WMSpqtTXUiMgW3dWytzOYH77SkASIzNVQyPqw37zek8fO7ET8NlKIT8GiL0dWcgbWtCVaAqpWnIfMqBg85XlhhtFGBntP8uRM_7h6k7jAFRNnYRe5RPrx5Nzq8goly_8TP2jCQuiQ20kqXMJGWQWo8H0X3HP3cgnyBUdh8Midakhg1cnqAqXIiAx0dcEKPoyJ5ky250brLwRTk",
 							"type": "string"
@@ -3821,13 +3741,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://local.test:8000/ping",
-					"protocol": "http",
+					"raw": "{{base_url}}/ping",
 					"host": [
-						"local",
-						"test"
+						"{{base_url}}"
 					],
-					"port": "8000",
 					"path": [
 						"ping"
 					],
@@ -3932,13 +3849,10 @@
 					}
 				],
 				"url": {
-					"raw": "http://local.test:8000/signing_public_key",
-					"protocol": "http",
+					"raw": "{{base_url}}/signing_public_key",
 					"host": [
-						"local",
-						"test"
+						"{{base_url}}"
 					],
-					"port": "8000",
 					"path": [
 						"signing_public_key"
 					],
@@ -3961,10 +3875,19 @@
 					"type": "oauth2",
 					"oauth2": [
 						{
+							"key": "tokenName",
+							"value": "Flight Blender RW",
+							"type": "string"
+						},
+						{
+							"key": "accessTokenUrl",
+							"value": "{{auth_server_base_url}}/oauth/token/",
+							"type": "string"
+						},
+						{
 							"key": "audience",
 							"value": {
-								"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_audience}}",
-								"083fa528-4a5d-4608-94a5-e517f207b2a7": "{{flight_blender_audience}}"
+								"7257e291-3f7c-443d-b6db-84ec80fc5703": "{{flight_blender_audience}}"
 							},
 							"type": "any"
 						},
@@ -4014,11 +3937,6 @@
 							"type": "string"
 						},
 						{
-							"key": "accessTokenUrl",
-							"value": "https://id.openskies.sh/oauth/token/",
-							"type": "string"
-						},
-						{
 							"key": "tokenType",
 							"value": "Bearer",
 							"type": "string"
@@ -4028,8 +3946,8 @@
 				"method": "POST",
 				"header": [],
 				"body": {
-					"mode": "formdata",
-					"formdata": [
+					"mode": "urlencoded",
+					"urlencoded": [
 						{
 							"key": "client_id",
 							"value": "{{client_id}}",
@@ -4058,12 +3976,9 @@
 					]
 				},
 				"url": {
-					"raw": "https://id.openskies.sh/oauth/token/",
-					"protocol": "https",
+					"raw": "{{auth_server_base_url}}/oauth/token/",
 					"host": [
-						"id",
-						"openskies",
-						"sh"
+						"{{auth_server_base_url}}"
 					],
 					"path": [
 						"oauth",
