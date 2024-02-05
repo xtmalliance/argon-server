@@ -1,17 +1,20 @@
 version: "3"
 services:
-  redis:
+  redis-blender:
     platform: linux/amd64
-    command: ["redis-server", "/redis.conf"]
+    command: ["redis-server", "/redis.conf", "--requirepass", "$REDIS_PASSWORD"]
     image: "redis:latest"
     expose:
       - "6379"
     volumes:
       - ./config/redis.conf:/redis.conf
-    container_name: "redis"
+    container_name: "redis-blender"
+    env_file:
+      - ".env"
 
-  db:
+  db-blender:
     platform: linux/amd64
+    container_name: "db-blender"
     image: postgres
     expose:
       - "5432"
@@ -23,6 +26,7 @@ services:
 
   web:
     platform: linux/amd64
+    container_name: "web"
     env_file:
       - ".env"
     build: .
@@ -31,24 +35,24 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - redis
-      - db
+      - redis-blender
+      - db-blender
     volumes:
       - .:/app
 
   celery:
     platform: linux/amd64
-    container_name: flight-blender-worker
+    container_name: worker
     image: openskiessh/flight-blender
     build:
       context: "."
     env_file:
       - ".env"
-    command: celery --app=flight_blender worker --loglevel=info
+    command: ./entrypoint-celery.sh
     volumes:
       - .:/app
     depends_on:
-      - redis
+      - redis-blender
 
   celery-beat:
     platform: linux/amd64
@@ -60,17 +64,15 @@ services:
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
-      - POSTGRES_DB 
+      - POSTGRES_DB
     hostname: celery-beat
-    command: celery --app=flight_blender beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: ./entrypoint-beat.sh
     volumes:
       - .:/app
     depends_on:
-      redis:
+      redis-blender:
         condition: service_started
-      db:
-        condition: service_started
-      rabbitmq3:
+      db-blender:
         condition: service_started
       celery:
         condition: service_started
