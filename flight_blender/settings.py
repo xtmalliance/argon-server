@@ -37,7 +37,7 @@ DEBUG = os.getenv("IS_DEBUG", False)
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 else:
-    ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "openskies.sh").split(",")
+    ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "openskies.sh").split(",")
 
 # Application definition
 INSTALLED_APPS = [
@@ -100,12 +100,12 @@ DATABASES = {
     }
 }
 DATABASES = {}
-USING_DOCKER_COMPOSE = os.environ.get("USING_DOCKER_COMPOSE", 0)
+USING_DOCKER_COMPOSE = os.getenv("USING_DOCKER_COMPOSE", 0)
 if USING_DOCKER_COMPOSE:
     DATABASES = {
         "default": {
-            "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
-            "NAME": os.environ.get("DB_DATABASE", os.path.join(BASE_DIR, "flight_blender.sqlite3")),
+            "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+            "NAME": os.getenv("DB_DATABASE", os.path.join(BASE_DIR, "flight_blender.sqlite3")),
         }
     }
 else:
