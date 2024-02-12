@@ -79,8 +79,7 @@ class OperationalIntentsConverter:
             max_altitude = feature["properties"]["max_altitude"]["meters"]
             min_altitude = feature["properties"]["min_altitude"]["meters"]
             s = shape(geom)
-            buffed_s = s.buffer(0.00001)
-            # all_shapes.append(buffed_s)
+            buffed_s = s.buffer(0.0005)
             self.all_features.append(buffed_s)
             # feature_union = unary_union(all_shapes)
             # # TODO: build a better flightplan
@@ -169,8 +168,8 @@ class OperationalIntentsConverter:
     def _convert_operational_intent_to_geojson_feature(self, volume: Volume4D):
         geo_json_features = []
         v = asdict(volume.volume)
-        time_start = volume.time_start
-        time_end = volume.time_end
+        time_start = volume.time_start.value
+        time_end = volume.time_end.value
         if "outline_polygon" in v and v["outline_polygon"] is not None:
             outline_polygon = v["outline_polygon"]
             point_list = []
@@ -196,8 +195,8 @@ class OperationalIntentsConverter:
             circle_radius = outline_circle["radius"]["value"]
             center_point = Point(outline_circle["center"]["lng"], outline_circle["center"]["lat"])
             utm_center = self.utm_converter(shapely_shape=center_point)
-            buffered_cicle = utm_center.buffer(circle_radius)
-            converted_circle = self.utm_converter(buffered_cicle, inverse=True)
+            buffered_circle = utm_center.buffer(circle_radius)
+            converted_circle = self.utm_converter(buffered_circle, inverse=True)
             self.all_features.append(converted_circle)
 
             outline_c = shapely.geometry.mapping(converted_circle)

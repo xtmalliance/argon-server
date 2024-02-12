@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from rest_framework import serializers
 
@@ -7,6 +8,8 @@ from common.database_operations import BlenderDatabaseReader
 from conformance_monitoring_operations.conformance_checks_handler import (
     FlightOperationConformanceHelper,
 )
+from scd_operations.dss_scd_helper import OperationalIntentReferenceHelper
+from scd_operations.scd_data_definitions import Volume4D
 
 from .models import FlightDeclaration
 from .utils import OperationalIntentsConverter
@@ -19,10 +22,14 @@ class FlightDeclarationSerializer(serializers.ModelSerializer):
 
     def get_flight_declaration_geojson(self, obj):
         o = json.loads(obj.operational_intent)
-
+        volumes = o["volumes"]
+        volumes_list: List[Volume4D] = []
+        my_operational_intent_parser = OperationalIntentReferenceHelper()
+        for v in volumes:
+            parsed_volume = my_operational_intent_parser.parse_volume_to_volume4D(v)
+            volumes_list.append(parsed_volume)
         my_operational_intent_converter = OperationalIntentsConverter()
-        my_operational_intent_converter.convert_operational_intent_to_geo_json(volumes=o["volumes"])
-
+        my_operational_intent_converter.convert_operational_intent_to_geo_json(volumes=volumes_list)
         return my_operational_intent_converter.geo_json
 
     def get_flight_declaration_raw_geojson(self, obj):
