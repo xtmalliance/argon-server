@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "flight_feed_operations",
     "conformance_monitoring_operations",
     "rid_operations",
+    "weather_monitoring_operations",
 ]
 
 MIDDLEWARE = [
@@ -182,3 +183,6 @@ LOGGING = {
         },
     },
 }
+
+# Weather service
+WEATHER_API_BASE_URL = "https://api.open-meteo.com/v1/forecast"
