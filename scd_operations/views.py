@@ -586,7 +586,7 @@ def scd_auth_test(request, operation_id):
 # Flight Planning Close Flight Plan
 @api_view(["DELETE"])
 @requires_scopes(["interuss.flight_planning.plan"])
-def UpsertCloseFlightPlan(request):
+def upsert_close_flight_plan(request):
     if request.method == "PUT":
         status = UpsertFlightPlanResponse(
             result=FlightPlanProcessingResultEnum.NotSupported,
@@ -605,7 +605,7 @@ def UpsertCloseFlightPlan(request):
 
 @api_view(["GET"])
 @requires_scopes(["interuss.flight_planning.direct_automated_test"])
-def FlightPlanningTestStatusRequest(request):
+def flight_planning_status(request):
     status = FlightPlanningTestStatus(
         status=FlightPlanningStatusResponseEnum.Ready,
         system_version="v0.1",
@@ -617,7 +617,7 @@ def FlightPlanningTestStatusRequest(request):
 
 @api_view(["POST"])
 @requires_scopes(["interuss.flight_planning.direct_automated_test"])
-def FlightPlanClearAreaRequest(request):
+def flight_planning_clear_area_request(request):
     clear_area_request = request.data
     try:
         request_id = clear_area_request["request_id"]
