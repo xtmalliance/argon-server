@@ -9,7 +9,6 @@ from typing import List, Optional, Union
 import arrow
 import requests
 import shapely.geometry
-
 from dotenv import find_dotenv, load_dotenv
 from pyproj import Proj
 from shapely.geometry import Point, Polygon
@@ -21,6 +20,7 @@ from common.auth_token_audience_helper import generate_audience_from_base_url
 from common.data_definitions import FLIGHT_OPINT_KEY
 from rid_operations import rtree_helper
 
+from .flight_planning_data_definitions import FlightPlanningInjectionData
 from .scd_data_definitions import (
     Altitude,
     Circle,
@@ -75,6 +75,38 @@ def is_time_within_time_period(start_time: datetime, end_time: datetime, time_to
     else:
         # Over midnight:
         return time_to_check >= start_time or time_to_check <= end_time
+
+
+class FlightPlanningDataValidator:
+    def __init__(self, incoming_flight_planning_data: FlightPlanningInjectionData):
+        self.flight_planning_data = incoming_flight_planning_data
+
+    def validate_flight_planning_state(self):
+        try:
+            assert self.flight_planning_data.state in [
+                "Accepted",
+                "Activated",
+                "Nonconforming",
+            ]
+        except AssertionError as ae:
+            logger.error(ae)
+            return False
+        else:
+            return True
+
+    def validate_flight_planning_off_nominals(self):
+        if self.flight_planning_data.state in ["Accepted", "Activated"] and bool(self.flight_planning_data.off_nominal_volumes):
+            return False
+        else:
+            return True
+
+    def validate_flight_planning_test_data(self) -> bool:
+        flight_planning_test_data_ok = []
+        flight_planning_state_ok = self.validate_flight_planning_state()
+        flight_planning_off_nominals_ok = self.validate_flight_planning_off_nominals()
+        flight_planning_test_data_ok.append(flight_planning_state_ok)
+        flight_planning_test_data_ok.append(flight_planning_off_nominals_ok)
+        return all(flight_planning_test_data_ok)
 
 
 class OperationalIntentValidator:

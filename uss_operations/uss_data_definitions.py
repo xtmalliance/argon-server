@@ -120,14 +120,6 @@ class Volume4D:
 
 
 @dataclass
-class Time:
-    """A class to hold time objects"""
-
-    format: str
-    value: str
-
-
-@dataclass
 class OperationalIntentReferenceDSSResponse:
     id: str
     manager: str
