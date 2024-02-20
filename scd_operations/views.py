@@ -1,9 +1,7 @@
 import json
 import logging
-
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-
 from typing import List
 from uuid import UUID
 
@@ -27,12 +25,21 @@ from rid_operations import rtree_helper
 from scd_operations.data_definitions import FlightDeclarationCreationPayload
 
 from . import dss_scd_helper
+from .flight_planning_data_definitions import (
+    CloseFlightPlanResponse,
+    FlightPlanAdvisoriesEnum,
+    FlightPlanCloseResultEnum,
+    FlightPlanningStatusResponseEnum,
+    FlightPlanningTestStatus,
+    FlightPlanProcessingResultEnum,
+    UpsertFlightPlanResponse,
+)
 from .scd_data_definitions import (
     CapabilitiesResponse,
     ClearAreaResponse,
     ClearAreaResponseOutcome,
     DeleteFlightResponse,
-    DeleteFlightStatus,
+    DeleteFlightStatusResponseEnum,
     FlightAuthorizationDataPayload,
     OperationalIntentState,
     OperationalIntentStorage,
@@ -561,12 +568,12 @@ def scd_auth_test(request, operation_id):
             my_database_writer.delete_flight_declaration(flight_declaration_id=operation_id_str)
 
             delete_flight_response = DeleteFlightResponse(
-                result=DeleteFlightStatus.Closed,
+                result=DeleteFlightStatusResponseEnum.Closed,
                 notes="The flight was closed successfully by the USS and is now out of the UTM system.",
             )
         else:
             delete_flight_response = DeleteFlightResponse(
-                result=DeleteFlightStatus.Failed,
+                result=DeleteFlightStatusResponseEnum.Failed,
                 notes="The flight was not found in the USS, please check your flight ID %s" % operation_id_str,
             )
 
@@ -574,3 +581,52 @@ def scd_auth_test(request, operation_id):
             json.loads(json.dumps(delete_flight_response, cls=EnhancedJSONEncoder)),
             status=status.HTTP_200_OK,
         )
+
+
+# Flight Planning Close Flight Plan
+@api_view(["DELETE"])
+@requires_scopes(["interuss.flight_planning.plan"])
+def UpsertCloseFlightPlan(request):
+    if request.method == "PUT":
+        status = UpsertFlightPlanResponse(
+            result=FlightPlanProcessingResultEnum.NotSupported,
+            notes="Flight Plan successfully closed",
+            includes_advisories=FlightPlanAdvisoriesEnum.No,
+        )
+        return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
+
+    if request.method == "DELETE":
+        status = CloseFlightPlanResponse(
+            result=FlightPlanCloseResultEnum.Closed,
+            notes="Flight Plan successfully closed",
+        )
+        return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
+
+
+@api_view(["GET"])
+@requires_scopes(["interuss.flight_planning.direct_automated_test"])
+def FlightPlanningTestStatusRequest(request):
+    status = FlightPlanningTestStatus(
+        status=FlightPlanningStatusResponseEnum.Ready,
+        system_version="v0.1",
+        api_name="Flight Planning Automated Testing Interface",
+        api_version="latest",
+    )
+    return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
+
+
+@api_view(["POST"])
+@requires_scopes(["interuss.flight_planning.direct_automated_test"])
+def FlightPlanClearAreaRequest(request):
+    clear_area_request = request.data
+    try:
+        request_id = clear_area_request["request_id"]
+        extent_raw = clear_area_request["extent"]
+    except KeyError as ke:
+        return Response(
+            {"result": "Could not parse clear area payload, expected key %s not found " % ke},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    my_flight_plan_clear_area_handler = DSSAreaClearHandler(request_id=request_id)
+    clear_area_response = my_flight_plan_clear_area_handler.clear_area_request(extent_raw=extent_raw)
+    return JsonResponse(json.loads(json.dumps(clear_area_response, cls=EnhancedJSONEncoder)), status=200)
