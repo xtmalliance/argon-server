@@ -59,12 +59,12 @@ from .scd_test_harness_helper import (
     conflict_with_flight_test_injection_response,
     failed_planning_response,
     failed_test_injection_response,
+    not_planned_planning_response,
     not_supported_planning_response,
     planned_planning_response,
     planned_test_injection_response,
     ready_to_fly_injection_response,
     ready_to_fly_planning_response,
-    rejected_planning_response,
     rejected_test_injection_response,
 )
 from .utils import (
@@ -637,7 +637,7 @@ def upsert_close_flight_plan(request, flight_plan_id):
 
         if not flight_planning_data_valid:
             return Response(
-                json.loads(json.dumps(rejected_planning_response, cls=EnhancedJSONEncoder)),
+                json.loads(json.dumps(not_planned_planning_response, cls=EnhancedJSONEncoder)),
                 status=status.HTTP_200_OK,
             )
 
@@ -650,7 +650,7 @@ def upsert_close_flight_plan(request, flight_plan_id):
 
         if not volumes_valid:
             return Response(
-                json.loads(json.dumps(rejected_planning_response, cls=EnhancedJSONEncoder)),
+                json.loads(json.dumps(not_planned_planning_response, cls=EnhancedJSONEncoder)),
                 status=status.HTTP_200_OK,
             )
         # End validation of Volumes
@@ -665,14 +665,14 @@ def upsert_close_flight_plan(request, flight_plan_id):
         is_reg_number_valid = my_reg_number_validator.is_valid()
 
         if not is_serial_number_valid:
-            injection_response = asdict(rejected_planning_response)
+            injection_response = asdict(not_planned_planning_response)
             return Response(
                 json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
                 status=status.HTTP_200_OK,
             )
 
         if not is_reg_number_valid:
-            injection_response = asdict(rejected_planning_response)
+            injection_response = asdict(not_planned_planning_response)
             return Response(
                 json.loads(json.dumps(injection_response, cls=EnhancedJSONEncoder)),
                 status=status.HTTP_200_OK,

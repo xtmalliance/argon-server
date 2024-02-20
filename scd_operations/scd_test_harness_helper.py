@@ -17,6 +17,7 @@ from .flight_planning_data_definitions import (
     FlightPlanAdvisoriesEnum,
     FlightPlanningRequest,
     FlightPlanProcessingResultEnum,
+    PlanningActivityResult,
     RPAS26FlightDetails,
     UpsertFlightPlanResponse,
 )
@@ -55,32 +56,37 @@ ready_to_fly_injection_response = TestInjectionResult(
 
 # Flight Planning responses
 not_supported_planning_response = UpsertFlightPlanResponse(
-    result=FlightPlanProcessingResultEnum.NotSupported,
+    flight_plan_status=FlightPlanProcessingResultEnum.NotPlanned,
     notes="Flight Plan action is not supported",
     includes_advisories=FlightPlanAdvisoriesEnum.No,
+    planning_result=PlanningActivityResult.NotSupported,
 )
 planned_planning_response = UpsertFlightPlanResponse(
-    result=FlightPlanProcessingResultEnum.Planned,
+    flight_plan_status=FlightPlanProcessingResultEnum.Planned,
     notes="Flight Plan successfully processed and flight planned",
     includes_advisories=FlightPlanAdvisoriesEnum.No,
+    planning_result=PlanningActivityResult.Completed,
 )
 
 ready_to_fly_planning_response = UpsertFlightPlanResponse(
-    result=FlightPlanProcessingResultEnum.ReadyToFly,
+    flight_plan_status=FlightPlanProcessingResultEnum.OkToFly,
     notes="Flight is ready to fly",
     includes_advisories=FlightPlanAdvisoriesEnum.No,
+    planning_result=PlanningActivityResult.Completed,
 )
 
-rejected_planning_response = UpsertFlightPlanResponse(
-    result=FlightPlanProcessingResultEnum.Rejected,
-    notes="Flight Planning rejected this flight",
+not_planned_planning_response = UpsertFlightPlanResponse(
+    flight_plan_status=FlightPlanProcessingResultEnum.NotPlanned,
+    notes="Flight Planning could not plan this flight",
     includes_advisories=FlightPlanAdvisoriesEnum.No,
+    planning_result=PlanningActivityResult.Rejected,
 )
 
 failed_planning_response = UpsertFlightPlanResponse(
-    result=FlightPlanProcessingResultEnum.Failed,
+    flight_plan_status=FlightPlanProcessingResultEnum.NotPlanned,
     notes="Flight Planning failed to process this flight",
     includes_advisories=FlightPlanAdvisoriesEnum.No,
+    planning_result=PlanningActivityResult.Failed,
 )
 
 
@@ -144,9 +150,9 @@ class FlightPlanningDataProcessor:
         self.incoming_flight_information = incoming_flight_information
 
         if not self.incoming_flight_information.keys() & {"intended_flight", "request_id"}:
-            raise ValueError("Some requested_flight and request_id must be present in the incoming data")
+            raise KeyError("Some requested_flight and request_id must be present in the incoming data")
 
-        self.intended_flight_information = self.incoming_flight_information["intended_flight"]
+        self.intended_flight_information = self.incoming_flight_information["flight_plan"]
         self.request_id = self.incoming_flight_information["request_id"]
 
         if not self.intended_flight_information.keys() & {
@@ -156,7 +162,7 @@ class FlightPlanningDataProcessor:
             "rpas_operating_rules_2_6",
             "additional_information",
         }:
-            raise ValueError("Some keys are missing")
+            raise KeyError("Some keys are missing")
 
     def process_basic_flight_plan(self, basic_information_dict) -> BasicFlightPlanInformation:
         basic_flight_plan_information = from_dict(
@@ -198,14 +204,9 @@ class FlightPlanningDataProcessor:
         uspace_flight_authorisation = self.process_uspace_flight_authorisation_information(
             self.intended_flight_information["uspace_flight_authorisation"]
         )
-        rpas_operating_rules_2_6 = self.process_rpas_operating_rules_2_6_information(self.intended_flight_information["rpas_operating_rules_2_6"])
-        additional_information = self.process_additional_information()
+
         flight_plan = FlightPlan(
-            basic_information=basic_information,
-            astm_f3548_21=astm_f3548_21,
-            uspace_flight_authorisation=uspace_flight_authorisation,
-            rpas_operating_rules_2_6=rpas_operating_rules_2_6,
-            additional_information=additional_information,
+            basic_information=basic_information, astm_f3548_21=astm_f3548_21, uspace_flight_authorisation=uspace_flight_authorisation
         )
 
         return flight_plan

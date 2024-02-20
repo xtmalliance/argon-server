@@ -21,13 +21,20 @@ class FlightPlanCloseResultEnum(str, enum.Enum):
 
 class FlightPlanAdvisoriesEnum(str, enum.Enum):
     Unknown = "Unknown"
-    Yes = "Yes"
-    No = "No"
+    Yes = "AtLeastOneAdvisoryOrCondition"
+    No = "NoAdvisoriesOrConditions"
 
 
 class FlightPlanProcessingResultEnum(str, enum.Enum):
+    NotPlanned = "NotPlanned"
     Planned = "Planned"
-    ReadyToFly = "ReadyToFly"
+    OkToFly = "OkToFly"
+    OffNominal = "OffNominal"
+    Closed = "Closed"
+
+
+class PlanningActivityResult(str, enum.Enum):
+    Completed = "Completed"
     Rejected = "Rejected"
     Failed = "Failed"
     NotSupported = "NotSupported"
@@ -35,15 +42,16 @@ class FlightPlanProcessingResultEnum(str, enum.Enum):
 
 @dataclass
 class CloseFlightPlanResponse:
-    result: FlightPlanCloseResultEnum
+    flight_plan_status: FlightPlanCloseResultEnum
     notes: str
 
 
 @dataclass
 class UpsertFlightPlanResponse:
-    result: FlightPlanProcessingResultEnum
+    flight_plan_status: FlightPlanProcessingResultEnum
     notes: str
     includes_advisories: FlightPlanAdvisoriesEnum
+    planning_result: PlanningActivityResult
 
 
 @dataclass
@@ -179,8 +187,8 @@ class FlightPlan:
     basic_information: BasicFlightPlanInformation
     astm_f3548_21: Optional[ASTMF354821OpIntentInformation]
     uspace_flight_authorisation: Optional[FlightAuthorisationData]
-    rpas_operating_rules_2_6: Optional[RPAS26FlightDetails]
-    additional_information: Optional[Dict[str, Any]]
+    rpas_operating_rules_2_6: Optional[RPAS26FlightDetails] = dict
+    additional_information: Optional[Dict[str, Any]] = dict
 
 
 @dataclass
