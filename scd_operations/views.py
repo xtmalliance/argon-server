@@ -888,7 +888,7 @@ def upsert_close_flight_plan(request, flight_plan_id):
                     status=status.HTTP_200_OK,
                 )
 
-            elif flight_planning_submission.status == "failure":
+            elif flight_planning_submission.status in ["failure", "peer_uss_data_sharing_issue"]:
                 return Response(
                     json.loads(json.dumps(asdict(failed_planning_response), cls=EnhancedJSONEncoder)),
                     status=status.HTTP_200_OK,

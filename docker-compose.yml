@@ -11,6 +11,8 @@ services:
     container_name: "redis-blender"
     env_file:
       - ".env"
+    networks:
+      - interop_ecosystem_network
 
   db-blender:
     platform: linux/amd64
@@ -23,6 +25,8 @@ services:
       - db_data:/var/lib/postgresql/data
     env_file:
       - ".env"
+    networks:
+      - interop_ecosystem_network
 
   web:
     platform: linux/amd64
@@ -31,7 +35,7 @@ services:
       - ".env"
     build: .
     image: openskiessh/flight-blender
-    command: ./entrypoints/with-database/entrypoint.sh
+    command: ./entrypoints/no-database/entrypoint.sh
     ports:
       - "8000:8000"
     depends_on:
@@ -39,6 +43,8 @@ services:
       - db-blender
     volumes:
       - .:/app
+    networks:
+      - interop_ecosystem_network
 
   celery:
     platform: linux/amd64
@@ -48,34 +54,36 @@ services:
       context: "."
     env_file:
       - ".env"
-    command: ./entrypoints/with-database/entrypoint-celery.sh
+    command: ./entrypoints/no-database/entrypoint-celery.sh
     volumes:
       - .:/app
     depends_on:
       - redis-blender
+    networks:
+      - interop_ecosystem_network
 
-  celery-beat:
-    platform: linux/amd64
-    container_name: flight-blender-beat
-    image: openskies-sh/flight-blender
-    restart: on-failure
-    build:
-      context: "."
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-    hostname: celery-beat
-    command: ./entrypoints/with-database/entrypoint-beat.sh
-    volumes:
-      - .:/app
-    depends_on:
-      redis-blender:
-        condition: service_started
-      db-blender:
-        condition: service_started
-      celery:
-        condition: service_started
+  # celery-beat:
+  #   platform: linux/amd64
+  #   container_name: flight-blender-beat
+  #   image: openskies-sh/flight-blender
+  #   restart: on-failure
+  #   build:
+  #     context: "."
+  #   environment:
+  #     - POSTGRES_USER
+  #     - POSTGRES_PASSWORD
+  #     - POSTGRES_DB
+  #   hostname: celery-beat
+  #   command: ./entrypoints/with-database/entrypoint-beat.sh
+  #   volumes:
+  #     - .:/app
+  #   depends_on:
+  #     redis-blender:
+  #       condition: service_started
+  #     db-blender:
+  #       condition: service_started
+  #     celery:
+  #       condition: service_started
 
 volumes:
   app:

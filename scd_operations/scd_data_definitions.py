@@ -388,6 +388,11 @@ class DeleteOperationalIntentResponseSuccess:
 
 
 @dataclass
+class CommonPeer9xxResponse:
+    message: str
+
+
+@dataclass
 class CommonDSS4xxResponse:
     message: str
 
@@ -417,7 +422,7 @@ class OperationalIntentUpdateErrorResponse:
 
 @dataclass
 class OperationalIntentUpdateResponse:
-    dss_response: Union[OperationalIntentUpdateSuccessResponse, CommonDSS4xxResponse]
+    dss_response: Union[OperationalIntentUpdateSuccessResponse, CommonDSS4xxResponse, CommonPeer9xxResponse]
     status: int
     message: Union[CommonDSS4xxResponse, CommonDSS2xxResponse, str]
 
