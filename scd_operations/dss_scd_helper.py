@@ -83,10 +83,11 @@ class FlightPlanningDataValidator:
 
     def validate_flight_planning_state(self):
         try:
-            assert self.flight_planning_data.state in [
-                "Accepted",
-                "Activated",
-                "Nonconforming",
+            assert self.flight_planning_data.uas_state in [
+                "Nominal",
+                "OffNominal",
+                "Contingent",
+                "NotSpecified",
             ]
         except AssertionError as ae:
             logger.error(ae)
@@ -95,7 +96,7 @@ class FlightPlanningDataValidator:
             return True
 
     def validate_flight_planning_off_nominals(self):
-        if self.flight_planning_data.state in ["Accepted", "Activated"] and bool(self.flight_planning_data.off_nominal_volumes):
+        if self.flight_planning_data.usage_state in ["Planned", "InUse"] and bool(self.flight_planning_data.off_nominal_volumes):
             return False
         else:
             return True
@@ -106,6 +107,7 @@ class FlightPlanningDataValidator:
         flight_planning_off_nominals_ok = self.validate_flight_planning_off_nominals()
         flight_planning_test_data_ok.append(flight_planning_state_ok)
         flight_planning_test_data_ok.append(flight_planning_off_nominals_ok)
+
         return all(flight_planning_test_data_ok)
 
 

@@ -7,25 +7,20 @@ from uuid import UUID
 from uss_operations.uss_data_definitions import Volume4D
 
 
-class FlightPlanningStatusResponseEnum(str, enum.Enum):
+class FlightPlanningStatusResponse(str, enum.Enum):
     """A enum to specify if the USS is ready (or not)"""
 
     Starting = "Starting"
     Ready = "Ready"
 
 
-class FlightPlanCloseResultEnum(str, enum.Enum):
-    Closed = "Closed"
-    Failed = "Failed"
-
-
-class FlightPlanAdvisoriesEnum(str, enum.Enum):
+class AdvisoryInclusion(str, enum.Enum):
     Unknown = "Unknown"
-    Yes = "AtLeastOneAdvisoryOrCondition"
-    No = "NoAdvisoriesOrConditions"
+    AtLeastOneAdvisoryOrCondition = "AtLeastOneAdvisoryOrCondition"
+    NoAdvisoriesOrConditions = "NoAdvisoriesOrConditions"
 
 
-class FlightPlanProcessingResultEnum(str, enum.Enum):
+class FlightPlanProcessingResult(str, enum.Enum):
     NotPlanned = "NotPlanned"
     Planned = "Planned"
     OkToFly = "OkToFly"
@@ -42,21 +37,23 @@ class PlanningActivityResult(str, enum.Enum):
 
 @dataclass
 class CloseFlightPlanResponse:
-    flight_plan_status: FlightPlanCloseResultEnum
-    notes: str
+    planning_result: PlanningActivityResult
+    notes: Optional[str]
+    flight_plan_status: FlightPlanProcessingResult
+    includes_advisories: Optional[AdvisoryInclusion]
 
 
 @dataclass
 class UpsertFlightPlanResponse:
-    flight_plan_status: FlightPlanProcessingResultEnum
+    flight_plan_status: FlightPlanProcessingResult
     notes: str
-    includes_advisories: FlightPlanAdvisoriesEnum
+    includes_advisories: Optional[AdvisoryInclusion]
     planning_result: PlanningActivityResult
 
 
 @dataclass
 class FlightPlanningTestStatus:
-    status: FlightPlanningStatusResponseEnum
+    status: FlightPlanningStatusResponse
     system_version: str
     api_name: str
     api_version: str
@@ -96,6 +93,7 @@ class FlightProfile(Enum):
 class UsageState(Enum):
     Planned = "Planned"
     InUse = "InUse"
+    Closed = "Closed"
 
 
 class OperationCategory(Enum):
@@ -109,6 +107,7 @@ class UasState(Enum):
     Nominal = "Nominal"
     OffNominal = "OffNominal"
     Contingent = "Contingent"
+    NotSpecified = "NotSpecified"
 
 
 class OperationMode(Enum):
@@ -161,8 +160,7 @@ class FlightAuthorisationData:
 class BasicFlightPlanInformation:
     usage_state: UsageState
     uas_state: UasState
-    nominal_area: Optional[List[Volume4D]]
-    off_nominal_area: Optional[List[Volume4D]]
+    area: Optional[List[Volume4D]]
 
 
 @dataclass
@@ -204,7 +202,9 @@ class FlightPlanningInjectionData:
     volumes: Optional[List[Volume4D]]
     priority: int
     off_nominal_volumes: Optional[List[Volume4D]]
-    state: UasState
+    uas_state: UasState
+    usage_state: UsageState
+    state: str
 
 
 @dataclass

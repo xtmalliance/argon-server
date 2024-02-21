@@ -1,4 +1,5 @@
 import json
+import logging
 from enum import Enum
 from typing import List
 
@@ -10,13 +11,14 @@ from rid_operations import rtree_helper
 
 from .dss_scd_helper import OperationalIntentReferenceHelper, VolumesConverter
 from .flight_planning_data_definitions import (
+    AdvisoryInclusion,
     ASTMF354821OpIntentInformation,
     BasicFlightPlanInformation,
+    CloseFlightPlanResponse,
     FlightAuthorisationData,
     FlightPlan,
-    FlightPlanAdvisoriesEnum,
     FlightPlanningRequest,
-    FlightPlanProcessingResultEnum,
+    FlightPlanProcessingResult,
     PlanningActivityResult,
     RPAS26FlightDetails,
     UpsertFlightPlanResponse,
@@ -26,6 +28,8 @@ from .scd_data_definitions import (
     TestInjectionResultState,
     Volume4D,
 )
+
+logger = logging.getLogger("django")
 
 # Set the responses to be used
 failed_test_injection_response = TestInjectionResult(
@@ -56,37 +60,51 @@ ready_to_fly_injection_response = TestInjectionResult(
 
 # Flight Planning responses
 not_supported_planning_response = UpsertFlightPlanResponse(
-    flight_plan_status=FlightPlanProcessingResultEnum.NotPlanned,
+    flight_plan_status=FlightPlanProcessingResult.NotPlanned,
     notes="Flight Plan action is not supported",
-    includes_advisories=FlightPlanAdvisoriesEnum.No,
+    includes_advisories=AdvisoryInclusion.Unknown,
     planning_result=PlanningActivityResult.NotSupported,
 )
 planned_planning_response = UpsertFlightPlanResponse(
-    flight_plan_status=FlightPlanProcessingResultEnum.Planned,
+    flight_plan_status=FlightPlanProcessingResult.Planned,
     notes="Flight Plan successfully processed and flight planned",
-    includes_advisories=FlightPlanAdvisoriesEnum.No,
+    includes_advisories=AdvisoryInclusion.Unknown,
     planning_result=PlanningActivityResult.Completed,
 )
 
 ready_to_fly_planning_response = UpsertFlightPlanResponse(
-    flight_plan_status=FlightPlanProcessingResultEnum.OkToFly,
+    flight_plan_status=FlightPlanProcessingResult.OkToFly,
     notes="Flight is ready to fly",
-    includes_advisories=FlightPlanAdvisoriesEnum.No,
+    includes_advisories=AdvisoryInclusion.Unknown,
     planning_result=PlanningActivityResult.Completed,
 )
 
 not_planned_planning_response = UpsertFlightPlanResponse(
-    flight_plan_status=FlightPlanProcessingResultEnum.NotPlanned,
+    flight_plan_status=FlightPlanProcessingResult.NotPlanned,
     notes="Flight Planning could not plan this flight",
-    includes_advisories=FlightPlanAdvisoriesEnum.No,
+    includes_advisories=AdvisoryInclusion.Unknown,
     planning_result=PlanningActivityResult.Rejected,
 )
 
 failed_planning_response = UpsertFlightPlanResponse(
-    flight_plan_status=FlightPlanProcessingResultEnum.NotPlanned,
+    flight_plan_status=FlightPlanProcessingResult.NotPlanned,
     notes="Flight Planning failed to process this flight",
-    includes_advisories=FlightPlanAdvisoriesEnum.No,
+    includes_advisories=AdvisoryInclusion.Unknown,
     planning_result=PlanningActivityResult.Failed,
+)
+
+flight_planning_deletion_success_response = CloseFlightPlanResponse(
+    planning_result=PlanningActivityResult.Completed,
+    notes="The flight was closed successfully by the USS and is now out of the UTM system.",
+    flight_plan_status=FlightPlanProcessingResult.Closed,
+    includes_advisories=AdvisoryInclusion.Unknown,
+)
+
+flight_planning_deletion_failure_response = CloseFlightPlanResponse(
+    planning_result=PlanningActivityResult.Failed,
+    notes="The flight plan was not deleted by the system",
+    flight_plan_status=FlightPlanProcessingResult.Closed,
+    includes_advisories=AdvisoryInclusion.Unknown,
 )
 
 
@@ -143,6 +161,34 @@ class SCDTestHarnessHelper:
             all_checks.append(are_polygons_same)
 
         return all(all_checks)
+
+
+class FlightPlantoOperationalIntentProcessor:
+    def __init__(self, flight_planning_request: FlightPlanningRequest):
+        self.flight_planning_request = flight_planning_request
+
+    def generate_operational_intent_state_from_planning_information(self, current_state: str = None):
+        logger.info("********************************")
+        logger.info(self.flight_planning_request.intended_flight.basic_information.uas_state.value)
+        logger.info(self.flight_planning_request.intended_flight.basic_information.usage_state.value)
+        logger.info("********************************")
+        if (
+            self.flight_planning_request.intended_flight.basic_information.uas_state.value == "Nominal"
+            and self.flight_planning_request.intended_flight.basic_information.usage_state.value == "Planned"
+        ):
+            operational_intent_state = "Accepted"
+        elif (
+            self.flight_planning_request.intended_flight.basic_information.uas_state.value == "Nominal"
+            and self.flight_planning_request.intended_flight.basic_information.usage_state.value == "InUse"
+        ):
+            operational_intent_state = "Activated"
+        elif (
+            self.flight_planning_request.intended_flight.basic_information.uas_state.value == "OffNominal"
+            and self.flight_planning_request.intended_flight.basic_information.usage_state.value == "InUse"
+        ):
+            operational_intent_state = "Nonconforming"
+
+        return operational_intent_state
 
 
 class FlightPlanningDataProcessor:
