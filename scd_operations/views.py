@@ -59,7 +59,6 @@ from .scd_test_harness_helper import (
     flight_planning_deletion_failure_response,
     flight_planning_deletion_success_response,
     not_planned_planning_response,
-    not_supported_planning_response,
     planned_planning_response,
     planned_test_injection_response,
     ready_to_fly_injection_response,
@@ -598,7 +597,7 @@ def upsert_close_flight_plan(request, flight_plan_id):
     # Parse the incoming flight planning data
 
     r = get_redis()
-    flight_details_storage = "flight_details:" + str(flight_plan_id)
+    # flight_details_storage = "flight_details:" + str(flight_plan_id)
     my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
     my_scd_dss_helper = dss_scd_helper.SCDOperations()
     my_geo_json_converter = dss_scd_helper.VolumesConverter()

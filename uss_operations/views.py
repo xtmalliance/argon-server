@@ -5,7 +5,6 @@ from dataclasses import asdict, is_dataclass
 from uuid import UUID
 
 import arrow
-from dacite import from_dict
 from django.http import JsonResponse
 from dotenv import find_dotenv, load_dotenv
 from rest_framework.decorators import api_view
@@ -43,7 +42,6 @@ from .uss_data_definitions import (
     OperationalIntentUSSDetails,
     OperatorDetailsSuccessResponse,
     Time,
-    UpdateChangedOpIntDetailsPost,
     UpdateOperationalIntent,
 )
 
@@ -75,9 +73,9 @@ def uss_update_opint_details(request):
     # Get notifications from peer uss re changed operational intent details https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/astm-utm/Protocol/cb7cf962d3a0c01b5ab12502f5f54789624977bf/utm.yaml#tag/p2p_utm/operation/notifyOperationalIntentDetailsChanged
 
     # my_geo_json_converter = dss_scd_helper.VolumesConverter()
-    op_int_update_details_data = request.data
+    # op_int_update_details_data = request.data
     # r = get_redis()
-    op_int_update_detail = from_dict(data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data)
+    # op_int_update_detail = from_dict(data_class=UpdateChangedOpIntDetailsPost, data=op_int_update_details_data)
     # my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
     # Write the operational Intent
     # operation_id_str = op_int_update_detail.operational_intent_id
