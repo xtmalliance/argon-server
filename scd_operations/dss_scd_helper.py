@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 import arrow
 import requests
 import shapely.geometry
-
+import urllib3
 from dotenv import find_dotenv, load_dotenv
 from pyproj import Proj
 from shapely.geometry import Point, Polygon
@@ -18,14 +18,16 @@ from shapely.ops import unary_union
 from auth_helper import dss_auth_helper
 from auth_helper.common import get_redis
 from common.auth_token_audience_helper import generate_audience_from_base_url
-from common.data_definitions import FLIGHT_OPINT_KEY
+from common.data_definitions import FLIGHT_OPINT_KEY, VALID_OPERATIONAL_INTENT_STATES
 from rid_operations import rtree_helper
 
+from .flight_planning_data_definitions import FlightPlanningInjectionData
 from .scd_data_definitions import (
     Altitude,
     Circle,
     CommonDSS2xxResponse,
     CommonDSS4xxResponse,
+    CommonPeer9xxResponse,
     DeleteOperationalIntentConstuctor,
     DeleteOperationalIntentResponse,
     DeleteOperationalIntentResponseSuccess,
@@ -77,6 +79,40 @@ def is_time_within_time_period(start_time: datetime, end_time: datetime, time_to
         return time_to_check >= start_time or time_to_check <= end_time
 
 
+class FlightPlanningDataValidator:
+    def __init__(self, incoming_flight_planning_data: FlightPlanningInjectionData):
+        self.flight_planning_data = incoming_flight_planning_data
+
+    def validate_flight_planning_state(self):
+        try:
+            assert self.flight_planning_data.uas_state in [
+                "Nominal",
+                "OffNominal",
+                "Contingent",
+                "NotSpecified",
+            ]
+        except AssertionError as ae:
+            logger.error(ae)
+            return False
+        else:
+            return True
+
+    def validate_flight_planning_off_nominals(self):
+        if self.flight_planning_data.usage_state in ["Planned", "InUse"] and bool(self.flight_planning_data.off_nominal_volumes):
+            return False
+        else:
+            return True
+
+    def validate_flight_planning_test_data(self) -> bool:
+        flight_planning_test_data_ok = []
+        flight_planning_state_ok = self.validate_flight_planning_state()
+        flight_planning_off_nominals_ok = self.validate_flight_planning_off_nominals()
+        flight_planning_test_data_ok.append(flight_planning_state_ok)
+        flight_planning_test_data_ok.append(flight_planning_off_nominals_ok)
+
+        return all(flight_planning_test_data_ok)
+
+
 class OperationalIntentValidator:
     def __init__(self, operational_intent_data: OperationalIntentTestInjection):
         self.operational_intent_data = operational_intent_data
@@ -107,6 +143,38 @@ class OperationalIntentValidator:
         operational_intent_test_data_ok.append(operational_intent_state_ok)
         operational_intent_test_data_ok.append(state_off_nominals_ok)
         return all(operational_intent_test_data_ok)
+
+
+class PeerOperationalIntentValidator:
+    """This class validates operational intent data received from a peer USS"""
+
+    def validate_individual_operational_intent(self, operational_intent: OperationalIntentDetailsUSSResponse) -> bool:
+        all_checks_passed: List[bool] = []
+        try:
+            assert operational_intent.reference.state in VALID_OPERATIONAL_INTENT_STATES
+        except AssertionError:
+            logger.debug("Error in received operational intent state, the state declared is invalid: %s" % operational_intent.reference.state)
+            all_checks_passed.append(False)
+        else:
+            all_checks_passed.append(True)
+
+        try:
+            assert isinstance(operational_intent.details.priority, int)
+        except AssertionError:
+            logger.debug("Error in received operational intent priority, it is not one an integer %s" % operational_intent.details.priority)
+            all_checks_passed.append(False)
+        else:
+            all_checks_passed.append(True)
+
+        return all(all_checks_passed)
+
+    def validate_nearby_operational_intents(self, nearby_operational_intents: List[OperationalIntentDetailsUSSResponse]) -> bool:
+        all_nearby_operational_intents_valid: List[bool] = []
+
+        for nearby_operational_intent in nearby_operational_intents:
+            operational_intent_valid = self.validate_individual_operational_intent(operational_intent=nearby_operational_intent)
+            all_nearby_operational_intents_valid.append(operational_intent_valid)
+        return all(all_nearby_operational_intents_valid)
 
 
 class VolumesValidator:
@@ -587,7 +655,18 @@ class SCDOperations:
                     logger.debug("Querying USS: {current_uss_base_url}".format(current_uss_base_url=current_uss_base_url))
                     try:
                         uss_operational_intent_request = requests.get(uss_operational_intent_url, headers=uss_headers)
-                    except Exception as e:
+                    except urllib3.exceptions.NameResolutionError:
+                        logger.info("URLLIB error")
+                        raise ConnectionError("Could not reach peer USS.. ")
+
+                    except (
+                        requests.exceptions.ConnectTimeout,
+                        requests.exceptions.HTTPError,
+                        requests.exceptions.ReadTimeout,
+                        requests.exceptions.Timeout,
+                        requests.exceptions.ConnectionError,
+                    ) as e:
+                        logger.error("Error details %s " % e)
                         logger.error(
                             "Error in getting operational intent id {uss_op_int_id} details from uss with base url {uss_base_url}".format(
                                 uss_op_int_id=current_uss_operational_intent_detail.id,
@@ -595,7 +674,9 @@ class SCDOperations:
                             )
                         )
                         op_int_details_retrieved = False
-                        logger.error("Error details %s " % e)
+                        logger.info("Raising connection Error 1")
+                        raise ConnectionError("Could not reach peer USS.. ")
+
                     else:
                         # Verify status of the response from the USS
                         if uss_operational_intent_request.status_code == 200:
@@ -721,10 +802,24 @@ class SCDOperations:
             delete_op_int_status = DeleteOperationalIntentResponse(dss_response=dss_response, status=500, message=common_400_response)
         return delete_op_int_status
 
-    def get_and_process_nearby_operational_intents(self, volumes: List[Volume4D]):
+    def get_and_process_nearby_operational_intents(self, volumes: List[Volume4D]) -> Union[dict, bool]:
         """This method processes the downloaded operational intents in to a GeoJSON object"""
         feat_collection = {"type": "FeatureCollection", "features": []}
-        all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        try:
+            all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        except ConnectionError:
+            raise ConnectionError("Could not reach peer USS for querying operational intent data")
+
+        my_peer_uss_data_validator = PeerOperationalIntentValidator()
+        all_received_intents_valid = my_peer_uss_data_validator.validate_nearby_operational_intents(nearby_operational_intents=all_uss_op_int_details)
+        logger.info(
+            "Validation processing completed for all received operational intents, result: {validation_status}".format(
+                validation_status=all_received_intents_valid
+            )
+        )
+        if not all_received_intents_valid:
+            raise ValueError("Error in validating received data, cannot progress with processing")
+
         for uss_op_int_detail in all_uss_op_int_details:
             operational_intent_volumes = uss_op_int_detail.details.volumes
             my_volume_converter = VolumesConverter()
@@ -734,10 +829,25 @@ class SCDOperations:
 
         return feat_collection
 
-    def get_latest_airspace_volumes(self, volumes: List[Volume4D]) -> List[OpInttoCheckDetails]:
+    def get_latest_airspace_volumes(self, volumes: List[Volume4D]) -> Union[list, List[OpInttoCheckDetails], bool]:
         # This method checks if a flight volume has conflicts with any other volume in the airspace
         all_opints_to_check = []
-        all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        try:
+            all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        except ConnectionError:
+            logger.info("Raising Connection Error 2")
+            raise ConnectionError("Could not reach peer USS for querying operational intent data")
+
+        my_peer_uss_data_validator = PeerOperationalIntentValidator()
+        all_received_intents_valid = my_peer_uss_data_validator.validate_nearby_operational_intents(nearby_operational_intents=all_uss_op_int_details)
+        logger.info(
+            "Validation processing completed for all received operational intents, result: {validation_status}".format(
+                validation_status=all_received_intents_valid
+            )
+        )
+        if not all_received_intents_valid:
+            raise ValueError("Error in validating received data, cannot progress with processing")
+
         for uss_op_int_detail in all_uss_op_int_details:
             if uss_op_int_detail.details.off_nominal_volumes:
                 operational_intent_volumes = uss_op_int_detail.details.off_nominal_volumes
@@ -909,7 +1019,22 @@ class SCDOperations:
             key=[],
         )
         # Get the latest airspace volumes
-        all_existing_operational_intent_details_full = self.get_latest_airspace_volumes(volumes=extents)
+        try:
+            all_existing_operational_intent_details_full = self.get_latest_airspace_volumes(volumes=extents)
+        except ValueError:
+            # Update unsuccessful, problems with processing peer USS volumes
+            d_r = CommonPeer9xxResponse(message="Error in validating received operational intents from peer USS")
+            message = "Error in updating operational intent in the DSS, peer USS shared invalid data"
+            opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status=999, message=message)
+            return opint_update_result
+        except ConnectionError:
+            logger.info("Raising Connection Error 3")
+            # Update unsuccessful, problems with processing peer USS volumes
+            d_r = CommonPeer9xxResponse(message="Error in validating received operational intents from peer USS")
+            message = "Error in updating operational intent in the DSS, peer USS shared invalid data"
+            opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status=408, message=message)
+            return opint_update_result
+
         all_existing_operational_intent_details = self.process_retrieved_airspace_volumes(
             all_existing_operational_intent_details_full=all_existing_operational_intent_details_full,
             operational_intent_ref_id=operational_intent_ref_id,
@@ -1035,9 +1160,34 @@ class SCDOperations:
         )
         # Query other USSes for operational intent
         # Check if there are conflicts (or not)
-        logger.info("Checking flight deconfliction status...")
+        logger.info("Checking flight de-confliction status...")
         # Get all operational intents in the area
-        all_existing_operational_intent_details = self.get_latest_airspace_volumes(volumes=volumes)
+
+        try:
+            all_existing_operational_intent_details = self.get_latest_airspace_volumes(volumes=volumes)
+        except ValueError:
+            logger.info("Error in processing peer USS data, cannot create a new operational intent..")
+            d_r = OperationalIntentSubmissionStatus(
+                status="peer_uss_data_sharing_issue",
+                status_code=900,
+                message="Error in processing peer USS data, cannot create a new operational intent",
+                dss_response={},
+                operational_intent_id="",
+            )
+            return d_r
+
+        except ConnectionError:
+            logger.info("Raising Connection Error 4")
+            logger.info("Error in processing peer USS data, cannot create a new operational intent..")
+            d_r = OperationalIntentSubmissionStatus(
+                status="peer_uss_data_sharing_issue",
+                status_code=408,
+                message="Error in processing peer USS data, cannot create a new operational intent",
+                dss_response={},
+                operational_intent_id="",
+            )
+            return d_r
+
         logger.info(
             "Found {all_existing_operational_intent_details} operational intent references in the DSS".format(
                 all_existing_operational_intent_details=len(all_existing_operational_intent_details)

@@ -25,12 +25,14 @@ OPERATION_TYPES = (
 )
 
 
-# When an operator changes a statem, he / she puts a new state (via the API), this object specifies the event when a operator takes action
+# When an operator changes a state, he / she puts a new state (via the API), this object specifies the event when a operator takes action
 OPERATOR_EVENT_LOOKUP = {
     5: "operator_confirms_ended",
     2: "operator_activates",
     4: "operator_initiates_contingent",
 }
+
+VALID_OPERATIONAL_INTENT_STATES = ["Accepted", "Activated", "Nonconforming", "Contingent"]
 
 
 FLIGHT_OPINT_KEY = "flight_opint."

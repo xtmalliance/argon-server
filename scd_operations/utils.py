@@ -1,7 +1,18 @@
+import json
 import logging
 from itertools import cycle
 
+import arrow
+
+from auth_helper.common import get_redis
+from rid_operations import rtree_helper
+
+from . import dss_scd_helper
+from .scd_data_definitions import ClearAreaResponse, ClearAreaResponseOutcome
+
 logger = logging.getLogger("django")
+
+INDEX_NAME = "opint_proc"
 
 
 class UAVSerialNumberValidator:
@@ -176,3 +187,68 @@ class OperatorRegistrationNumberValidator:
             return False
 
         return True
+
+
+class DSSAreaClearHandler:
+    def __init__(self, request_id):
+        self.request_id = request_id
+
+    def clear_area_request(self, extent_raw) -> ClearAreaResponse:
+        r = get_redis()
+        # Convert the extent to V4D
+        # my_redis_helper = RedisHelper()
+        # my_redis_helper.delete_all_opints()
+
+        # Create a list of Volume4D objects
+        my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
+        volume4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=extent_raw)
+        my_geo_json_converter = dss_scd_helper.VolumesConverter()
+
+        my_geo_json_converter.convert_volumes_to_geojson(volumes=[volume4D])
+        view_rect_bounds = my_geo_json_converter.get_bounds()
+        my_rtree_helper = rtree_helper.OperationalIntentsIndexFactory(index_name=INDEX_NAME)
+        my_rtree_helper.generate_operational_intents_index(pattern="flight_opint.*")
+        op_ints_exist = my_rtree_helper.check_op_ints_exist()
+        all_existing_op_ints_in_area = []
+        if op_ints_exist:
+            all_existing_op_ints_in_area = my_rtree_helper.check_box_intersection(view_box=view_rect_bounds)
+
+        all_deletion_requests_status = []
+        if all_existing_op_ints_in_area:
+            for flight_details in all_existing_op_ints_in_area:
+                if flight_details:
+                    deletion_success = False
+                    operation_id = flight_details["flight_id"]
+                    op_int_details_key = "flight_opint." + operation_id
+                    if r.exists(op_int_details_key):
+                        op_int_detail_raw = r.get(op_int_details_key)
+                        my_scd_dss_helper = dss_scd_helper.SCDOperations()
+                        # op_int_detail_raw = op_int_details.decode()
+                        op_int_detail = json.loads(op_int_detail_raw)
+                        ovn = op_int_detail["success_response"]["operational_intent_reference"]["ovn"]
+                        opint_id = op_int_detail["success_response"]["operational_intent_reference"]["id"]
+                        ovn_opint = {"ovn_id": ovn, "opint_id": opint_id}
+                        logger.info("Deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
+
+                        deletion_request = my_scd_dss_helper.delete_operational_intent(dss_operational_intent_ref_id=opint_id, ovn=ovn)
+
+                        if deletion_request.status == 200:
+                            logger.info("Success in deleting operational intent {opint_id} with ovn {ovn_id}".format(**ovn_opint))
+                            deletion_success = True
+                        all_deletion_requests_status.append(deletion_success)
+            clear_area_status = ClearAreaResponseOutcome(
+                success=all(all_deletion_requests_status),
+                message="All operational intents in the area cleared successfully",
+                timestamp=arrow.now().isoformat(),
+            )
+
+        else:
+            clear_area_status = ClearAreaResponseOutcome(
+                success=True,
+                message="All operational intents in the area cleared successfully",
+                timestamp=arrow.now().isoformat(),
+            )
+        my_rtree_helper.clear_rtree_index(pattern="flight_opint.*")
+        clear_area_response = ClearAreaResponse(outcome=clear_area_status)
+
+        return clear_area_response
