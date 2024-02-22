@@ -9,6 +9,7 @@ from typing import List, Optional, Union
 import arrow
 import requests
 import shapely.geometry
+import urllib3
 from dotenv import find_dotenv, load_dotenv
 from pyproj import Proj
 from shapely.geometry import Point, Polygon
@@ -654,7 +655,18 @@ class SCDOperations:
                     logger.debug("Querying USS: {current_uss_base_url}".format(current_uss_base_url=current_uss_base_url))
                     try:
                         uss_operational_intent_request = requests.get(uss_operational_intent_url, headers=uss_headers)
-                    except Exception as e:
+                    except urllib3.exceptions.NameResolutionError:
+                        logger.info("URLLIB error")
+                        raise ConnectionError("Could not reach peer USS.. ")
+
+                    except (
+                        requests.exceptions.ConnectTimeout,
+                        requests.exceptions.HTTPError,
+                        requests.exceptions.ReadTimeout,
+                        requests.exceptions.Timeout,
+                        requests.exceptions.ConnectionError,
+                    ) as e:
+                        logger.error("Error details %s " % e)
                         logger.error(
                             "Error in getting operational intent id {uss_op_int_id} details from uss with base url {uss_base_url}".format(
                                 uss_op_int_id=current_uss_operational_intent_detail.id,
@@ -662,7 +674,9 @@ class SCDOperations:
                             )
                         )
                         op_int_details_retrieved = False
-                        logger.error("Error details %s " % e)
+                        logger.info("Raising connection Error 1")
+                        raise ConnectionError("Could not reach peer USS.. ")
+
                     else:
                         # Verify status of the response from the USS
                         if uss_operational_intent_request.status_code == 200:
@@ -791,7 +805,11 @@ class SCDOperations:
     def get_and_process_nearby_operational_intents(self, volumes: List[Volume4D]) -> Union[dict, bool]:
         """This method processes the downloaded operational intents in to a GeoJSON object"""
         feat_collection = {"type": "FeatureCollection", "features": []}
-        all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        try:
+            all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        except ConnectionError:
+            raise ConnectionError("Could not reach peer USS for querying operational intent data")
+
         my_peer_uss_data_validator = PeerOperationalIntentValidator()
         all_received_intents_valid = my_peer_uss_data_validator.validate_nearby_operational_intents(nearby_operational_intents=all_uss_op_int_details)
         logger.info(
@@ -814,7 +832,12 @@ class SCDOperations:
     def get_latest_airspace_volumes(self, volumes: List[Volume4D]) -> Union[list, List[OpInttoCheckDetails], bool]:
         # This method checks if a flight volume has conflicts with any other volume in the airspace
         all_opints_to_check = []
-        all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        try:
+            all_uss_op_int_details = self.get_nearby_operational_intents(volumes=volumes)
+        except ConnectionError:
+            logger.info("Raising Connection Error 2")
+            raise ConnectionError("Could not reach peer USS for querying operational intent data")
+
         my_peer_uss_data_validator = PeerOperationalIntentValidator()
         all_received_intents_valid = my_peer_uss_data_validator.validate_nearby_operational_intents(nearby_operational_intents=all_uss_op_int_details)
         logger.info(
@@ -997,13 +1020,19 @@ class SCDOperations:
         )
         # Get the latest airspace volumes
         try:
-            print("here222")
             all_existing_operational_intent_details_full = self.get_latest_airspace_volumes(volumes=extents)
         except ValueError:
             # Update unsuccessful, problems with processing peer USS volumes
             d_r = CommonPeer9xxResponse(message="Error in validating received operational intents from peer USS")
             message = "Error in updating operational intent in the DSS, peer USS shared invalid data"
             opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status=999, message=message)
+            return opint_update_result
+        except ConnectionError:
+            logger.info("Raising Connection Error 3")
+            # Update unsuccessful, problems with processing peer USS volumes
+            d_r = CommonPeer9xxResponse(message="Error in validating received operational intents from peer USS")
+            message = "Error in updating operational intent in the DSS, peer USS shared invalid data"
+            opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status=408, message=message)
             return opint_update_result
 
         all_existing_operational_intent_details = self.process_retrieved_airspace_volumes(
@@ -1141,6 +1170,18 @@ class SCDOperations:
             d_r = OperationalIntentSubmissionStatus(
                 status="peer_uss_data_sharing_issue",
                 status_code=900,
+                message="Error in processing peer USS data, cannot create a new operational intent",
+                dss_response={},
+                operational_intent_id="",
+            )
+            return d_r
+
+        except ConnectionError:
+            logger.info("Raising Connection Error 4")
+            logger.info("Error in processing peer USS data, cannot create a new operational intent..")
+            d_r = OperationalIntentSubmissionStatus(
+                status="peer_uss_data_sharing_issue",
+                status_code=408,
                 message="Error in processing peer USS data, cannot create a new operational intent",
                 dss_response={},
                 operational_intent_id="",

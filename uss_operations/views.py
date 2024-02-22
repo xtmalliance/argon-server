@@ -2,13 +2,11 @@ import json
 import logging
 import time
 from dataclasses import asdict, is_dataclass
-
 from uuid import UUID
 
 import arrow
 from dacite import from_dict
 from django.http import JsonResponse
-
 from dotenv import find_dotenv, load_dotenv
 from rest_framework.decorators import api_view
 from shapely.geometry import Point
@@ -85,7 +83,7 @@ def uss_update_opint_details(request):
     # operation_id_str = op_int_update_detail.operational_intent_id
     # op_int_details_key = "flight_opint." + operation_id_str
     logger.info("incoming...")
-    logger.info(op_int_update_detail)
+    # logger.info(op_int_update_detail)
     # operational_intent_reference = op_int_update_detail.operational_intent.reference
     # operational_intent_details = op_int_update_detail.operational_intent.details
     # volumes = operational_intent_details.volumes

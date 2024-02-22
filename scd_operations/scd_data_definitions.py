@@ -333,6 +333,12 @@ class OperationalIntentDetailsUSSResponse:
 
 
 @dataclass
+class PeerUSSUnavailableResponse:
+    message: str
+    status: int
+
+
+@dataclass
 class LatLng:
     lat: float
     lng: float
@@ -389,6 +395,11 @@ class DeleteOperationalIntentResponseSuccess:
 
 @dataclass
 class CommonPeer9xxResponse:
+    message: str
+
+
+@dataclass
+class CommonPeer4xxResponse:
     message: str
 
 

@@ -342,6 +342,9 @@ def network_flight_declaration_details(request, flight_declaration_id):
     except ValueError:
         logger.info("The received data from peer USS had errors and failed validation checks..")
         operational_intent_geojson = []
+    except ConnectionError:
+        logger.info("The received data from peer USS had errors and failed validation checks..")
+        operational_intent_geojson = []
 
     # return opints as GeoJSON
     return HttpResponse(

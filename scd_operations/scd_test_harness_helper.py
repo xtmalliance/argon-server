@@ -168,10 +168,10 @@ class FlightPlantoOperationalIntentProcessor:
         self.flight_planning_request = flight_planning_request
 
     def generate_operational_intent_state_from_planning_information(self, current_state: str = None):
-        logger.info("********************************")
-        logger.info(self.flight_planning_request.intended_flight.basic_information.uas_state.value)
-        logger.info(self.flight_planning_request.intended_flight.basic_information.usage_state.value)
-        logger.info("********************************")
+        logger.debug("********************************")
+        logger.debug(self.flight_planning_request.intended_flight.basic_information.uas_state.value)
+        logger.debug(self.flight_planning_request.intended_flight.basic_information.usage_state.value)
+        logger.debug("********************************")
         if (
             self.flight_planning_request.intended_flight.basic_information.uas_state.value == "Nominal"
             and self.flight_planning_request.intended_flight.basic_information.usage_state.value == "Planned"

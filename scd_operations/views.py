@@ -889,10 +889,19 @@ def upsert_close_flight_plan(request, flight_plan_id):
                 )
 
             elif flight_planning_submission.status in ["failure", "peer_uss_data_sharing_issue"]:
-                return Response(
-                    json.loads(json.dumps(asdict(failed_planning_response), cls=EnhancedJSONEncoder)),
-                    status=status.HTTP_200_OK,
-                )
+                logger.info(flight_planning_submission.status_code)
+                if flight_planning_submission.status_code == 408:
+                    print("&&&&")
+                    return Response(
+                        json.loads(json.dumps(asdict(not_planned_planning_response), cls=EnhancedJSONEncoder)),
+                        status=status.HTTP_200_OK,
+                    )
+
+                else:
+                    return Response(
+                        json.loads(json.dumps(asdict(failed_planning_response), cls=EnhancedJSONEncoder)),
+                        status=status.HTTP_200_OK,
+                    )
 
             if scd_test_data.intended_flight.basic_information.usage_state == " Planned":
                 return Response(
