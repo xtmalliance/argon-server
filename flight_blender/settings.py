@@ -101,8 +101,8 @@ DATABASES = {
     }
 }
 DATABASES = {}
-USING_DOCKER_COMPOSE = os.getenv("USING_DOCKER_COMPOSE", 0)
-if USING_DOCKER_COMPOSE:
+USE_LOCAL_SQLITE_DATABASE = os.getenv("USE_LOCAL_SQLITE_DATABASE", 0)
+if USE_LOCAL_SQLITE_DATABASE:
     DATABASES = {
         "default": {
             "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
