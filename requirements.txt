@@ -5,7 +5,7 @@ redis==4.4.4
 walrus==0.9.2
 celery==5.3.4
 requests==2.31.0
-python-dotenv==0.19.2
+python-dotenv==1.0.1
 pyproj==3.3.1
 pandas==2.0.3
 Shapely==1.8.5
