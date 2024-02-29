@@ -390,6 +390,16 @@ def traffic_information_discovery_view(request):
             content_type="application/json",
         )
 
+    data_format = request.query_params.get("format", None)
+
+    if data_format and data_format == "asterix":
+        incorrect_parameters = {"message": "A format query parameter can only be 'mavlink' since 'asterix' is not supported. "}
+        return JsonResponse(
+            json.loads(json.dumps(incorrect_parameters)),
+            status=400,
+            content_type="application/json",
+        )
+
     traffic_information_url = env.get("TRAFFIC_INFORMATION_URL", "https://not_implemented_yet")
 
     traffic_information_discovery_response = TrafficInformationDiscoveryResponse(
