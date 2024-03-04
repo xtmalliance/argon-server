@@ -36,7 +36,7 @@ Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
 
 To visualize flight tracking data you can use a complementary application like [Flight Spotlight](https://github.com/openutm/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
 
-![OpenskiesStack](images/openskies-stack.png)
+![OpenUTMStack](images/openutm-stack.png)
 
 ## Technical details
 
