@@ -32,7 +32,7 @@ Refer to the [deployment](https://github.com/openutm/deployment) repository to s
 
 Join our Discord community via [this link](https://discord.gg/dnRxpZdd9a) 💫
 
-## Openskies stack
+## OpenUTM stack
 
 To visualize flight tracking data you can use a complementary application like [Flight Spotlight](https://github.com/openutm/flight-spotlight). To submit data like Geofences etc. into Flight Blender beyond the API you can use the user interface provided by Spotlight, for more information see the diagram below.
 
