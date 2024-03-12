@@ -540,166 +540,6 @@ paths:
         in: path
         required: true
 
-  /scd/v1/clear_area_requests:
-    post:
-      security:
-        - AuthFromAuthorizationAuthority:
-            - utm.inject_test_data
-
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClearAreaRequest'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ClearAreaResponse'
-          description: Requested area was cleared successfully
-        '401':
-          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
-        '403':
-          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
-
-      summary: Clear area
-      operationId: ClearArea
-      description: >-
-        This endpoint requests that the USS cancel and remove all flights in the specified area and is used in the SCD Qualifier tool.
-      tags:
-        - scd-qualifier
-  /scd/v1/status:
-    get:
-      security:
-        - AuthFromAuthorizationAuthority:
-            - utm.inject_test_data
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StatusResponse'
-          description: >-
-            Flight Blender's automated testing interface is activated and its status was retrieved successfully.
-        '401':
-          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
-        '403':
-          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
-        '404':
-          description: Blender's testing interface is not activated.
-      summary: Retrieve the status of Fight Blender's automated testing interface
-      description: Get the status of of Fight Blender's automated testing interface
-      tags:
-        - scd-qualifier
-
-  /scd/v1/capabilities:
-    get:
-      security:
-      - AuthFromAuthorizationAuthority:
-          - utm.inject_test_data
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CapabilitiesResponse'
-          description: >-
-            The capabilities of Flight Blender which is under test
-        '401':
-          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
-        '403':
-          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
-      summary: Retrieve the SCD testing capabilities of Blender
-      description: Retrieve the capabilities of the USS under test
-      tags:
-        - scd-qualifier
-
-  # /uss/v1/operational_intents:
-  #   post:
-  #     operationId: createUSSUpdateOpIntDetails
-  #     description: ''
-  #     parameters: []
-  #     requestBody:
-  #       content:
-  #         application/json:
-  #           schema: {}
-  #         application/x-www-form-urlencoded:
-  #           schema: {}
-  #         multipart/form-data:
-  #           schema: {}
-  #     responses:
-  #       '201':
-  #         content:
-  #           application/json:
-  #             schema: {}
-  #         description: ''
-  #     tags:
-  #       - uss
-
-  /scd/v1/flights/{flight_id}:
-    parameters:
-      - name: flight_id
-        in: path
-        required: true
-        description: A UUID string identifying the injected flight.
-        schema:
-          $ref: '#/components/schemas/UUIDv4Format'
-
-    put:
-      security:
-        - AuthFromAuthorizationAuthority:
-            - utm.inject_test_data
-
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InjectFlightRequest'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InjectFlightResponse'
-          description: Requested data was processed successfully
-        '401':
-          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
-        '403':
-          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
-      summary: Inject flight
-      operationId: injectFlight
-      description: >-
-        This endpoint simulates the operator intention to submit a flight operation / flight request.
-      tags:
-        - scd-qualifier
-
-    delete:
-      security:
-        - AuthFromAuthorizationAuthority:
-            - utm.inject_test_data
-
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeleteFlightResponse'
-          description: Flight was deleted from the system successfully
-        '401':
-          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
-        '403':
-          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
-
-      summary: Delete flight
-      operationId: DeleteFlight
-      description: >-
-        This endpoint simulates the operator intention to cancel or end a flight operation.
-
-      tags:
-        - scd-qualifier
 
   /uss/v1/operational_intents/{entityid}:
     summary: Query detailed information of an operational intent from submitted Blender, this is used in the context of strategic deconfliction.
@@ -1937,6 +1777,133 @@ paths:
       tags:
         - crewed-traffic
 
+
+  /status:
+    get:
+      security:
+        - Authority:
+            - interuss.flight_planning.direct_automated_test
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+          description: >-
+            The USS automated testing interface is available and its status was retrieved successfully.
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+        '404':
+          description: The USS automated testing interface is not available.
+      summary: Status of the USS automated testing interface
+      description: Get the status of the USS automated testing interface.
+      operationId: GetStatus
+      tags:
+        - flight-planning-qualifier
+
+  /clear_area_requests:
+    post:
+      security:
+        - Authority:
+            - interuss.flight_planning.direct_automated_test
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClearAreaRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearAreaResponse'
+          description: Requested area was cleared successfully
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+
+      summary: Clear area
+      operationId: ClearArea
+      description: >-
+        This endpoint requests that the USS cancel and remove all flight plans in the specified area.
+      tags:
+        - flight-planning-qualifier
+
+  /flight_plans/{flight_plan_id}:
+    parameters:
+      - name: flight_plan_id
+        in: path
+        required: true
+        description: A UUID-formatted string identifying the user's flight plan intent.
+        schema:
+          $ref: '#/components/schemas/FlightPlanID'
+
+    put:
+      security:
+        - Authority:
+            - interuss.flight_planning.plan
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertFlightPlanRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpsertFlightPlanResponse'
+          description: Requested data was processed successfully
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+        '409':
+          description: The request contains a duplicate request_id and the response for that request is not available, or another conflict condition occurred.
+
+      summary: Upsert flight plan
+      operationId: UpsertFlightPlan
+      description: >-
+        This endpoint simulates a user intention to submit a new or updated flight plan.
+      tags:
+        - flight-planning-qualifier
+
+    delete:
+      security:
+        - Authority:
+            - interuss.flight_planning.direct_automated_test
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteFlightPlanResponse'
+          description: Flight plan was deleted successfully
+        '401':
+          description: Bearer access token was not provided in Authorization header, token could not be decoded, or token was invalid.
+        '403':
+          description: The access token was decoded successfully but did not include a scope appropriate to this endpoint.
+        '404':
+          description: The specified flight plan could not be found (it may have already been deleted).
+
+      summary: Close flight plan
+      operationId: DeleteFlightPlan
+      description: >-
+        This endpoint allows the test director to instruct the USS to remove a flight plan that is no longer needed for testing.
+      tags:
+        - flight-planning-qualifier
+
+
+
+
 components:
   securitySchemes:
     AuthFromPassport:
@@ -1976,7 +1943,490 @@ components:
 
         Clients shall provide these access tokens in an `Authorization` header in the form `Bearer <token>` in accordance with RFC 6750.
   schemas:
+    ##### Begin Flight Planning Schema
 
+    FlightPlanID:
+      description: >-
+        String identifying a user flight plan.  Format matches a version-4 UUID according to RFC 4122.
+      maxLength: 36
+      minLength: 36
+      type: string
+      format: uuid
+      pattern: >-
+        ^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-4[0-9a-fA-F]{3}\\-[8-b][0-9a-fA-F]{3}\\-[0-9a-fA-F]{12}$
+      example: 03e5572a-f733-49af-bc14-8a18bd53ee39
+
+    StatusResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          description: >-
+            The status of the USS automated testing interface.
+
+            - `Starting`: the USS is starting and the automated test driver should wait before sending requests.
+
+            - `Ready`: the USS is ready to receive test requests.
+          type: string
+          enum: [Starting, Ready]
+          example: Ready
+        api_name:
+          description: |-
+            Indication of the API implemented at this URL.  Must be "Flight Planning Automated Testing Interface".
+          type: string
+          example: Flight Planning Automated Testing Interface
+        api_version:
+          description: |-
+            Indication of the API version implemented at this URL.  Must be "v0.4.0" when implementing this version of the API.
+          type: string
+          example: v0.4.0
+
+    FlightPlan:
+      description: >-
+        Details of user's intent to create or modify a flight plan.
+      required:
+        - basic_information
+      type: object
+      properties:
+        basic_information:
+          $ref: '#/components/schemas/BasicFlightPlanInformation'
+        astm_f3548_21:
+          $ref: '#/components/schemas/ASTMF354821OpIntentInformation'
+        uspace_flight_authorisation:
+          $ref: '#/components/schemas/FlightAuthorisationData'
+        rpas_operating_rules_2_6:
+          $ref: '#/components/schemas/RPAS26FlightDetails'
+        additional_information:
+          description: >-
+            Any information relevant to a particular jurisdiction or use case not described in the standard schema. The
+            keys and values must be agreed upon between the test designers and USSs under test.
+          type: object
+
+    RPAS26FlightDetails:
+      description: >-
+        Information about a flight necessary to plan successfully using the RPAS Platform Operating Rules version 2.6.
+      type: object
+      properties:
+        operator_type:
+          description: The type of operator.
+          type: string
+          enum:
+            - Recreational
+            - CommercialExcluded
+            - ReOC
+        uas_serial_numbers:
+          description: The list of UAS/drone serial numbers that will be operated during the operation.
+          type: array
+          items:
+            type: string
+        uas_registration_numbers:
+          description: The list of UAS/drone registration numbers that will be operated during the operation.
+          type: array
+          items:
+            type: string
+        aircraft_type:
+          description: Type of vehicle being used as per ASTM F3411-22a.
+          type: string
+          enum:
+            - NotDeclared
+            - Aeroplane
+            - Helicopter
+            - Gyroplane
+            - HybridLift
+            - Ornithopter
+            - Glider
+            - Kite
+            - FreeBalloon
+            - CaptiveBalloon
+            - Airship
+            - FreeFallOrParachute
+            - Rocket
+            - TetheredPoweredAircraft
+            - GroundObstacle
+            - Other
+        flight_profile:
+          description: Type of flight profile.
+          type: string
+          enum:
+            - AutomatedGrid
+            - AutomatedWaypoint
+            - Manual
+        pilot_license_number:
+          description: License number for the pilot.
+          type: string
+        pilot_phone_number:
+          description: Contact phone number for the pilot.
+          type: string
+        operator_number:
+          description: Operator number.
+          type: string
+    FlightAuthorisationData:
+      description: |-
+        The details of a UAS flight authorization request, as received from the user.
+
+        Note that a full description of a flight authorisation must include mandatory information required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664 for an UAS flight authorisation request. Reference: https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32021R0664&from=EN#d1e32-178-1
+      type: object
+      properties:
+        uas_serial_number:
+          type: string
+          description: Unique serial number of the unmanned aircraft or, if the unmanned aircraft is privately built, the unique serial number of the add-on. This is expressed in the ANSI/CTA-2063 Physical Serial Number format. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 1.
+          example: MFR1C123456789ABC
+        operation_mode:
+          $ref: '#/components/schemas/OperationMode'
+        operation_category:
+          type: string
+          enum:
+            - Unknown
+            - Open
+            - Specific
+            - Certified
+          description: |-
+            Category of UAS operation (‘open’, ‘specific’, ‘certified’) as defined in COMMISSION DELEGATED REGULATION (EU) 2019/945. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
+          example: Open
+        uas_class:
+          $ref: '#/components/schemas/UASClass'
+        identification_technologies:
+          type: array
+          items:
+            type: string
+          description: Technology used to identify the UAS. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 6.
+          example: ['ADS-B', 'ASTMNetRID']
+        uas_type_certificate:
+          description: |-
+            Provisional field. Not applicable as of September 2021. Required only if `uas_class` is set to `other` by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
+          type: string
+          example: ''
+        connectivity_methods:
+          type: array
+          items:
+            type: string
+          description: Connectivity methods. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 7.
+          example: ['cellular']
+        endurance_minutes:
+          description: Endurance of the UAS. This is expressed in minutes. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 8.
+          type: number
+          format: int32
+          example: 20
+        emergency_procedure_url:
+          type: string
+          format: url
+          description: The URL at which the applicable emergency procedure in case of a loss of command and control link may be retrieved. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 9.
+          example: https://utm_uss.com/emergency_procedure
+        operator_id:
+          type: string
+          description: |-
+            Registration number of the UAS operator.
+            The format is defined in EASA Easy Access Rules for Unmanned Aircraft Systems GM1 to AMC1
+            Article 14(6) Registration of UAS operators and ‘certified’ UAS.
+            Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 10.
+          example: FIN87astrdge12k8
+        uas_id:
+          description: |-
+            When applicable, the registration number of the unmanned aircraft.
+            This is expressed using the nationality and registration mark of the unmanned aircraft in
+            line with ICAO Annex 7.
+            Specified by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 10.
+          type: string
+          example: HB-XXXX
+      required:
+        - uas_serial_number
+        - operation_mode
+        - uas_class
+        - identification_technologies
+        - operator_id
+        - operation_category
+        - connectivity_methods
+        - endurance_minutes
+        - emergency_procedure_url
+
+    OperationMode:
+      type: string
+      enum:
+        - Undeclared
+        - Vlos
+        - Bvlos
+      description: Specify if the operation is a `VLOS` or `BVLOS` operation. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 2.
+      example: Vlos
+
+    UASClass:
+      type: string
+      enum:
+        - Other
+        - C0
+        - C1
+        - C2
+        - C3
+        - C4
+        - C5
+        - C6
+      description: Specify the class of the UAS to be flown, the specifition matches EASA class identification label categories. UAS aircraft class as defined in COMMISSION DELEGATED REGULATION (EU) 2019/945 (C0 to C4) and COMMISSION DELEGATED REGULATION (EU) 2020/1058 (C5 and C6). This field is required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
+      example: C0
+    ASTMF354821OpIntentInformation:
+      description: >-
+        Information provided about a flight plan that is necessary for ASTM F3548-21.
+      type: object
+      properties:
+        priority:
+          $ref: '#/components/schemas/Priority'
+    Priority:
+      description: >-
+        Ordinal priority of the operational intent, as defined in ASTM F3548-21.
+      type: integer
+      default: 0
+    BasicFlightPlanInformation:
+      description: >-
+        Basic information about a flight plan that a user and/or UAS can be expected to provide in most flight planning
+        scenarios.
+      type: object
+      required:
+        - usage_state
+        - uas_state
+      properties:
+        usage_state:
+          description: >-
+            User's current usage of the flight plan.
+
+            `Planned`: The user intends to fly according to this flight plan, but is not currently using the defined
+              area with an active UAS.
+
+            `InUse`: The user is currently using the defined area with an active UAS.
+
+            `Closed`: The user is no longer using, or planning to use, the flight plan.
+          type: string
+          enum:
+            - Planned
+            - InUse
+            - Closed
+        uas_state:
+          description: >-
+            State of the user's UAS associated with this flight plan.
+
+              - `Nominal`: The user or UAS reports or implies that it is performing nominally, or has not indicated
+                `OffNominal` or `Contingent`.
+
+              - `OffNominal`: The user or UAS reports or implies that it is temporarily not performing nominally, but
+                may expect to be able to recover to normal operation.
+
+              - `Contingent`: The user or UAS reports or implies that it is not performing nominally and may be unable
+                to recover to normal operation.
+
+              - `NotSpecified`: The UAS status is not currently available or known (for instance, if the flight is
+                planned in the future and the UAS that will be flying has not yet connected to the system).
+          type: string
+          enum:
+            - Nominal
+            - OffNominal
+            - Contingent
+            - NotSpecified
+        area:
+          description: >-
+            The complete area in which the user intends to fly, or may fly, as known by the user.  The user intends to
+            fly, or may fly, anywhere in this entire area.
+
+            This means, for instance, that an ASTM F3548-21 operational intent supporting this flight must have volumes
+            that are a superset of this area.  If the operational intent did not cover this entire area, then all of the
+            intended flight would not be covered by the operational intent (for at least part of the flight, the
+            operator intends to fly outside the operational intent).
+          type: array
+          items:
+            $ref: '#/components/schemas/Volume4D'
+          default: []
+
+    ExecutionStyle:
+      type: string
+      description: >-
+        The style of execution of a specified flight planning action that the operator would like the USS to perform.
+
+          - `Hypothetical`: The user does not want the USS to actually perform any action regarding the actual flight plan.  Instead, the user would like to know the likely outcome if the action were hypothetically attempted.  The response to this request will not refer to an actual flight plan, or an actual state change in an existing flight plan, but rather a hypothetical flight plan or a hypothetical change to an existing flight plan.
+
+          - `IfAllowed`: The user would like to perform the requested action if it is allowed.  If the requested action is allowed, the USS should actually perform the action (e.g., actually create a new ASTM F3548-21 operational intent).  If the requested action is not allowed, the USS should indicate that the action is Rejected and not perform the action.  The response to this request will refer to an actual flight plan when appropriate, and never refer to a hypothetical flight plan or status.
+
+          - `InReality`: The user is communicating an actual state of reality.  The USS should consider the user to be actually performing (or attempting to perform) this action, regardless of whether or not the action is allowed under relevant UTM rules.
+      enum: [Hypothetical, IfAllowed, InReality]
+      example: IfAllowed
+
+    UpsertFlightPlanRequest:
+      description: >-
+        Client request to emulate a user performing a flight planning action.
+      type: object
+      required:
+        - flight_plan
+        - execution_style
+        - request_id
+      properties:
+        flight_plan:
+          description: Complete new or updated information about the flight describing the flight planning action to be taken.
+          anyOf:
+            - $ref: '#/components/schemas/FlightPlan'
+        execution_style:
+          description: Style of execution for the requested flight planning action.
+          anyOf:
+            - $ref: '#/components/schemas/ExecutionStyle'
+        request_id:
+          type: string
+          description: >-
+            ID uniquely identifying the upsertion request.  If additional requests are received with the same
+            request_id, the response from the first request should be returned, or an error indicated.
+
+    PlanningActivityResult:
+      type: string
+      description: >-
+        The result of a flight planning activity.
+
+          - `Completed`: The user's flight plan has been updated according to the situation specified by the user.
+
+          - `Rejected`: The updates the user requested to their flight plan are not allowed according to the rules under which the flight plan is being managed.  The reasons for rejection may include a disallowed conflict with another flight during preflight.
+
+          - `Failed`: The USS was not able to successfully authorize or update the flight plan due to a problem with the USS or a downstream system.
+
+          - `NotSupported`: The USS's implementation does not support the attempted interaction.  For instance, if the request specified a high-priority flight and the USS does not support management of high-priority flights.
+      enum: [Completed, Rejected, Failed, NotSupported]
+      example: Completed
+
+    FlightPlanStatus:
+      type: string
+      description: >-
+        The status of the user's flight plan.
+
+          - `NotPlanned`: The USS has not created an authorized flight plan for the user.
+
+          - `Planned`: The USS has created an authorized flight plan for the user, but the user may not yet start flying (even if within the time bounds of the flight plan).
+
+          - `OkToFly`: The flight plan is in a state such that it is ok for the user to nominally fly within the bounds (including time) of the flight plan.
+
+          - `OffNominal`: The flight plan now reflects the user's actions, but the flight plan is not in a nominal state (e.g., the USS has placed the ASTM F3548-21 operational intent into one of the Nonconforming or Contingent states).
+
+          - `Closed`: The flight plan was closed successfully by the USS and is now out of the UTM system.
+      enum: [NotPlanned, Planned, OkToFly, OffNominal, Closed]
+      example: Planned
+
+    AdvisoryInclusion:
+      type: string
+      description: >-
+        Indication of whether any advisories or conditions were provided to the user along with the result of an
+        associated flight planning attempt.
+
+          - `Unknown`: It is unknown or irrelevant whether advisories or conditions were provided to the user
+
+          - `AtLeastOneAdvisoryOrCondition`: At least one advisory or condition was provided to the user.
+
+          - `NoAdvisoriesOrConditions`: No advisories or conditions were provided to the user.
+      enum: [Unknown, AtLeastOneAdvisoryOrCondition, NoAdvisoriesOrConditions]
+      default: Unknown
+      example: NoAdvisoriesOrConditions
+
+    UpsertFlightPlanResponse:
+      type: object
+      required:
+        - planning_result
+        - flight_plan_status
+      properties:
+        planning_result:
+          description: >-
+            The result of the flight plan creation or update attempt.
+            If any option other than `Completed` is specified, the `notes` field should be populated with the reason for the unsuccessful outcome.
+          anyOf:
+            - $ref: '#/components/schemas/PlanningActivityResult'
+        notes:
+          description: >-
+            Human-readable explanation of the observed result.  This explanation
+            may be made available to a human reviewing the test results, and
+            ideally should explain why an undesirable result was obtained.  For
+            instance, if the injection attempt Failed, then these notes may
+            indicate that the attempt failed because the DSS indicated 400 to a
+            valid request (perhaps also including the valid request as proof).
+          type: string
+          example: Requested flight intersected operational intent c036326c-c97b-4926-bf9f-c60dc83d2b57
+        flight_plan_status:
+          description: >-
+            The status of the user's flight plan following the flight planning activity.
+          anyOf:
+            - $ref: '#/components/schemas/FlightPlanStatus'
+        includes_advisories:
+          description: >-
+            Nature of advisories included in the response to the user regarding their attempt to perform this flight
+            planning activity.
+          anyOf:
+            - $ref: '#/components/schemas/AdvisoryInclusion'
+
+    DeleteFlightPlanResponse:
+      type: object
+      required:
+        - planning_result
+        - flight_plan_status
+      properties:
+        planning_result:
+          description: >-
+            The result of attempted flight plan cancellation/closure.
+            If any option other than `Completed` is specified, the `notes` field should be populated with the reason for the unsuccessful outcome.
+          anyOf:
+            - $ref: '#/components/schemas/PlanningActivityResult'
+        notes:
+          description: >-
+            Human-readable explanation of the observed result.
+          type: string
+          example: DSS was unreachable when attempting to delete operational intent reference
+        flight_plan_status:
+          description: >-
+            The status of the user's flight plan following the flight planning activity.
+          anyOf:
+            - $ref: '#/components/schemas/FlightPlanStatus'
+        includes_advisories:
+          description: >-
+            Nature of advisories included in the response to the user regarding their attempt to cancel/close their
+            flight plan.
+          anyOf:
+            - $ref: '#/components/schemas/AdvisoryInclusion'
+
+    ClearAreaRequest:
+      type: object
+      required:
+        - request_id
+        - extent
+      properties:
+        request_id:
+          description: >-
+            Unique string identifying this request.  If a second request with an
+            identical ID is received, the USS may return the same response from
+            the previous operation rather than attempting to clear the area
+            again (the USS may also attempt to clear the area again).
+          type: string
+        extent:
+          description: >-
+            The USS should cancel and remove any flight plan it manages where
+            any part of that flight plan intersects this area.
+          anyOf:
+            - $ref: '#/components/schemas/Volume4D'
+    ClearAreaOutcome:
+      type: object
+      properties:
+        success:
+          description: >-
+            True if, and only if, all flight plans in the specified area managed by the
+            USS were canceled and removed.
+          type: boolean
+          default: false
+        message:
+          description: >-
+            If the USS was unable to clear the entire area, this message can
+            provide information on the problem encountered.
+          type: string
+          example: >-
+            DSS at dss.example.com returned 500 when attempting to delete
+            operational intent 57e98b17-aefa-4eee-a376-5140e4a8385f
+        details:
+          description: Optional free-form structured data to augment `message`.
+          type: object
+    ClearAreaResponse:
+      type: object
+      required:
+        - outcome
+      properties:
+        outcome:
+          $ref: '#/components/schemas/ClearAreaOutcome'
+
+    ##### End Flight Planning Schema
     RIDCapability:
       type: string
       description: >-
@@ -3169,125 +3619,6 @@ components:
           description: Authentication data in form specified by `format`.
           type: string
 
-    DeleteFlightResponse:
-      type: object
-      required:
-        - result
-      properties:
-        result:
-          description: >-
-            The result of attempted flight cancellation/closure
-
-              - `Closed`: The flight was closed successfully by the USS and is now out of the UTM system.
-
-              - `Failed`: The flight could not be closed successfully by the USS.
-
-          enum: [Closed, Failed]
-          example: Failed
-        notes:
-          description: >-
-            Human-readable explanation of the observed result.
-          type: string
-          example: DSS was unreachable when attempting to delete operational intent reference
-    ClearAreaRequest:
-      type: object
-      required:
-        - request_id
-        - extent
-      properties:
-        request_id:
-          description: >-
-            Unique string identifying this request.  If a second request with an
-            identical ID is received, the USS may return the same response from
-            the previous operation rather than attempting to clear the area
-            again (the USS may also attempt to clear the area again).
-          type: string
-        extent:
-          description: >-
-            The USS should cancel and remove any flight where any part of that
-            flight intersects this area.
-          anyOf:
-            - $ref: '#/components/schemas/Volume4D'
-    ClearAreaOutcome:
-      type: object
-      required:
-        - timestamp
-      properties:
-        success:
-          description: >-
-            True if, and only if, all flights in the specified area owned by the
-            USS were canceled and removed.
-          type: boolean
-          default: false
-        message:
-          description: >-
-            If the USS was unable to clear the entire area, this message can
-            provide information on the problem encountered.
-          type: string
-          example: >-
-            DSS at dss.example.com returned 500 when attempting to delete
-            operational intent 57e98b17-aefa-4eee-a376-5140e4a8385f
-        timestamp:
-          description: >-
-            The time at which this operation was performed by the USS.
-          type: string
-          format: datetime
-    ClearAreaResponse:
-      type: object
-      required:
-        - outcome
-      properties:
-        outcome:
-          $ref: '#/components/schemas/ClearAreaOutcome'
-
-    Capability:
-      type: string
-      description: >-
-        Capability of a USS.
-          `FlightAuthorisationValidation`: USS supports EU flight authorisation
-            parameter validation.
-          `BasicStrategicConflictDetection`: USS supports strategic conflict
-            detection for typical flights, including future planning (Accepted
-            operational intents), activation (Accepted operational intents), and
-            closing (deleting the operational intent reference).
-          `HighPriorityFlights`: USS supports flights at priority levels higher
-            than typical flights.
-      enum:
-      - FlightAuthorisationValidation
-      - BasicStrategicConflictDetection
-      - HighPriorityFlights
-
-    CapabilitiesResponse:
-      type: object
-      properties:
-        capabilities:
-          type: array
-          description: Set of capabilities supported by this USS.
-          items:
-            $ref: '#/components/schemas/Capability'
-          default: []
-
-    StatusResponse:
-      type: object
-      required:
-        - status
-      properties:
-        status:
-          description: >-
-            The status of the Geo Awareness automated testing interface.
-
-            - `Starting`: the USS is starting and the automated test driver should wait before sending requests.
-
-            - `Ready`: the USS is ready to receive test requests.
-          type: string
-          enum: [Starting, Ready]
-          example: Ready
-        version:
-          description: |-
-            Arbitrary string representing the version of the USS system to be tested.
-          type: string
-          example: v0.0.1-445ad3
-
     GeoZoneSubmission:
       type: object
       required:
@@ -3681,6 +4012,21 @@ components:
     #################### Start of ASTM-standard definitions    #####################
     #################### interfaces/astm-utm/Protocol/utm.yaml #####################
     ################################################################################
+    EntityOVN:
+      title: EntityOVN
+      description: >-
+        A token associated with a particular UTM Entity+version created by the
+        DSS upon creation or modification of an Entity reference and provided to
+        the client creating or modifying the Entity reference.  The EntityOVN is
+        stored privately by the DSS and then compared against entries in a Key
+        provided to mutate the airspace.  The EntityOVN is also provided by the
+        client whenever that client transmits the full information of the Entity
+        (either via GET, or via a subscription notification).
+      type: string
+      minLength: 16
+      maxLength: 128
+      example: 9d158f59-80b7-4c11-9c0c-8a2b4d936b2d
+
     UUIDv4Format:
       description: >-
         String whose format matches a version-4 UUID according to RFC 4122.
@@ -3747,151 +4093,6 @@ components:
           items:
             $ref: '#/components/schemas/Volume4D'
 
-    FlightAuthorisationData:
-      description: |-
-        A dataset to hold details of a UAS flight authorization request. Full description of a flight authorisation including mandatory information required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664 for an UAS flight authorisation request. Reference: https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32021R0664&from=EN#d1e32-178-1
-      type: object
-      properties:
-        uas_serial_number:
-          type: string
-          description: Unique serial number of the unmanned aircraft or, if the unmanned aircraft is privately built, the unique serial number of the add-on. This is expressed in the ANSI/CTA-2063 Physical Serial Number format. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 1.
-          example: MFR1C123456789ABC
-        operation_mode:
-          $ref: '#/components/schemas/OperationMode'
-        operation_category:
-          type: string
-          enum:
-            - Unknown
-            - Open
-            - Specific
-            - Certified
-          description: |-
-            Category of UAS operation (‘open’, ‘specific’, ‘certified’) as defined in COMMISSION DELEGATED REGULATION (EU) 2019/945. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
-          example: Open
-        uas_class:
-          $ref: '#/components/schemas/UASClass'
-        identification_technologies:
-          type: array
-          items:
-            type: string
-          description: Technology used to identify the UAS. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 6.
-          example: ['ADS-B', 'ASTMNetRID']
-        uas_type_certificate:
-          description: |-
-            Provisional field. Not applicable as of September 2021. Required only if `uas_class` is set to `other` by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
-          type: string
-          example: ''
-        connectivity_methods:
-          type: array
-          items:
-            type: string
-          description: Connectivity methods. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 7.
-          example: ['cellular']
-        endurance_minutes:
-          description: Endurance of the UAS. This is expressed in minutes. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 8.
-          type: number
-          format: int32
-          example: 20
-        emergency_procedure_url:
-          type: string
-          format: url
-          description: The URL at which the applicable emergency procedure in case of a loss of command and control link may be retrieved. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 9.
-          example: https://utm_uss.com/emergency_procedure
-        operator_id:
-          type: string
-          description: |-
-            Registration number of the UAS operator.
-            The format is defined in EASA Easy Access Rules for Unmanned Aircraft Systems GM1 to AMC1
-            Article 14(6) Registration of UAS operators and ‘certified’ UAS.
-            Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 10.
-          example: FIN87astrdge12k8
-        uas_id:
-          description: |-
-            When applicable, the registration number of the unmanned aircraft.
-            This is expressed using the nationality and registration mark of the unmanned aircraft in
-            line with ICAO Annex 7.
-            Specified by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 10.
-          type: string
-          example: HB-XXXX
-      required:
-        - uas_serial_number
-        - operation_mode
-        - uas_class
-        - identification_technologies
-        - operator_id
-        - operation_category
-        - connectivity_methods
-        - endurance_minutes
-        - emergency_procedure_url
-
-    OperationMode:
-      type: string
-      enum:
-        - Undeclared
-        - Vlos
-        - Bvlos
-        - Crewed
-      description: Specify if the operation is a `VLOS` or `BVLOS` operation. Required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 2.
-      example: Vlos
-
-    UASClass:
-      type: string
-      enum:
-        - Other
-        - C0
-        - C1
-        - C2
-        - C3
-        - C4
-        - C5
-        - C6
-      description: Specify the class of the UAS to be flown, the specifition matches EASA class identification label categories. UAS aircraft class as defined in COMMISSION DELEGATED REGULATION (EU) 2019/945 (C0 to C4) and COMMISSION DELEGATED REGULATION (EU) 2020/1058 (C5 and C6). This field is required by ANNEX IV of COMMISSION IMPLEMENTING REGULATION (EU) 2021/664, paragraph 4.
-      example: C0
-
-    InjectFlightRequest:
-      type: object
-      properties:
-        operational_intent:
-          $ref: '#/components/schemas/OperationalIntentTestInjection'
-
-        flight_authorisation:
-          $ref: '#/components/schemas/FlightAuthorisationData'
-    InjectFlightResponse:
-      type: object
-      required:
-        - result
-      properties:
-        result:
-          description: >-
-            The result of the flight submission
-
-              - `Planned`: The flight submission data was valid and the flight was successfully processed by the USS and is now authorized.
-
-              - `ReadyToFly`: The flight is ready for the operator to begin flying.
-
-              - `Rejected`: The flight submission data provided was invalid and/or could not be used to attempt to authorize the flight.
-
-              - `ConflictWithFlight`: The flight submission data was valid, but the flight could not be authorized because of a disallowed conflict with another flight.
-
-              - `Failed`: The USS was not able to successfully authorize the flight due to a problem with the USS or a downstream system
-
-          type: string
-          enum: [Planned, ReadyToFly, Rejected, ConflictWithFlight, Failed]
-          example: ConflictWithFlight
-        notes:
-          description: >-
-            Human-readable explanation of the observed result.  This explanation
-            should be available to a human reviewing the test results, and
-            ideally should explain why an undesirable result was obtained.  For
-            instance, if the injection attempt Failed, then these notes may
-            indicate that the attempt failed because the DSS indicated 400 to a
-            valid request (perhaps also including the valid request as proof).
-          type: string
-          example: Requested flight intersected operational intent c036326c-c97b-4926-bf9f-c60dc83d2b57
-        operational_intent_id:
-          description: The id of the operational intent communicated to the DSS. This value is only required when the result of the flight submission is `Planned`.
-          anyOf:
-            - $ref: '#/components/schemas/EntityID'
     Radius:
       required:
         - value
@@ -4040,32 +4241,6 @@ components:
         A USS in the Unknown state possesses all the capabilities, within the
         DSS, of a USS in the Normal state.
 
-    Priority:
-      description: >-
-        Ordinal priority of the operational intent, as defined by the
-        regulator.  Operational intents with lesser values are lower priority
-        than all operational intents with greater values.  A lower-priority
-        operational intent may not create a conflict with a higher-priority
-        operational intent.  A higher-priority operational intent may create a
-        conflict with a lower-priority operational intent.  The regulator
-        specifies whether an operational intent may create a conflict with other
-        operational intents of the same priority.
-      type: integer
-      default: 0
-    EntityOVN:
-      title: EntityOVN
-      description: >-
-        A token associated with a particular UTM Entity+version created by the
-        DSS upon creation or modification of an Entity reference and provided to
-        the client creating or modifying the Entity reference.  The EntityOVN is
-        stored privately by the DSS and then compared against entries in a Key
-        provided to mutate the airspace.  The EntityOVN is also provided by the
-        client whenever that client transmits the full information of the Entity
-        (either via GET, or via a subscription notification).
-      type: string
-      minLength: 16
-      maxLength: 128
-      example: 9d158f59-80b7-4c11-9c0c-8a2b4d936b2d
     OperationalIntentReference:
       description: >-
         The high-level information of a planned or active operational intent
@@ -4949,7 +5124,7 @@ tags:
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions, operational intents to the DSS for ASTM Compliant Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data and querying operational intents
   - name: rid-qualifier
     description: RID Qualifier is a set of tests created to check compliance with ASTM remote-id standards, these endpoints implement the Observation API as described by the test suite.
-  - name: scd-qualifier
+  - name: flight-planning-qualifier
     description: Flight Blender allows connections and interactions with the USSP software testing framework (via InterUSS) for Remote ID and Strategic deconfliction. These endpoints implement the stratetgic deconflication test framework APIs.
   - name: rid
     description: Flight Blender allows connections and interactions with the DSS by enabling creation of subscriptions to the DSS for Remote-ID data, these endpoints detail how the functionality work for creating a DSS subscription and querying the area for Remote-ID data.
