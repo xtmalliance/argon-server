@@ -1724,7 +1724,7 @@ paths:
       tags:
         - geozone-qualifier
 
-  /utm_adapter/traffic_information:
+  /utm_adapter/crewed_traffic_information:
     get:
       parameters:
         - name: view
@@ -1738,7 +1738,7 @@ paths:
 
       summary: 'Get latest air-traffic data'
       security:
-        - AuthFromPassport:  [qgcs.utm_adapter.read]
+        - AuthFromPassport:  [blender.read]
       description:
         "Using this endpoint, you can query a stream of air-traffic observations for the view port provided"
 
