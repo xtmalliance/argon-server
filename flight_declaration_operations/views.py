@@ -48,6 +48,7 @@ load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
 
+print("Flight Declaration Operations Views Loaded")
 
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
