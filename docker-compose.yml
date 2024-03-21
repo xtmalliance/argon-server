@@ -44,7 +44,6 @@ services:
     platform: linux/amd64
     container_name: worker
     image: openskiessh/flight-blender
-    restart: on-failure
     build:
       context: "."
     env_file:
