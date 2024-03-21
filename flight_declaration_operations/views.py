@@ -50,6 +50,7 @@ logger = logging.getLogger("django")
 
 print("Flight Declaration Operations Views Loaded")
 
+
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
 def set_flight_declaration(request):
