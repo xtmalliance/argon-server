@@ -11,18 +11,21 @@ from typing import List
 
 import arrow
 import pyproj
-from auth_helper.common import get_redis
-from auth_helper.utils import requires_scopes
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
+from implicitdict import ImplicitDict
 from rest_framework import generics, mixins, status
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from shapely.geometry import Point, shape
 from shapely.ops import unary_union
+
+from auth_helper.common import get_redis
+from auth_helper.utils import requires_scopes
+from flight_declaration_operations.pagination import StandardResultsSetPagination
 
 from . import rtree_geo_fence_helper
 from .buffer_helper import toFromUTM
@@ -53,7 +56,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 INDEX_NAME = "geofence_proc"
 
 
-@api_view(["POST"])
+@api_view(["PUT"])
 @requires_scopes(["blender.write"])
 def set_geo_fence(request: HttpRequest):
     try:
@@ -86,11 +89,7 @@ def set_geo_fence(request: HttpRequest):
     bnd_tuple = combined_features.bounds
     bounds = ",".join(["{:.7f}".format(x) for x in bnd_tuple])
 
-    start_time = (
-        arrow.now().isoformat()
-        if "start_time" not in feature["properties"]
-        else arrow.get(feature["properties"]["start_time"]).isoformat()
-    )
+    start_time = arrow.now().isoformat() if "start_time" not in feature["properties"] else arrow.get(feature["properties"]["start_time"]).isoformat()
     end_time = (
         arrow.now().shift(hours=1).isoformat()
         if "end_time" not in feature["properties"]
@@ -122,7 +121,7 @@ def set_geo_fence(request: HttpRequest):
 def set_geozone(request):
     try:
         assert request.headers["Content-Type"] == "application/json"
-    except AssertionError as ae:
+    except AssertionError:
         msg = {"message": "Unsupported Media Type"}
         return HttpResponse(
             json.dumps(msg),
@@ -132,10 +131,8 @@ def set_geozone(request):
 
     try:
         geo_zone = request.data
-    except KeyError as ke:
-        msg = json.dumps(
-            {"message": "A geozone object is necessary in the body of the request"}
-        )
+    except KeyError:
+        msg = json.dumps({"message": "A geozone object is necessary in the body of the request"})
         return HttpResponse(msg, status=status.HTTP_400_BAD_REQUEST)
 
     is_geo_zone_valid = validate_geo_zone(geo_zone)
@@ -145,19 +142,11 @@ def set_geozone(request):
 
         geo_f = uuid.uuid4()
         op = json.dumps({"message": "GeoZone Declaration submitted", "id": str(geo_f)})
-        return HttpResponse(
-            op, status=status.HTTP_200_OK, content_type="application/json"
-        )
+        return HttpResponse(op, status=status.HTTP_200_OK, content_type="application/json")
 
     else:
-        msg = json.dumps(
-            {
-                "message": "A valid geozone object with a description is necessary the body of the request"
-            }
-        )
-        return HttpResponse(
-            msg, status=status.HTTP_400_BAD_REQUEST, content_type="application/json"
-        )
+        msg = json.dumps({"message": "A valid geozone object with a description is necessary the body of the request"})
+        return HttpResponse(msg, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
 @method_decorator(requires_scopes(["blender.read"]), name="dispatch")
@@ -173,6 +162,7 @@ class GeoFenceDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
 class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = GeoFence.objects.filter(is_test_dataset=False)
     serializer_class = GeoFenceSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get_relevant_geo_fence(self, start_date, end_date, view_port: List[float]):
         present = arrow.now()
@@ -184,22 +174,14 @@ class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
             s_date = present.shift(days=-1)
             e_date = present.shift(days=1)
 
-        all_fences_within_timelimits = GeoFence.objects.filter(
-            start_datetime__gte=s_date.isoformat(), end_datetime__lte=e_date.isoformat()
-        )
-        logging.info("Found %s geofences" % len(all_fences_within_timelimits))
+        all_fences_within_timelimits = GeoFence.objects.filter(start_datetime__gte=s_date.isoformat(), end_datetime__lte=e_date.isoformat())
+        logger.info("Found %s geofences" % len(all_fences_within_timelimits))
 
         if view_port:
             INDEX_NAME = "geofence_idx"
-            my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(
-                index_name=INDEX_NAME
-            )
-            my_rtree_helper.generate_geo_fence_index(
-                all_fences=all_fences_within_timelimits
-            )
-            all_relevant_fences = my_rtree_helper.check_box_intersection(
-                view_box=view_port
-            )
+            my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(index_name=INDEX_NAME)
+            my_rtree_helper.generate_geo_fence_index(all_fences=all_fences_within_timelimits)
+            all_relevant_fences = my_rtree_helper.check_box_intersection(view_box=view_port)
             relevant_id_set = []
             for i in all_relevant_fences:
                 relevant_id_set.append(i["geo_fence_id"])
@@ -221,9 +203,7 @@ class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
         if view:
             view_port = [float(i) for i in view.split(",")]
 
-        responses = self.get_relevant_geo_fence(
-            view_port=view_port, start_date=start_date, end_date=end_date
-        )
+        responses = self.get_relevant_geo_fence(view_port=view_port, start_date=start_date, end_date=end_date)
         return responses
 
     def get(self, request, *args, **kwargs):
@@ -234,9 +214,7 @@ class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
 class GeoZoneTestHarnessStatus(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         status = GeoAwarenessTestHarnessStatus(status="Ready", version="latest")
-        return JsonResponse(
-            json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200
-        )
+        return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
 
 
 @method_decorator(requires_scopes(["geo-awareness.test"]), name="dispatch")
@@ -245,7 +223,7 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         r = get_redis()
         try:
             geo_zone_url_details = ImplicitDict.parse(request.data, GeoZoneHttpsSource)
-        except KeyError as ke:
+        except KeyError:
             ga_import_response = GeoAwarenessTestStatus(
                 result="Rejected",
                 message="There was an error in processing the request payload, a url and format key is required for successful processing",
@@ -258,10 +236,8 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         url_validator = URLValidator()
         try:
             url_validator(geo_zone_url_details.https_source.url)
-        except ValidationError as ve:
-            ga_import_response = GeoAwarenessTestStatus(
-                result="Unsupported", message="There was an error in the url provided"
-            )
+        except ValidationError:
+            ga_import_response = GeoAwarenessTestStatus(result="Unsupported", message="There was an error in the url provided")
             return JsonResponse(
                 json.loads(json.dumps(ga_import_response, cls=EnhancedJSONEncoder)),
                 status=200,
@@ -290,9 +266,7 @@ class GeoZoneSourcesOperations(generics.GenericAPIView):
         if r.exists(geoawareness_test_data_store):
             test_data_status = r.get(geoawareness_test_data_store)
             test_status = json.loads(test_data_status)
-            ga_test_status = GeoAwarenessTestStatus(
-                result=test_status["result"], message=""
-            )
+            ga_test_status = GeoAwarenessTestStatus(result=test_status["result"], message="")
             return JsonResponse(
                 json.loads(json.dumps(ga_test_status, cls=EnhancedJSONEncoder)),
                 status=200,
@@ -331,14 +305,10 @@ class GeoZoneCheck(generics.GenericAPIView):
         geo_zones_of_interest = False
         for filter_set in geo_zone_checks.checks.filterSets:
             if "position" in filter_set:
-                filter_position = ImplicitDict.parse(
-                    filter_set["position"], GeoZoneFilterPosition
-                )
+                filter_position = ImplicitDict.parse(filter_set["position"], GeoZoneFilterPosition)
                 relevant_geo_fences = GeoFence.objects.filter(is_test_dataset=1)
                 INDEX_NAME = "geofence_idx"
-                my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(
-                    index_name=INDEX_NAME
-                )
+                my_rtree_helper = rtree_geo_fence_helper.GeoFenceRTreeIndexFactory(index_name=INDEX_NAME)
                 # Buffer the point to get a small view port / bounds
                 init_point = Point(filter_position)
                 init_shape_utm = toFromUTM(init_point, proj)
@@ -347,25 +317,19 @@ class GeoZoneCheck(generics.GenericAPIView):
                 view_port = buffer_shape_lonlat.bounds
 
                 my_rtree_helper.generate_geo_fence_index(all_fences=relevant_geo_fences)
-                all_relevant_fences = my_rtree_helper.check_box_intersection(
-                    view_box=view_port
-                )
+                all_relevant_fences = my_rtree_helper.check_box_intersection(view_box=view_port)
                 my_rtree_helper.clear_rtree_index()
                 if all_relevant_fences:
                     geo_zones_of_interest = True
 
             if "after" in filter_set:
                 after_query = arrow.get(filter_set["after"])
-                geo_zones_exist = GeoFence.objects.filter(
-                    start_datetime__gte=after_query, is_test_dataset=1
-                ).exists()
+                geo_zones_exist = GeoFence.objects.filter(start_datetime__gte=after_query, is_test_dataset=1).exists()
                 if geo_zones_exist:
                     geo_zones_of_interest = True
             if "before" in filter_set:
                 before_query = arrow.get(filter_set["before"])
-                geo_zones_exist = GeoFence.objects.filter(
-                    before_datetime__lte=before_query, is_test_dataset=1
-                ).exists()
+                geo_zones_exist = GeoFence.objects.filter(before_datetime__lte=before_query, is_test_dataset=1).exists()
                 if geo_zones_exist:
                     geo_zones_of_interest = True
             if "ed269" in filter_set:
@@ -402,9 +366,7 @@ class GeoZoneCheck(generics.GenericAPIView):
         else:
             geo_zone_check_result = GeoZoneCheckResult(geozone="Absent")
 
-        geo_zone_response = GeoZoneChecksResponse(
-            applicableGeozone=geo_zone_check_result
-        )
+        geo_zone_response = GeoZoneChecksResponse(applicableGeozone=geo_zone_check_result)
         return JsonResponse(
             json.loads(json.dumps(geo_zone_response, cls=EnhancedJSONEncoder)),
             status=200,

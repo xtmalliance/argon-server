@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-docker build . -t openskiessh/flight-blender
+
+APP=flight-blender
+
+docker build --platform linux/amd64 -t "openskiessh/$APP" .

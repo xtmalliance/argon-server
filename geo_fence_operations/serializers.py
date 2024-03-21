@@ -1,6 +1,5 @@
 import json
 
-import arrow
 from rest_framework import serializers
 
 from .models import GeoFence
@@ -23,16 +22,12 @@ class GeoFencePropertiesSerializer(serializers.Serializer):
 class GeoFenceFeatureSerializer(serializers.Serializer):
     type = serializers.CharField()
     properties = GeoFencePropertiesSerializer()
-    geometry = serializers.DictField(
-        error_messages={"required": "A valid geometry object must be provided."}
-    )
+    geometry = serializers.DictField(error_messages={"required": "A valid geometry object must be provided."})
 
 
 class GeoFenceRequestSerializer(serializers.Serializer):
     type = serializers.CharField()
-    features = serializers.ListField(
-        child=GeoFenceFeatureSerializer(), min_length=1, max_length=1
-    )
+    features = serializers.ListField(child=GeoFenceFeatureSerializer(), min_length=1, max_length=1)
 
     def create(self, validated_data):
         return GeoFenceRequest(**validated_data)

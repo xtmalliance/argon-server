@@ -13,9 +13,10 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
-from . import views as geo_fence_views
 
+from django.urls import path
+
+from . import views as geo_fence_views
 
 urlpatterns = [
     path("set_geo_fence", geo_fence_views.set_geo_fence, name="set_geo_fence"),

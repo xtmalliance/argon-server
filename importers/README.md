@@ -1,3 +1,3 @@
-# Importers
+# Importers -> E2E Verification
 
-This folder has scripts that demonstrate how different type of data can be imported into Flight Blender
+The Importers directory has been moved to `openutm/verification` [here](https://github.com/openutm/verification).

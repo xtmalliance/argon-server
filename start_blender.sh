@@ -1,7 +1,7 @@
 #!/bin/bash
 BLENDER_ROOT=.
 cp .env.sample .env
-chmod +x $BLENDER_ROOT/entrypoint.sh
+chmod +x $BLENDER_ROOT/entrypoints/with-database/entrypoint.sh
 STATUS="$(systemctl is-active postgresql)"
 if [ "${STATUS}" = "active" ]; then
     echo "stop local instance of postgresql"

@@ -1,4 +1,3 @@
-
 """flight_blender URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -16,21 +15,25 @@ Including another URLconf
 """
 
 from django.urls import path
+
 from . import views as rid_views
 
 urlpatterns = [
     # Flight Spotlight specific views
-    path('create_dss_subscription', rid_views.create_dss_subscription),    
+    path("create_dss_subscription", rid_views.create_dss_subscription),
     # USSP RID views
     ### This is the call back url to DSS
-    path('uss/identification_service_areas/<uuid:subscription_id>', rid_views.dss_isa_callback),
+    path(
+        "uss/identification_service_areas/<uuid:subscription_id>",
+        rid_views.dss_isa_callback,
+    ),
     # Get RID data (PULL)
-    path('get_rid_data/<uuid:subscription_id>', rid_views.get_rid_data),    
+    path("get_rid_data/<uuid:subscription_id>", rid_views.get_rid_data),
     # RID Qualifier data: Observation, for more information see: https://github.com/interuss/dss/tree/master/interfaces/automated-testing/rid
-    path('display_data', rid_views.get_display_data),
-    path('display_data/<uuid:flight_id>', rid_views.get_flight_data),
-    # RID Qualifier data: Injection views 
-    path('tests/<uuid:test_id>', rid_views.create_test),
-    path('tests/<uuid:test_id>/<str:version>', rid_views.delete_test),
-    path('capabilities', rid_views.get_rid_capabilities),    
+    path("display_data", rid_views.get_display_data),
+    path("display_data/<uuid:flight_id>", rid_views.get_flight_data),
+    # RID Qualifier data: Injection views
+    path("tests/<uuid:test_id>", rid_views.create_test),
+    path("tests/<uuid:test_id>/<str:version>", rid_views.delete_test),
+    path("capabilities", rid_views.get_rid_capabilities),
 ]
