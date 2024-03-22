@@ -23,7 +23,6 @@ class FlightDeclaration(models.Model):
     bounds = models.CharField(max_length=140)
     aircraft_id = models.CharField(
         max_length=256,
-        default="000",
         help_text="Specify the ID of the aircraft for this declaration",
     )
     state = models.IntegerField(choices=OPERATION_STATES, default=0, help_text="Set the state of operation")

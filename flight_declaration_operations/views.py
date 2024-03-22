@@ -48,6 +48,8 @@ load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
 
+print("Flight Declaration Operations Views Loaded")
+
 
 @api_view(["POST"])
 @requires_scopes(["blender.write"])
@@ -67,12 +69,13 @@ def set_flight_declaration(request):
             "end_datetime",
             "flight_declaration_geo_json",
             "type_of_operation",
+            "aircraft_id",
         }
 
     except AssertionError:
         msg = json.dumps(
             {
-                "message": "Not all necessary fields were provided. Originating Party, Start Datetime, End Datetime, Flight Declaration and Type of operation must be provided."
+                "message": "Not all necessary fields were provided. Aircraft ID, Originating Party, Start Datetime, End Datetime, Flight Declaration and Type of operation must be provided."
             }
         )
         return HttpResponse(msg, status=400)
@@ -91,6 +94,7 @@ def set_flight_declaration(request):
     is_approved = False
     type_of_operation = 0 if "type_of_operation" not in req else req["type_of_operation"]
     originating_party = "No Flight Information" if "originating_party" not in req else req["originating_party"]
+    aircraft_id = req["aircraft_id"]
     now = arrow.now()
 
     start_datetime = now.isoformat() if "start_datetime" not in req else arrow.get(req["start_datetime"]).isoformat()
@@ -208,6 +212,7 @@ def set_flight_declaration(request):
         operational_intent=json.dumps(asdict(parital_op_int_ref)),
         bounds=bounds,
         type_of_operation=type_of_operation,
+        aircraft_id=aircraft_id,
         submitted_by=submitted_by,
         is_approved=is_approved,
         start_datetime=start_datetime,
