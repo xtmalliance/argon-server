@@ -59,7 +59,6 @@ def check_operation_telemetry_conformance(flight_declaration_id: str, dry_run: s
         logger.error("No telemetry data found for operation {flight_operation_id}".format(flight_operation_id=flight_declaration_id))
         return
 
-
     all_flights_rid_data.sort(key=lambda item: item["timestamp"], reverse=True)
     distinct_messages = {i["address"]: i for i in reversed(all_flights_rid_data)}.values()
 
