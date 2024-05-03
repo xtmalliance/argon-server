@@ -5,7 +5,6 @@ from dataclasses import asdict
 from os import environ as env
 from typing import List
 
-import arrow
 import shapely.geometry
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -316,8 +315,7 @@ def set_signed_telemetry(request):
             unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
 
             operation_id = f_details.id
-            now = arrow.now().isoformat()
-            relevant_operation_ids_qs = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
+            relevant_operation_ids_qs = my_blender_database_reader.get_current_flight_declaration_ids()
             relevant_operation_ids = [str(o) for o in relevant_operation_ids_qs.all()]
             if operation_id in relevant_operation_ids:
                 # Get flight state:
@@ -454,8 +452,7 @@ def set_telemetry(request):
 
         unsigned_telemetry_observations.append(asdict(single_observation_set, dict_factory=NestedDict))
         operation_id = f_details.id
-        now = arrow.now().isoformat()
-        relevant_operation_ids_qs = my_blender_database_reader.get_current_flight_declaration_ids(now=now)
+        relevant_operation_ids_qs = my_blender_database_reader.get_current_flight_declaration_ids()
         relevant_operation_ids = [str(o) for o in relevant_operation_ids_qs.all()]
         if operation_id in list(relevant_operation_ids):
             # Get flight state:
