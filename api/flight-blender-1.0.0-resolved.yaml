@@ -1321,11 +1321,11 @@ paths:
 
       responses:
         '200':
-          description: A flight declaration created notification
+          description: The flight declaration was successfully processed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FlightDeclarationCreated'
+                $ref: '#/components/schemas/FlightDeclarationCreationResponse'
 
         '400':
           description: Bad request submitted
@@ -2479,8 +2479,8 @@ components:
           type: string
           example: 'RemoteID data successfully submitted'
 
-    FlightDeclarationCreated:
-      description: A flight declaration has been created
+    FlightDeclarationCreationResponse:
+      description: A response when the UTM system processes a Flight Declaration
       type: object
       properties:
         id:

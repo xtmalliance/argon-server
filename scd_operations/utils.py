@@ -195,10 +195,6 @@ class DSSAreaClearHandler:
 
     def clear_area_request(self, extent_raw) -> ClearAreaResponse:
         r = get_redis()
-        # Convert the extent to V4D
-        # my_redis_helper = RedisHelper()
-        # my_redis_helper.delete_all_opints()
-
         # Create a list of Volume4D objects
         my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
         volume4D = my_operational_intent_parser.parse_volume_to_volume4D(volume=extent_raw)

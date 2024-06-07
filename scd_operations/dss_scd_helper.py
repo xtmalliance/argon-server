@@ -752,7 +752,7 @@ class SCDOperations:
 
         return auth_token
 
-    def delete_operational_intent(self, dss_operational_intent_ref_id: str, ovn: str) -> Optional[DeleteOperationalIntentResponse]:
+    def delete_operational_intent(self, dss_operational_intent_ref_id: str, ovn: str) -> DeleteOperationalIntentResponse:
         auth_token = self.get_auth_token()
 
         dss_opint_delete_url = self.dss_base_url + "dss/v1/operational_intent_references/" + dss_operational_intent_ref_id + "/" + ovn
