@@ -15,4 +15,4 @@ python manage.py migrate
 
 # Start server
 echo "Starting server"
-gunicorn --bind :8000 --workers 3 flight_blender.wsgi
+gunicorn --bind :8000 --workers 3 argon_server.wsgi

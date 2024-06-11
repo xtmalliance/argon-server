@@ -8,13 +8,13 @@ import arrow
 from dacite import from_dict
 from dotenv import find_dotenv, load_dotenv
 
+from argon_server.celery import app
 from auth_helper.common import get_redis
 from common.data_definitions import OPERATION_STATES
 from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
 from conformance_monitoring_operations.conformance_checks_handler import (
     FlightOperationConformanceHelper,
 )
-from flight_blender.celery import app
 from notification_operations.data_definitions import FlightDeclarationUpdateMessage
 from notification_operations.notification_helper import NotificationFactory
 from scd_operations.opint_helper import DSSOperationalIntentsCreator

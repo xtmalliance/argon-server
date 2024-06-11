@@ -5,4 +5,4 @@ if ! wait-for-it --parallel --service redis-blender:6379 --service db-blender:54
     exit
 fi
 
-celery --app=flight_blender beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+celery --app=argon_server beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler

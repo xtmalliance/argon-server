@@ -12,12 +12,11 @@ from arrow.parser import ParserError
 from dotenv import find_dotenv, load_dotenv
 from shapely.geometry import MultiPoint, Point, box
 
+from argon_server.celery import app
 from auth_helper.common import get_redis
 from common.database_operations import BlenderDatabaseWriter
-from flight_blender.celery import app
 from flight_feed_operations import flight_stream_helper
 from flight_feed_operations.data_definitions import SingleRIDObservation
-
 from flight_feed_operations.tasks import write_incoming_air_traffic_data
 from rid_operations.data_definitions import (
     UASID,

@@ -53,12 +53,12 @@ Once you have created and saved the .env file you can then use the [docker-compo
 You can run Argon Server by running `docker compose up` and then go to `http://localhost:8000`, you should see the Argon Server Logo and a link to the API and Ping documentation. Congratulations 🎉 we now have a running version of the system!
 
 ### 3. Upload some flight information
-Next we can now upload flight data. Argon Server has a extensive API and you can review it, any data uploaded or downloaded is done via the API. The [importers](../importers/) directory has a set of scripts that help you with uploading data / flight tracks. For this quickstart, we will use the [import_flight_json_blender_local.py](https://github.com/utmalliance/verification/blob/main/flight_blender_e2e_integration/import_flight_json_blender_local.py) script here, you can see the rest of the scripts there to understand how it works.
+Next we can now upload flight data. Argon Server has a extensive API and you can review it, any data uploaded or downloaded is done via the API. The [importers](../importers/) directory has a set of scripts that help you with uploading data / flight tracks. For this quickstart, we will use the [import_flight_json_blender_local.py](https://github.com/utmalliance/verification/blob/main/argon_server_e2e_integration/import_flight_json_blender_local.py) script here, you can see the rest of the scripts there to understand how it works.
 
 You will have to setup a environment like Anaconda or similar software package and install dependencies via something like `pip install -r requirements.txt` then you can run the import script via `python import_flight_json_blender_local.py` this will send some observations to the `/set_air_traffic` POST endpoint. This script will send a observation and then wait for 10 seconds and send another one. All of this requires Python.
 
 ### 4. Use Postman to query the API
-While the script is running you can install Postman and which should help us query the API. You can import the [Postman Collection](../api/flight_blender_api.postman_collection.json) prior. You will also need a "NoAuth" Bearer JWT token that you can generate by using the [get_access_token.py](https://github.com/utmalliance/verification/blob/main/flight_blender_e2e_integration/get_access_token.py) script. You should have a scope of `argon.read` and a audience of `testflight.argonserver.com`. We will use this token to go to the Postman collection > Flight Feed Operations > Get airtraffic observations. You should be able to see output of the flight feed as a response!
+While the script is running you can install Postman and which should help us query the API. You can import the [Postman Collection](../api/argon_server_api.postman_collection.json) prior. You will also need a "NoAuth" Bearer JWT token that you can generate by using the [get_access_token.py](https://github.com/utmalliance/verification/blob/main/argon_server_e2e_integration/get_access_token.py) script. You should have a scope of `argon.read` and a audience of `testflight.argonserver.com`. We will use this token to go to the Postman collection > Flight Feed Operations > Get airtraffic observations. You should be able to see output of the flight feed as a response!
 
 
 ## Frequently asked Questions (FAQs)
@@ -67,7 +67,7 @@ While the script is running you can install Postman and which should help us que
 A: Check existing Postgres port and / or shut down Postgres if you have it, Argon Server Docker uses the default SQL ports.
 
 **Q: Where do I point my tools for Remote ID / Strategic Deconfliction APIs ?**
-A: Check the [API Specification](http://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/utmalliance/argon-server/master/api/argon-server-1.0.0-resolved.yaml) to see the appropriate endpoints and / or download the [Postman Collection](../api/flight_blender_api.postman_collection.json) to see the endpoints.
+A: Check the [API Specification](http://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/utmalliance/argon-server/master/api/argon-server-1.0.0-resolved.yaml) to see the appropriate endpoints and / or download the [Postman Collection](../api/argon_server_api.postman_collection.json) to see the endpoints.
 
 **Q: Is there guide on how to configure Flight Passport can be configured to be used with Blender + Spotlight?**
 A: Yes there is a small [OAUTH Infrastructure](oauth_infrastructure.md) document.

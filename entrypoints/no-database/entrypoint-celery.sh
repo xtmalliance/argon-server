@@ -5,4 +5,4 @@ if ! wait-for-it --parallel --service redis-blender:6379; then
     exit
 fi
 
-celery --app=flight_blender worker --loglevel=info
+celery --app=argon_server worker --loglevel=info
