@@ -64,7 +64,7 @@ def generate_unsigned_rid_telemetry_objects(
     return all_rid_data
 
 
-class BlenderTelemetryValidator:
+class ArgonServerTelemetryValidator:
     def parse_validate_current_state(self, current_state) -> RIDAircraftState:
         timestamp = Time(
             value=current_state["timestamp"]["value"],

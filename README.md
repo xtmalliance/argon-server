@@ -1,6 +1,6 @@
 # Argon Server
 
-![argon-server-logo](images/argon.png)
+![argon-server-logo](images/argonserver-logo.png)
 
 Argon Server is a backend / data-processing engine to stand up standards-compliant UTM services that adhere to the latest regulations on UTM / U-Space in the EU and other jurisdictions. Specifically, it gives you:
 

@@ -4,7 +4,7 @@ from typing import List
 from rest_framework import serializers
 
 from common.data_definitions import OPERATION_STATES, OPERATOR_EVENT_LOOKUP
-from common.database_operations import BlenderDatabaseReader
+from common.database_operations import ArgonServerDatabaseReader
 from conformance_monitoring_operations.conformance_checks_handler import (
     FlightOperationConformanceHelper,
 )
@@ -90,7 +90,7 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        my_database_reader = BlenderDatabaseReader()
+        my_database_reader = ArgonServerDatabaseReader()
         fd = my_database_reader.get_flight_declaration_by_id(instance.id)
         original_state = fd.state
         FlightDeclaration.objects.filter(pk=instance.id).update(**validated_data)

@@ -11,7 +11,7 @@ from services.weather_service import WeatherService
 from .serializers import WeatherSerializer
 
 
-@method_decorator(requires_scopes(["blender.write"]), name="dispatch")
+@method_decorator(requires_scopes(["argonserver.write"]), name="dispatch")
 class WeatherAPIView(APIView):
     def get(self, request, *args, **kwargs):
         longitude = request.query_params.get("longitude")

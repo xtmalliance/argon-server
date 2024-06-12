@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "b15cf272-66f7-4a7a-8036-8ffda1a1a253",
-		"name": "Flight Blender Calls",
+		"name": "Argon Server Calls",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "393882"
 	},
@@ -304,7 +304,7 @@
 								}
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -413,7 +413,7 @@
 								}
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -430,7 +430,7 @@
 							"oauth2": [
 								{
 									"key": "tokenName",
-									"value": "Blender RW",
+									"value": "Argon Server RW",
 									"type": "string"
 								},
 								{
@@ -525,7 +525,7 @@
 								}
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -547,7 +547,7 @@
 								},
 								{
 									"key": "tokenName",
-									"value": "Blender RW Token",
+									"value": "Argon Server RW Token",
 									"type": "string"
 								},
 								{
@@ -641,7 +641,7 @@
 								}
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -746,7 +746,7 @@
 								}
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -836,7 +836,7 @@
 								"set_flight_declaration"
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -1074,7 +1074,7 @@
 								}
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -1183,7 +1183,7 @@
 								}
 							]
 						},
-						"description": "This request submits a Geofence to Flight Blender"
+						"description": "This request submits a Geofence to Argon Server"
 					},
 					"response": []
 				},
@@ -1426,7 +1426,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -1534,7 +1534,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -1651,7 +1651,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Flight Blender Token",
+											"value": "Argon Server Token",
 											"type": "string"
 										},
 										{
@@ -1743,7 +1743,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -1852,7 +1852,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						}
@@ -1884,7 +1884,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Flight Blender Token",
+											"value": "Argon Server Token",
 											"type": "string"
 										},
 										{
@@ -1969,7 +1969,7 @@
 										"ac52ccd4-2bf9-4397-9ae3-4842b63f942f"
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -1996,7 +1996,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Flight Blender Token",
+											"value": "Argon Server Token",
 											"type": "string"
 										},
 										{
@@ -2081,7 +2081,7 @@
 										"ac52ccd4-2bf9-4397-9ae3-4842b63f942f"
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -2103,7 +2103,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Flight Blender Token",
+											"value": "Argon Server Token",
 											"type": "string"
 										},
 										{
@@ -2194,7 +2194,7 @@
 										"1"
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -2294,7 +2294,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Flight Blender Token",
+											"value": "Argon Server Token",
 											"type": "string"
 										},
 										{
@@ -2378,7 +2378,7 @@
 										"set_telemetry"
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						}
@@ -2433,7 +2433,7 @@
 									"oauth2": [
 										{
 											"key": "tokenName",
-											"value": "Blender RW",
+											"value": "Argon Server RW",
 											"type": "string"
 										},
 										{
@@ -2531,7 +2531,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -2642,7 +2642,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -2757,7 +2757,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -2868,7 +2868,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -2983,7 +2983,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						}
@@ -3032,7 +3032,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Flight Blender Token",
+											"value": "Argon Server Token",
 											"type": "string"
 										},
 										{
@@ -3111,7 +3111,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -3155,7 +3155,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Flight Blender Token",
+											"value": "Argon Server Token",
 											"type": "string"
 										},
 										{
@@ -3234,7 +3234,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -3343,7 +3343,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -3452,7 +3452,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						},
@@ -3474,7 +3474,7 @@
 										},
 										{
 											"key": "tokenName",
-											"value": "Blender RW Token",
+											"value": "Argon Server RW Token",
 											"type": "string"
 										},
 										{
@@ -3570,7 +3570,7 @@
 										}
 									]
 								},
-								"description": "This request submits a Geofence to Flight Blender"
+								"description": "This request submits a Geofence to Argon Server"
 							},
 							"response": []
 						}
@@ -3653,7 +3653,7 @@
 			"description": "This folder contains calls for UTM Adapter APIs"
 		},
 		{
-			"name": "PING Blender",
+			"name": "PING Argon Server",
 			"protocolProfileBehavior": {
 				"disabledSystemHeaders": {
 					"content-type": true
@@ -3670,7 +3670,7 @@
 						},
 						{
 							"key": "tokenName",
-							"value": "Flight Blender RW",
+							"value": "Argon Server RW",
 							"type": "string"
 						},
 						{
@@ -3756,7 +3756,7 @@
 						}
 					]
 				},
-				"description": "This request submits a Geofence to Flight Blender"
+				"description": "This request submits a Geofence to Argon Server"
 			},
 			"response": []
 		},
@@ -3773,7 +3773,7 @@
 					"oauth2": [
 						{
 							"key": "tokenName",
-							"value": "Flight Blender RW",
+							"value": "Argon Server RW",
 							"type": "string"
 						},
 						{
@@ -3864,19 +3864,19 @@
 						}
 					]
 				},
-				"description": "This request submits a Geofence to Flight Blender"
+				"description": "This request submits a Geofence to Argon Server"
 			},
 			"response": []
 		},
 		{
-			"name": "Flight Blender Openskies Token",
+			"name": "Argon Server Openskies Token",
 			"request": {
 				"auth": {
 					"type": "oauth2",
 					"oauth2": [
 						{
 							"key": "tokenName",
-							"value": "Flight Blender RW",
+							"value": "Argon Server RW",
 							"type": "string"
 						},
 						{

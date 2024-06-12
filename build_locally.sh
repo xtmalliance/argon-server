@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-APP=flight-blender
+APP=argon-server
 
 docker build --platform linux/amd64 -t "openskiessh/$APP" .

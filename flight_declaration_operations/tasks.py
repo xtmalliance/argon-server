@@ -11,7 +11,10 @@ from dotenv import find_dotenv, load_dotenv
 from argon_server.celery import app
 from auth_helper.common import get_redis
 from common.data_definitions import OPERATION_STATES
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.database_operations import (
+    ArgonServerDatabaseReader,
+    ArgonServerDatabaseWriter,
+)
 from conformance_monitoring_operations.conformance_checks_handler import (
     FlightOperationConformanceHelper,
 )
@@ -35,9 +38,9 @@ load_dotenv(find_dotenv())
 @app.task(name="submit_flight_declaration_to_dss_async")
 def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
     my_dss_opint_creator = DSSOperationalIntentsCreator(flight_declaration_id)
-    my_database_reader = BlenderDatabaseReader()
+    my_database_reader = ArgonServerDatabaseReader()
     r = get_redis()
-    my_database_writer = BlenderDatabaseWriter()
+    my_database_writer = ArgonServerDatabaseWriter()
 
     start_end_time_validated = my_dss_opint_creator.validate_flight_declaration_start_end_time()
 
@@ -88,7 +91,7 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
             logger.error("Error in submitting Flight Declaration to the DSS %s" % opint_submission_result.status)
 
             dss_submission_error_msg = (
-                "Flight Operation with ID {operation_id} was rejected by the DSS, there was a error in data submitted by Blender".format(
+                "Flight Operation with ID {operation_id} was rejected by the DSS, there was a error in data submitted by Argon Server".format(
                     operation_id=flight_declaration_id
                 )
             )
@@ -176,9 +179,9 @@ def submit_flight_declaration_to_dss_async(flight_declaration_id: str):
                 for subscriber in subscribers:
                     subscriptions_raw = subscriber["subscriptions"]
                     uss_base_url = subscriber["uss_base_url"]
-                    blender_base_url = env.get("BLENDER_FQDN", 0)
+                    argon_server_base_url = env.get("ARGON_SERVER_FQDN", 0)
 
-                    if uss_base_url != blender_base_url:  # There are others who are subscribesd, not just ourselves
+                    if uss_base_url != argon_server_base_url:  # There are others who are subscribesd, not just ourselves
                         subscriptions = from_dict(data_class=SubscriptionState, data=subscriptions_raw)
                         op_int_details = from_dict(
                             data_class=OperationalIntentUSSDetails,

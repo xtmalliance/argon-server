@@ -14,7 +14,7 @@ from shapely.geometry import MultiPoint, Point, box
 
 from argon_server.celery import app
 from auth_helper.common import get_redis
-from common.database_operations import BlenderDatabaseWriter
+from common.database_operations import ArgonServerDatabaseWriter
 from flight_feed_operations import flight_stream_helper
 from flight_feed_operations.data_definitions import SingleRIDObservation
 from flight_feed_operations.tasks import write_incoming_air_traffic_data
@@ -114,7 +114,7 @@ def poll_uss_for_flights_async():
 
 @app.task(name="stream_rid_telemetry_data")
 def stream_rid_telemetry_data(rid_telemetry_observations):
-    my_database_writer = BlenderDatabaseWriter()
+    my_database_writer = ArgonServerDatabaseWriter()
     telemetry_observations = json.loads(rid_telemetry_observations)
 
     for observation in telemetry_observations:
@@ -339,7 +339,7 @@ def stream_rid_test_data(requested_flights):
         time_end=RIDTime(value=astm_rid_standard_end_time.isoformat(), format="RFC3339"),
     )
 
-    uss_base_url = env.get("BLENDER_FQDN", "http://host.docker.internal:8000")
+    uss_base_url = env.get("ARGON_SERVER_FQDN", "http://host.docker.internal:8000")
     my_dss_helper = dss_rid_helper.RemoteIDOperations()
 
     logger.info("Creating a DSS ISA..")

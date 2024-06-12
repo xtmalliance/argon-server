@@ -57,7 +57,7 @@ INDEX_NAME = "geofence_proc"
 
 
 @api_view(["PUT"])
-@requires_scopes(["blender.write"])
+@requires_scopes(["argonserver.write"])
 def set_geo_fence(request: HttpRequest):
     try:
         assert request.headers["Content-Type"] == "application/json"
@@ -117,7 +117,7 @@ def set_geo_fence(request: HttpRequest):
 
 
 @api_view(["POST"])
-@requires_scopes(["blender.write"])
+@requires_scopes(["argonserver.write"])
 def set_geozone(request):
     try:
         assert request.headers["Content-Type"] == "application/json"
@@ -149,7 +149,7 @@ def set_geozone(request):
         return HttpResponse(msg, status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
 
 
-@method_decorator(requires_scopes(["blender.read"]), name="dispatch")
+@method_decorator(requires_scopes(["argonserver.read"]), name="dispatch")
 class GeoFenceDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = GeoFence.objects.filter(is_test_dataset=False)
     serializer_class = GeoFenceSerializer
@@ -158,7 +158,7 @@ class GeoFenceDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
         return self.retrieve(request, *args, **kwargs)
 
 
-@method_decorator(requires_scopes(["blender.read"]), name="dispatch")
+@method_decorator(requires_scopes(["argonserver.read"]), name="dispatch")
 class GeoFenceList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = GeoFence.objects.filter(is_test_dataset=False)
     serializer_class = GeoFenceSerializer

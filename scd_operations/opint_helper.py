@@ -6,7 +6,10 @@ import arrow
 import tldextract
 from dacite import from_dict
 
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.database_operations import (
+    ArgonServerDatabaseReader,
+    ArgonServerDatabaseWriter,
+)
 
 from . import dss_scd_helper
 from .data_definitions import FlightDeclarationOperationalIntentStorageDetails
@@ -27,7 +30,7 @@ class DSSOperationalIntentsCreator:
         self.flight_declaration_id = flight_declaration_id
 
     def validate_flight_declaration_start_end_time(self) -> bool:
-        my_database_reader = BlenderDatabaseReader()
+        my_database_reader = ArgonServerDatabaseReader()
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=self.flight_declaration_id)
         # check that flight declaration start and end time is in the next two hours
         now = arrow.now()
@@ -52,8 +55,8 @@ class DSSOperationalIntentsCreator:
         new_entity_id = str(uuid.uuid4())
 
         my_scd_dss_helper = dss_scd_helper.SCDOperations()
-        my_database_reader = BlenderDatabaseReader()
-        my_database_writer = BlenderDatabaseWriter()
+        my_database_reader = ArgonServerDatabaseReader()
+        my_database_writer = ArgonServerDatabaseWriter()
 
         flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=self.flight_declaration_id)
         current_state = flight_declaration.state
