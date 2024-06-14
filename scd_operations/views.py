@@ -16,6 +16,8 @@ from rest_framework.response import Response
 from auth_helper.common import get_redis
 from auth_helper.utils import requires_scopes
 from common.data_definitions import (
+    ARGONSERVER_READ_SCOPE,
+    ARGONSERVER_WRITE_SCOPE,
     FLIGHT_OPINT_KEY,
     OPERATION_STATES,
     OPERATION_STATES_LOOKUP,
@@ -116,7 +118,7 @@ def scd_test_capabilities(request):
 
 
 @api_view(["GET"])
-@requires_scopes(["argonserver.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def scd_capabilities(request):
     return redirect(scd_test_capabilities)
 

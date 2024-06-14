@@ -14,7 +14,11 @@ from rest_framework.decorators import api_view
 from shapely.geometry import shape
 
 from auth_helper.utils import requires_scopes
-from common.data_definitions import RESPONSE_CONTENT_TYPE
+from common.data_definitions import (
+    ARGONSERVER_READ_SCOPE,
+    ARGONSERVER_WRITE_SCOPE,
+    RESPONSE_CONTENT_TYPE,
+)
 from common.database_operations import (
     ArgonServerDatabaseReader,
     ArgonServerDatabaseWriter,
@@ -51,11 +55,12 @@ load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
 
+
 print("Flight Declaration Operations Views Loaded")
 
 
 @api_view(["POST"])
-@requires_scopes(["argonserver.write"])
+@requires_scopes([ARGONSERVER_WRITE_SCOPE])
 def set_flight_declaration(request):
     try:
         assert request.headers["Content-Type"] == RESPONSE_CONTENT_TYPE
@@ -274,7 +279,7 @@ def set_flight_declaration(request):
     return HttpResponse(op, status=200, content_type=RESPONSE_CONTENT_TYPE)
 
 
-@method_decorator(requires_scopes(["argonserver.write"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_WRITE_SCOPE]), name="dispatch")
 class FlightDeclarationApproval(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationApprovalSerializer
@@ -283,7 +288,7 @@ class FlightDeclarationApproval(mixins.UpdateModelMixin, generics.GenericAPIView
         return self.update(request, *args, **kwargs)
 
 
-@method_decorator(requires_scopes(["argonserver.write"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_WRITE_SCOPE]), name="dispatch")
 class FlightDeclarationStateUpdate(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationStateSerializer
@@ -292,7 +297,7 @@ class FlightDeclarationStateUpdate(mixins.UpdateModelMixin, generics.GenericAPIV
         return self.update(request, *args, **kwargs)
 
 
-@method_decorator(requires_scopes(["argonserver.read"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_READ_SCOPE]), name="dispatch")
 class FlightDeclarationDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationSerializer
@@ -302,7 +307,7 @@ class FlightDeclarationDetail(mixins.RetrieveModelMixin, generics.GenericAPIView
 
 
 @api_view(["GET"])
-@requires_scopes(["argonserver.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def network_flight_declaration_details(request, flight_declaration_id):
     my_database_reader = ArgonServerDatabaseReader()
     USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
@@ -362,7 +367,7 @@ def network_flight_declaration_details(request, flight_declaration_id):
     )
 
 
-@method_decorator(requires_scopes(["argonserver.read"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_READ_SCOPE]), name="dispatch")
 class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationSerializer

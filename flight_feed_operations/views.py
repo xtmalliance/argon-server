@@ -16,6 +16,7 @@ from rest_framework import generics
 from rest_framework.decorators import api_view
 
 from auth_helper.utils import requires_scopes
+from common.data_definitions import ARGONSERVER_READ_SCOPE, ARGONSERVER_WRITE_SCOPE
 from common.database_operations import ArgonServerDatabaseReader
 from rid_operations import view_port_ops
 from rid_operations.data_definitions import (
@@ -79,7 +80,7 @@ def ping(request):
 
 
 @api_view(["POST"])
-@requires_scopes(["argonserver.write"])
+@requires_scopes([ARGONSERVER_WRITE_SCOPE])
 def set_air_traffic(request):
     """This is the main POST method that takes in a request for Air traffic observation and processes the input data"""
 
@@ -137,7 +138,7 @@ def set_air_traffic(request):
 
 
 @api_view(["GET"])
-@requires_scopes(["argonserver.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def get_air_traffic(request):
     """This is the end point for the rid_qualifier test DSS network call once a subscription is updated"""
 
@@ -224,7 +225,7 @@ def get_air_traffic(request):
 
 
 @api_view(["GET"])
-@requires_scopes(["argonserver.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def start_opensky_feed(request):
     # This method takes in a view port as a lat1,lon1,lat2,lon2 coordinate system and for 60 seconds starts the stream of data from the OpenSky Network.
 
@@ -363,7 +364,7 @@ def set_signed_telemetry(request):
 
 
 @api_view(["GET"])
-@requires_scopes(["argonserver.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def traffic_information_discovery_view(request):
     try:
         view = request.query_params["view"]
@@ -410,7 +411,7 @@ def traffic_information_discovery_view(request):
 
 
 @api_view(["PUT"])
-@requires_scopes(["argonserver.write"])
+@requires_scopes([ARGONSERVER_WRITE_SCOPE])
 def set_telemetry(request):
     """A RIDOperatorDetails object is posted here"""
     # This endpoints receives data from GCS and / or flights and processes telemetry data.
