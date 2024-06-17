@@ -3,7 +3,7 @@ import logging
 import django.dispatch
 from django.dispatch import receiver
 
-from common.database_operations import BlenderDatabaseReader
+from common.database_operations import ArgonServerDatabaseReader
 
 from .conformance_checks_handler import FlightOperationConformanceHelper
 from .conformance_state_helper import ConformanceChecksList
@@ -36,7 +36,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
         logger.error(invalid_aircraft_id_msg)
         my_operation_notification.send_conformance_status_notification(message=invalid_aircraft_id_msg, level="error")
         new_state = 4
-        event = "blender_confirms_contingent"
+        event = "argon_server_confirms_contingent"
 
     elif non_conformance_state_code in ["C4", "C5"]:
         flight_state_not_correct_msg = "The Operation state for operation {flight_declaration_id}, is not one of 'Accepted' or 'Activated', your authorization is invalid. C4+C5 Check failed.".format(
@@ -44,7 +44,7 @@ def process_telemetry_conformance_message(sender, **kwargs):
         )
         logger.error(flight_state_not_correct_msg)
         my_operation_notification.send_conformance_status_notification(message=flight_state_not_correct_msg, level="error")
-        event = "blender_confirms_contingent"
+        event = "argon_server_confirms_contingent"
         new_state = 3
 
     elif non_conformance_state_code == "C6":
@@ -78,9 +78,9 @@ def process_telemetry_conformance_message(sender, **kwargs):
 
     # The operation is non-conforming, need to update the operational intent in the dss and notify peer USSP
     if event:
-        my_blender_database_reader = BlenderDatabaseReader()
+        my_argon_server_database_reader = ArgonServerDatabaseReader()
 
-        fd = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+        fd = my_argon_server_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         original_state = fd.state
         fd.add_state_history_entry(
             original_state=original_state,
@@ -118,7 +118,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         logger.error(telemetry_never_received_error_msg)
         my_operation_notification.send_conformance_status_notification(message=telemetry_never_received_error_msg, level="error")
 
-        event = "blender_confirms_contingent"
+        event = "argon_server_confirms_contingent"
         new_state = 4
     elif non_conformance_state_code == "C10":
         # notify the operator that the state of operation is not properly set.
@@ -127,7 +127,7 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
         )
         logger.error(flight_state_not_conformant)
         my_operation_notification.send_conformance_status_notification(message=flight_state_not_conformant, level="error")
-        event = "blender_confirms_contingent"
+        event = "argon_server_confirms_contingent"
         new_state = 4
     elif non_conformance_state_code == "C11":
         authorization_not_granted_message = "There is no flight authorization for operation with ID {flight_declaration_id}. Check C11 Failed".format(
@@ -137,11 +137,11 @@ def process_flight_authorization_non_conformance_message(sender, **kwargs):
 
         new_state = 4
         my_operation_notification.send_conformance_status_notification(message=authorization_not_granted_message, level="error")
-        event = "blender_confirms_contingent"
+        event = "argon_server_confirms_contingent"
     # The operation is non-conforming, need to update the operational intent in the dss and notify peer USSP
     if event:
-        my_blender_database_reader = BlenderDatabaseReader()
-        fd = my_blender_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
+        my_argon_server_database_reader = ArgonServerDatabaseReader()
+        fd = my_argon_server_database_reader.get_flight_declaration_by_id(flight_declaration_id=flight_declaration_id)
         original_state = fd.state
         fd.add_state_history_entry(
             original_state=original_state,

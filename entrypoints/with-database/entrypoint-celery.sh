@@ -1,8 +1,8 @@
 #!/bin/bash
 
 echo Waiting for DBs...
-if ! wait-for-it --parallel --service redis-blender:6379; then
+if ! wait-for-it --parallel --service redis-argon-server:6379; then
     exit
 fi
 
-celery --app=flight_blender worker --loglevel=info
+celery --app=argon_server worker --loglevel=info

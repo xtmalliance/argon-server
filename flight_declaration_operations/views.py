@@ -14,8 +14,15 @@ from rest_framework.decorators import api_view
 from shapely.geometry import shape
 
 from auth_helper.utils import requires_scopes
-from common.data_definitions import RESPONSE_CONTENT_TYPE
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.data_definitions import (
+    ARGONSERVER_READ_SCOPE,
+    ARGONSERVER_WRITE_SCOPE,
+    RESPONSE_CONTENT_TYPE,
+)
+from common.database_operations import (
+    ArgonServerDatabaseReader,
+    ArgonServerDatabaseWriter,
+)
 from geo_fence_operations import rtree_geo_fence_helper
 from geo_fence_operations.models import GeoFence
 from scd_operations.dss_scd_helper import (
@@ -48,11 +55,12 @@ load_dotenv(find_dotenv())
 
 logger = logging.getLogger("django")
 
+
 print("Flight Declaration Operations Views Loaded")
 
 
 @api_view(["POST"])
-@requires_scopes(["blender.write"])
+@requires_scopes([ARGONSERVER_WRITE_SCOPE])
 def set_flight_declaration(request):
     try:
         assert request.headers["Content-Type"] == RESPONSE_CONTENT_TYPE
@@ -86,7 +94,7 @@ def set_flight_declaration(request):
         msg = json.dumps({"message": "A valid flight declaration as specified by the A flight declaration protocol must be submitted."})
         return HttpResponse(msg, status=400)
 
-    my_database_writer = BlenderDatabaseWriter()
+    my_database_writer = ArgonServerDatabaseWriter()
     USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
 
     submitted_by = None if "submitted_by" not in req else req["submitted_by"]
@@ -230,7 +238,7 @@ def set_flight_declaration(request):
         flight_declaration.add_state_history_entry(
             new_state=declaration_state,
             original_state=0,
-            notes="Rejected by Flight Blender because of  time / space conflicts with existing operations",
+            notes="Rejected by Argon Server because of  time / space conflicts with existing operations",
         )
 
     flight_declaration_id = str(flight_declaration.id)
@@ -271,7 +279,7 @@ def set_flight_declaration(request):
     return HttpResponse(op, status=200, content_type=RESPONSE_CONTENT_TYPE)
 
 
-@method_decorator(requires_scopes(["blender.write"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_WRITE_SCOPE]), name="dispatch")
 class FlightDeclarationApproval(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationApprovalSerializer
@@ -280,7 +288,7 @@ class FlightDeclarationApproval(mixins.UpdateModelMixin, generics.GenericAPIView
         return self.update(request, *args, **kwargs)
 
 
-@method_decorator(requires_scopes(["blender.write"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_WRITE_SCOPE]), name="dispatch")
 class FlightDeclarationStateUpdate(mixins.UpdateModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationStateSerializer
@@ -289,7 +297,7 @@ class FlightDeclarationStateUpdate(mixins.UpdateModelMixin, generics.GenericAPIV
         return self.update(request, *args, **kwargs)
 
 
-@method_decorator(requires_scopes(["blender.read"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_READ_SCOPE]), name="dispatch")
 class FlightDeclarationDetail(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationSerializer
@@ -299,13 +307,13 @@ class FlightDeclarationDetail(mixins.RetrieveModelMixin, generics.GenericAPIView
 
 
 @api_view(["GET"])
-@requires_scopes(["blender.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def network_flight_declaration_details(request, flight_declaration_id):
-    my_database_reader = BlenderDatabaseReader()
+    my_database_reader = ArgonServerDatabaseReader()
     USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
     # Check if the flight declaration exists
     if not USSP_NETWORK_ENABLED:
-        network_not_enabled = HTTP400Response(message="USSP network can not be queried since it is not enabled in Flight Blender")
+        network_not_enabled = HTTP400Response(message="USSP network can not be queried since it is not enabled in Argon Server")
         op = json.dumps(asdict(network_not_enabled))
         return HttpResponse(op, status=400, content_type="application/json")
 
@@ -359,7 +367,7 @@ def network_flight_declaration_details(request, flight_declaration_id):
     )
 
 
-@method_decorator(requires_scopes(["blender.read"]), name="dispatch")
+@method_decorator(requires_scopes([ARGONSERVER_READ_SCOPE]), name="dispatch")
 class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = FlightDeclaration.objects.all()
     serializer_class = FlightDeclarationSerializer
@@ -442,7 +450,7 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
             msg = json.dumps({"message": "A valid flight declaration as specified by the A flight declaration protocol must be submitted."})
             return HttpResponse(msg, status=400)
 
-        my_database_writer = BlenderDatabaseWriter()
+        my_database_writer = ArgonServerDatabaseWriter()
         USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
 
         submitted_by = None if "submitted_by" not in req else req["submitted_by"]
@@ -584,7 +592,7 @@ class FlightDeclarationCreateList(mixins.ListModelMixin, generics.GenericAPIView
             flight_declaration.add_state_history_entry(
                 new_state=declaration_state,
                 original_state=0,
-                notes="Rejected by Flight Blender because of  time / space conflicts with existing operations",
+                notes="Rejected by Argon Server because of  time / space conflicts with existing operations",
             )
 
         flight_declaration_id = str(flight_declaration.id)

@@ -5,7 +5,10 @@ from os import environ as env
 from django.core import management
 from dotenv import find_dotenv, load_dotenv
 
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.database_operations import (
+    ArgonServerDatabaseReader,
+    ArgonServerDatabaseWriter,
+)
 
 from .operation_state_helper import FlightOperationStateMachine, get_status
 
@@ -25,9 +28,9 @@ class FlightOperationConformanceHelper:
 
     def __init__(self, flight_declaration_id: str):
         self.flight_declaration_id = flight_declaration_id
-        self.database_reader = BlenderDatabaseReader()
+        self.database_reader = ArgonServerDatabaseReader()
         self.flight_declaration = self.database_reader.get_flight_declaration_by_id(flight_declaration_id=self.flight_declaration_id)
-        self.database_writer = BlenderDatabaseWriter()
+        self.database_writer = ArgonServerDatabaseWriter()
         self.ENABLE_CONFORMANCE_MONITORING = int(os.getenv("ENABLE_CONFORMANCE_MONITORING", 0))
         self.USSP_NETWORK_ENABLED = int(env.get("USSP_NETWORK_ENABLED", 0))
 
@@ -69,7 +72,7 @@ class FlightOperationConformanceHelper:
         elif new_state == 4:  # handle entry into contingent state
             if original_state == 2 and event in [
                 "operator_initiates_contingent",
-                "blender_confirms_contingent",
+                "argon_server_confirms_contingent",
             ]:
                 # Operator activates contingent state from Activated state
                 if self.USSP_NETWORK_ENABLED:

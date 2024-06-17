@@ -16,7 +16,11 @@ from rest_framework.decorators import api_view
 
 from auth_helper.common import get_redis
 from auth_helper.utils import requires_scopes
-from common.data_definitions import RESPONSE_CONTENT_TYPE
+from common.data_definitions import (
+    ARGONSERVER_READ_SCOPE,
+    ARGONSERVER_WRITE_SCOPE,
+    RESPONSE_CONTENT_TYPE,
+)
 from flight_feed_operations import flight_stream_helper
 from uss_operations.uss_data_definitions import (
     FlightDetailsNotFoundMessage,
@@ -100,14 +104,14 @@ class SubscriptionHelper:
 
 
 @api_view(["GET"])
-@requires_scopes(["blender.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def get_rid_capabilities(request):
     status = RIDCapabilitiesResponse(capabilities=["ASTMRID2022"])
     return JsonResponse(json.loads(json.dumps(status, cls=EnhancedJSONEncoder)), status=200)
 
 
 @api_view(["PUT"])
-@requires_scopes(["blender.write"])
+@requires_scopes([ARGONSERVER_WRITE_SCOPE])
 def create_dss_subscription(request, *args, **kwargs):
     """This module takes a lat, lng box from Flight Spotlight and puts in a subscription to the DSS for the ISA"""
 
@@ -168,9 +172,9 @@ def create_dss_subscription(request, *args, **kwargs):
 
 
 @api_view(["GET"])
-@requires_scopes(["blender.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def get_rid_data(request, subscription_id):
-    """This is the GET endpoint for remote id data given a DSS subscription id. Blender will store flight URLs and every time the data is queried"""
+    """This is the GET endpoint for remote id data given a DSS subscription id. Argon Server will store flight URLs and every time the data is queried"""
 
     try:
         UUID(subscription_id, version=4)

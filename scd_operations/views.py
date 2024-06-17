@@ -16,11 +16,16 @@ from rest_framework.response import Response
 from auth_helper.common import get_redis
 from auth_helper.utils import requires_scopes
 from common.data_definitions import (
+    ARGONSERVER_READ_SCOPE,
+    ARGONSERVER_WRITE_SCOPE,
     FLIGHT_OPINT_KEY,
     OPERATION_STATES,
     OPERATION_STATES_LOOKUP,
 )
-from common.database_operations import BlenderDatabaseReader, BlenderDatabaseWriter
+from common.database_operations import (
+    ArgonServerDatabaseReader,
+    ArgonServerDatabaseWriter,
+)
 from rid_operations import rtree_helper
 from scd_operations.data_definitions import FlightDeclarationCreationPayload
 
@@ -113,7 +118,7 @@ def scd_test_capabilities(request):
 
 
 @api_view(["GET"])
-@requires_scopes(["blender.read"])
+@requires_scopes([ARGONSERVER_READ_SCOPE])
 def scd_capabilities(request):
     return redirect(scd_test_capabilities)
 
@@ -196,8 +201,8 @@ def scd_auth_test(request, operation_id):
     my_scd_dss_helper = dss_scd_helper.SCDOperations()
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
     my_volumes_validator = dss_scd_helper.VolumesValidator()
-    my_database_writer = BlenderDatabaseWriter()
-    my_database_reader = BlenderDatabaseReader()
+    my_database_writer = ArgonServerDatabaseWriter()
+    my_database_reader = ArgonServerDatabaseReader()
 
     operation_id_str = str(operation_id)
     logger.info("*********************")
@@ -326,21 +331,21 @@ def scd_auth_test(request, operation_id):
         view_rect_bounds_storage = ",".join([str(i) for i in view_rect_bounds])
         view_r_bounds = ",".join(map(str, view_rect_bounds))
 
-        # Check if operational intent exists in Flight Blender
+        # Check if operational intent exists in Argon Server
         my_test_harness_helper = SCDTestHarnessHelper()
-        operational_intent_exists_in_blender = my_test_harness_helper.check_if_same_flight_id_exists(operation_id=operation_id_str)
+        operational_intent_exists_in_argon_server = my_test_harness_helper.check_if_same_flight_id_exists(operation_id=operation_id_str)
         operational_intent_details_notification = OperationalIntentUSSDetails(
             volumes=test_injection_data.operational_intent.volumes,
             priority=test_injection_data.operational_intent.priority,
             off_nominal_volumes=test_injection_data.operational_intent.off_nominal_volumes,
         )
-        if operational_intent_exists_in_blender and test_state in ["Activated", "Nonconforming"]:
+        if operational_intent_exists_in_argon_server and test_state in ["Activated", "Nonconforming"]:
             # Operational intent exists, update the operational intent based on SCD rules. Get the detail of the existing / stored operational intent
             existing_op_int_details = my_operational_intent_parser.parse_stored_operational_intent_details(operation_id=operation_id_str)
             flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id_str)
             if not flight_declaration:
                 return Response(
-                    {"result": "Flight Declaration with ID %s not found in Flight Blender" % operation_id_str},
+                    {"result": "Flight Declaration with ID %s not found in Argon Server" % operation_id_str},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -602,8 +607,8 @@ def upsert_close_flight_plan(request, flight_plan_id):
     my_scd_dss_helper = dss_scd_helper.SCDOperations()
     my_geo_json_converter = dss_scd_helper.VolumesConverter()
     my_volumes_validator = dss_scd_helper.VolumesValidator()
-    my_database_writer = BlenderDatabaseWriter()
-    my_database_reader = BlenderDatabaseReader()
+    my_database_writer = ArgonServerDatabaseWriter()
+    my_database_reader = ArgonServerDatabaseReader()
 
     operation_id_str = str(flight_plan_id)
     logger.info("*********************")
@@ -695,19 +700,19 @@ def upsert_close_flight_plan(request, flight_plan_id):
         view_rect_bounds_storage = ",".join([str(i) for i in view_rect_bounds])
         view_r_bounds = ",".join(map(str, view_rect_bounds))
 
-        # Check if operational intent exists in Flight Blender
+        # Check if operational intent exists in Argon Server
         my_test_harness_helper = SCDTestHarnessHelper()
-        flight_plan_exists_in_blender = my_test_harness_helper.check_if_same_flight_id_exists(operation_id=operation_id_str)
+        flight_plan_exists_in_argon_server = my_test_harness_helper.check_if_same_flight_id_exists(operation_id=operation_id_str)
         # Create a payload for notification
         flight_planning_notification_payload = flight_planning_data
         generated_operational_intent_state = my_flight_plan_op_intent_bridge.generate_operational_intent_state_from_planning_information()
-        # Flight plan exists in Blender and the new state is off nominal or contingent
-        if flight_plan_exists_in_blender and generated_operational_intent_state in ["Activated", "Nonconforming"]:
+        # Flight plan exists in Argon Server and the new state is off nominal or contingent
+        if flight_plan_exists_in_argon_server and generated_operational_intent_state in ["Activated", "Nonconforming"]:
             # Operational intent exists, update the operational intent based on SCD rules. Get the detail of the existing / stored operational intent
             existing_op_int_details = my_operational_intent_parser.parse_stored_operational_intent_details(operation_id=operation_id_str)
             flight_declaration = my_database_reader.get_flight_declaration_by_id(flight_declaration_id=operation_id_str)
             if not flight_declaration:
-                failed_planning_response.notes = "Flight Declaration with ID %s not found in Flight Blender" % operation_id_str
+                failed_planning_response.notes = "Flight Declaration with ID %s not found in Argon Server" % operation_id_str
 
                 return Response(
                     json.loads(json.dumps(asdict(failed_planning_response), cls=EnhancedJSONEncoder)),

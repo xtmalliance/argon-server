@@ -3,9 +3,9 @@ import os
 from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "flight_blender.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "argon_server.settings")
 app = Celery(
-    "flight_blender",
+    "argon_server",
     include=["conformance_monitoring_operations.tasks"],
     broker_connection_retry_on_startup=True,
 )
