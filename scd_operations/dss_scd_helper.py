@@ -412,7 +412,7 @@ class OperationalIntentReferenceHelper:
             op_int_details = json.loads(op_int_details_raw)
             reference_full = op_int_details["success_response"]["operational_intent_reference"]
             # dss_response_subscribers = op_int_details["success_response"]["subscribers"]
-            # argon_server_base_url = env.get("ARGON_SERVER_FQDN", "http://localhost:8000")
+            # argon_server_base_url = env.get("ARGONSERVER_FQDN", "http://localhost:8000")
 
             # for subscriber in dss_response_subscribers:
             #     subscriptions = subscriber["subscriptions"]
@@ -581,7 +581,7 @@ class SCDOperations:
             "Authorization": "Bearer " + auth_token["access_token"],
         }
 
-        argon_server_base_url = env.get("ARGON_SERVER_FQDN", "http://localhost:8000")
+        argon_server_base_url = env.get("ARGONSERVER_FQDN", "http://localhost:8000")
         my_op_int_ref_helper = OperationalIntentReferenceHelper()
         all_uss_operational_intent_details = []
 
@@ -1027,7 +1027,7 @@ class SCDOperations:
         """This method updates a operational intent from one state to other"""
         auth_token = self.get_auth_token()
         logger.info("Updating operational intent...")
-        argon_server_base_url = env.get("ARGON_SERVER_FQDN", "http://localhost:8000")
+        argon_server_base_url = env.get("ARGONSERVER_FQDN", "http://localhost:8000")
 
         # Initialize the update request with empty airspace key
         operational_intent_update_payload = OperationalIntentUpdateRequest(
@@ -1095,7 +1095,7 @@ class SCDOperations:
             "Authorization": "Bearer " + auth_token["access_token"],
         }
 
-        argon_server_base_url = env.get("ARGON_SERVER_FQDN", "http://localhost:8000")
+        argon_server_base_url = env.get("ARGONSERVER_FQDN", "http://localhost:8000")
         dss_r = requests.put(
             dss_opint_update_url,
             json=json.loads(json.dumps(asdict(operational_intent_update_payload))),
@@ -1161,7 +1161,7 @@ class SCDOperations:
         }
         management_key = str(uuid.uuid4())
         airspace_keys = []
-        argon_server_base_url = env.get("ARGON_SERVER_FQDN", "http://localhost:8000")
+        argon_server_base_url = env.get("ARGONSERVER_FQDN", "http://localhost:8000")
         implicit_subscription_parameters = ImplicitSubscriptionParameters(uss_base_url=argon_server_base_url)
         operational_intent_reference = OperationalIntentReference(
             extents=volumes,
