@@ -63,6 +63,8 @@ from .scd_test_harness_helper import (
     failed_test_injection_response,
     flight_planning_deletion_failure_response,
     flight_planning_deletion_success_response,
+    not_planned_activated_planning_response,
+    not_planned_already_planned_planning_response,
     not_planned_planning_response,
     planned_planning_response,
     planned_test_injection_response,
@@ -525,6 +527,7 @@ def scd_auth_test(request, operation_id):
 
             elif op_int_submission.status == "failure":
                 # The flight was rejected by the DSS we will make it a failure and report back
+
                 rejected_test_injection_response.operational_intent_id = op_int_submission.operational_intent_id
                 return Response(
                     json.loads(
@@ -797,8 +800,27 @@ def upsert_close_flight_plan(request, flight_plan_id):
                     status=status.HTTP_200_OK,
                 )
             elif operational_intent_update_job.status == 999:
-                # Deconfliction check failed during updating of operational intent
-                logger.info("Flight not deconflicted...")
+                # The update cannot be sent ot the DSS
+
+                # Why can it not be sent to the DSS?
+
+                logger.info("Flight not sent to DSS..")
+                print("---*****-----")
+                print(flight_plan_exists_in_argon_server)
+                print(generated_operational_intent_state)
+                print("---*****-----")
+                if flight_plan_exists_in_argon_server and generated_operational_intent_state == "Activated":
+                    # Updated cannot be processed / sent to the DSS
+                    return Response(
+                        json.loads(
+                            json.dumps(
+                                not_planned_activated_planning_response,
+                                cls=EnhancedJSONEncoder,
+                            )
+                        ),
+                        status=status.HTTP_200_OK,
+                    )
+
                 return Response(
                     json.loads(
                         json.dumps(
@@ -893,6 +915,12 @@ def upsert_close_flight_plan(request, flight_plan_id):
                 # End create operational intent
 
             elif flight_planning_submission.status == "conflict_with_flight":
+                if flight_plan_exists_in_argon_server:
+                    if generated_operational_intent_state == "Accepted":
+                        return Response(
+                            json.loads(json.dumps(asdict(not_planned_already_planned_planning_response), cls=EnhancedJSONEncoder)),
+                            status=status.HTTP_200_OK,
+                        )
                 return Response(
                     json.loads(json.dumps(asdict(not_planned_planning_response), cls=EnhancedJSONEncoder)),
                     status=status.HTTP_200_OK,
