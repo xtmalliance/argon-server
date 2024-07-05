@@ -3,7 +3,7 @@ import json
 import logging
 import time
 import uuid
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict
 from datetime import timedelta
 from typing import Any
 from uuid import UUID

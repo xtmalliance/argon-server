@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict
 from uuid import UUID
 
 import arrow

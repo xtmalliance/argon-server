@@ -1,6 +1,6 @@
 import json
 import logging
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict
 from datetime import timedelta
 from uuid import UUID
 

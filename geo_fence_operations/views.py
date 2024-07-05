@@ -5,7 +5,7 @@ import io
 import json
 import logging
 import uuid
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict
 from decimal import Decimal
 from typing import List
 
