@@ -1130,7 +1130,7 @@ class SCDOperations:
                 subscribers=all_subscribers,
                 operational_intent_reference=operational_intent_reference,
             )
-            logger.info("Updated Operational Intent in the DSS Successfully")
+            logger.info("Updated Operational Intent in the DSS successfully...")
 
             message = CommonDSS4xxResponse(message="Successfully updated operational intent")
             opint_update_result = OperationalIntentUpdateResponse(dss_response=d_r, status=dss_r_status_code, message=message)

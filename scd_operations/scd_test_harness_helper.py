@@ -71,6 +71,12 @@ planned_planning_response = UpsertFlightPlanResponse(
     includes_advisories=AdvisoryInclusion.Unknown,
     planning_result=PlanningActivityResult.Completed,
 )
+planned_off_nominal_planning_response = UpsertFlightPlanResponse(
+    flight_plan_status=FlightPlanProcessingResult.OffNominal,
+    notes="Flight Plan successfully processed and flight planned",
+    includes_advisories=AdvisoryInclusion.Unknown,
+    planning_result=PlanningActivityResult.Completed,
+)
 
 ready_to_fly_planning_response = UpsertFlightPlanResponse(
     flight_plan_status=FlightPlanProcessingResult.OkToFly,
