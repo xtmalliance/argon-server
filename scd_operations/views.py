@@ -2,10 +2,8 @@ import json
 import logging
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from typing import List
 from uuid import UUID
 
-import arrow
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from dotenv import find_dotenv, load_dotenv
@@ -42,19 +40,19 @@ from .scd_data_definitions import (
     OperationalIntentSubmissionStatus,
     SCDTestStatusResponse,
     SuccessfulOperationalIntentFlightIDStorage,
-    USSCapabilitiesResponseEnum,    
+    USSCapabilitiesResponseEnum,
 )
 from .scd_test_harness_helper import (
     FlightPlanningDataProcessor,
     FlightPlantoOperationalIntentProcessor,
     SCDTestHarnessHelper,
     failed_planning_response,
-    planned_off_nominal_planning_response,
     flight_planning_deletion_failure_response,
     flight_planning_deletion_success_response,
     not_planned_activated_planning_response,
     not_planned_already_planned_planning_response,
     not_planned_planning_response,
+    planned_off_nominal_planning_response,
     planned_planning_response,
     planned_test_injection_response,
     ready_to_fly_planning_response,
@@ -324,7 +322,7 @@ def upsert_close_flight_plan(request, flight_plan_id):
                 return update_operational_intent_response
 
             elif operational_intent_update_job.status == 999:
-                # The update cannot be sent ot the DSS                
+                # The update cannot be sent to the DSS
                 logger.info("Flight not sent to DSS..")
                 if flight_plan_exists_in_argon_server and generated_operational_intent_state == "Activated":
                     # Updated cannot be processed / sent to the DSS
