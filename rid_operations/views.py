@@ -21,6 +21,7 @@ from common.data_definitions import (
     ARGONSERVER_WRITE_SCOPE,
     RESPONSE_CONTENT_TYPE,
 )
+from common.utils import EnhancedJSONEncoder
 from flight_feed_operations import flight_stream_helper
 from uss_operations.uss_data_definitions import (
     FlightDetailsNotFoundMessage,
@@ -58,13 +59,6 @@ class RIDOutputHelper:
             return [self.make_json_compatible(v) for v in struct]
         except TypeError:
             return struct
-
-
-class EnhancedJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if is_dataclass(o):
-            return asdict(o)
-        return super().default(o)
 
 
 class SubscriptionHelper:
