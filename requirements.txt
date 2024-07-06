@@ -26,3 +26,4 @@ http-message-signatures==0.4.4
 dj-database-url==2.1.0
 django-celery-beat==2.5.0
 wait-for-it==2.2.2
+numpy<2.0.0
