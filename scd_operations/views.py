@@ -321,7 +321,6 @@ def upsert_close_flight_plan(request, flight_plan_id):
                 logger.info(operational_intent_update_job.additional_information)
                 logger.info("Flight not sent to DSS..")
                 if flight_plan_exists_in_argon_server and operational_intent_update_job.additional_information.check_id.value == "B":
-                    print("B check here")
                     logger.info(operational_intent_update_job.additional_information.tentative_flight_plan_processing_response.value)
                     if operational_intent_update_job.additional_information.tentative_flight_plan_processing_response.value == "OkToFly":
                         return Response(
@@ -345,8 +344,6 @@ def upsert_close_flight_plan(request, flight_plan_id):
                         )
                 elif scd_test_data.intended_flight.astm_f3548_21.priority == 100:
                     # Updated cannot be processed / sent to the DSS
-                    print("h343434")
-                    print(operational_intent_update_job.additional_information.tentative_flight_plan_processing_response.value)
                     return Response(
                         json.loads(
                             json.dumps(
@@ -356,7 +353,6 @@ def upsert_close_flight_plan(request, flight_plan_id):
                         ),
                         status=status.HTTP_200_OK,
                     )
-                print("C check here")
                 return Response(
                     json.loads(
                         json.dumps(
