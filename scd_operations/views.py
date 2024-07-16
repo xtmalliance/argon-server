@@ -109,8 +109,8 @@ def scd_capabilities(request):
 @requires_scopes(["interuss.flight_planning.plan"])
 def upsert_close_flight_plan(request, flight_plan_id):
     # Parse the incoming flight planning data
-    view_name = request.resolver_match.view_name
-    uspace_test = True if "u-space" in view_name else False
+    # view_name = request.resolver_match.view_name
+    # uspace_test = True if "u-space" in view_name else False
     r = get_redis()
     # flight_details_storage = "flight_details:" + str(flight_plan_id)
     my_operational_intent_parser = dss_scd_helper.OperationalIntentReferenceHelper()
@@ -519,8 +519,8 @@ def upsert_close_flight_plan(request, flight_plan_id):
 @api_view(["GET"])
 @requires_scopes(["interuss.flight_planning.direct_automated_test"])
 def flight_planning_status(request):
-    view_name = request.resolver_match.view_name
-    uspace_test = True if "u-space" in view_name else False
+    # view_name = request.resolver_match.view_name
+    # uspace_test = True if "u-space" in view_name else False
     status = FlightPlanningTestStatus(
         status=FlightPlanningStatusResponse.Ready,
         system_version="v0.1",
@@ -533,8 +533,8 @@ def flight_planning_status(request):
 @api_view(["POST"])
 @requires_scopes(["interuss.flight_planning.direct_automated_test"])
 def flight_planning_clear_area_request(request):
-    view_name = request.resolver_match.view_name
-    uspace_test = True if "u-space" in view_name else False
+    # view_name = request.resolver_match.view_name
+    # uspace_test = True if "u-space" in view_name else False
     clear_area_request = request.data
     try:
         request_id = clear_area_request["request_id"]

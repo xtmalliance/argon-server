@@ -1,7 +1,7 @@
 import enum
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
 from uss_operations.uss_data_definitions import Volume4D
 
