@@ -686,7 +686,8 @@ class SCDOperations:
                         requests.exceptions.Timeout,
                         requests.exceptions.ConnectionError,
                     ) as e:
-                        logger.error("Error details %s " % e)
+                        logger.error("Connection error details..")
+                        logger.error(e)
                         logger.error(
                             "Error in getting operational intent id {uss_op_int_id} details from uss with base url {uss_base_url}".format(
                                 uss_op_int_id=current_uss_operational_intent_detail.id,
@@ -695,7 +696,7 @@ class SCDOperations:
                         )
                         op_int_details_retrieved = False
                         logger.info("Raising connection Error 1")
-                        raise ConnectionError("Could not reach peer USS.. ")
+                        raise ConnectionError("Could not reach peer USS..")
 
                     else:
                         # Verify status of the response from the USS
@@ -1073,6 +1074,7 @@ class SCDOperations:
             return opint_update_result
         except ConnectionError:
             logger.info("Raising Connection Error 3")
+            logger.info("Connection error with peer USS, cannot update volume...")
             # Update unsuccessful, problems with processing peer USS volumes
             d_r = CommonPeer9xxResponse(message="Error in validating received operational intents from peer USS")
             message = "Error in updating operational intent in the DSS, peer USS shared invalid data"
