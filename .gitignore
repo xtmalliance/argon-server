@@ -142,3 +142,5 @@ celerybeat-schedule.db
 # Ignore rtree indexes
 *.dat
 *.idx
+docker-compose.yml
+docker-compose.yml

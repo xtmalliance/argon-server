@@ -18,6 +18,7 @@ import logging
 
 logger = logging.getLogger("django")
 
+
 class FlightDeclarationSerializer(serializers.ModelSerializer):
     operational_intent = serializers.SerializerMethodField()
     flight_declaration_geojson = serializers.SerializerMethodField()
