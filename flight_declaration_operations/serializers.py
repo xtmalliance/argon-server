@@ -13,7 +13,10 @@ from scd_operations.scd_data_definitions import Volume4D
 
 from .models import FlightDeclaration
 from .utils import OperationalIntentsConverter
+from django.db import transaction
+import logging
 
+logger = logging.getLogger("django")
 
 class FlightDeclarationSerializer(serializers.ModelSerializer):
     operational_intent = serializers.SerializerMethodField()
@@ -90,22 +93,26 @@ class FlightDeclarationStateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        my_database_reader = ArgonServerDatabaseReader()
-        fd = my_database_reader.get_flight_declaration_by_id(instance.id)
-        original_state = fd.state
-        FlightDeclaration.objects.filter(pk=instance.id).update(**validated_data)
+        with transaction.atomic():
+            my_database_reader = ArgonServerDatabaseReader()
+            fd = my_database_reader.get_flight_declaration_by_id(instance.id)
+            original_state = fd.state
+            FlightDeclaration.objects.filter(pk=instance.id).update(**validated_data)
 
-        # Save the database and trigger management command
-        new_state = validated_data["state"]
-        event = OPERATOR_EVENT_LOOKUP[new_state]
-        fd.add_state_history_entry(
-            original_state=original_state,
-            new_state=new_state,
-            notes="State changed by operator",
-        )
-        my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=str(instance.id))
-        my_conformance_helper.manage_operation_state_transition(original_state=original_state, new_state=new_state, event=event)
-        return fd
+            # Save the database and trigger management command
+            new_state = validated_data["state"]
+            fd.refresh_from_db()
+            actual_new_state = fd.state
+            logger.debug("New state changed to {}".format(actual_new_state))
+            event = OPERATOR_EVENT_LOOKUP[new_state]
+            fd.add_state_history_entry(
+                original_state=original_state,
+                new_state=new_state,
+                notes="State changed by operator",
+            )
+            my_conformance_helper = FlightOperationConformanceHelper(flight_declaration_id=str(instance.id))
+            my_conformance_helper.manage_operation_state_transition(original_state=original_state, new_state=new_state, event=event)
+            return fd
 
     class Meta:
         model = FlightDeclaration
