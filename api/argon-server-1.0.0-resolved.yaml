@@ -2717,6 +2717,11 @@ components:
         originating_party:
           description: Provide the name of the flight declaration e.g. Argon Server 102
           type: string
+        bounds:
+          description: The bounding box of the flight declraratoin in minX, minY, maxX, maxY order
+          type: string
+          example: 34.378675201285006,-89.45781948677741,34.403695823615934,-89.4279213143275
+
         submitted_by:
           description: Email address of person submitting this declaration
           type: string

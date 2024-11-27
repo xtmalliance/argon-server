@@ -51,6 +51,7 @@ class FlightDeclarationSerializer(serializers.ModelSerializer):
             "end_datetime",
             "flight_declaration_geojson",
             "flight_declaration_raw_geojson",
+            "bounds",
             "approved_by",
             "submitted_by",
         )
