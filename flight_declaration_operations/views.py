@@ -6,7 +6,7 @@ from os import environ as env
 from typing import List
 
 import arrow
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import Http404, HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from dotenv import find_dotenv, load_dotenv
 from rest_framework import generics, mixins, status
@@ -15,6 +15,7 @@ from shapely.geometry import shape
 
 from auth_helper.utils import requires_scopes
 from common.data_definitions import (
+    ACTIVE_OPERATIONAL_STATES,
     ARGONSERVER_READ_SCOPE,
     ARGONSERVER_WRITE_SCOPE,
     RESPONSE_CONTENT_TYPE,
@@ -214,10 +215,12 @@ def set_flight_declaration(request):
 
     all_relevant_declarations = []
     existing_declaration_within_timelimits = FlightDeclaration.objects.filter(
-        start_datetime__lte=end_datetime, end_datetime__gte=start_datetime
+        start_datetime__lte=end_datetime, end_datetime__gte=start_datetime, state__in=ACTIVE_OPERATIONAL_STATES
     ).exists()
     if existing_declaration_within_timelimits:
-        all_declarations_within_timelimits = FlightDeclaration.objects.filter(start_datetime__lte=end_datetime, end_datetime__gte=start_datetime)
+        all_declarations_within_timelimits = FlightDeclaration.objects.filter(
+            start_datetime__lte=end_datetime, end_datetime__gte=start_datetime, state__in=ACTIVE_OPERATIONAL_STATES
+        )
         INDEX_NAME = "flight_declaration_idx"
         my_fd_rtree_helper = FlightDeclarationRTreeIndexFactory(index_name=INDEX_NAME)
         my_fd_rtree_helper.generate_flight_declaration_index(all_flight_declarations=all_declarations_within_timelimits)

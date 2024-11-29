@@ -17,6 +17,7 @@ OPERATION_STATES = (
     (7, _("Cancelled")),
     (8, _("Rejected")),
 )
+ACTIVE_OPERATIONAL_STATES = [1, 2, 3, 4]
 
 # This is only used int he SCD Test harness therefore it is partial
 OPERATION_STATES_LOOKUP = {
